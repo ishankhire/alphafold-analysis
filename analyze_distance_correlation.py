@@ -134,6 +134,22 @@ plt.savefig('visualizations/distance_correlation_analysis.png', dpi=150)
 plt.show()
 print("\nSaved: visualizations/distance_correlation_analysis.png")
 
+# --- Scatterplot: Spatial vs Sequential Distance ---
+fig, ax = plt.subplots(figsize=(10, 7))
+ax.scatter(sequential_distances, spatial_distances, alpha=0.05, s=5, color='steelblue', rasterized=True)
+ax.axhline(y=8, color='red', linestyle='--', alpha=0.8, label='8 Å')
+ax.axhline(y=14, color='orange', linestyle='--', alpha=0.8, label='14 Å')
+ax.axvline(x=5, color='cyan', linestyle='--', alpha=0.8, label='Seq dist = 5')
+ax.set_xlabel('Sequential Distance |i - j|', fontsize=12)
+ax.set_ylabel('Spatial Distance (Å)', fontsize=12)
+ax.set_title(f'Spatial vs Sequential Distance (all residue pairs)\nPearson r = {pearson_r:.3f}, Spearman r = {spearman_r:.3f}', fontsize=13)
+ax.legend(fontsize=10)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('visualizations/distance_scatter.png', dpi=150)
+plt.show()
+print("Saved: visualizations/distance_scatter.png")
+
 # --- Now run magnitude analysis at 14 Å ---
 print("\n" + "=" * 60)
 print("MAGNITUDE ANALYSIS AT 14 Å THRESHOLD")
