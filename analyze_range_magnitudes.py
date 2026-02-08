@@ -13,6 +13,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+os.makedirs("visualizations", exist_ok=True)
+
 # Settings
 base_dir = os.path.dirname(os.path.abspath(__file__))
 protein = "7b3a_A"
@@ -89,7 +91,7 @@ ax.set_xlim(-1, 48)
 
 plt.tight_layout()
 
-output_fig = "range_magnitude_by_layer.png"
+output_fig = "visualizations/range_magnitude_by_layer.png"
 plt.savefig(output_fig, dpi=150)
 plt.show()
 

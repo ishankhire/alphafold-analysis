@@ -18,6 +18,7 @@ except ImportError:
 
 # Settings
 base_dir = os.path.dirname(os.path.abspath(__file__))
+os.makedirs("visualizations", exist_ok=True)
 protein = "7b3a_A"
 cif_file = os.path.join(base_dir, "7b3a.cif")
 all_layers = list(range(48))
@@ -129,9 +130,9 @@ ax2.legend(fontsize=10)
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('distance_correlation_analysis.png', dpi=150)
+plt.savefig('visualizations/distance_correlation_analysis.png', dpi=150)
 plt.show()
-print("\nSaved: distance_correlation_analysis.png")
+print("\nSaved: visualizations/distance_correlation_analysis.png")
 
 # --- Now run magnitude analysis at 14 Å ---
 print("\n" + "=" * 60)
@@ -205,10 +206,10 @@ ax.set_xticks(range(0, 48, 5))
 ax.set_xlim(-1, 48)
 
 plt.tight_layout()
-plt.savefig('spatial_range_magnitude_14A.png', dpi=150)
+plt.savefig('visualizations/spatial_range_magnitude_14A.png', dpi=150)
 plt.show()
 
-print(f"\nSaved: spatial_range_magnitude_14A.png")
+print(f"\nSaved: visualizations/spatial_range_magnitude_14A.png")
 
 # Save data
 with open('spatial_range_magnitude_14A.csv', 'w') as f:
@@ -287,10 +288,10 @@ if idx_90 < plot_range:
             f'90% at |i-j|={seq_dist_range[idx_90]}', fontsize=10, color='green')
 
 plt.tight_layout()
-plt.savefig('spatial_close_pairs_seq_distribution.png', dpi=150)
+plt.savefig('visualizations/spatial_close_pairs_seq_distribution.png', dpi=150)
 plt.show()
 
-print(f"\nSaved: spatial_close_pairs_seq_distribution.png")
+print(f"\nSaved: visualizations/spatial_close_pairs_seq_distribution.png")
 
 # Save data
 with open('spatial_close_pairs_seq_distribution.csv', 'w') as f:

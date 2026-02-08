@@ -12,6 +12,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+os.makedirs("visualizations", exist_ok=True)
+
 try:
     from Bio.PDB import MMCIFParser
     from Bio.PDB.Polypeptide import is_aa
@@ -152,7 +154,7 @@ ax.set_xlim(-1, 48)
 
 plt.tight_layout()
 
-output_fig = "spatial_range_magnitude_by_layer.png"
+output_fig = "visualizations/spatial_range_magnitude_by_layer.png"
 plt.savefig(output_fig, dpi=150)
 plt.show()
 

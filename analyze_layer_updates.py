@@ -12,6 +12,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+os.makedirs("visualizations", exist_ok=True)
+
 try:
     from Bio.PDB import MMCIFParser
     from Bio.PDB.Polypeptide import is_aa
@@ -325,9 +327,9 @@ ax4.grid(True, alpha=0.3)
 ax4.set_xticks(range(0, num_layers, 5))
 
 plt.tight_layout()
-plt.savefig('layer_cosine_change_analysis.png', dpi=150)
+plt.savefig('visualizations/layer_cosine_change_analysis.png', dpi=150)
 plt.show()
-print("Saved: layer_cosine_change_analysis.png")
+print("Saved: visualizations/layer_cosine_change_analysis.png")
 
 
 # =============================================================================
@@ -552,8 +554,8 @@ ax4.grid(True, alpha=0.3)
 ax4.set_xticks(range(0, num_layers, 5))
 
 plt.tight_layout()
-plt.savefig('layer_cosine_change_sequential.png', dpi=150)
-print("Saved: layer_cosine_change_sequential.png")
+plt.savefig('visualizations/layer_cosine_change_sequential.png', dpi=150)
+print("Saved: visualizations/layer_cosine_change_sequential.png")
 
 # Sequential Summary
 print("\n" + "=" * 60)

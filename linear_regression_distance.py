@@ -14,6 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 1. Load data
@@ -116,7 +117,7 @@ ax.set_xlim(lims)
 ax.set_ylim(lims)
 ax.set_aspect("equal")
 plt.tight_layout()
-scatter_path = os.path.join(BASE_DIR, "linear_regression_scatter.png")
+scatter_path = os.path.join(BASE_DIR, "visualizations", "linear_regression_scatter.png")
 plt.savefig(scatter_path, dpi=150)
 plt.close()
 print(f"\nScatter plot saved to {scatter_path}")

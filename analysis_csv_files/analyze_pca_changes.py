@@ -251,8 +251,10 @@ for pc_idx in range(num_pcs):
 
 plt.suptitle('PC Magnitude Changes: Short-range vs Long-range Pairs', fontsize=13, y=1.02)
 plt.tight_layout()
-plt.savefig('pca_magnitude_change_by_pc.png', dpi=150, bbox_inches='tight')
-print("Saved: pca_magnitude_change_by_pc.png")
+vis_dir = os.path.join(base_dir, "visualizations")
+os.makedirs(vis_dir, exist_ok=True)
+plt.savefig(os.path.join(vis_dir, 'pca_magnitude_change_by_pc.png'), dpi=150, bbox_inches='tight')
+print(f"Saved: {os.path.join(vis_dir, 'pca_magnitude_change_by_pc.png')}")
 
 # Plot 2: Difference (near - far) for each PC
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -276,8 +278,8 @@ for pc_idx in range(num_pcs):
 
 plt.suptitle('PC Magnitude Change Difference: Which Pairs Update More?', fontsize=13, y=1.02)
 plt.tight_layout()
-plt.savefig('pca_magnitude_change_diff.png', dpi=150, bbox_inches='tight')
-print("Saved: pca_magnitude_change_diff.png")
+plt.savefig(os.path.join(vis_dir, 'pca_magnitude_change_diff.png'), dpi=150, bbox_inches='tight')
+print(f"Saved: {os.path.join(vis_dir, 'pca_magnitude_change_diff.png')}")
 
 # Plot 3: All PCs on same axes for comparison
 pc_colors = ['tab:blue', 'tab:green', 'tab:red', 'tab:purple']
@@ -314,8 +316,8 @@ ax2.grid(True, alpha=0.3)
 ax2.set_xticks(range(0, num_layers, 5))
 
 plt.tight_layout()
-plt.savefig('pca_magnitude_change_all_pcs.png', dpi=150)
-print("Saved: pca_magnitude_change_all_pcs.png")
+plt.savefig(os.path.join(vis_dir, 'pca_magnitude_change_all_pcs.png'), dpi=150)
+print(f"Saved: {os.path.join(vis_dir, 'pca_magnitude_change_all_pcs.png')}")
 
 # Plot 4: Percentage change by PC (2x2 grid)
 fig, axes = plt.subplots(2, 2, figsize=(14, 10))
@@ -342,8 +344,8 @@ for pc_idx in range(num_pcs):
 
 plt.suptitle('PC Percentage Change (Median): ||PC_L+1| - |PC_L|| / |PC_L| × 100\n(Excluding pairs with baseline < 5th percentile)', fontsize=12, y=1.02)
 plt.tight_layout()
-plt.savefig('pca_percentage_change_by_pc.png', dpi=150, bbox_inches='tight')
-print("Saved: pca_percentage_change_by_pc.png")
+plt.savefig(os.path.join(vis_dir, 'pca_percentage_change_by_pc.png'), dpi=150, bbox_inches='tight')
+print(f"Saved: {os.path.join(vis_dir, 'pca_percentage_change_by_pc.png')}")
 
 
 # =============================================================================

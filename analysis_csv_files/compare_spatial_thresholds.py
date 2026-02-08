@@ -119,9 +119,11 @@ for idx, threshold in enumerate(thresholds):
 
 plt.suptitle('Pairwise Feature Magnitude by Spatial Distance', fontsize=14, y=1.02)
 plt.tight_layout()
-plt.savefig('spatial_threshold_comparison_sidebyside.png', dpi=150, bbox_inches='tight')
+vis_dir = os.path.join(base_dir, "visualizations")
+os.makedirs(vis_dir, exist_ok=True)
+plt.savefig(os.path.join(vis_dir, 'spatial_threshold_comparison_sidebyside.png'), dpi=150, bbox_inches='tight')
 plt.show()
-print("\nSaved: spatial_threshold_comparison_sidebyside.png")
+print(f"\nSaved: {os.path.join(vis_dir, 'spatial_threshold_comparison_sidebyside.png')}")
 
 # Plot 2: All on same axes for direct comparison
 fig, ax = plt.subplots(figsize=(12, 6))
@@ -148,9 +150,9 @@ ax.set_xticks(range(0, 48, 5))
 ax.set_xlim(-1, 48)
 
 plt.tight_layout()
-plt.savefig('spatial_threshold_comparison_overlay.png', dpi=150)
+plt.savefig(os.path.join(vis_dir, 'spatial_threshold_comparison_overlay.png'), dpi=150)
 plt.show()
-print("Saved: spatial_threshold_comparison_overlay.png")
+print(f"Saved: {os.path.join(vis_dir, 'spatial_threshold_comparison_overlay.png')}")
 
 # --- Save data ---
 for threshold in thresholds:

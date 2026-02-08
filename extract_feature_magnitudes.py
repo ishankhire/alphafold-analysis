@@ -94,7 +94,9 @@ for layer_idx in all_layers:
 
         plt.tight_layout()
 
-        output_fig = os.path.join(output_dir, f"layer{layer_idx}_heatmap.png")
+        vis_dir = os.path.join("visualizations", "feature_magnitudes")
+        os.makedirs(vis_dir, exist_ok=True)
+        output_fig = os.path.join(vis_dir, f"layer{layer_idx}_heatmap.png")
         plt.savefig(output_fig, dpi=150)
         plt.close()
 

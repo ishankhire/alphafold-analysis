@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 # Settings
 input_dir = "pca_projections"
-output_dir = "pc_maps"
+output_dir = "visualizations/pc_maps"
 protein = "7b3a_A"
 layer_indices = list(range(48))  # All layers 0-47
 num_pcs = 4  # Top 4 principal components

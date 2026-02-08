@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python3:*)",
       "Bash(pip install:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

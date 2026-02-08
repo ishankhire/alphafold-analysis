@@ -6,9 +6,12 @@ Visualize the subspace similarity matrix between layers.
 This shows which layers have similar PCA subspaces.
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from pca_subspace_main import analyze
+
+os.makedirs("visualizations", exist_ok=True)
 
 # Settings
 base_dir = "activations_some_layers"
@@ -62,10 +65,10 @@ ax.set_xlabel('Layer')
 ax.set_ylabel('Layer')
 
 plt.tight_layout()
-plt.savefig('subspace_similarity_heatmap.png', dpi=150)
+plt.savefig('visualizations/subspace_similarity_heatmap.png', dpi=150)
 plt.show()
 
-print("\nSaved: subspace_similarity_heatmap.png")
+print("\nSaved: visualizations/subspace_similarity_heatmap.png")
 
 # Also print explained variance summary
 print(f"\nExplained variance ratio (cumulative for top {k} PCs):")

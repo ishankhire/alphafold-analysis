@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Analysis of AlphaFold pair representations across 48 layers for protein **7B3A chain A** (280 residues, 128 feature channels per pair). The research investigates how pairwise residue features evolve through network depth, comparing spatially-near vs spatially-far residue pairs.
+Analysis of AlphaFold pair representations across 48 layers for protein **7B3A chain A** (280 residues, 128 feature channels per pair).
+ The research investigates how pairwise residue features evolve through network depth, comparing spatially-near vs spatially-far residue pairs.
 
 ## Dependencies
 
@@ -62,3 +63,21 @@ No build system, test suite, or linter is configured.
 **Pair representation shape:** Always `(R, R, C)` where R=280 residues and C=128 channels (or 32 after PCA).
 
 **Pair block alignment offset:** The AlphaFold entity sequence has 280 residues, but the resolved CIF structure only contains 276 (residues 0–275). The entity sequence has a 4-residue N-terminal prefix (`GHMA`) not present in the deposited structure. Therefore **CIF residue `i` corresponds to pair block index `i + 4`**. Any script that cross-references pair block data with CIF-derived spatial distances must apply `PAIR_OFFSET = 4` when indexing into the pair block. Scripts that operate solely on pair blocks (e.g., `extract_feature_magnitudes.py`, `analyze_range_magnitudes.py`, PCA scripts) are unaffected.
+
+## Visualizations
+
+All generated plots and figures must be saved to the `visualizations/` directory (or a subdirectory within it, e.g. `visualizations/feature_magnitudes/`, `visualizations/pc_maps/`). When creating new scripts that produce visualizations, always use `os.makedirs("visualizations", exist_ok=True)` and save outputs under `visualizations/`.
+
+## Change Log
+
+When making important or substantive changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes — what was changed, why, and any key decisions. Keep it focused: skip minor or trivial edits, but document anything that affects analysis logic, data flow, or architecture.
+
+## Git Workflow
+
+After every significant change, run:
+```
+git add -A
+git commit -m "<descriptive message>"
+git push
+```
+Commit frequently with clear messages. Push after each commit to keep the remote up to date.
