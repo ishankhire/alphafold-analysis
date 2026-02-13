@@ -54,3 +54,77 @@ Added three new sections:
 1. **Visualizations** — all plots save to `visualizations/`
 2. **Change Log** — record substantive changes in `branch-analysis.md`
 3. **Git Workflow** — `git add -A && commit && push` after significant changes
+
+## Session: 2026-02-08 — Distance encoding probes
+
+### What changed
+Added two new analysis scripts that probe how spatial distance information is encoded in AlphaFold pair representations.
+
+### New scripts
+- `probe_layer_regression.py` — trains a linear regression (pair features → CA-CA distance) independently for each of the 48 layers. Uses the same fixed train/test split (random_state=42) across all layers for fair comparison.
+- `probe_pca_regression.py` — runs PCA on layer-47 pair features, then trains linear regression on top-k PCs for k ∈ {1, 2, 3, 5, 10, 20, 32, 64, 128, 256}. PCA is fit on training data only to avoid leakage.
+
+### New outputs
+- `layer_regression_r2.csv` + `visualizations/layer_regression_r2.png`
+- `pca_regression_r2.csv` + `visualizations/pca_regression_r2.png`
+
+### Key findings
+- **Layer-wise probe**: Distance information emerges primarily in layers 8–18 (R² jumps from 0.71 to 0.96). Gradual refinement continues through later layers. Peak R² at layer 46 (0.9897); slight dip at layer 47 (0.9881).
+- **PCA probe**: 20 PCs achieve R²=0.97 — distance is encoded in a ~20-dimensional subspace of the 256-dim feature space. Note: PCA maximizes feature variance, not distance-predictiveness; the fact that the high-variance subspace also predicts distance well is itself a meaningful finding.
+
+### Code review of linear_regression_distance.py
+Verified correct: PAIR_OFFSET=4 properly applied, proper train/test split before fitting, concatenated 256-dim feature vector matches reference. Train R²=0.9882 ≈ Test R²=0.9881 confirms no classical overfitting.
+
+## Session: 2026-02-12 — Coefficient evolution across layers
+
+### What changed
+Extended `probe_layer_regression.py` to track how regression coefficients evolve across all 48 layers. The script now stores all 256 coefficients per layer (128 upper + 128 lower), computes derived metrics (top-K overlap, Jaccard similarity, rank evolution), saves two CSVs, and produces four new visualizations.
+
+### New outputs
+- `regression_coefficients_by_layer.csv` — all 256 coefficients at each of 48 layers (12,288 rows)
+- `regression_coefficient_overlap.csv` — per-layer overlap with final layer's top-50 + Jaccard similarity
+- `visualizations/regression_coef_heatmap.png` — top 30 feature |coefficients| as a heatmap
+- `visualizations/regression_coef_overlap.png` — overlap fraction and Jaccard similarity plots
+- `visualizations/regression_coef_rank_evolution.png` — rank trajectories of final layer's top 10 features
+- `visualizations/regression_coef_top_channels.png` — top 5 feature magnitude traces + R² vs total importance
+
+### Key findings
+- **The top features are NOT stable across layers.** Overlap between any earlier layer's top-50 and the final layer's top-50 stays flat at ~20-30% (vs. ~10% chance baseline). This means different features encode distance at different layers — the representation undergoes substantial reorganization.
+- **Coefficient magnitudes decrease as R² increases.** Early layers (0-4) have large individual coefficients (~0.3-0.4) but low R². Later layers have small coefficients (~0.05-0.07) but high R². This suggests distance information becomes more distributed across features in later layers.
+- **Consecutive-layer Jaccard similarity is ~0.3-0.7**, meaning 30-70% of the top-50 set changes from one layer to the next. There is no stabilization — even between layers 46 and 47, significant reshuffling occurs.
+- **Rank evolution of the final layer's top-10 shows wild oscillation** across earlier layers. Features like upper[9] and lower[64] are NOT consistently important — they bounce between rank 0 and rank 200+.
+- **Interpretation**: AlphaFold does not maintain dedicated "distance channels." Instead, distance information is progressively constructed through changing combinations of features, becoming more diffusely distributed in later layers.
+
+## Session: 2026-02-13 — Regression variant analyses
+
+### What changed
+Added `regression_variants.py` with two variant analyses on the layer-47 linear regression probe.
+
+### New outputs
+- `regression_topk_r2.csv` + `visualizations/regression_topk_r2.png`
+- `visualizations/regression_upper_lower_scatter.png`
+
+### Analysis 1: Top-k feature selection
+Takes the k features with the largest |coefficient| from the full 256-dim regression on layer 47, retrains using only those features.
+
+| k | R² |
+|---|-----|
+| 10 | 0.8696 |
+| 20 | 0.9274 |
+| 32 | 0.9502 |
+| 64 | 0.9663 |
+| 128 | 0.9867 |
+| 256 | 0.9881 |
+
+Just 32 features capture R²=0.95 — most of the distance signal is concentrated in a small subset of channels. Diminishing returns beyond 64 features.
+
+### Analysis 2: Upper vs lower feature triangle
+Trains separate regressions using only pair_block[i,j,:] (upper, 128-dim) vs pair_block[j,i,:] (lower, 128-dim).
+
+| Features | Test R² |
+|----------|---------|
+| Upper (i,j) | 0.9798 |
+| Lower (j,i) | 0.9801 |
+| Full (concat) | 0.9881 |
+
+Upper and lower triangles encode distance nearly identically (R²≈0.98 each). Concatenating both adds only ~0.8 percentage points, suggesting the two directions carry largely redundant distance information — the pair representation is near-symmetric with respect to spatial distance.
