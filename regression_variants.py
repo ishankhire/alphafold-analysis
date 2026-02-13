@@ -101,20 +101,74 @@ for k in k_values:
     topk_r2.append(r2)
     print(f"  k = {k:>3d}  →  R² = {r2:.6f}")
 
-# Plot
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.plot(k_values, topk_r2, "o-", markersize=7, linewidth=2, color="steelblue")
-for k, r2 in zip(k_values, topk_r2):
-    ax.annotate(f"{r2:.4f}", (k, r2), textcoords="offset points",
-                xytext=(0, 10), ha="center", fontsize=8)
+# =========================================================================
+# ANALYSIS 1b: Random-k feature baseline
+# =========================================================================
+print("\n" + "=" * 60)
+print("ANALYSIS 1b: Random-k Feature Baseline (Layer 47)")
+print("=" * 60)
+
+N_TRIALS = 20
+rng = np.random.RandomState(123)
+# k=256 is trivially the full model, so skip random trials for it
+random_r2_mean = []
+random_r2_std = []
+random_r2_all = []  # store per-trial results
+
+for k in k_values:
+    if k >= 256:
+        # All features selected — no randomness
+        random_r2_mean.append(topk_r2[-1])
+        random_r2_std.append(0.0)
+        random_r2_all.append([topk_r2[-1]] * N_TRIALS)
+        print(f"  k = {k:>3d}  →  R² = {topk_r2[-1]:.6f} (all features, no randomness)")
+        continue
+
+    trial_r2s = []
+    for t in range(N_TRIALS):
+        selected = rng.choice(256, size=k, replace=False)
+        X_sel_train = X_full[idx_train][:, selected]
+        X_sel_test = X_full[idx_test][:, selected]
+
+        model = LinearRegression()
+        model.fit(X_sel_train, y_train)
+        y_pred = model.predict(X_sel_test)
+        trial_r2s.append(r2_score(y_test, y_pred))
+
+    mean_r2 = np.mean(trial_r2s)
+    std_r2 = np.std(trial_r2s)
+    random_r2_mean.append(mean_r2)
+    random_r2_std.append(std_r2)
+    random_r2_all.append(trial_r2s)
+    print(f"  k = {k:>3d}  →  R² = {mean_r2:.6f} ± {std_r2:.6f}")
+
+random_r2_mean = np.array(random_r2_mean)
+random_r2_std = np.array(random_r2_std)
+
+# Plot: Top-k vs Random-k comparison
+fig, ax = plt.subplots(figsize=(9, 5.5))
+ax.plot(k_values, topk_r2, "o-", markersize=7, linewidth=2,
+        color="steelblue", label="Top-k (by |coefficient|)", zorder=3)
+ax.plot(k_values, random_r2_mean, "s-", markersize=7, linewidth=2,
+        color="darkorange", label=f"Random-k (mean of {N_TRIALS} trials)", zorder=3)
+ax.fill_between(k_values,
+                random_r2_mean - random_r2_std,
+                random_r2_mean + random_r2_std,
+                color="darkorange", alpha=0.2, label="Random-k ±1 std")
+for k, r2_top, r2_rand in zip(k_values, topk_r2, random_r2_mean):
+    ax.annotate(f"{r2_top:.4f}", (k, r2_top), textcoords="offset points",
+                xytext=(0, 10), ha="center", fontsize=7, color="steelblue")
+    ax.annotate(f"{r2_rand:.4f}", (k, r2_rand), textcoords="offset points",
+                xytext=(0, -14), ha="center", fontsize=7, color="darkorange")
 ax.set_xlabel("Number of Features (k)")
 ax.set_ylabel("Test R²")
-ax.set_title("Layer 47: R² vs Top-k Features (Ranked by |Coefficient|)")
+ax.set_title("Layer 47: Top-k vs Random-k Feature Selection")
 ax.set_xscale("log", base=2)
 ax.set_xticks(k_values)
 ax.get_xaxis().set_major_formatter(plt.ScalarFormatter())
 ax.set_ylim(0, 1.05)
 ax.axhline(1.0, color="gray", linestyle="--", linewidth=0.8, alpha=0.5)
+ax.legend(loc="lower right")
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
 topk_path = os.path.join(BASE_DIR, "visualizations", "regression_topk_r2.png")
@@ -125,9 +179,9 @@ print(f"  Plot saved to {topk_path}")
 # Save CSV
 csv_path = os.path.join(BASE_DIR, "regression_topk_r2.csv")
 with open(csv_path, "w") as f:
-    f.write("k,r2\n")
-    for k, r2 in zip(k_values, topk_r2):
-        f.write(f"{k},{r2:.6f}\n")
+    f.write("k,topk_r2,random_r2_mean,random_r2_std\n")
+    for k, r2_top, r2_rand, r2_std in zip(k_values, topk_r2, random_r2_mean, random_r2_std):
+        f.write(f"{k},{r2_top:.6f},{r2_rand:.6f},{r2_std:.6f}\n")
 print(f"  CSV saved to {csv_path}")
 
 # =========================================================================
@@ -189,10 +243,11 @@ print(f"  Scatterplot saved to {tri_path}")
 print("\n" + "=" * 60)
 print("SUMMARY")
 print("=" * 60)
-print(f"\nAnalysis 1 — Top-k features (layer 47):")
-for k, r2 in zip(k_values, topk_r2):
-    bar = "█" * int(r2 * 40)
-    print(f"  k={k:>3d}  R²={r2:.4f}  {bar}")
+print(f"\nAnalysis 1 — Top-k vs Random-k features (layer 47):")
+print(f"  {'k':>5s}  {'Top-k R²':>10s}  {'Random R²':>10s}  {'Gap':>8s}")
+for k, r2_top, r2_rand in zip(k_values, topk_r2, random_r2_mean):
+    gap = r2_top - r2_rand
+    print(f"  {k:>5d}  {r2_top:>10.4f}  {r2_rand:>10.4f}  {gap:>+8.4f}")
 print(f"\nAnalysis 2 — Upper vs Lower feature triangle:")
 print(f"  Upper (pair_block[i,j,:]):  R² = {results_tri['upper']['r2_test']:.4f}")
 print(f"  Lower (pair_block[j,i,:]):  R² = {results_tri['lower']['r2_test']:.4f}")

@@ -118,6 +118,20 @@ Takes the k features with the largest |coefficient| from the full 256-dim regres
 
 Just 32 features capture R²=0.95 — most of the distance signal is concentrated in a small subset of channels. Diminishing returns beyond 64 features.
 
+### Analysis 1b: Random-k feature baseline
+Same k values, but channels selected uniformly at random (20 trials each). Tests whether top-k channels are genuinely special.
+
+| k | Top-k R² | Random R² (mean±std) | Gap |
+|---|----------|----------------------|-----|
+| 10 | 0.8696 | 0.4785 ± 0.137 | +0.39 |
+| 20 | 0.9274 | 0.7062 ± 0.112 | +0.22 |
+| 32 | 0.9502 | 0.8366 ± 0.058 | +0.11 |
+| 64 | 0.9663 | 0.9437 ± 0.016 | +0.02 |
+| 128 | 0.9867 | 0.9750 ± 0.005 | +0.01 |
+| 256 | 0.9881 | 0.9881 | 0.00 |
+
+The top-k channels are clearly special at low k (10 random channels only get R²≈0.48 vs 0.87 for top-k). But the gap shrinks fast — by k=64, random channels achieve R²=0.94. This suggests distance information is broadly distributed across many channels, but a small core of ~10-20 channels carries disproportionate signal. The top-k selection identifies these high-signal channels effectively.
+
 ### Analysis 2: Upper vs lower feature triangle
 Trains separate regressions using only pair_block[i,j,:] (upper, 128-dim) vs pair_block[j,i,:] (lower, 128-dim).
 
