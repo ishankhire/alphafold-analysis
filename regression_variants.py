@@ -6,6 +6,11 @@ Analysis 1 — Top-k feature selection:
   only the k features with the largest |coefficient|, for k = 10, 20, 32, 64,
   128, 256. Plot R² vs k.
 
+Analysis 1b — Random-k feature baseline:
+  Same k values, but select k channels uniformly at random (20 trials each).
+  Plotted alongside top-k to test whether the top-k channels are genuinely
+  special or any random subset encodes distance equally well.
+
 Analysis 2 — Upper vs lower triangle of feature vectors:
   Train separate regressions using only pair_block[i,j,:] (upper, 128-dim)
   vs only pair_block[j,i,:] (lower, 128-dim). Report R² and show scatterplots.
