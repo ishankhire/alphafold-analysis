@@ -142,3 +142,42 @@ Trains separate regressions using only pair_block[i,j,:] (upper, 128-dim) vs pai
 | Full (concat) | 0.9881 |
 
 Upper and lower triangles encode distance nearly identically (R²≈0.98 each). Concatenating both adds only ~0.8 percentage points, suggesting the two directions carry largely redundant distance information — the pair representation is near-symmetric with respect to spatial distance.
+
+---
+
+## Session: 2026-02-17 — Codebase reorganization for multi-protein support
+
+### Motivation
+The root directory had grown to 14 scripts + raw data + outputs in a flat layout that doesn't scale. A second protein is planned, so the structure was reorganized now rather than after the fact.
+
+### What moved
+
+**Data → `proteins/7b3a/`**
+- `7b3a.cif` → `proteins/7b3a/7b3a.cif`
+- `7b3a_A/` → `proteins/7b3a/pair_blocks/` (directory renamed; file names unchanged)
+- `pca_projections/` → `proteins/7b3a/pca_projections/`
+- `feature_magnitudes/` → `proteins/7b3a/feature_magnitudes/`
+- `csv_files/` → `proteins/7b3a/csv_files/`
+- `visualizations/` → `proteins/7b3a/visualizations/`
+
+**Scripts → `scripts/`**
+- `scripts/extract_coordinates.py` — standalone extraction (no subfolder)
+- `scripts/linear-regression/` — all 5 regression probe scripts
+- `scripts/data-analysis/` — all 8 magnitude/PCA/cosine-change/correlation scripts
+
+**Archived → `old_analysis/`**
+- `analysis_csv_files/` → `old_analysis/analysis_csv_files/`
+- `misc/` → `old_analysis/misc/`
+
+### Path updates
+All 14 scripts updated to use `ROOT_DIR` / `PROTEIN_DIR` computed from `__file__` (no more reliance on working directory). Common pattern for scripts two levels deep:
+```python
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+```
+Output paths updated: `csv_files/`, `visualizations/`, `pair_blocks/`, `feature_magnitudes/`, `pca_projections/` now all reference `PROTEIN_DIR`.
+
+`pca_subspace_main.py`: `load_layer_paths` updated to use `base_dir` directly as the pair_blocks directory (no longer appends `protein` as a subdirectory). Pass `--base_dir proteins/7b3a/pair_blocks` when calling via CLI.
+
+### No analysis logic changed
+This is a pure structural reorganization. All script outputs (CSVs, PNGs) are identical — only the paths they read from and write to have changed.

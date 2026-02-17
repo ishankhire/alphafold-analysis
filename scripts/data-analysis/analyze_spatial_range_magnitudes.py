@@ -12,8 +12,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-os.makedirs("visualizations", exist_ok=True)
-
 try:
     from Bio.PDB import MMCIFParser
     from Bio.PDB.Polypeptide import is_aa
@@ -22,9 +20,15 @@ except ImportError:
     exit(1)
 
 # Settings
-base_dir = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+VIS_DIR = os.path.join(PROTEIN_DIR, "visualizations")
+CSV_DIR = os.path.join(PROTEIN_DIR, "csv_files")
+os.makedirs(VIS_DIR, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
+
 protein = "7b3a_A"
-cif_file = os.path.join(base_dir, "7b3a.cif")
+cif_file = os.path.join(PROTEIN_DIR, "7b3a.cif")
 all_layers = list(range(48))
 distance_threshold = 8.0  # Angstroms
 
@@ -76,7 +80,7 @@ long_range_means = []
 valid_layers = []
 
 for layer_idx in all_layers:
-    filepath = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_idx}.npy")
+    filepath = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_idx}.npy")
 
     if not os.path.exists(filepath):
         print(f"Skipping layer {layer_idx}: file not found")
@@ -154,14 +158,14 @@ ax.set_xlim(-1, 48)
 
 plt.tight_layout()
 
-output_fig = "visualizations/spatial_range_magnitude_by_layer.png"
+output_fig = os.path.join(VIS_DIR, "spatial_range_magnitude_by_layer.png")
 plt.savefig(output_fig, dpi=150)
 plt.show()
 
 print(f"\nSaved plot to: {output_fig}")
 
 # Save data
-output_csv = "spatial_range_magnitude_by_layer.csv"
+output_csv = os.path.join(CSV_DIR, "spatial_range_magnitude_by_layer.csv")
 with open(output_csv, "w") as f:
     f.write("layer,short_range_mean,long_range_mean\n")
     for layer, short, long in zip(valid_layers, short_range_means, long_range_means):
@@ -170,5 +174,6 @@ with open(output_csv, "w") as f:
 print(f"Saved data to: {output_csv}")
 
 # Also save the CA distance matrix for reference
-np.save("ca_distance_matrix.npy", dist_matrix)
-print("Saved CA distance matrix to: ca_distance_matrix.npy")
+ca_matrix_path = os.path.join(CSV_DIR, "ca_distance_matrix.npy")
+np.save(ca_matrix_path, dist_matrix)
+print(f"Saved CA distance matrix to: {ca_matrix_path}")

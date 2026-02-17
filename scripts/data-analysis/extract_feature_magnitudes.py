@@ -12,17 +12,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Settings
-base_dir = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
 protein = "7b3a_A"
 all_layers = list(range(48))  # All layers 0-47
 visualize_layers = [10, 20, 30, 40]  # Only generate heatmaps for these
 
 # Create output directory
-output_dir = "feature_magnitudes"
+output_dir = os.path.join(PROTEIN_DIR, "feature_magnitudes")
 os.makedirs(output_dir, exist_ok=True)
 
 for layer_idx in all_layers:
-    filepath = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_idx}.npy")
+    filepath = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_idx}.npy")
 
     if not os.path.exists(filepath):
         print(f"Skipping layer {layer_idx}: file not found")
@@ -94,7 +95,7 @@ for layer_idx in all_layers:
 
         plt.tight_layout()
 
-        vis_dir = os.path.join("visualizations", "feature_magnitudes")
+        vis_dir = os.path.join(PROTEIN_DIR, "visualizations", "feature_magnitudes")
         os.makedirs(vis_dir, exist_ok=True)
         output_fig = os.path.join(vis_dir, f"layer{layer_idx}_heatmap.png")
         plt.savefig(output_fig, dpi=150)
@@ -102,4 +103,4 @@ for layer_idx in all_layers:
 
         print(f"  Saved heatmap: {output_fig}")
 
-print(f"\nAll outputs saved to {output_dir}/")
+print(f"\nAll outputs saved to {output_dir}")

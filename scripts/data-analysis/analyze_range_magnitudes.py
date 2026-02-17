@@ -13,10 +13,14 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-os.makedirs("visualizations", exist_ok=True)
-
 # Settings
-base_dir = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+VIS_DIR = os.path.join(PROTEIN_DIR, "visualizations")
+CSV_DIR = os.path.join(PROTEIN_DIR, "csv_files")
+os.makedirs(VIS_DIR, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
+
 protein = "7b3a_A"
 all_layers = list(range(48))
 range_threshold = 5  # Short-range if |i - j| <= 5
@@ -27,7 +31,7 @@ long_range_means = []
 valid_layers = []
 
 for layer_idx in all_layers:
-    filepath = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_idx}.npy")
+    filepath = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_idx}.npy")
 
     if not os.path.exists(filepath):
         print(f"Skipping layer {layer_idx}: file not found")
@@ -91,14 +95,14 @@ ax.set_xlim(-1, 48)
 
 plt.tight_layout()
 
-output_fig = "visualizations/range_magnitude_by_layer.png"
+output_fig = os.path.join(VIS_DIR, "range_magnitude_by_layer.png")
 plt.savefig(output_fig, dpi=150)
 plt.show()
 
 print(f"\nSaved plot to: {output_fig}")
 
 # Also save the data
-output_csv = "range_magnitude_by_layer.csv"
+output_csv = os.path.join(CSV_DIR, "range_magnitude_by_layer.csv")
 with open(output_csv, "w") as f:
     f.write("layer,short_range_mean,long_range_mean\n")
     for layer, short, long in zip(valid_layers, short_range_means, long_range_means):

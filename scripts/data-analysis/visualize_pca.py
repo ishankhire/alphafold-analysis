@@ -10,8 +10,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Settings
-input_dir = "pca_projections"
-output_dir = "visualizations/pc_maps"
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+input_dir = os.path.join(PROTEIN_DIR, "pca_projections")
+output_dir = os.path.join(PROTEIN_DIR, "visualizations", "pc_maps")
 protein = "7b3a_A"
 layer_indices = list(range(48))  # All layers 0-47
 num_pcs = 4  # Top 4 principal components

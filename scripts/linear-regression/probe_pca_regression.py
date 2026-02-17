@@ -14,13 +14,16 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 from sklearn.decomposition import PCA
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+os.makedirs(os.path.join(PROTEIN_DIR, "visualizations"), exist_ok=True)
+os.makedirs(os.path.join(PROTEIN_DIR, "csv_files"), exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 1. Load distance matrix
 # ---------------------------------------------------------------------------
-dist_csv = os.path.join(BASE_DIR, "residue_distances.csv")
+dist_csv = os.path.join(PROTEIN_DIR, "csv_files", "residue_distances.csv")
 raw = np.genfromtxt(dist_csv, delimiter=",", skip_header=1)
 n = raw.shape[0]  # 276 resolved residues
 print(f"Distance matrix: {n} x {n} residues")
@@ -31,7 +34,7 @@ C = 128
 # ---------------------------------------------------------------------------
 # 2. Load layer-47 pair block and build features
 # ---------------------------------------------------------------------------
-pb_path = os.path.join(BASE_DIR, "7b3a_A", "7b3a_A_pair_block_47.npy")
+pb_path = os.path.join(PROTEIN_DIR, "pair_blocks", "7b3a_A_pair_block_47.npy")
 pair_block = np.load(pb_path)
 print(f"Pair block shape: {pair_block.shape}")
 
@@ -92,7 +95,7 @@ for k in ks:
 # ---------------------------------------------------------------------------
 # 6. Save CSV
 # ---------------------------------------------------------------------------
-csv_path = os.path.join(BASE_DIR, "pca_regression_r2.csv")
+csv_path = os.path.join(PROTEIN_DIR, "csv_files", "pca_regression_r2.csv")
 with open(csv_path, "w") as f:
     f.write("n_components,r2,cumulative_variance\n")
     for k, r2 in zip(ks, r2_results):
@@ -129,7 +132,7 @@ ax1.set_title("PCA Dimensionality Probe: Test R² vs Number of PCs (Layer 47)")
 ax1.set_xticks(ks)
 ax1.set_xticklabels(ks)
 plt.tight_layout()
-png_path = os.path.join(BASE_DIR, "visualizations", "pca_regression_r2.png")
+png_path = os.path.join(PROTEIN_DIR, "visualizations", "pca_regression_r2.png")
 plt.savefig(png_path, dpi=150)
 plt.close()
 print(f"Plot saved to {png_path}")

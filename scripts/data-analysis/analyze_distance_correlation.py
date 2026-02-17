@@ -17,10 +17,15 @@ except ImportError:
     exit(1)
 
 # Settings
-base_dir = os.path.dirname(os.path.abspath(__file__))
-os.makedirs("visualizations", exist_ok=True)
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+VIS_DIR = os.path.join(PROTEIN_DIR, "visualizations")
+CSV_DIR = os.path.join(PROTEIN_DIR, "csv_files")
+os.makedirs(VIS_DIR, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
+
 protein = "7b3a_A"
-cif_file = os.path.join(base_dir, "7b3a.cif")
+cif_file = os.path.join(PROTEIN_DIR, "7b3a.cif")
 all_layers = list(range(48))
 
 # --- Load structure and compute distances ---
@@ -130,9 +135,9 @@ ax2.legend(fontsize=10)
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('visualizations/distance_correlation_analysis.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'distance_correlation_analysis.png'), dpi=150)
 plt.show()
-print("\nSaved: visualizations/distance_correlation_analysis.png")
+print(f"\nSaved: {os.path.join(VIS_DIR, 'distance_correlation_analysis.png')}")
 
 # --- Scatterplot: Spatial vs Sequential Distance ---
 fig, ax = plt.subplots(figsize=(10, 7))
@@ -146,9 +151,9 @@ ax.set_title(f'Spatial vs Sequential Distance (all residue pairs)\nPearson r = {
 ax.legend(fontsize=10)
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig('visualizations/distance_scatter.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'distance_scatter.png'), dpi=150)
 plt.show()
-print("Saved: visualizations/distance_scatter.png")
+print(f"Saved: {os.path.join(VIS_DIR, 'distance_scatter.png')}")
 
 # --- Now run magnitude analysis at 14 Å ---
 print("\n" + "=" * 60)
@@ -173,7 +178,7 @@ valid_layers = []
 PAIR_OFFSET = 4
 
 for layer_idx in all_layers:
-    filepath = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_idx}.npy")
+    filepath = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_idx}.npy")
 
     if not os.path.exists(filepath):
         continue
@@ -222,17 +227,17 @@ ax.set_xticks(range(0, 48, 5))
 ax.set_xlim(-1, 48)
 
 plt.tight_layout()
-plt.savefig('visualizations/spatial_range_magnitude_14A.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'spatial_range_magnitude_14A.png'), dpi=150)
 plt.show()
 
-print(f"\nSaved: visualizations/spatial_range_magnitude_14A.png")
+print(f"\nSaved: {os.path.join(VIS_DIR, 'spatial_range_magnitude_14A.png')}")
 
 # Save data
-with open('spatial_range_magnitude_14A.csv', 'w') as f:
+with open(os.path.join(CSV_DIR, 'spatial_range_magnitude_14A.csv'), 'w') as f:
     f.write("layer,short_range_mean,long_range_mean\n")
     for layer, short, long in zip(valid_layers, short_range_means, long_range_means):
         f.write(f"{layer},{short:.6f},{long:.6f}\n")
-print("Saved: spatial_range_magnitude_14A.csv")
+print(f"Saved: {os.path.join(CSV_DIR, 'spatial_range_magnitude_14A.csv')}")
 
 # --- Sequential distance distribution for spatially close pairs (8 Å) ---
 print("\n" + "=" * 60)
@@ -304,14 +309,14 @@ if idx_90 < plot_range:
             f'90% at |i-j|={seq_dist_range[idx_90]}', fontsize=10, color='green')
 
 plt.tight_layout()
-plt.savefig('visualizations/spatial_close_pairs_seq_distribution.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'spatial_close_pairs_seq_distribution.png'), dpi=150)
 plt.show()
 
-print(f"\nSaved: visualizations/spatial_close_pairs_seq_distribution.png")
+print(f"\nSaved: {os.path.join(VIS_DIR, 'spatial_close_pairs_seq_distribution.png')}")
 
 # Save data
-with open('spatial_close_pairs_seq_distribution.csv', 'w') as f:
+with open(os.path.join(CSV_DIR, 'spatial_close_pairs_seq_distribution.csv'), 'w') as f:
     f.write("sequential_distance,count,percentage,cumulative_percentage\n")
     for i, (cnt, pct, cum) in enumerate(zip(seq_dist_counts[1:], seq_dist_percentages, cumsum), start=1):
         f.write(f"{i},{int(cnt)},{pct:.4f},{cum:.4f}\n")
-print("Saved: spatial_close_pairs_seq_distribution.csv")
+print(f"Saved: {os.path.join(CSV_DIR, 'spatial_close_pairs_seq_distribution.csv')}")

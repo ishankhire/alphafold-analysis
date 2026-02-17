@@ -71,7 +71,10 @@ def compute_distance_matrix(coordinates: np.ndarray) -> np.ndarray:
 
 
 def main():
-    cif_file = Path(__file__).parent / "7b3a.cif"
+    PROTEIN_DIR = Path(__file__).parent.parent / "proteins" / "7b3a"
+    cif_file = PROTEIN_DIR / "7b3a.cif"
+    csv_dir = PROTEIN_DIR / "csv_files"
+    csv_dir.mkdir(parents=True, exist_ok=True)
 
     if not cif_file.exists():
         print(f"Error: {cif_file} not found")
@@ -100,7 +103,7 @@ def main():
     dist_matrix = compute_distance_matrix(coords)
 
     # Save to CSV
-    output_file = cif_file.parent / "residue_distances.csv"
+    output_file = csv_dir / "residue_distances.csv"
 
     # Create header with residue labels
     header = ",".join([f"{r[0]}_{r[1]}{r[2]}" for r in residues])
@@ -110,7 +113,7 @@ def main():
     print(f"Distance matrix saved to: {output_file}")
 
     # Also save raw coordinates
-    coord_file = cif_file.parent / "residue_coordinates.csv"
+    coord_file = csv_dir / "residue_coordinates.csv"
     with open(coord_file, "w") as f:
         f.write("chain,residue,number,x,y,z\n")
         for (chain, name, num), (x, y, z) in zip(residues, coords):

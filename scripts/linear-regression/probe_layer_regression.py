@@ -18,13 +18,16 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+os.makedirs(os.path.join(PROTEIN_DIR, "visualizations"), exist_ok=True)
+os.makedirs(os.path.join(PROTEIN_DIR, "csv_files"), exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 1. Load distance matrix
 # ---------------------------------------------------------------------------
-dist_csv = os.path.join(BASE_DIR, "residue_distances.csv")
+dist_csv = os.path.join(PROTEIN_DIR, "csv_files", "residue_distances.csv")
 raw = np.genfromtxt(dist_csv, delimiter=",", skip_header=1)
 n = raw.shape[0]  # 276 resolved residues
 print(f"Distance matrix: {n} x {n} residues")
@@ -71,7 +74,7 @@ n_layers = 48
 TOP_K = 50
 all_coefs = np.zeros((n_layers, 2 * C))  # store all 256 coefficients per layer
 for layer in range(n_layers):
-    pb_path = os.path.join(BASE_DIR, "7b3a_A", f"7b3a_A_pair_block_{layer}.npy")
+    pb_path = os.path.join(PROTEIN_DIR, "pair_blocks", f"7b3a_A_pair_block_{layer}.npy")
     pair_block = np.load(pb_path)
 
     # Extract features: concatenate [pair_block[i+4, j+4], pair_block[j+4, i+4]]
@@ -96,7 +99,7 @@ for layer in range(n_layers):
 # ---------------------------------------------------------------------------
 # 5. Save CSV
 # ---------------------------------------------------------------------------
-csv_path = os.path.join(BASE_DIR, "layer_regression_r2.csv")
+csv_path = os.path.join(PROTEIN_DIR, "csv_files", "layer_regression_r2.csv")
 with open(csv_path, "w") as f:
     f.write("layer,r2\n")
     for layer, r2 in enumerate(results):
@@ -115,7 +118,7 @@ ax.set_xticks(range(0, n_layers, 4))
 ax.set_ylim(0, 1.05)
 ax.axhline(1.0, color="gray", linestyle="--", linewidth=0.8, alpha=0.5)
 plt.tight_layout()
-png_path = os.path.join(BASE_DIR, "visualizations", "layer_regression_r2.png")
+png_path = os.path.join(PROTEIN_DIR, "visualizations", "layer_regression_r2.png")
 plt.savefig(png_path, dpi=150)
 plt.close()
 print(f"Plot saved to {png_path}")
@@ -171,7 +174,7 @@ for layer in range(n_layers):
 # 8. Save CSVs
 # ---------------------------------------------------------------------------
 # CSV 1: All coefficients per layer (long format)
-csv1_path = os.path.join(BASE_DIR, "regression_coefficients_by_layer.csv")
+csv1_path = os.path.join(PROTEIN_DIR, "csv_files", "regression_coefficients_by_layer.csv")
 with open(csv1_path, "w") as f:
     f.write("layer,feature_index,feature_label,coefficient,abs_coefficient,rank\n")
     for layer in range(n_layers):
@@ -184,7 +187,7 @@ with open(csv1_path, "w") as f:
 print(f"Coefficients CSV saved to {csv1_path}")
 
 # CSV 2: Overlap summary per layer
-csv2_path = os.path.join(BASE_DIR, "regression_coefficient_overlap.csv")
+csv2_path = os.path.join(PROTEIN_DIR, "csv_files", "regression_coefficient_overlap.csv")
 with open(csv2_path, "w") as f:
     f.write("layer,r2,overlap_with_final_top50,jaccard_with_prev\n")
     for layer in range(n_layers):
@@ -213,7 +216,7 @@ ax.axhline(y=8, color='white', linestyle='--', linewidth=0.8, alpha=0.7)
 ax.axhline(y=18, color='white', linestyle='--', linewidth=0.8, alpha=0.7)
 plt.colorbar(im, ax=ax, label="|coefficient|")
 plt.tight_layout()
-heatmap_path = os.path.join(BASE_DIR, "visualizations", "regression_coef_heatmap.png")
+heatmap_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_coef_heatmap.png")
 plt.savefig(heatmap_path, dpi=150)
 plt.close()
 print(f"Heatmap saved to {heatmap_path}")
@@ -245,7 +248,7 @@ ax2.set_xticks(range(0, n_layers, 4))
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-overlap_path = os.path.join(BASE_DIR, "visualizations", "regression_coef_overlap.png")
+overlap_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_coef_overlap.png")
 plt.savefig(overlap_path, dpi=150)
 plt.close()
 print(f"Overlap plot saved to {overlap_path}")
@@ -272,7 +275,7 @@ ax.set_xticks(range(0, n_layers, 4))
 ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=8)
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-rank_path = os.path.join(BASE_DIR, "visualizations", "regression_coef_rank_evolution.png")
+rank_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_coef_rank_evolution.png")
 plt.savefig(rank_path, dpi=150)
 plt.close()
 print(f"Rank evolution plot saved to {rank_path}")
@@ -314,7 +317,7 @@ ax2.set_xticks(range(0, n_layers, 4))
 ax2.grid(True, alpha=0.3)
 
 plt.tight_layout()
-top_path = os.path.join(BASE_DIR, "visualizations", "regression_coef_top_channels.png")
+top_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_coef_top_channels.png")
 plt.savefig(top_path, dpi=150)
 plt.close()
 print(f"Top channels plot saved to {top_path}")

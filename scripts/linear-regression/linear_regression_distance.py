@@ -13,20 +13,23 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+os.makedirs(os.path.join(PROTEIN_DIR, "visualizations"), exist_ok=True)
+os.makedirs(os.path.join(PROTEIN_DIR, "csv_files"), exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # 1. Load data
 # ---------------------------------------------------------------------------
 # Distance matrix: first row is residue labels, remaining rows are distances
-dist_csv = os.path.join(BASE_DIR, "residue_distances.csv")
+dist_csv = os.path.join(PROTEIN_DIR, "csv_files", "residue_distances.csv")
 raw = np.genfromtxt(dist_csv, delimiter=",", skip_header=1)
 n_residues = raw.shape[0]  # 280
 print(f"Distance matrix shape: ({n_residues}, {raw.shape[1]})")
 
 # Last-layer pair representation
-pair_path = os.path.join(BASE_DIR, "7b3a_A", "7b3a_A_pair_block_47.npy")
+pair_path = os.path.join(PROTEIN_DIR, "pair_blocks", "7b3a_A_pair_block_47.npy")
 pair_block = np.load(pair_path)
 r, _, C = pair_block.shape
 print(f"Pair block shape: {pair_block.shape}")
@@ -117,7 +120,7 @@ ax.set_xlim(lims)
 ax.set_ylim(lims)
 ax.set_aspect("equal")
 plt.tight_layout()
-scatter_path = os.path.join(BASE_DIR, "visualizations", "linear_regression_scatter.png")
+scatter_path = os.path.join(PROTEIN_DIR, "visualizations", "linear_regression_scatter.png")
 plt.savefig(scatter_path, dpi=150)
 plt.close()
 print(f"\nScatter plot saved to {scatter_path}")
@@ -125,7 +128,7 @@ print(f"\nScatter plot saved to {scatter_path}")
 # ---------------------------------------------------------------------------
 # 8. Save per-pair results CSV (test set)
 # ---------------------------------------------------------------------------
-csv_path = os.path.join(BASE_DIR, "linear_regression_results.csv")
+csv_path = os.path.join(PROTEIN_DIR, "csv_files", "linear_regression_results.csv")
 with open(csv_path, "w") as f:
     f.write("residue_i,residue_j,actual_distance,predicted_distance\n")
     for k, test_idx in enumerate(idx_test):

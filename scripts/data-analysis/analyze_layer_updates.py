@@ -12,8 +12,6 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-os.makedirs("visualizations", exist_ok=True)
-
 try:
     from Bio.PDB import MMCIFParser
     from Bio.PDB.Polypeptide import is_aa
@@ -22,9 +20,15 @@ except ImportError:
     exit(1)
 
 # Settings
-base_dir = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+VIS_DIR = os.path.join(PROTEIN_DIR, "visualizations")
+CSV_DIR = os.path.join(PROTEIN_DIR, "csv_files")
+os.makedirs(VIS_DIR, exist_ok=True)
+os.makedirs(CSV_DIR, exist_ok=True)
+
 protein = "7b3a_A"
-cif_file = os.path.join(base_dir, "7b3a.cif")
+cif_file = os.path.join(PROTEIN_DIR, "7b3a.cif")
 num_layers = 48
 spatial_threshold = 8.0  # Angstroms
 eps = 1e-10  # Small epsilon to avoid divide-by-zero
@@ -109,8 +113,8 @@ for layer_idx in range(1, num_layers):
     layer_prev = layer_idx - 1
     layer_curr = layer_idx
 
-    filepath_prev = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_prev}.npy")
-    filepath_curr = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_curr}.npy")
+    filepath_prev = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_prev}.npy")
+    filepath_curr = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_curr}.npy")
 
     if not os.path.exists(filepath_prev) or not os.path.exists(filepath_curr):
         print(f"Skipping layer {layer_prev} -> {layer_curr}: files not found")
@@ -252,7 +256,7 @@ raw_near = np.array(results['raw_mean_cosine_change_near'])
 raw_far = np.array(results['raw_mean_cosine_change_far'])
 
 # Save CSV table
-csv_path = "layer_cosine_change_analysis.csv"
+csv_path = os.path.join(CSV_DIR, "layer_cosine_change_analysis.csv")
 with open(csv_path, 'w') as f:
     f.write("layer_index,near_count,far_count,"
             "raw_mean_cosine_change_near,raw_mean_cosine_change_far,raw_difference_near_minus_far,"
@@ -327,9 +331,9 @@ ax4.grid(True, alpha=0.3)
 ax4.set_xticks(range(0, num_layers, 5))
 
 plt.tight_layout()
-plt.savefig('visualizations/layer_cosine_change_analysis.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'layer_cosine_change_analysis.png'), dpi=150)
 plt.show()
-print("Saved: visualizations/layer_cosine_change_analysis.png")
+print(f"Saved: {os.path.join(VIS_DIR, 'layer_cosine_change_analysis.png')}")
 
 
 # =============================================================================
@@ -411,8 +415,8 @@ for layer_idx in range(1, num_layers):
     layer_prev = layer_idx - 1
     layer_curr = layer_idx
 
-    filepath_prev = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_prev}.npy")
-    filepath_curr = os.path.join(base_dir, protein, f"{protein}_pair_block_{layer_curr}.npy")
+    filepath_prev = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_prev}.npy")
+    filepath_curr = os.path.join(PROTEIN_DIR, "pair_blocks", f"{protein}_pair_block_{layer_curr}.npy")
 
     if not os.path.exists(filepath_prev) or not os.path.exists(filepath_curr):
         continue
@@ -483,7 +487,7 @@ seq_raw_far = np.array(seq_results['raw_mean_cosine_change_far'])
 seq_raw_diff = seq_raw_near - seq_raw_far
 
 # Save CSV for sequential analysis
-seq_csv_path = "layer_cosine_change_sequential.csv"
+seq_csv_path = os.path.join(CSV_DIR, "layer_cosine_change_sequential.csv")
 with open(seq_csv_path, 'w') as f:
     f.write("layer_index,near_count,far_count,"
             "raw_mean_cosine_change_near,raw_mean_cosine_change_far,raw_difference_near_minus_far,"
@@ -554,8 +558,8 @@ ax4.grid(True, alpha=0.3)
 ax4.set_xticks(range(0, num_layers, 5))
 
 plt.tight_layout()
-plt.savefig('visualizations/layer_cosine_change_sequential.png', dpi=150)
-print("Saved: visualizations/layer_cosine_change_sequential.png")
+plt.savefig(os.path.join(VIS_DIR, 'layer_cosine_change_sequential.png'), dpi=150)
+print(f"Saved: {os.path.join(VIS_DIR, 'layer_cosine_change_sequential.png')}")
 
 # Sequential Summary
 print("\n" + "=" * 60)

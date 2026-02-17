@@ -9,13 +9,13 @@ Purpose:
   - Compute subspace similarity between layers using principal angles.
 
 I/O assumptions:
-  Files live at: {base_dir}/{protein}/{protein}_pair_block_{i}.npy
+  Files live at: {base_dir}/{protein}_pair_block_{i}.npy  (base_dir = pair_blocks dir)
   Each file has shape (r, r, C) with the same r and C across layers.
 
 Usage:
-  python analyze_pca_similarity.py \
-      --base_dir /path/to/data \
-      --protein  example_protein \
+  python pca_subspace_main.py \
+      --base_dir /path/to/proteins/7b3a/pair_blocks \
+      --protein  7b3a_A \
       --layers   8 \
       --k        32 \
       --metric   affinity \
@@ -37,10 +37,13 @@ def to64(x: np.ndarray) -> np.ndarray:
     return x.astype(np.float64, copy=False)
 
 def load_layer_paths(base_dir: str, protein: str, layers: int):
-    """Return canonical .npy paths for each layer."""
-    root = os.path.join(base_dir, protein)
+    """Return canonical .npy paths for each layer.
+
+    base_dir should be the pair_blocks directory directly (e.g. proteins/7b3a/pair_blocks).
+    protein is used only as the filename prefix (e.g. '7b3a_A').
+    """
     layer_indices = list(range(layers))  # All layers from 0 to layers-1
-    return [os.path.join(root, f"{protein}_pair_block_{i}.npy") for i in layer_indices]
+    return [os.path.join(base_dir, f"{protein}_pair_block_{i}.npy") for i in layer_indices]
 
 def load_block(path: str, mmap_mode: str = "r") -> np.memmap:
     """Load a single (r, r, C) block with memory mapping."""

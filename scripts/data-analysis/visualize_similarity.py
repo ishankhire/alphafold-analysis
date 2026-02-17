@@ -11,10 +11,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pca_subspace_main import analyze
 
-os.makedirs("visualizations", exist_ok=True)
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+VIS_DIR = os.path.join(PROTEIN_DIR, "visualizations")
+os.makedirs(VIS_DIR, exist_ok=True)
 
 # Settings
-base_dir = "activations_some_layers"
+base_dir = os.path.join(PROTEIN_DIR, "pair_blocks")
 protein = "7b3a_A"
 layers = 48  # All layers 0-47
 k = 32
@@ -65,10 +68,10 @@ ax.set_xlabel('Layer')
 ax.set_ylabel('Layer')
 
 plt.tight_layout()
-plt.savefig('visualizations/subspace_similarity_heatmap.png', dpi=150)
+plt.savefig(os.path.join(VIS_DIR, 'subspace_similarity_heatmap.png'), dpi=150)
 plt.show()
 
-print("\nSaved: visualizations/subspace_similarity_heatmap.png")
+print(f"\nSaved: {os.path.join(VIS_DIR, 'subspace_similarity_heatmap.png')}")
 
 # Also print explained variance summary
 print(f"\nExplained variance ratio (cumulative for top {k} PCs):")

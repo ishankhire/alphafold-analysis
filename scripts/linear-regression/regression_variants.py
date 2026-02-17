@@ -23,8 +23,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-os.makedirs(os.path.join(BASE_DIR, "visualizations"), exist_ok=True)
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
+PROTEIN_DIR = os.path.join(ROOT_DIR, "proteins", "7b3a")
+os.makedirs(os.path.join(PROTEIN_DIR, "visualizations"), exist_ok=True)
+os.makedirs(os.path.join(PROTEIN_DIR, "csv_files"), exist_ok=True)
 
 PAIR_OFFSET = 4
 C = 128  # channels per direction
@@ -33,7 +36,7 @@ LAYER = 47  # final layer (0-indexed)
 # ---------------------------------------------------------------------------
 # 1. Load distance matrix and build target vector
 # ---------------------------------------------------------------------------
-dist_csv = os.path.join(BASE_DIR, "residue_distances.csv")
+dist_csv = os.path.join(PROTEIN_DIR, "csv_files", "residue_distances.csv")
 raw = np.genfromtxt(dist_csv, delimiter=",", skip_header=1)
 n = raw.shape[0]  # 276 resolved residues
 
@@ -60,7 +63,7 @@ y_test = y[idx_test]
 # ---------------------------------------------------------------------------
 # 2. Load layer 47 pair block and build feature matrix
 # ---------------------------------------------------------------------------
-pb_path = os.path.join(BASE_DIR, "7b3a_A", f"7b3a_A_pair_block_{LAYER}.npy")
+pb_path = os.path.join(PROTEIN_DIR, "pair_blocks", f"7b3a_A_pair_block_{LAYER}.npy")
 pair_block = np.load(pb_path)
 
 pi = pair_i + PAIR_OFFSET
@@ -171,13 +174,13 @@ ax.axhline(1.0, color="gray", linestyle="--", linewidth=0.8, alpha=0.5)
 ax.legend(loc="lower right")
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-topk_path = os.path.join(BASE_DIR, "visualizations", "regression_topk_r2.png")
+topk_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_topk_r2.png")
 plt.savefig(topk_path, dpi=150)
 plt.close()
 print(f"  Plot saved to {topk_path}")
 
 # Save CSV
-csv_path = os.path.join(BASE_DIR, "regression_topk_r2.csv")
+csv_path = os.path.join(PROTEIN_DIR, "csv_files", "regression_topk_r2.csv")
 with open(csv_path, "w") as f:
     f.write("k,topk_r2,random_r2_mean,random_r2_std\n")
     for k, r2_top, r2_rand, r2_std in zip(k_values, topk_r2, random_r2_mean, random_r2_std):
@@ -232,7 +235,7 @@ for ax, label in zip(axes, ["upper", "lower"]):
     ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-tri_path = os.path.join(BASE_DIR, "visualizations", "regression_upper_lower_scatter.png")
+tri_path = os.path.join(PROTEIN_DIR, "visualizations", "regression_upper_lower_scatter.png")
 plt.savefig(tri_path, dpi=150)
 plt.close()
 print(f"  Scatterplot saved to {tri_path}")
