@@ -40,17 +40,15 @@ protein/                              ← project root
 │   ├── multi_protein/
 │   │   ├── structure_comparison.py   ← CIF vs PDB comparison (RMSD, TM-score)
 │   │   └── regression/
-│   │       ├── final_multi_protein_regression.py    ← PDB-based, cluster-ready
-│   │       ├── new_multi_protein_regression.py      ← PDB-based multi-protein regression
-│   │       ├── probe_layer_regression_predicted.py  ← layer-wise R² with predicted distances
-│   │       ├── regression_variants_predicted.py     ← top-k + upper/lower triangle variants
-│   │       └── regression_job.sbatch                ← SLURM job submission script
+│   │       ├── multi_protein_regression.py           ← local: pooled regression, visualizations, per-protein CSVs
+│   │       ├── cluster_multi_protein_regression.py   ← cluster: same regression for ICE $SCRATCH layout
+│   │       ├── regression_variants_predicted.py      ← model comparison (Linear, Ridge, Lasso)
+│   │       └── regression_job.sbatch                 ← SLURM job submission script
 │   └── tests/
 │       └── test_alignment.py         ← alignment sanity checks (run standalone)
 ├── .claude/CLAUDE.md
 ├── branch-analysis.md
-├── cluster_multi_protein_regression.md
-└── multi-protein-regression-plan.md
+└── cluster_multi_protein_regression.md
 ```
 
 When adding a new protein, create `proteins/<pdb_id>_A/` with the same subdirectory layout.
@@ -59,7 +57,7 @@ When adding a new protein, create `proteins/<pdb_id>_A/` with the same subdirect
 
 All scripts use absolute path computation (`ROOT_DIR = os.path.dirname(...)`) so they resolve data correctly regardless of working directory. Run from the project root:
 ```
-python scripts/multi_protein/regression/probe_layer_regression_predicted.py
+python scripts/multi_protein/regression/multi_protein_regression.py
 python scripts/multi_protein/structure_comparison.py
 python scripts/tests/test_alignment.py
 ```
@@ -85,10 +83,9 @@ proteins/<id>/predicted_pdb/*.pdb ──► PDB CA coordinate extraction (inline
 proteins/<id>/pair_blocks/*.npy ──┐
 predicted_residue_distances.csv ──┤
                                   ▼
-   multi_protein/regression/probe_layer_regression_predicted.py ──► per-layer R² (PDB-based)
-   multi_protein/regression/final_multi_protein_regression.py ──► cluster-ready pooled regression
-   multi_protein/regression/new_multi_protein_regression.py ──► multi-protein regression
-   multi_protein/regression/regression_variants_predicted.py ──► top-k + triangle variants
+   multi_protein/regression/multi_protein_regression.py ──► per-layer R², visualizations, per-protein CSVs (local)
+   multi_protein/regression/cluster_multi_protein_regression.py ──► same regression for ICE cluster
+   multi_protein/regression/regression_variants_predicted.py ──► model comparison (Linear, Ridge, Lasso)
 
    multi_protein/structure_comparison.py ──► CIF vs PDB RMSD, TM-score, per-residue deviation
 ```

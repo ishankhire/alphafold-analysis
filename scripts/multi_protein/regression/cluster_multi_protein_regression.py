@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
 """
-new_multi_protein_regression.py
-================================
-Standalone, cluster-ready script that:
-  1. Extracts CA coordinates from AlphaFold predicted PDB files
-  2. Computes pairwise CA-CA distance matrices
-  3. Trains a pooled linear regression (pair-block features -> CA-CA distance)
-     independently for each of 48 AlphaFold layers
-
-This script does NOT import from lib/ or any other project modules.
-All helper functions are defined inline.
-
-Designed for the ICE cluster directory layout where:
+cluster_multi_protein_regression.py
+====================================
+ICE cluster variant of multi_protein_regression.py. Same regression logic
+but adapted for the cluster's $SCRATCH directory layout:
   - PDB files are under:   ROOT_DIR/Structures/my_outputs_align_{id}_representations_load_from_saved_layer_47/predictions/
   - Pair blocks are under: ROOT_DIR/{protein_id}/{protein_id}_pair_block_{layer}.npy
   - Output CSVs go to:     ROOT_DIR/csv_files/
+
+For the local version (project repo layout), see multi_protein_regression.py.
+
+All helper functions are defined inline (no lib/ imports).
 
 Dependencies (all pip-installable):
     pip install numpy scipy matplotlib scikit-learn biopython

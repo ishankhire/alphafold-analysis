@@ -14,4 +14,4 @@ module load anaconda3                     # Load Python environment
 # Uncomment and set if $SCRATCH is not pre-configured on the cluster:
 # export SCRATCH=/path/to/your/data/root
 
-srun python new_multi_protein_regression.py
+srun python cluster_multi_protein_regression.py

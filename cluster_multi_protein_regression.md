@@ -4,36 +4,33 @@
 
 Train a linear regression probe at each of the 48 AlphaFold pair-representation layers to predict CA-CA distances from pair-block features. This tests how much structural (distance) information is encoded at each layer. The script pools residue pairs across all proteins into a single train/test split, producing one R² curve over layers.
 
-## Script
+## Scripts
 
-`scripts/multi_protein/regression/probe_layer_regression_predicted.py`
+- **Cluster:** `scripts/multi_protein/regression/cluster_multi_protein_regression.py` — adapted for ICE `$SCRATCH` layout
+- **Local:** `scripts/multi_protein/regression/multi_protein_regression.py` — runs against the project repo layout
 
-- **Fully standalone** — no imports from `lib/` or any other project file. All helpers are inline.
-- **Cluster-ready** — headless matplotlib (`Agg` backend), argparse CLI, only pip-installable dependencies.
-- **Robust** — skips individual proteins on failure (missing files, dimension mismatch) without crashing.
+Both are fully standalone (no `lib/` imports) and skip proteins on failure.
 
 ## How It Works
 
-1. **Discover proteins**: scans `--proteins_dir` for subdirectories. Each subdirectory name is the `protein_id` (e.g. `7b3a_A`).
+1. **Discover proteins**: scans `ROOT_DIR` (cluster) or `PROTEINS_DIR` (local) for subdirectories.
 2. **Parse chain ID**: extracted from `protein_id` — the part after the last underscore (e.g. `7b3a_A` → chain `A`).
-3. **Load predicted PDB**: from `<protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb`. Extracts all CA atoms on the target chain (no standard-residue filtering).
+3. **Load predicted PDB**: extracts all CA atoms on the target chain (no standard-residue filtering).
 4. **Verify dimension match**: CA atom count must exactly equal pair block dimension (no alignment needed for predicted PDBs).
 5. **Compute distance matrix**: vectorized pairwise Euclidean distances between CA atoms.
 6. **Pool upper-triangle pairs** across all proteins into a single dataset.
 7. **80/20 train/test split** (random_state=42), fixed across all layers.
 8. **Per-layer regression**: for each layer 0–47, load pair blocks, concatenate `[pb[i,j,:], pb[j,i,:]]` → 256-dim feature vector, standardize (fit on train only), fit `LinearRegression`, record test R².
-9. **Save outputs**: R² CSV, coefficient CSV, last-layer predicted-vs-actual CSV, three plots.
+9. **Save outputs**: R² CSV, coefficient CSV, last-layer predicted-vs-actual CSV. Local version also saves visualizations.
 
-## CLI Usage
+## Usage
 
 ```bash
-# Default paths (run from project root)
-python scripts/multi_protein/regression/probe_layer_regression_predicted.py
+# Local (from project root)
+python scripts/multi_protein/regression/multi_protein_regression.py
 
-# Custom paths (cluster)
-python probe_layer_regression_predicted.py \
-    --proteins_dir /data/proteins \
-    --output_dir /data/results
+# Cluster (submitted via SLURM)
+sbatch regression_job.sbatch
 ```
 
 ## Configuration Constants
@@ -46,30 +43,40 @@ python probe_layer_regression_predicted.py \
 | `TEST_SIZE` | 0.2 | Train/test split ratio |
 | `RANDOM_STATE` | 42 | Reproducible split seed |
 
-## Expected Directory Layout Per Protein
+## Directory Layouts
 
+**Local** (`multi_protein_regression.py`):
 ```
 proteins/<protein_id>/
 ├── predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
 ├── pair_blocks/<protein_id>_pair_block_{0..47}.npy
 └── csv_files/   (created by script)
-    ├── predicted_residue_coordinates.csv
-    └── predicted_residue_distances.csv
+```
+
+**Cluster** (`cluster_multi_protein_regression.py`):
+```
+$SCRATCH/
+├── Structures/my_outputs_align_{id}_..._layer_47/predictions/*.pdb
+├── <protein_id>/<protein_id>_pair_block_{0..47}.npy
+└── csv_files/   (created by script)
 ```
 
 ## Outputs
 
-**Per-protein** (saved inside each protein's `csv_files/`):
-- `predicted_residue_coordinates.csv` — chain, residue name, number, x, y, z
-- `predicted_residue_distances.csv` — N×N distance matrix with residue labels
-
-**Multi-protein summary** (saved to `--output_dir`):
+**Local version** saves:
+- Per-protein CSVs (`predicted_residue_coordinates.csv`, `predicted_residue_distances.csv`)
 - `csv_files/layer_regression_r2_predicted.csv` — layer, R², n_proteins, n_total_pairs
-- `csv_files/layer_regression_coefficients_predicted.csv` — 256 regression coefficients + intercept per layer
-- `csv_files/predicted_distances_last_layer_predicted.csv` — per-pair actual vs predicted distance with train/test label
+- `csv_files/layer_regression_coefficients_predicted.csv` — 256 coefficients + intercept per layer
+- `csv_files/predicted_distances_last_layer_predicted.csv` — actual vs predicted with train/test label
 - `visualizations/layer_regression_r2_predicted.png` — R² vs layer curve
 - `visualizations/pred_vs_actual_all_predicted.png` — scatter, all proteins combined
 - `visualizations/pred_vs_actual_per_protein_predicted.png` — scatter grid, one panel per protein
+
+**Cluster version** saves:
+- `csv_files/layer_regression_r2_predicted.csv` — per-layer R² with per-protein breakdown
+- `csv_files/layer_regression_coefficients_predicted.csv` — coefficients per layer
+- `csv_files/predicted_distances_last_layer_predicted.csv` — actual vs predicted
+- `csv_files/regression_summary.txt` — human-readable summary
 
 ## Results (4 proteins, local run)
 
@@ -80,7 +87,7 @@ proteins/<protein_id>/
 
 ## Flagged Code (needs updating when scaling)
 
-Three functions are marked with `⚠️ FLAG` comments — these encode assumptions about directory layout and file naming that may change on the cluster:
+Three functions in each script are marked with FLAG comments — these encode assumptions about directory layout and file naming:
 
 1. **`find_pdb_file()`** — PDB filename pattern (`<protein_id>_model_1_ptm_unrelaxed.pdb`)
 2. **`get_pair_block_path()`** — pair block path pattern (`pair_blocks/<protein_id>_pair_block_<layer>.npy`)
