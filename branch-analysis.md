@@ -145,6 +145,45 @@ Upper and lower triangles encode distance nearly identically (R²≈0.98 each). 
 
 ---
 
+## Session: 2026-02-18 — lib/ shared library + multi-protein alignment
+
+### Motivation
+Preparing for multi-protein regression (`probe_layer_regression_multi.py`). The old `PAIR_OFFSET = 4` hardcode only worked for 7B3A. A general alignment mechanism is needed that reads the mmCIF `_pdbx_poly_seq_scheme` table to map resolved structure residues to pair-block indices for any protein.
+
+### New files
+
+**`lib/__init__.py`** — empty; makes `lib/` importable as a Python package.
+
+**`lib/alignment.py`**
+- `AlignmentResult` dataclass: holds `protein_id`, `chain_id`, `pb_indices` (shape `n_modeled`, dtype int32), `n_entity`, `n_modeled`.
+- `build_alignment(cif_path, chain_id, protein_id)`: reads `_pdbx_poly_seq_scheme` from the CIF, filters to the requested `asym_id`, converts 1-based `seq_id` to 0-based pair-block indices, excludes unmodeled residues (`auth_mon_id == '?'`). For 7B3A returns `pb_indices = [4..279]` — identical to the old offset=4 pattern.
+- `validate_alignment(alignment, first_pb_path, n_ca_atoms)`: raises `AssertionError` if the pair-block dimension, index bounds, monotonicity, or CA count don't match.
+
+**`lib/structure.py`**
+Functions migrated verbatim from `scripts/extract_coordinates.py` so multi-protein scripts can import them:
+- `extract_residue_coordinates(cif_file, chain_id)` — unchanged logic
+- `compute_distance_matrix(coords)` — **vectorized** replacement: `np.linalg.norm(diff, axis=2)` via broadcasting; results are numerically identical to the old triangle loop
+- `load_distance_matrix(csv_path)` — `np.genfromtxt` with `skip_header=1`
+- `detect_chain(protein_dir)` — unchanged logic
+
+**`scripts/tests/test_alignment.py`** — standalone (no pytest), 5 tests, all pass:
+1. `build_alignment` returns `pb_indices == [4..279]`, `n_entity=280`, `n_modeled=276`
+2. `validate_alignment` passes without raising
+3. Spot-check: `pb_indices[0]==4`, `pb_indices[10]==14`; fancy indexing into pair block returns shape `(128,)`
+4. `compute_distance_matrix` returns shape `(276, 276)`, symmetric, zero diagonal
+5. `load_distance_matrix` matches computed result within `atol=1e-3`
+
+### Modified files
+
+**`scripts/extract_coordinates.py`** — removed inline definitions of `extract_residue_coordinates`, `compute_distance_matrix`, `detect_chain`. Replaced with `from lib.structure import ...`. `process_protein()` and `main()` unchanged; external behaviour identical. Adds `sys.path.insert(0, project_root)` so `lib/` is importable regardless of cwd.
+
+### Key decisions
+- Protein dirs confirmed to follow `proteins/<pdb_id>_A/` convention (not `proteins/<pdb_id>/`). Test paths updated accordingly.
+- `compute_distance_matrix` in `lib/structure` uses vectorized broadcasting; the loop-based version is removed from `extract_coordinates.py`. The two are numerically identical.
+- `validate_alignment` is designed to hard-fail (raise) rather than warn silently — a wrong alignment is worse than a skipped protein.
+
+---
+
 ## Session: 2026-02-17 — Codebase reorganization for multi-protein support
 
 ### Motivation
