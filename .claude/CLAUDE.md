@@ -43,7 +43,9 @@ protein/                              ← project root
 │   │       ├── multi_protein_regression.py           ← local: pooled regression, visualizations, per-protein CSVs
 │   │       ├── cluster_multi_protein_regression.py   ← cluster: same regression for ICE $SCRATCH layout
 │   │       ├── regression_variants_predicted.py      ← model comparison (Linear, Ridge, Lasso)
-│   │       └── regression_job.sbatch                 ← SLURM job submission script
+│   │       ├── per_protein_regression.py             ← cluster: independent regression per protein per layer
+│   │       ├── regression_job.sbatch                 ← SLURM job for pooled regression
+│   │       └── per_protein_regression_job.sbatch     ← SLURM job for per-protein regression
 │   └── tests/
 │       └── test_alignment.py         ← alignment sanity checks (run standalone)
 ├── .claude/CLAUDE.md

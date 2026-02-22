@@ -1,0 +1,522 @@
+#!/usr/bin/env python3
+"""
+per_protein_regression.py
+==========================
+ICE cluster variant that trains a SEPARATE linear regression per protein
+per layer (instead of pooling all proteins into one model).
+
+Same cluster directory layout as cluster_multi_protein_regression.py:
+  - PDB files are under:   ROOT_DIR/Structures/my_outputs_align_{id}_representations_load_from_saved_layer_47/predictions/
+  - Pair blocks are under: ROOT_DIR/{protein_id}/{protein_id}_pair_block_{layer}.npy
+  - Output CSVs go to:     ROOT_DIR/csv_files/
+
+All helper functions are defined inline (no lib/ imports).
+
+Dependencies (all pip-installable):
+    pip install numpy scipy matplotlib scikit-learn biopython
+
+Outputs (inside ROOT_DIR/csv_files/):
+    per_protein_regression_metrics.csv      — per-(protein, layer) R2, MAE, RMSE
+    per_protein_coefficients.csv            — model coefficients per (protein, layer)
+    per_protein_predicted_distances.csv     — actual vs predicted (layer 47 only)
+    per_protein_regression_summary.txt      — human-readable summary
+"""
+
+import csv
+import math
+import os
+import sys
+import time
+import traceback
+from pathlib import Path
+
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import r2_score, mean_absolute_error
+
+from Bio.PDB import PDBParser
+
+
+# ===========================================================================
+# Configuration
+# ===========================================================================
+
+N_LAYERS = 48          # AlphaFold pair representation layers
+N_CHANNELS = 128       # channels per pair representation direction
+FEATURE_DIM = 2 * N_CHANNELS  # 256 (concatenated [i,j] and [j,i])
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
+
+# ===========================================================================
+# Hardcoded directories
+# ===========================================================================
+
+# Auto-detect scratch directory from Slurm environment, with fallback.
+# ⚠️ FLAG: Update this path if your root directory is not on scratch.
+ROOT_DIR = Path(os.environ.get("SCRATCH", "/path/to/your/root/directory"))
+CSV_DIR  = ROOT_DIR / "csv_files"
+
+# Subdirectory inside ROOT_DIR that contains PDB structures.
+# ⚠️ FLAG: If the Structures directory is renamed or moved, update here.
+STRUCTURES_DIR = ROOT_DIR / "Structures"
+
+
+# ===========================================================================
+# Helper functions — data loading
+# ===========================================================================
+
+# ⚠️ FLAG: This function defines the PDB filename pattern.
+# PDB path: ROOT_DIR/Structures/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/predictions/{protein_id}_model_1_ptm_unrelaxed.pdb
+# If the naming convention changes, update the pattern here.
+def find_pdb_file(protein_id):
+    """Locate the predicted PDB file for a protein.
+
+    Expected path:
+        STRUCTURES_DIR/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/
+            predictions/{protein_id}_model_1_ptm_unrelaxed.pdb
+
+    Returns the Path object, or None if not found.
+    """
+    pdb_path = (
+        STRUCTURES_DIR
+        / f"my_outputs_align_{protein_id}_representations_load_from_saved_layer_47"
+        / "predictions"
+        / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
+    )
+    return pdb_path if pdb_path.exists() else None
+
+
+# FLAG: This function defines the pair block path pattern.
+# Pair block path: ROOT_DIR/{protein_id}/{protein_id}_pair_block_{layer}.npy
+# If the naming convention or directory structure changes, update here.
+def get_pair_block_path(protein_dir, protein_id, layer):
+    """Return the path to a pair block .npy file for a given layer.
+
+    Expected: <protein_dir>/<protein_id>_pair_block_<layer>.npy
+    (pair blocks live directly in the protein directory, no pair_blocks/ subdirectory)
+    """
+    return protein_dir / f"{protein_id}_pair_block_{layer}.npy"
+
+
+# FLAG: This function discovers protein directories.
+# It lists subdirectories of ROOT_DIR, excluding 'Structures' and 'csv_files'.
+# If the directory layout changes (e.g. nested folders, manifest file), update here.
+def discover_proteins(root_dir):
+    """Find all protein subdirectories under the given root.
+
+    Returns a sorted list of (protein_id, protein_dir) tuples.
+    Skips 'Structures', 'csv_files', and any non-directory entries.
+    """
+    skip_names = {"Structures", "csv_files"}
+    proteins = []
+    for entry in sorted(root_dir.iterdir()):
+        if not entry.is_dir():
+            continue
+        if entry.name in skip_names:
+            continue
+        proteins.append((entry.name, entry))
+    return proteins
+
+
+# ===========================================================================
+# Helper functions — coordinate extraction & distance computation
+# ===========================================================================
+
+def extract_ca_coordinates(pdb_path, chain_id):
+    """Extract CA atom coordinates from a PDB file.
+
+    Extracts ALL residues with a CA atom (no standard-residue filtering).
+
+    Parameters
+    ----------
+    pdb_path : str or Path
+        Path to the PDB file.
+    chain_id : str
+        Chain identifier to extract (e.g. 'A', 'B').
+
+    Returns
+    -------
+    dict with keys:
+        'residues'    : list of (chain_id, residue_name, residue_number) tuples
+        'coordinates' : np.ndarray of shape (n_residues, 3)
+    """
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("predicted", str(pdb_path))
+
+    residues = []
+    coordinates = []
+
+    model = structure[0]
+    for chain in model:
+        if chain.get_id() != chain_id:
+            continue
+        for residue in chain:
+            het_flag = residue.get_id()[0]
+            if het_flag == "W":
+                continue
+            if "CA" in residue:
+                ca = residue["CA"]
+                residues.append((
+                    chain.get_id(),
+                    residue.get_resname(),
+                    residue.get_id()[1],
+                ))
+                coordinates.append(ca.get_coord())
+
+    return {
+        "residues": residues,
+        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
+    }
+
+
+def compute_distance_matrix(coords):
+    """Vectorized pairwise Euclidean distance matrix.
+
+    Parameters
+    ----------
+    coords : np.ndarray, shape (n, 3)
+
+    Returns
+    -------
+    np.ndarray, shape (n, n) -- symmetric, zero diagonal.
+    """
+    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
+    return np.linalg.norm(diff, axis=2)
+
+
+# ===========================================================================
+# Per-protein regression
+# ===========================================================================
+
+def process_single_protein(protein_id, protein_dir, n_layers):
+    """Train per-layer linear regression for a single protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        e.g. "7b3a_A"
+    protein_dir : Path
+        Directory containing pair block .npy files for this protein.
+    n_layers : int
+        Number of layers to process (48).
+
+    Returns
+    -------
+    dict with keys:
+        'protein_id'             : str
+        'n_residues'             : int
+        'n_pairs'                : int
+        'metrics'                : list of 48 dicts (layer, r2_train, r2_test, mae_test, rmse_test)
+        'coefficients'           : list of 48 dicts (layer, intercept, coef_0..coef_255)
+        'last_layer_predictions' : dict with struct_i, struct_j, actual, predicted, split arrays
+
+    Raises
+    ------
+    ValueError
+        If PDB not found, no CA atoms, dimension mismatch, or too few pairs.
+    """
+    # --- Locate PDB ---
+    pdb_path = find_pdb_file(protein_id)
+    if pdb_path is None:
+        raise ValueError("no predicted PDB file found")
+
+    # --- Check all pair blocks exist ---
+    pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
+    if not pb0_path.exists():
+        raise ValueError(f"pair block 0 not found at {pb0_path}")
+
+    # --- Extract CA coordinates ---
+    chain_id = protein_id.split("_")[-1]
+    ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+    n_ca = len(ca_data["residues"])
+    if n_ca == 0:
+        raise ValueError("no CA atoms found in PDB")
+
+    # --- Check pair block dimension matches ---
+    pb0 = np.load(str(pb0_path), mmap_mode="r")
+    pb_dim = pb0.shape[0]
+    del pb0
+
+    if n_ca != pb_dim:
+        raise ValueError(f"CA count {n_ca} != pair block dim {pb_dim}")
+
+    # --- Compute distance matrix and targets ---
+    dist_matrix = compute_distance_matrix(ca_data["coordinates"])
+    struct_i, struct_j = np.triu_indices(n_ca, k=1)
+    y = dist_matrix[struct_i, struct_j]
+    n_pairs = len(y)
+    del dist_matrix
+
+    if n_pairs < FEATURE_DIM:
+        raise ValueError(
+            f"underdetermined: {n_pairs} pairs < {FEATURE_DIM} features "
+            f"({n_ca} residues)"
+        )
+
+    # --- Train/test split (per-protein, fixed seed) ---
+    all_idx = np.arange(n_pairs)
+    idx_train, idx_test = train_test_split(
+        all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE
+    )
+    y_train = y[idx_train]
+    y_test = y[idx_test]
+
+    split_labels = np.empty(n_pairs, dtype=object)
+    split_labels[idx_train] = "train"
+    split_labels[idx_test] = "test"
+
+    # --- Layer-wise regression ---
+    metrics = []
+    coefficients = []
+    last_layer_preds = None
+
+    for layer in range(n_layers):
+        pb_path = get_pair_block_path(protein_dir, protein_id, layer)
+        pb = np.load(str(pb_path))
+
+        X = np.concatenate([
+            pb[struct_i, struct_j, :],
+            pb[struct_j, struct_i, :],
+        ], axis=1)
+        del pb
+
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X[idx_train])
+        X_test = scaler.transform(X[idx_test])
+
+        model = LinearRegression()
+        model.fit(X_train, y_train)
+
+        y_pred_train = model.predict(X_train)
+        y_pred_test = model.predict(X_test)
+        r2_train = r2_score(y_train, y_pred_train)
+        r2_test = r2_score(y_test, y_pred_test)
+        mae_test = mean_absolute_error(y_test, y_pred_test)
+        rmse_test = math.sqrt(np.mean((y_test - y_pred_test) ** 2))
+
+        metrics.append({
+            "layer": layer,
+            "r2_train": r2_train,
+            "r2_test": r2_test,
+            "mae_test": mae_test,
+            "rmse_test": rmse_test,
+        })
+
+        coef_row = {"layer": layer, "intercept": float(model.intercept_)}
+        coef_row.update({
+            f"coef_{i}": float(c) for i, c in enumerate(model.coef_)
+        })
+        coefficients.append(coef_row)
+
+        if layer == n_layers - 1:
+            X_all_std = scaler.transform(X)
+            last_layer_preds = model.predict(X_all_std)
+
+        del X, X_train, X_test
+
+    return {
+        "protein_id": protein_id,
+        "n_residues": n_ca,
+        "n_pairs": n_pairs,
+        "metrics": metrics,
+        "coefficients": coefficients,
+        "last_layer_predictions": {
+            "struct_i": struct_i,
+            "struct_j": struct_j,
+            "actual": y,
+            "predicted": last_layer_preds,
+            "split": split_labels,
+        },
+    }
+
+
+# ===========================================================================
+# Main
+# ===========================================================================
+
+def main():
+    root_dir = ROOT_DIR.resolve()
+    n_layers = N_LAYERS
+
+    csv_dir = CSV_DIR.resolve()
+    csv_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Root directory:     {root_dir}")
+    print(f"Structures dir:     {STRUCTURES_DIR}")
+    print(f"Output CSV dir:     {csv_dir}")
+    print(f"Layers:             {n_layers}")
+    print(f"Mode:               PER-PROTEIN (independent model per protein per layer)")
+
+    # ------------------------------------------------------------------
+    # Phase 1: Discover proteins
+    # ------------------------------------------------------------------
+    all_proteins = discover_proteins(root_dir)
+    n_total = len(all_proteins)
+    print(f"\nDiscovered {n_total} protein directories.")
+
+    # ------------------------------------------------------------------
+    # Phase 2: Open streaming CSV for predicted distances
+    # ------------------------------------------------------------------
+    pred_path = csv_dir / "per_protein_predicted_distances.csv"
+    f_pred = open(pred_path, "w", newline="")
+    w_pred = csv.writer(f_pred)
+    w_pred.writerow([
+        "protein_id", "struct_i", "struct_j",
+        "actual_distance_A", "predicted_distance_A", "split",
+    ])
+
+    # Accumulate metrics and coefficients in memory (small: ~24K rows)
+    all_metrics = []
+    all_coefs = []
+    succeeded = []
+    skipped = []
+
+    # ------------------------------------------------------------------
+    # Phase 3: Process each protein
+    # ------------------------------------------------------------------
+    for idx, (protein_id, protein_dir) in enumerate(all_proteins):
+        t0 = time.time()
+        print(f"\n[{idx + 1}/{n_total}] Processing {protein_id} ...", flush=True)
+
+        try:
+            result = process_single_protein(protein_id, protein_dir, n_layers)
+        except ValueError as e:
+            skipped.append((protein_id, str(e)))
+            print(f"  [SKIP] {e}")
+            continue
+        except Exception as e:
+            skipped.append((protein_id, f"unexpected error -- {e}"))
+            print(f"  [SKIP] unexpected error -- {e}")
+            traceback.print_exc()
+            continue
+
+        # Accumulate metrics (add protein_id to each row)
+        for m in result["metrics"]:
+            all_metrics.append({
+                "protein_id": protein_id,
+                "n_residues": result["n_residues"],
+                "n_pairs": result["n_pairs"],
+                **m,
+            })
+
+        # Accumulate coefficients (add protein_id to each row)
+        for c in result["coefficients"]:
+            c["protein_id"] = protein_id
+            all_coefs.append(c)
+
+        # Stream predicted distances to disk immediately
+        preds = result["last_layer_predictions"]
+        if preds["predicted"] is not None:
+            for k in range(result["n_pairs"]):
+                w_pred.writerow([
+                    protein_id,
+                    int(preds["struct_i"][k]),
+                    int(preds["struct_j"][k]),
+                    f"{preds['actual'][k]:.4f}",
+                    f"{preds['predicted'][k]:.4f}",
+                    preds["split"][k],
+                ])
+            f_pred.flush()
+
+        elapsed = time.time() - t0
+        best_layer = max(result["metrics"], key=lambda m: m["r2_test"])
+        succeeded.append({
+            "protein_id": protein_id,
+            "n_residues": result["n_residues"],
+            "n_pairs": result["n_pairs"],
+            "best_layer": best_layer["layer"],
+            "best_r2": best_layer["r2_test"],
+            "r2_layer47": result["metrics"][-1]["r2_test"],
+        })
+        print(f"  [OK] {result['n_residues']} residues, {result['n_pairs']:,} pairs, "
+              f"best R2={best_layer['r2_test']:.4f} (layer {best_layer['layer']}), "
+              f"{elapsed:.1f}s")
+
+    f_pred.close()
+    print(f"\nSaved predictions CSV  -> {pred_path}")
+
+    # ------------------------------------------------------------------
+    # Phase 4: Write metrics and coefficients CSVs
+    # ------------------------------------------------------------------
+
+    # CSV 1: Metrics
+    metrics_path = csv_dir / "per_protein_regression_metrics.csv"
+    with open(metrics_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "protein_id", "layer", "n_residues", "n_pairs",
+            "r2_train", "r2_test", "mae_test", "rmse_test",
+        ])
+        for m in all_metrics:
+            writer.writerow([
+                m["protein_id"], m["layer"], m["n_residues"], m["n_pairs"],
+                f"{m['r2_train']:.6f}", f"{m['r2_test']:.6f}",
+                f"{m['mae_test']:.4f}", f"{m['rmse_test']:.4f}",
+            ])
+    print(f"Saved metrics CSV      -> {metrics_path}")
+
+    # CSV 2: Coefficients
+    coef_path = csv_dir / "per_protein_coefficients.csv"
+    coef_fieldnames = (
+        ["protein_id", "layer", "intercept"]
+        + [f"coef_{i}" for i in range(FEATURE_DIM)]
+    )
+    with open(coef_path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=coef_fieldnames, extrasaction="ignore")
+        writer.writeheader()
+        writer.writerows(all_coefs)
+    print(f"Saved coefficients CSV -> {coef_path}")
+
+    # ------------------------------------------------------------------
+    # Phase 5: Summary
+    # ------------------------------------------------------------------
+    summary_path = csv_dir / "per_protein_regression_summary.txt"
+    with open(summary_path, "w") as f:
+        f.write("Per-Protein Linear Regression Summary\n")
+        f.write("=" * 50 + "\n\n")
+        f.write(f"Total discovered:  {n_total}\n")
+        f.write(f"Succeeded:         {len(succeeded)}\n")
+        f.write(f"Skipped:           {len(skipped)}\n")
+        f.write(f"Test fraction:     {TEST_SIZE}\n")
+        f.write(f"Random state:      {RANDOM_STATE}\n")
+        f.write(f"Feature dim:       {FEATURE_DIM}\n")
+        f.write(f"Layers:            {n_layers}\n\n")
+
+        if succeeded:
+            r2_47_values = [s["r2_layer47"] for s in succeeded]
+            f.write("Layer 47 R2 (test) across proteins:\n")
+            f.write(f"  Min:    {min(r2_47_values):.6f}\n")
+            f.write(f"  Median: {np.median(r2_47_values):.6f}\n")
+            f.write(f"  Mean:   {np.mean(r2_47_values):.6f}\n")
+            f.write(f"  Max:    {max(r2_47_values):.6f}\n\n")
+
+            f.write("Per-protein summary (sorted by layer-47 R2):\n")
+            for s in sorted(succeeded, key=lambda x: x["r2_layer47"], reverse=True):
+                f.write(f"  {s['protein_id']}: {s['n_residues']} res, "
+                        f"{s['n_pairs']:,} pairs, "
+                        f"best layer={s['best_layer']} (R2={s['best_r2']:.4f}), "
+                        f"layer47 R2={s['r2_layer47']:.6f}\n")
+
+        if skipped:
+            f.write(f"\nSkipped proteins ({len(skipped)}):\n")
+            for pid, reason in skipped:
+                f.write(f"  {pid}: {reason}\n")
+
+    print(f"Saved summary          -> {summary_path}")
+
+    # Console summary
+    print("\n" + "=" * 60)
+    print("SUMMARY")
+    print("=" * 60)
+    print(f"Succeeded: {len(succeeded)} / {n_total}")
+    print(f"Skipped:   {len(skipped)}")
+    if succeeded:
+        r2_47 = [s["r2_layer47"] for s in succeeded]
+        print(f"Layer 47 R2: min={min(r2_47):.4f}, median={np.median(r2_47):.4f}, "
+              f"mean={np.mean(r2_47):.4f}, max={max(r2_47):.4f}")
+
+
+if __name__ == "__main__":
+    main()

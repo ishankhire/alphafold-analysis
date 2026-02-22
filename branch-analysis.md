@@ -220,3 +220,42 @@ Output paths updated: `csv_files/`, `visualizations/`, `pair_blocks/`, `feature_
 
 ### No analysis logic changed
 This is a pure structural reorganization. All script outputs (CSVs, PNGs) are identical — only the paths they read from and write to have changed.
+
+---
+
+## Session: 2026-02-22 — SLURM resource sizing for 500-protein regression
+
+### Motivation
+Scaling `cluster_multi_protein_regression.py` from 4 proteins to ~500. The existing `regression_job.sbatch` requested only 8 GB total memory (1 node, 1 task, 8 GB/cpu), which would OOM for 500 proteins.
+
+### Analysis
+The regression script pools ALL upper-triangle residue pairs across all proteins into a single feature matrix `X_all` per layer. For 500 proteins with average sequence length R=200, this produces ~10 million pairs and an `X_all` of ~10.2 GB (10M × 256 features × 4 bytes). With numpy fancy-indexing copies for train/test split and StandardScaler, peak memory reaches ~30–40 GB. Memory scales as R² per protein since pair count = R(R-1)/2.
+
+### Changes
+
+**`regression_job.sbatch`** — Updated resource requests:
+- Cores: 1 → 4 (`-N1 --ntasks-per-node=4`) for numpy BLAS threading
+- Memory: 8 GB → 64 GB (`--mem-per-cpu=16G`, 4 × 16 = 64 GB total)
+- Walltime: 2 hours → 8 hours
+- Changed `srun python` to `python` (srun with ntasks=4 would launch 4 copies)
+- CPU hours: 4 × 8 = 32, well under the 512 limit
+
+**`check_protein_sizes.py`** — New utility script that surveys protein sizes on the cluster before submitting the regression job. Uses the same `discover_proteins()` / `get_pair_block_path()` directory conventions as the cluster regression script. Memory-maps layer-0 pair blocks to read shapes without loading data. Prints residue length statistics, total pairs, estimated peak memory, and a ready-to-paste sbatch recommendation.
+
+## Session: 2026-02-22 — Per-protein regression script
+
+### Motivation
+The existing `cluster_multi_protein_regression.py` trains one pooled model per layer across all ~500 proteins. A new script is needed that trains a **separate regression model per protein per layer** to answer a different question: "How well does each protein's own pair representation predict its own distances?"
+
+### New files
+
+**`per_protein_regression.py`** — Trains 48 independent linear regressions per protein (one per layer), with per-protein 80/20 train/test splits. Same cluster directory layout and helper functions as `cluster_multi_protein_regression.py`.
+
+Key differences from the pooled script:
+- Processes one protein at a time (peak memory ~128 MB vs. 30-40 GB for pooled)
+- Per-protein train/test split (not global)
+- Streams predicted distances CSV to disk after each protein for crash resilience
+- Skips proteins with fewer pairs than features (underdetermined regression)
+- Produces 3 output CSVs: metrics, coefficients, and last-layer predicted distances
+
+**`per_protein_regression_job.sbatch`** — SLURM job script. Only 4 GB total memory (vs. 64 GB for pooled), 18-hour walltime for ~500 proteins.

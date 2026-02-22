@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -JMultiProteinRegression          # Job name
-#SBATCH -N1 --ntasks-per-node=1           # 1 node, 1 task (run script once)
-#SBATCH --mem-per-cpu=8G                  # 8 GB memory
-#SBATCH -t2:00:00                         # 2 hour walltime
+#SBATCH -N1 --ntasks-per-node=4           # 1 node, 4 cores (for numpy BLAS threading)
+#SBATCH --mem-per-cpu=16G                 # 16 GB/core × 4 = 64 GB total
+#SBATCH -t8:00:00                         # 8 hour walltime (max: 18h)
 #SBATCH -oRegression-Report-%j.out        # Output file with job ID
 #SBATCH --mail-type=BEGIN,END,FAIL        # Mail on start/end/fail
 #SBATCH --mail-user=<YOUR_EMAIL>          # <-- UPDATE THIS
@@ -14,4 +14,7 @@ module load anaconda3                     # Load Python environment
 # Uncomment and set if $SCRATCH is not pre-configured on the cluster:
 # export SCRATCH=/path/to/your/data/root
 
-srun python cluster_multi_protein_regression.py
+# NOTE: Using 'python' (not 'srun python') because srun with ntasks=4
+# would launch 4 copies of the script. We request 4 cores so numpy BLAS
+# can use them for multithreaded linear algebra.
+python cluster_multi_protein_regression.py
