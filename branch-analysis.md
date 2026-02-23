@@ -259,3 +259,35 @@ Key differences from the pooled script:
 - Produces 3 output CSVs: metrics, coefficients, and last-layer predicted distances
 
 **`per_protein_regression_job.sbatch`** — SLURM job script. Only 4 GB total memory (vs. 64 GB for pooled), 18-hour walltime for ~500 proteins.
+
+## Session: 2026-02-22 — Logistic regression amino acid pair type classifier
+
+### Motivation
+The existing regression scripts probe whether pair representations encode **spatial distance**. This new script asks a different question: do pair representations encode **amino acid identity**? Specifically, can we predict the unordered amino acid pair type (e.g., ALA-GLY) from the 256-dim pair embedding?
+
+### New files
+
+**`scripts/multi_protein/regression/logistic_regression_pair_type.py`** — Pooled multinomial logistic regression classifier. One model per layer, trained on all 4 proteins combined (~86,688 pairs, 210 classes). Uses stratified train/test split to handle rare pair types (e.g., TRP-TRP with only 14 samples).
+
+Key design decisions:
+- Labels: alphabetically-sorted unordered pairs (e.g., "ALA-GLY"), so (GLU, LYS) and (LYS, GLU) map to the same class
+- Features: same 256-dim concatenation `[pb[i,j,:], pb[j,i,:]]` as the distance regression
+- Model: `LogisticRegression(C=1e12, solver='lbfgs', max_iter=2000)` — effectively unregularized
+- Primary metric: balanced accuracy (accounts for class imbalance)
+- StandardScaler fit on training set only
+
+### Outputs (in `proteins/multi_protein_results/logistic_regression/`)
+- `csv_files/layer_balanced_accuracy.csv` — balanced + raw accuracy for all 48 layers
+- `csv_files/per_class_f1_layer47.csv` — per-class F1/precision/recall for layer 47
+- `csv_files/confusion_matrix_layer47.csv` — full 210×210 confusion matrix
+- `csv_files/top_confused_pairs_layer47.csv` — top 20 most confused pair types
+- `visualizations/layer_balanced_accuracy.png` — accuracy vs layer curve
+- `visualizations/confusion_matrix_layer47.png` — row-normalized heatmap
+- `visualizations/top_confused_pairs_layer47.png` — horizontal bar chart of top confusions
+
+### Key findings
+- **Peak balanced accuracy: 89.8% at layer 15** (raw accuracy 91.9%), far above the 0.48% random baseline for 210 classes
+- **Layer 0 already achieves 67% balanced accuracy** — amino acid identity information is present from the start
+- **Accuracy declines monotonically after layer 15**, dropping to 9.5% balanced accuracy at layer 47 — the representation progressively loses amino acid identity information in later layers
+- **Most confused pairs are biochemically similar**: ILE-LEU ↔ LEU-LEU (hydrophobic aliphatics), GLU-GLU ↔ ASP-GLU (acidic residues), LEU-PHE ↔ LEU-TYR (aromatic substitution)
+- **Contrasts with distance regression**: distance R² increases monotonically and peaks at later layers, while amino acid identity peaks early and declines — the network trades identity information for structural/spatial information through its depth
