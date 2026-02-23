@@ -118,29 +118,106 @@ def compute_distance_matrix(coords):
 # ===========================================================================
 
 def classical_mds(distance_matrix, n_dims=3):
-    """Classical (Torgerson) MDS: embed a distance matrix into n_dims dimensions.
+    """Classical (Torgerson) MDS: recover n_dims-dimensional coordinates from a
+    pairwise distance matrix.
+
+    The core idea: given only the distances between N points, reconstruct where
+    those points are in space. This is the inverse of computing a distance
+    matrix — instead of coords -> distances, we go distances -> coords.
+
+    Mathematical overview:
+        1. Square the distances to get D².
+        2. "Double center" D² to convert it into a Gram matrix B (inner products).
+           This removes the arbitrary choice of origin that coordinates depend on.
+        3. Eigendecompose B. The top eigenvalues tell us which dimensions carry
+           the most variance (like PCA). For points that truly live in 3D, only
+           3 eigenvalues will be large; the rest will be ~zero.
+        4. Reconstruct coordinates: eigenvectors scaled by sqrt(eigenvalues).
+
+    Parameters
+    ----------
+    distance_matrix : np.ndarray, shape (n, n)
+        Symmetric matrix of pairwise distances. D[i,j] = distance between
+        point i and point j. Diagonal should be zero.
+    n_dims : int
+        Number of dimensions to embed into (default 3 for 3D reconstruction).
 
     Returns
     -------
     coords : np.ndarray, shape (n, n_dims)
-    eigenvalues : np.ndarray, shape (n,)  — sorted descending
+        Reconstructed coordinates. These are determined up to rotation and
+        reflection — MDS cannot recover the original orientation, only the
+        relative geometry. We fix this later with Kabsch alignment.
+    eigenvalues : np.ndarray, shape (n,)
+        ALL eigenvalues of the Gram matrix B, sorted largest to smallest.
+        Diagnostic: if the top 3 dominate, the distances are well-explained
+        by 3D geometry. Large negative eigenvalues indicate the distance
+        matrix is non-Euclidean (can't be realized by any set of 3D points).
     """
     n = distance_matrix.shape[0]
+
+    # STEP 1: Square all distances.
+    # Why? The fundamental identity connecting distances to coordinates is:
+    #   d(i,j)² = ||x_i||² + ||x_j||² - 2 * x_i · x_j
+    # We need d² (not d) because the dot product relationship is quadratic.
     D_sq = distance_matrix ** 2
 
-    # Double centering: B = -0.5 * H * D^2 * H
-    row_mean = D_sq.mean(axis=1, keepdims=True)
-    col_mean = D_sq.mean(axis=0, keepdims=True)
-    grand_mean = D_sq.mean()
+    # STEP 2: Double centering — convert squared distances into inner products.
+    #
+    # The squared distance d²_ij = ||x_i||² + ||x_j||² - 2*(x_i · x_j)
+    # contains three terms, but we only want the dot product x_i · x_j.
+    # Double centering removes the ||x_i||² and ||x_j||² terms by subtracting
+    # row means, column means, and adding back the grand mean:
+    #
+    #   B_ij = -0.5 * (D²_ij - mean_of_row_i - mean_of_col_j + grand_mean)
+    #
+    # After this transformation, B_ij = x_i · x_j (inner product), where the
+    # coordinates x are centered at the origin (centroid = 0). This is called
+    # the Gram matrix.
+    #
+    # Mathematically equivalent to B = -0.5 * H @ D_sq @ H where
+    # H = I - (1/n)*11^T is the centering matrix, but computing via means
+    # is more memory-efficient (avoids creating the n×n matrix H).
+    row_mean = D_sq.mean(axis=1, keepdims=True)   # mean of each row (n×1)
+    col_mean = D_sq.mean(axis=0, keepdims=True)   # mean of each column (1×n)
+    grand_mean = D_sq.mean()                       # overall mean (scalar)
     B = -0.5 * (D_sq - row_mean - col_mean + grand_mean)
 
+    # STEP 3: Eigendecomposition of the Gram matrix.
+    #
+    # Since B = X @ X^T (coordinates times their transpose), its eigenvalues
+    # tell us the variance along each principal axis — exactly like PCA.
+    #   - For perfect 3D distances: exactly 3 positive eigenvalues, rest = 0
+    #   - For noisy/predicted distances: eigenvalues taper off gradually
+    #   - Negative eigenvalues: the distances are "non-Euclidean" — no set of
+    #     points in any dimension could produce exactly these distances. This
+    #     happens when predictions violate the triangle inequality.
+    #
+    # np.linalg.eigh is used because B is symmetric (B_ij = B_ji, since
+    # dot products are symmetric). eigh is faster and more numerically stable
+    # than the general eig for symmetric matrices.
     eigenvalues, eigenvectors = np.linalg.eigh(B)
-    # eigh returns ascending; reverse to descending
+
+    # eigh returns eigenvalues in ascending order (smallest first).
+    # We want descending order (largest first) so the top-n_dims are first.
     idx = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[idx]
     eigenvectors = eigenvectors[:, idx]
 
-    # Take top n_dims, clamp negative eigenvalues to zero
+    # STEP 4: Reconstruct coordinates from the top eigenvalues/eigenvectors.
+    #
+    # Since B = X @ X^T, and the eigendecomposition gives B = V @ Λ @ V^T,
+    # we can reconstruct X = V @ sqrt(Λ). Each eigenvector gives one axis of
+    # the coordinate system, scaled by the square root of its eigenvalue
+    # (which represents the spread of points along that axis).
+    #
+    # We take only the top n_dims eigenvalues/eigenvectors (typically 3),
+    # discarding the rest. This is the best rank-n_dims approximation of B
+    # (by the Eckart-Young theorem — same principle as truncated SVD/PCA).
+    #
+    # Negative eigenvalues are clamped to zero because sqrt of a negative
+    # number is undefined. These correspond to non-Euclidean "phantom
+    # dimensions" that arise from prediction errors.
     top_evals = np.maximum(eigenvalues[:n_dims], 0.0)
     coords = eigenvectors[:, :n_dims] * np.sqrt(top_evals)
 
@@ -320,8 +397,22 @@ def main():
                 n_neg_evals = int(np.sum(eigenvalues < 0))
                 neg_frac = float(abs(np.sum(eigenvalues[eigenvalues < 0])) / sum_pos) if n_neg_evals > 0 else 0.0
 
-                # Kabsch alignment + metrics
-                transformed, rmsd = superimpose_structures(true_coords, mds_coords)
+                # Kabsch alignment + metrics.
+                # MDS is ambiguous up to reflection (mirror image). The Kabsch
+                # algorithm only applies proper rotations (det=+1), so if MDS
+                # produced a mirror image, rotation-only alignment will be poor.
+                # Fix: try both orientations, keep the one with lower RMSD.
+                mds_reflected = mds_coords.copy()
+                mds_reflected[:, 2] *= -1  # flip z-axis to get mirror image
+
+                transformed_orig, rmsd_orig = superimpose_structures(true_coords, mds_coords)
+                transformed_flip, rmsd_flip = superimpose_structures(true_coords, mds_reflected)
+
+                if rmsd_flip < rmsd_orig:
+                    transformed, rmsd = transformed_flip, rmsd_flip
+                else:
+                    transformed, rmsd = transformed_orig, rmsd_orig
+
                 tm = compute_tm_score(true_coords, transformed, n)
 
                 # Stress: how well MDS coords reproduce the predicted distances
