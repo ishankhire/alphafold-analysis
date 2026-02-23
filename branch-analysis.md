@@ -291,3 +291,55 @@ Key design decisions:
 - **Accuracy declines monotonically after layer 15**, dropping to 9.5% balanced accuracy at layer 47 — the representation progressively loses amino acid identity information in later layers
 - **Most confused pairs are biochemically similar**: ILE-LEU ↔ LEU-LEU (hydrophobic aliphatics), GLU-GLU ↔ ASP-GLU (acidic residues), LEU-PHE ↔ LEU-TYR (aromatic substitution)
 - **Contrasts with distance regression**: distance R² increases monotonically and peaks at later layers, while amino acid identity peaks early and declines — the network trades identity information for structural/spatial information through its depth
+
+## Session: 2026-02-22 — Protein-level train/test split regression
+
+### Motivation
+The existing `cluster_multi_protein_regression.py` pools all residue pairs across proteins and splits them randomly into train/test. This creates data leakage: pairs from the same protein appear in both train and test sets, so the model can exploit protein-specific patterns (e.g., overall fold shape, size) rather than learning generalizable pair-representation-to-distance mappings.
+
+### New files
+
+**`train_test_separated_multi_protein_regression.py`** — Same regression logic as `cluster_multi_protein_regression.py`, but splits at the **protein level** instead of the pair level:
+- ~80% of proteins go into training, ~20% into testing
+- The model never sees any pairs from test proteins during training
+- Uses `sklearn.train_test_split` on protein indices with `random_state=42`
+- Requires at least 2 proteins (exits with error if only 1)
+- Reports per-protein R² for both test proteins (main metric) and train proteins (diagnostic)
+
+**`protein_split_regression_job.sbatch`** — SLURM job script. Same resource requests as `regression_job.sbatch` (64 GB total, 4 cores, 8h walltime) since memory usage is similar.
+
+### Output files (in ROOT_DIR/csv_files/)
+- `protein_split_regression_r2.csv` — per-layer R² with per-protein breakdown
+- `protein_split_regression_coefficients.csv` — model coefficients per layer
+- `protein_split_predicted_distances.csv` — actual vs predicted (last layer)
+- `protein_split_regression_summary.txt` — human-readable summary
+
+### Key difference from pooled script
+The pooled script's test R² measures interpolation within known proteins. The protein-level split measures **generalization to unseen proteins** — a much harder and more meaningful test of whether pair representations encode distance in a protein-agnostic way.
+
+## Session: 2026-02-22 — AA-augmented distance regression
+
+### Motivation
+The logistic regression classifier showed that amino acid identity is present in early layers but fades by later layers. The distance regression showed R² increases through the layers. A natural question: does **explicitly providing** amino acid identity to the distance regression model improve predictions? If so, the pair representation does not fully capture AA-relevant distance information.
+
+### New files
+
+**`scripts/multi_protein/regression/aa_augmented_regression.py`** — Runs two linear regression models side-by-side per layer:
+1. **Baseline** (256-dim): pair-block features only `[pb[i,j,:], pb[j,i,:]]`
+2. **Augmented** (296-dim): pair-block features + 40-dim one-hot amino acid encoding
+
+The amino acid encoding works as follows: for each pair (i, j), sort the two 3-letter amino acid names alphabetically, then one-hot encode each into 20 dims (one per standard amino acid). Concatenating gives 40 dims. This ensures ALA-GLY == GLY-ALA automatically.
+
+Non-standard amino acids get all-zero encoding (graceful degradation, no crash).
+
+### Outputs (in `proteins/multi_protein_results/aa_augmented_regression/`)
+- `csv_files/layer_regression_r2_comparison.csv` — baseline vs augmented R² per layer
+- `csv_files/layer_regression_coefficients_augmented.csv` — augmented model coefficients (296 features)
+- `visualizations/layer_r2_comparison.png` — two-line R² vs layer plot
+- `visualizations/pred_vs_actual_augmented.png` — scatter plot (layer 47, augmented model)
+
+### Key findings
+- **AA features provide a small but consistent improvement** — delta ranges from +0.008 at layer 0 down to +0.0002 at layer 47
+- **The improvement shrinks monotonically with layer depth** — early layers gain the most from AA identity (delta ~0.004–0.008), while later layers gain almost nothing (delta < 0.001 after layer 40)
+- **Interpretation**: The pair representation progressively encodes the distance-relevant aspects of amino acid identity through its depth. By the final layers, explicitly providing AA identity adds essentially nothing — the pair block already contains all AA-related distance information
+- **This is consistent with the logistic regression findings**: AA identity is explicitly readable in early layers, then gets "compiled" into structural features. The distance regression doesn't need the AA hint because the pair block has already internalized it
