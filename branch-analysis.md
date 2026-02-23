@@ -343,3 +343,37 @@ Non-standard amino acids get all-zero encoding (graceful degradation, no crash).
 - **The improvement shrinks monotonically with layer depth** — early layers gain the most from AA identity (delta ~0.004–0.008), while later layers gain almost nothing (delta < 0.001 after layer 40)
 - **Interpretation**: The pair representation progressively encodes the distance-relevant aspects of amino acid identity through its depth. By the final layers, explicitly providing AA identity adds essentially nothing — the pair block already contains all AA-related distance information
 - **This is consistent with the logistic regression findings**: AA identity is explicitly readable in early layers, then gets "compiled" into structural features. The distance regression doesn't need the AA hint because the pair block has already internalized it
+
+## Session: 2026-02-22 — MDS reconstruction from predicted distances
+
+### Motivation
+R² measures marginal prediction accuracy (averaging over individual pairs) but not **geometric coherence** — whether the predicted distances correspond to a realizable 3D structure. This script uses classical MDS to reconstruct 3D coordinates from regression-predicted distances, then compares to actual PDB structures via TM-score and RMSD.
+
+### New files
+
+**`scripts/multi_protein/regression/mds_reconstruction.py`** — For each of 48 layers:
+1. Trains pooled linear regression (same 80/20 split, RANDOM_STATE=42)
+2. Predicts ALL pairwise distances per protein (train + test pairs, needed for complete distance matrix)
+3. Classical MDS (Torgerson) to embed predicted distances into 3D coordinates
+4. Kabsch alignment onto true PDB coordinates via `lib/structure.superimpose_structures`
+5. Computes TM-score, RMSD, eigenvalue diagnostics, stress
+
+Classical MDS implementation: eigendecomposition of double-centered Gram matrix, top 3 eigenvalues → 3D coordinates. Uses numpy only (no sklearn MDS). Negative eigenvalues clamped to zero for coordinate extraction; their magnitude is tracked as a diagnostic of non-Euclidean distance predictions.
+
+### Outputs (in `proteins/multi_protein_results/mds_reconstruction/`)
+- `csv_files/mds_reconstruction_metrics.csv` — per (layer, protein): R², RMSD, TM-score, top-3 eigenvalue fraction, negative eigenvalue count, stress
+- `csv_files/mds_eigenvalue_spectrum.csv` — full eigenvalue spectrum for layers 0, 11, 23, 35, 47
+- `csv_files/mds_reconstructed_coords_layer47.csv` — per-residue MDS vs PDB coordinates (last layer)
+- `visualizations/mds_tmscores_vs_layer.png` — TM-score vs layer per protein + mean
+- `visualizations/mds_rmsd_vs_layer.png` — RMSD vs layer
+- `visualizations/mds_eigenvalue_fraction_vs_layer.png` — top-3 eigenvalue variance fraction vs layer
+- `visualizations/mds_reconstruction_overlay_layer47.png` — 2×2 3D scatter overlay (PDB vs MDS)
+- `visualizations/mds_r2_vs_tmscore.png` — R² vs TM-score scatter
+
+### Key findings
+- **TM-scores are surprisingly non-monotonic** — they oscillate significantly across layers even as R² increases steadily. This confirms R² and geometric coherence measure fundamentally different things.
+- **7b3a_A achieves the highest TM-scores** (~0.95 at layers 43-46) but crashes to 0.33 at layer 47. The larger proteins show better MDS reconstruction overall.
+- **Best mean TM-score is ~0.59 at layers 42-46**, then drops at layer 47 despite R²=0.98.
+- **Top-3 eigenvalue fraction reaches only ~0.70 by layer 47** — 30% of variance is in non-3D dimensions, meaning predicted distances are significantly non-Euclidean even at high R².
+- **Small proteins (6tf4_A, 6wmk_A, 67-69 residues) have consistently lower TM-scores** (<0.6) than large proteins (6wqc_A, 7b3a_A, 280-294 residues), likely because fewer pairs constrain the MDS embedding less.
+- **The R² vs TM-score scatter reveals a protein-dependent relationship**: high R² is necessary but not sufficient for good TM-score. For 7b3a_A, TM-scores reach 0.95 at R²>0.97; for 6wmk_A, TM-scores barely reach 0.25 at the same R² values.
