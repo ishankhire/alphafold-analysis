@@ -399,3 +399,19 @@ Migrating from the ICE cluster to the Delta NCSA cluster. Delta has different Sl
 | Task layout | `-N1 --ntasks-per-node=4` | `--nodes=1 --ntasks-per-node=1 --cpus-per-task=4` |
 
 Existing ICE sbatch files left untouched.
+
+## Session: 2026-02-25 — Logistic regression with diagonal features
+
+### Motivation
+The existing `logistic_regression_pair_type.py` uses only cross-pair features `[pb[i,j,:], pb[j,i,:]]` (256-dim) to predict amino acid pair types. Adding diagonal self-representation features `[pb[i,i,:], pb[j,j,:]]` gives the model direct information about each residue's own identity, which should improve pair-type classification.
+
+### New files
+
+**`scripts/multi_protein/regression/logistic_regression_pair_type_with_diagonal.py`** — Same structure as `logistic_regression_pair_type.py`, with two key changes:
+
+1. **512-dim features**: For each pair (i, j), concatenates `[pb[i,j,:], pb[j,i,:], pb[i,i,:], pb[j,j,:]]` — cross-pair (256) + diagonal self-representations (256).
+
+2. **C=10 regularization**: Light regularization (vs C=1e12 in original) to help L-BFGS converge faster with doubled feature dimension, with negligible accuracy impact.
+
+### Outputs (in `proteins/multi_protein_results/logistic_regression_with_diagonal/`)
+Same output structure as the original logistic regression script: layer balanced accuracy CSV, per-class F1, confusion matrix, top confused pairs, and corresponding visualizations.
