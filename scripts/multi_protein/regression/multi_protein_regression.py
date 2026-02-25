@@ -35,6 +35,7 @@ Outputs:
 import csv
 import math
 import sys
+import os
 import traceback
 from pathlib import Path
 
@@ -46,7 +47,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 
-from Bio.PDB import PDBParser
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from lib.data_loading import discover_proteins, find_pdb_file, get_pair_block_path
+from lib.structure import extract_ca_coordinates, compute_distance_matrix
 
 
 # ===========================================================================
@@ -69,98 +72,8 @@ OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results"
 
 
 # ===========================================================================
-# Helper functions — data loading
+# Helper functions — CSV output (script-specific, not shared)
 # ===========================================================================
-
-# FLAG: This function defines the PDB filename pattern.
-# If the naming convention changes, update the pattern here.
-def find_pdb_file(protein_dir, protein_id):
-    """Locate the predicted PDB file for a protein.
-
-    Expected path: <protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
-
-    Returns the Path object, or None if not found.
-    """
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-# FLAG: This function defines the pair block path pattern.
-# If the naming convention or directory structure changes, update here.
-def get_pair_block_path(protein_dir, protein_id, layer):
-    """Return the path to a pair block .npy file for a given layer.
-
-    Expected: <protein_dir>/pair_blocks/<protein_id>_pair_block_<layer>.npy
-    """
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-# FLAG: This function discovers protein directories.
-# It filters out non-protein directories (e.g. multi_protein_results).
-# If the directory layout changes (e.g. nested folders, manifest file), update here.
-def discover_proteins(proteins_dir):
-    """Find all protein subdirectories under the given root.
-
-    Returns a sorted list of (protein_id, protein_dir) tuples.
-    Skips 'multi_protein_results' and any non-directory entries.
-    """
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if entry.name == "multi_protein_results":
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-# ===========================================================================
-# Helper functions — coordinate extraction & distance computation
-# ===========================================================================
-
-def extract_ca_coordinates(pdb_path):
-    """Extract CA atom coordinates from a PDB file across all chains."""
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-
-    residues = []
-    coordinates = []
-
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((
-                    chain.get_id(),
-                    residue.get_resname(),
-                    residue.get_id()[1],
-                ))
-                coordinates.append(ca.get_coord())
-
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    """Vectorized pairwise Euclidean distance matrix.
-
-    Parameters
-    ----------
-    coords : np.ndarray, shape (n, 3)
-
-    Returns
-    -------
-    np.ndarray, shape (n, n) -- symmetric, zero diagonal.
-    """
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
-    return np.linalg.norm(diff, axis=2)
-
 
 def save_coordinates_csv(path, residue_data):
     """Save residue coordinates to CSV.

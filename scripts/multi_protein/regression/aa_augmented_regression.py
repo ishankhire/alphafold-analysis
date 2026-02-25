@@ -27,6 +27,7 @@ Outputs (inside proteins/multi_protein_results/aa_augmented_regression/):
 import csv
 import math
 import sys
+import os
 import traceback
 from pathlib import Path
 
@@ -38,7 +39,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 
-from Bio.PDB import PDBParser
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from lib.data_loading import discover_proteins, find_pdb_file, get_pair_block_path
+from lib.structure import extract_ca_coordinates, compute_distance_matrix
 
 
 # ===========================================================================
@@ -105,166 +108,7 @@ OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "aa_augmented_regression
 
 
 # ===========================================================================
-# Helper functions — data loading (copied from multi_protein_regression.py)
-# ===========================================================================
-
-def find_pdb_file(protein_dir, protein_id):
-    """Locate the AlphaFold-predicted PDB file for a protein.
-
-    Parameters
-    ----------
-    protein_dir : Path
-        Directory for this protein (e.g. proteins/7b3a_A/).
-    protein_id : str
-        Protein identifier (e.g. "7b3a_A").
-
-    Returns
-    -------
-    Path or None
-        Full path to the PDB file if it exists, otherwise None.
-        Expected location: <protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
-    """
-    # Construct the expected PDB path using the AlphaFold naming convention.
-    # "model_1_ptm_unrelaxed" is the default AlphaFold output name for the
-    # top-ranked predicted structure before relaxation.
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-def get_pair_block_path(protein_dir, protein_id, layer):
-    """Construct the file path to a pair block .npy file for a given layer.
-
-    Each pair block is a numpy array of shape (R, R, 128) where R is the number
-    of residues in the AlphaFold entity sequence. There are 48 layers (0-47).
-    The pair block captures pairwise residue relationships learned by AlphaFold's
-    Evoformer; it is asymmetric (pb[i,j] != pb[j,i] in general).
-
-    Parameters
-    ----------
-    protein_dir : Path
-        Directory for this protein (e.g. proteins/7b3a_A/).
-    protein_id : str
-        Protein identifier (e.g. "7b3a_A").
-    layer : int
-        Layer index (0-47).
-
-    Returns
-    -------
-    Path
-        Path to the .npy file. Does NOT check if the file exists.
-    """
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-def discover_proteins(proteins_dir):
-    """Scan the proteins/ directory and find all protein subdirectories.
-
-    Iterates over proteins_dir in alphabetical order. Skips non-directories and
-    the 'multi_protein_results' folder (which holds output, not protein data).
-
-    Parameters
-    ----------
-    proteins_dir : Path
-        Root proteins directory (e.g. proteins/).
-
-    Returns
-    -------
-    list of (str, Path)
-        Sorted list of (protein_id, protein_dir) tuples.
-        Example: [("6tf4_A", Path("proteins/6tf4_A")), ("7b3a_A", Path("proteins/7b3a_A"))]
-    """
-    proteins = []  # list of (str, Path) — accumulates discovered protein directories
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue  # Skip files (e.g. README, .DS_Store)
-        if entry.name == "multi_protein_results":
-            continue  # Skip the output directory — it's not a protein
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-# ===========================================================================
-# Helper functions — coordinate extraction & distance computation
-# ===========================================================================
-
-def extract_ca_coordinates(pdb_path):
-    """Extract CA (alpha-carbon) atom coordinates and residue metadata from a PDB file.
-
-    Extracts all residues with a CA atom across all chains. Chain filtering is
-    unnecessary because each PDB file is already specific to a single protein.
-    Water molecules (het_flag == "W") are skipped.
-
-    Returns
-    -------
-    dict with keys:
-        'residues' : list of tuple (str, str, int)
-            Each tuple is (chain_id, residue_name, residue_number).
-        'coordinates' : np.ndarray of shape (n_residues, 3), dtype float
-            XYZ coordinates of each CA atom in Angstroms.
-    """
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-
-    residues = []
-    coordinates = []
-
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            # het_flag: " " for standard residues, "W" for water, "H_XXX" for heteroatoms.
-            # residue.get_id() returns a tuple: (het_flag, sequence_number, insertion_code)
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue  # skip water molecules — they are not amino acid residues
-            if "CA" in residue:
-                ca = residue["CA"]  # BioPython Atom object for the alpha-carbon
-                residues.append((
-                    chain.get_id(),       # str: chain ID (e.g. "A")
-                    residue.get_resname(),  # str: 3-letter amino acid code (e.g. "ALA")
-                    residue.get_id()[1],    # int: residue sequence number from PDB
-                ))
-                coordinates.append(ca.get_coord())  # np.ndarray shape (3,): [x, y, z] in Angstroms
-
-    return {
-        "residues": residues,
-        # If no coordinates found, return an empty (0, 3) array so downstream code
-        # doesn't break on np operations expecting 2D input.
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    """Compute a vectorized pairwise Euclidean distance matrix from CA coordinates.
-
-    Given N residue positions in 3D space, computes the NxN symmetric matrix
-    where entry (i, j) is the Euclidean distance between residue i and residue j.
-    The diagonal is zero (distance from a residue to itself).
-
-    These distances serve as the regression target (y): the model tries to predict
-    CA-CA distance from pair-block features.
-
-    Parameters
-    ----------
-    coords : np.ndarray of float, shape (N, 3)
-        XYZ coordinates of N alpha-carbon atoms. Each row is [x, y, z] in Angstroms.
-
-    Returns
-    -------
-    np.ndarray of float, shape (N, N)
-        Symmetric distance matrix in Angstroms. dist[i, j] = dist[j, i].
-        Diagonal entries are 0.0.
-    """
-    # Broadcasting trick: coords[:, np.newaxis, :] has shape (N, 1, 3),
-    # coords[np.newaxis, :, :] has shape (1, N, 3). Subtraction broadcasts
-    # to shape (N, N, 3) — the vector difference between every pair of residues.
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]  # shape (N, N, 3)
-    # np.linalg.norm along axis=2 computes the L2 norm of each 3D difference vector,
-    # yielding a scalar distance for each pair.
-    return np.linalg.norm(diff, axis=2)  # shape (N, N)
-
-
-# ===========================================================================
-# Helper functions — amino acid one-hot encoding
+# Helper functions — amino acid one-hot encoding (script-specific, not shared)
 # ===========================================================================
 
 def build_aa_onehot_features(residue_data, struct_i, struct_j):

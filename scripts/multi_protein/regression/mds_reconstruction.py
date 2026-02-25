@@ -36,12 +36,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
-from Bio.PDB import PDBParser
-
 # lib/ imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-from lib.structure import superimpose_structures, compute_tm_score
+from lib.data_loading import discover_proteins, find_pdb_file, get_pair_block_path
+from lib.structure import extract_ca_coordinates, compute_distance_matrix, superimpose_structures, compute_tm_score
 
 
 # ===========================================================================
@@ -59,56 +58,6 @@ EIGENVALUE_LAYERS = [0, 11, 23, 35, 47]
 
 PROTEINS_DIR = PROJECT_ROOT / "proteins"
 OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "mds_reconstruction"
-
-
-# ===========================================================================
-# Helper functions — data loading (replicated from multi_protein_regression.py)
-# ===========================================================================
-
-def find_pdb_file(protein_dir, protein_id):
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-def get_pair_block_path(protein_dir, protein_id, layer):
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-def discover_proteins(proteins_dir):
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if entry.name in ("multi_protein_results", "claude_reference"):
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-def extract_ca_coordinates(pdb_path):
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-    residues = []
-    coordinates = []
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((chain.get_id(), residue.get_resname(), residue.get_id()[1]))
-                coordinates.append(ca.get_coord())
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
-    return np.linalg.norm(diff, axis=2)
 
 
 # ===========================================================================

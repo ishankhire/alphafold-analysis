@@ -445,3 +445,36 @@ The existing `logistic_regression_pair_type.py` uses only cross-pair features `[
 
 ### Outputs (in `proteins/multi_protein_results/logistic_regression_with_diagonal/`)
 Same output structure as the original logistic regression script: layer balanced accuracy CSV, per-class F1, confusion matrix, top confused pairs, and corresponding visualizations.
+
+## Session: 2026-02-25 — Extract duplicated functions into lib/
+
+### Motivation
+Five utility functions were copy-pasted across 6-7 multi-protein regression scripts (each 10-35 lines), totaling ~500+ lines of duplicated code. Extracted them into shared lib/ modules so scripts import instead of redefining.
+
+### New files
+**`lib/data_loading.py`** — Three shared data-loading utilities:
+- `discover_proteins(proteins_dir)` — scan for protein subdirectories, skip `multi_protein_results`
+- `find_pdb_file(protein_dir, protein_id)` — locate predicted PDB file
+- `get_pair_block_path(protein_dir, protein_id, layer)` — construct pair block .npy path
+
+### Modified files
+
+**`lib/structure.py`** — Added `extract_ca_coordinates(pdb_path)` using the `het_flag == "W"` filtering approach (preferred over the existing `extract_pdb_ca_coordinates` which uses `is_aa()`). Both functions are kept; the existing `extract_pdb_ca_coordinates` is still used by `structure_comparison.py`.
+
+**6 scripts refactored** (inline functions replaced with lib/ imports):
+- `scripts/multi_protein/regression/multi_protein_regression.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type_with_diagonal.py`
+- `scripts/multi_protein/regression/aa_augmented_regression.py`
+- `scripts/multi_protein/regression/regression_variants_predicted.py`
+- `scripts/multi_protein/regression/mds_reconstruction.py`
+
+### Not modified (by design)
+- Cluster scripts (`cluster_multi_protein_regression.py`, `train_test_separated_multi_protein_regression.py`) — must remain standalone for cluster execution
+- `check_protein_sizes.py` — cluster utility with different directory layout (no `pair_blocks/` subdirectory)
+- Functions appearing in only 2 files (`build_pair_labels`, `extract_top_confused_pairs`) — not worth extracting
+
+### Verification
+- All 6 refactored scripts pass import checks
+- `multi_protein_regression.py` run end-to-end: produces identical R² values (peak 0.9842 at layer 45)
+- `mds_reconstruction.py` run end-to-end: produces identical TM-scores and RMSD values

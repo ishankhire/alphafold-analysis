@@ -31,6 +31,7 @@ Outputs (inside proteins/multi_protein_results/logistic_regression_with_diagonal
 import csv
 import math
 import sys
+import os
 import traceback
 from pathlib import Path
 
@@ -47,7 +48,9 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
 )
 
-from Bio.PDB import PDBParser
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from lib.data_loading import discover_proteins, find_pdb_file, get_pair_block_path
+from lib.structure import extract_ca_coordinates
 
 
 # ===========================================================================
@@ -81,115 +84,7 @@ OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "logistic_regression_wit
 
 
 # ===========================================================================
-# Helper functions — data loading
-# ===========================================================================
-
-def find_pdb_file(protein_dir, protein_id):
-    """Locate the AlphaFold-predicted PDB file for a protein.
-
-    Parameters
-    ----------
-    protein_dir : Path
-        Directory for this protein (e.g. proteins/7b3a_A/).
-    protein_id : str
-        Protein identifier (e.g. "7b3a_A").
-
-    Returns
-    -------
-    Path or None
-        Full path to the PDB file if it exists, otherwise None.
-        Expected location: <protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
-    """
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-def get_pair_block_path(protein_dir, protein_id, layer):
-    """Construct the file path to a pair block .npy file for a given layer.
-
-    Each pair block is a numpy array of shape (R, R, 128) where R is the number
-    of residues in the AlphaFold entity sequence. There are 48 layers (0-47).
-
-    Parameters
-    ----------
-    protein_dir : Path
-        Directory for this protein (e.g. proteins/7b3a_A/).
-    protein_id : str
-        Protein identifier (e.g. "7b3a_A").
-    layer : int
-        Layer index (0-47).
-
-    Returns
-    -------
-    Path
-        Path to the .npy file. Does NOT check if the file exists.
-    """
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-def discover_proteins(proteins_dir):
-    """Scan the proteins/ directory and find all protein subdirectories.
-
-    Iterates over proteins_dir in alphabetical order. Skips non-directories and
-    the 'multi_protein_results' folder (which holds output, not protein data).
-
-    Parameters
-    ----------
-    proteins_dir : Path
-        Root proteins directory (e.g. proteins/).
-
-    Returns
-    -------
-    list of (str, Path)
-        Sorted list of (protein_id, protein_dir) tuples.
-        Example: [("6tf4_A", Path("proteins/6tf4_A")), ("7b3a_A", Path("proteins/7b3a_A"))]
-    """
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if entry.name == "multi_protein_results":
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-def extract_ca_coordinates(pdb_path):
-    """Extract CA (alpha-carbon) atom coordinates and residue metadata from a PDB file.
-
-    Extracts all residues with a CA atom across all chains. Chain filtering is
-    unnecessary because each PDB file is already specific to a single protein.
-    Water molecules (het_flag == "W") are skipped.
-    """
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-
-    residues = []
-    coordinates = []
-
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((
-                    chain.get_id(),
-                    residue.get_resname(),
-                    residue.get_id()[1],
-                ))
-                coordinates.append(ca.get_coord())
-
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-# ===========================================================================
-# Helper functions — pair type labels
+# Helper functions — pair type labels (script-specific, not shared)
 # ===========================================================================
 
 def build_pair_labels(residue_data):

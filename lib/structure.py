@@ -65,6 +65,51 @@ def extract_residue_coordinates(cif_file: str, chain_id: str = None) -> dict:
     }
 
 
+def extract_ca_coordinates(pdb_path):
+    """Extract CA atom coordinates from a PDB file across all chains.
+
+    Skips water molecules (het_flag == "W") and extracts all residues
+    with a CA atom. Chain filtering is unnecessary because each PDB file
+    is already specific to a single protein.
+
+    Parameters
+    ----------
+    pdb_path : str or Path
+        Path to the .pdb structure file.
+
+    Returns
+    -------
+    dict with two keys:
+      'residues'    : list of (chain_id, residue_name, residue_number) tuples
+      'coordinates' : numpy array of shape (n_residues, 3)
+    """
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure("predicted", str(pdb_path))
+
+    residues = []
+    coordinates = []
+
+    model = structure[0]
+    for chain in model:
+        for residue in chain:
+            het_flag = residue.get_id()[0]
+            if het_flag == "W":
+                continue
+            if "CA" in residue:
+                ca = residue["CA"]
+                residues.append((
+                    chain.get_id(),
+                    residue.get_resname(),
+                    residue.get_id()[1],
+                ))
+                coordinates.append(ca.get_coord())
+
+    return {
+        "residues": residues,
+        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
+    }
+
+
 def extract_pdb_ca_coordinates(pdb_file: str) -> dict:
     """Parse a PDB file and extract the 3D position of the alpha-carbon (CA)
     for every standard amino acid residue across all chains.
