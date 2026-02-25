@@ -27,6 +27,6 @@ echo "job is starting on $(hostname)"
 # Data directories on Delta
 export PAIR_BLOCKS_ROOT=/work/hdd/bekh/thayes/openfold_reps
 export PDB_ROOT=/work/hdd/bekh/thayes/openfold_reps_outputs_sm
-export CSV_ROOT=/work/hdd/bekh/thayes/linear_regression_csv_files
+export CSV_ROOT=$HOME/linear_regression_csv_files
 
 srun python3 test_cluster_multi_protein_regression.py
