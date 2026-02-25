@@ -38,16 +38,13 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     balanced_accuracy_score,
     accuracy_score,
     confusion_matrix,
     precision_recall_fscore_support,
 )
-
-from Bio.PDB import PDBParser
 
 
 # ===========================================================================
@@ -78,6 +75,23 @@ PROTEINS_DIR = PROJECT_ROOT / "proteins"
 
 # OUTPUT_DIR: Path — where all outputs (CSVs, plots) are saved for this script
 OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "logistic_regression_with_diagonal"
+
+sys.path.insert(0, str(PROJECT_ROOT))
+from lib.classification_common import (
+    build_pair_type_labels as _build_pair_type_labels,
+    extract_top_confused_pairs as _extract_top_confused_pairs,
+    write_confusion_matrix_csv,
+    write_per_class_report_csv,
+)
+from lib.output_writers import ensure_output_dirs
+from lib.protein_dataset import load_local_protein_data
+from lib.regression_common import (
+    build_layer_feature_matrix,
+    concatenate_labels,
+    compute_protein_offsets_for_key,
+    encode_labels,
+    split_indices,
+)
 
 
 # ===========================================================================
@@ -217,16 +231,9 @@ def build_pair_labels(residue_data):
     struct_j : np.ndarray of int, shape (n_pairs,)
         Column indices from np.triu_indices — the second residue index in each pair.
     """
-    res_names = [r[1] for r in residue_data["residues"]]
-    n = len(res_names)
-
+    n = len(residue_data["residues"])
     struct_i, struct_j = np.triu_indices(n, k=1)
-
-    labels = np.array([
-        "-".join(sorted([res_names[i], res_names[j]]))
-        for i, j in zip(struct_i, struct_j)
-    ])
-
+    labels = _build_pair_type_labels(residue_data, struct_i, struct_j)
     return labels, struct_i, struct_j
 
 
@@ -248,23 +255,7 @@ def extract_top_confused_pairs(cm, class_names, top_n=20):
         Each dict has keys: 'true_class', 'predicted_class', 'count', 'true_total'.
         Sorted by count descending.
     """
-    cm_off = cm.copy()
-    np.fill_diagonal(cm_off, 0)
-
-    flat_indices = np.argsort(cm_off.ravel())[::-1][:top_n]
-    rows, cols = np.unravel_index(flat_indices, cm.shape)
-
-    results = []
-    for r, c in zip(rows, cols):
-        if cm_off[r, c] == 0:
-            break
-        results.append({
-            "true_class": class_names[r],
-            "predicted_class": class_names[c],
-            "count": int(cm_off[r, c]),
-            "true_total": int(cm[r].sum()),
-        })
-    return results
+    return _extract_top_confused_pairs(cm, class_names, top_n=top_n)
 
 
 # ===========================================================================
@@ -276,10 +267,7 @@ def main():
     output_dir = OUTPUT_DIR.resolve()
     n_layers = N_LAYERS
 
-    csv_dir = output_dir / "csv_files"
-    vis_dir = output_dir / "visualizations"
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    vis_dir.mkdir(parents=True, exist_ok=True)
+    csv_dir, vis_dir = ensure_output_dirs(output_dir)
 
     print(f"Proteins directory: {proteins_dir}")
     print(f"Output directory:   {output_dir}")
@@ -291,59 +279,19 @@ def main():
     # Phase 1: Load data for each protein
     # ------------------------------------------------------------------
 
-    all_proteins = discover_proteins(proteins_dir)
-    print(f"\nDiscovered {len(all_proteins)} protein directories.")
-
-    protein_data = []
-    skipped = []
-
-    for protein_id, protein_dir in all_proteins:
-        try:
-            pdb_path = find_pdb_file(protein_dir, protein_id)
-            if pdb_path is None:
-                skipped.append((protein_id, "no predicted PDB file found"))
-                print(f"[SKIP] {protein_id}: no predicted PDB file found")
-                continue
-
-            pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
-            if not pb0_path.exists():
-                skipped.append((protein_id, "pair block 0 not found"))
-                print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
-                continue
-
-            ca_data = extract_ca_coordinates(pdb_path)
-            n_ca = len(ca_data["residues"])
-            if n_ca == 0:
-                skipped.append((protein_id, "no CA atoms found in PDB"))
-                print(f"[SKIP] {protein_id}: no CA atoms found in PDB")
-                continue
-
-            pb0 = np.load(str(pb0_path), mmap_mode="r")
-            pb_dim = pb0.shape[0]
-            del pb0
-
-            if n_ca != pb_dim:
-                skipped.append((protein_id, f"CA count {n_ca} != pair block dim {pb_dim}"))
-                print(f"[SKIP] {protein_id}: CA count {n_ca} != pair block dim {pb_dim}")
-                continue
-
-            labels, struct_i, struct_j = build_pair_labels(ca_data)
-            n_pair_types = len(set(labels))
-
-            protein_data.append({
-                "protein_id": protein_id,
-                "protein_dir": protein_dir,
-                "n_residues": n_ca,
-                "pb_i": struct_i,
-                "pb_j": struct_j,
-                "labels": labels,
-            })
-            print(f"[OK]   {protein_id}: {n_ca} residues, {len(labels):,} pairs, {n_pair_types} pair types")
-
-        except Exception as e:
-            skipped.append((protein_id, f"unexpected error -- {e}"))
-            print(f"[SKIP] {protein_id}: unexpected error -- {e}")
-            traceback.print_exc()
+    protein_data, skipped = load_local_protein_data(
+        proteins_dir,
+        include_pair_labels=True,
+    )
+    print(f"\nDiscovered {len(protein_data) + len(skipped)} protein directories.")
+    for d in protein_data:
+        n_pair_types = len(set(d["labels"]))
+        print(
+            f"[OK]   {d['protein_id']}: {d['n_residues']} residues, "
+            f"{len(d['labels']):,} pairs, {n_pair_types} pair types"
+        )
+    for protein_id, reason in skipped:
+        print(f"[SKIP] {protein_id}: {reason}")
 
     if not protein_data:
         print("\nERROR: No proteins loaded successfully. Exiting.")
@@ -355,28 +303,22 @@ def main():
     # Phase 2: Pool labels, encode, and split
     # ------------------------------------------------------------------
 
-    labels_all = np.concatenate([d["labels"] for d in protein_data])
+    labels_all = concatenate_labels(protein_data)
     n_total_pairs = len(labels_all)
 
-    protein_offsets = []
-    offset = 0
-    for d in protein_data:
-        n = len(d["labels"])
-        protein_offsets.append((d["protein_id"], offset, offset + n))
-        offset += n
+    protein_offsets = compute_protein_offsets_for_key(protein_data, "labels")
 
-    label_encoder = LabelEncoder()
-    y_all = label_encoder.fit_transform(labels_all)
+    y_all, label_encoder = encode_labels(labels_all)
     n_classes = len(label_encoder.classes_)
     class_names = list(label_encoder.classes_)
 
     print(f"\nTotal pairs across {n_proteins} protein(s): {n_total_pairs:,}")
     print(f"Unique pair types: {n_classes}")
 
-    all_idx = np.arange(n_total_pairs)
-
-    idx_train, idx_test = train_test_split(
-        all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE,
+    idx_train, idx_test = split_indices(
+        n_samples=n_total_pairs,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
         stratify=y_all,
     )
 
@@ -400,24 +342,7 @@ def main():
     print()
     for layer in range(n_layers):
         try:
-            X_chunks = []
-            for d in protein_data:
-                pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-
-                pb = np.load(str(pb_path))
-
-                # 512-dim feature: cross-pair (i→j, j→i) + diagonal (i→i, j→j)
-                X_chunk = np.concatenate([
-                    pb[d["pb_i"], d["pb_j"], :],  # (n_pairs, 128): i→j cross-pair
-                    pb[d["pb_j"], d["pb_i"], :],  # (n_pairs, 128): j→i cross-pair
-                    pb[d["pb_i"], d["pb_i"], :],  # (n_pairs, 128): i diagonal (self)
-                    pb[d["pb_j"], d["pb_j"], :],  # (n_pairs, 128): j diagonal (self)
-                ], axis=1)  # shape (n_pairs, 512)
-                X_chunks.append(X_chunk)
-                del pb
-
-            X_all = np.vstack(X_chunks)
-            del X_chunks
+            X_all = build_layer_feature_matrix(protein_data, layer, mode="diagonal")
 
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_all[idx_train])
@@ -495,29 +420,12 @@ def main():
 
     if last_layer_report is not None:
         f1_csv = csv_dir / "per_class_f1_layer47.csv"
-        with open(f1_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["pair_type", "f1", "precision", "recall", "support"])
-            for i in range(n_classes):
-                sup = int(last_layer_report["support"][i])
-                if sup == 0:
-                    continue
-                writer.writerow([
-                    class_names[i],
-                    f"{last_layer_report['f1'][i]:.4f}",
-                    f"{last_layer_report['precision'][i]:.4f}",
-                    f"{last_layer_report['recall'][i]:.4f}",
-                    sup,
-                ])
+        write_per_class_report_csv(f1_csv, class_names, last_layer_report)
         print(f"Saved per-class F1 CSV -> {f1_csv}")
 
     if last_layer_cm is not None:
         cm_csv = csv_dir / "confusion_matrix_layer47.csv"
-        with open(cm_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([""] + class_names)
-            for i, row in enumerate(last_layer_cm):
-                writer.writerow([class_names[i]] + [int(x) for x in row])
+        write_confusion_matrix_csv(cm_csv, last_layer_cm, class_names)
         print(f"Saved confusion matrix CSV -> {cm_csv}")
 
     if last_layer_cm is not None:

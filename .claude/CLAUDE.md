@@ -32,7 +32,7 @@ Scripts run on two SLURM clusters: **Delta** and **ICE**. Each has its own sbatc
 | ICE | `regression_job.sbatch`, `per_protein_regression_job.sbatch`, `protein_split_regression_job.sbatch` | Uses `module load anaconda3`, `$SCRATCH` for data root |
 | Delta | `delta_regression_job.sbatch`, `delta_per_protein_regression_job.sbatch` | Uses `module load python`, `srun`, `--account=bekh-delta-cpu` |
 
-**Reference documentation** lives in `proteins/claude_reference/`:
+**Reference documentation** lives in `proteins/reference_for_llms/`:
 - `delta_slurm_guide.pdf` — Delta cluster SLURM specifics
 - `slurm_guidelines.pdf` — general SLURM guidelines
 - `storage_on_ice.pdf` — ICE storage and `$SCRATCH` layout
@@ -71,6 +71,8 @@ from lib.structure import extract_residue_coordinates, compute_distance_matrix, 
 **Pair representation shape:** Always `(R, R, C)` where R = entity sequence length and C = 128 channels.
 
 **PDB-based regression scripts** use inline PDB parsing (no lib/ imports for coordinate extraction). They extract CA coordinates directly from predicted PDB files.
+
+**Single-chain analysis:** Each protein directory (e.g. `7b3a_A/`) represents one chain of interest. The analysis operates on that one chain — not the whole protein complex. However, the chain letter in the directory name (e.g. `_A`) does **not** reliably match the internal chain ID in the PDB file (e.g. a protein named `7ab3_E` may store its residues under chain `A` in the PDB). For this reason, `extract_ca_coordinates` in all scripts iterates **all chains** rather than filtering by the suffix from the protein_id. Since each PDB file is already specific to one chain of interest, this produces the correct result regardless of the internal chain letter used.
 
 **Visualizations:** All plots saved to `proteins/<id>/visualizations/` or `proteins/multi_protein_results/visualizations/`.
 

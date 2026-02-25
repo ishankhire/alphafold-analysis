@@ -33,14 +33,20 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 (needed for 3D projection)
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
-from Bio.PDB import PDBParser
 
 # lib/ imports
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
+from lib.output_writers import ensure_output_dirs
+from lib.protein_dataset import compute_pairwise_distances, load_local_protein_data
+from lib.regression_common import (
+    build_layer_feature_matrix,
+    concatenate_targets,
+    compute_protein_offsets,
+    split_indices,
+)
 from lib.structure import superimpose_structures, compute_tm_score
 
 
@@ -59,56 +65,6 @@ EIGENVALUE_LAYERS = [0, 11, 23, 35, 47]
 
 PROTEINS_DIR = PROJECT_ROOT / "proteins"
 OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "mds_reconstruction"
-
-
-# ===========================================================================
-# Helper functions — data loading (replicated from multi_protein_regression.py)
-# ===========================================================================
-
-def find_pdb_file(protein_dir, protein_id):
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-def get_pair_block_path(protein_dir, protein_id, layer):
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-def discover_proteins(proteins_dir):
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if entry.name in ("multi_protein_results", "claude_reference"):
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-def extract_ca_coordinates(pdb_path):
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-    residues = []
-    coordinates = []
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((chain.get_id(), residue.get_resname(), residue.get_id()[1]))
-                coordinates.append(ca.get_coord())
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
-    return np.linalg.norm(diff, axis=2)
 
 
 # ===========================================================================
@@ -229,10 +185,7 @@ def classical_mds(distance_matrix, n_dims=3):
 def main():
     proteins_dir = PROTEINS_DIR.resolve()
     output_dir = OUTPUT_DIR.resolve()
-    csv_dir = output_dir / "csv_files"
-    vis_dir = output_dir / "visualizations"
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    vis_dir.mkdir(parents=True, exist_ok=True)
+    csv_dir, vis_dir = ensure_output_dirs(output_dir)
 
     print(f"Proteins directory: {proteins_dir}")
     print(f"Output directory:   {output_dir}")
@@ -241,62 +194,12 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Load data for each protein
     # ------------------------------------------------------------------
-    all_proteins = discover_proteins(proteins_dir)
-    print(f"\nDiscovered {len(all_proteins)} protein directories.")
-
-    protein_data = []
-    skipped = []
-
-    for protein_id, protein_dir in all_proteins:
-        try:
-            pdb_path = find_pdb_file(protein_dir, protein_id)
-            if pdb_path is None:
-                skipped.append((protein_id, "no predicted PDB file found"))
-                print(f"[SKIP] {protein_id}: no predicted PDB file found")
-                continue
-
-            pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
-            if not pb0_path.exists():
-                skipped.append((protein_id, "pair block 0 not found"))
-                print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
-                continue
-
-            ca_data = extract_ca_coordinates(pdb_path)
-            n_ca = len(ca_data["residues"])
-            if n_ca == 0:
-                skipped.append((protein_id, "no CA atoms found in PDB"))
-                print(f"[SKIP] {protein_id}: no CA atoms found in PDB")
-                continue
-
-            pb0 = np.load(str(pb0_path), mmap_mode="r")
-            pb_dim = pb0.shape[0]
-            del pb0
-
-            if n_ca != pb_dim:
-                skipped.append((protein_id, f"CA count {n_ca} != pair block dim {pb_dim}"))
-                print(f"[SKIP] {protein_id}: CA count {n_ca} != pair block dim {pb_dim}")
-                continue
-
-            dist_matrix = compute_distance_matrix(ca_data["coordinates"])
-            struct_i, struct_j = np.triu_indices(n_ca, k=1)
-            y_protein = dist_matrix[struct_i, struct_j]
-
-            protein_data.append({
-                "protein_id": protein_id,
-                "protein_dir": protein_dir,
-                "n_residues": n_ca,
-                "coordinates": ca_data["coordinates"],  # ground truth 3D coords
-                "residues": ca_data["residues"],
-                "pb_i": struct_i,
-                "pb_j": struct_j,
-                "y": y_protein,
-            })
-            print(f"[OK]   {protein_id}: {n_ca} residues, {len(y_protein):,} pairs")
-
-        except Exception as e:
-            skipped.append((protein_id, f"unexpected error -- {e}"))
-            print(f"[SKIP] {protein_id}: unexpected error -- {e}")
-            traceback.print_exc()
+    protein_data, skipped = load_local_protein_data(proteins_dir, include_distances=True)
+    print(f"\nDiscovered {len(protein_data) + len(skipped)} protein directories.")
+    for d in protein_data:
+        print(f"[OK]   {d['protein_id']}: {d['n_residues']} residues, {len(d['y']):,} pairs")
+    for protein_id, reason in skipped:
+        print(f"[SKIP] {protein_id}: {reason}")
 
     if not protein_data:
         print("\nERROR: No proteins loaded successfully. Exiting.")
@@ -307,21 +210,17 @@ def main():
     # ------------------------------------------------------------------
     # Phase 2: Pool targets and create train/test split
     # ------------------------------------------------------------------
-    y_all = np.concatenate([d["y"] for d in protein_data])
+    y_all = concatenate_targets(protein_data)
     n_total_pairs = len(y_all)
 
-    protein_offsets = []
-    offset = 0
-    for d in protein_data:
-        n = len(d["y"])
-        protein_offsets.append((d["protein_id"], offset, offset + n))
-        offset += n
+    protein_offsets = compute_protein_offsets(protein_data)
 
     print(f"\nTotal pairs across {n_proteins} protein(s): {n_total_pairs:,}")
 
-    all_idx = np.arange(n_total_pairs)
-    idx_train, idx_test = train_test_split(
-        all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE
+    idx_train, idx_test = split_indices(
+        n_samples=n_total_pairs,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
     )
     y_train = y_all[idx_train]
 
@@ -337,19 +236,7 @@ def main():
     for layer in range(N_LAYERS):
         try:
             # --- Load features ---
-            X_chunks = []
-            for d in protein_data:
-                pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-                pb = np.load(str(pb_path))
-                X_chunk = np.concatenate([
-                    pb[d["pb_i"], d["pb_j"], :],
-                    pb[d["pb_j"], d["pb_i"], :],
-                ], axis=1)
-                X_chunks.append(X_chunk)
-                del pb
-
-            X_all = np.vstack(X_chunks)
-            del X_chunks
+            X_all = build_layer_feature_matrix(protein_data, layer, mode="base")
 
             # --- Train regression ---
             scaler = StandardScaler()
@@ -413,7 +300,7 @@ def main():
                 tm = compute_tm_score(true_coords, transformed, n)
 
                 # Stress: how well MDS coords reproduce the predicted distances
-                mds_dist = compute_distance_matrix(transformed)
+                mds_dist = compute_pairwise_distances(transformed)
                 triu_i, triu_j = np.triu_indices(n, k=1)
                 d_pred = pred_dist[triu_i, triu_j]
                 d_mds = mds_dist[triu_i, triu_j]

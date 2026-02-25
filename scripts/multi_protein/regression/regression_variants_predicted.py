@@ -6,7 +6,7 @@ Compares Linear, Ridge, and Lasso regression as probes for predicting
 CA-CA distance from AlphaFold pair-block embeddings across all 48 layers.
 
 Uses predicted PDB files (not CIF structures) for ground-truth distances.
-Standalone, cluster-ready — no lib/ imports.
+Uses shared local helpers from lib/ to avoid duplicated data-loading logic.
 
 For each of the 48 layers:
   - Feature: concatenated pair-block vectors [pair_block[i,j,:], pair_block[j,i,:]] → 256-dim
@@ -28,7 +28,6 @@ Usage:
 import argparse
 import csv
 import math
-import os
 import sys
 import traceback
 from pathlib import Path
@@ -38,12 +37,19 @@ import matplotlib
 matplotlib.use("Agg")  # non-interactive backend for cluster
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
 
-# BioPython — needed for PDB parsing
-from Bio.PDB import PDBParser
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+from lib.output_writers import ensure_output_dirs
+from lib.protein_dataset import load_local_protein_data
+from lib.regression_common import (
+    build_layer_feature_matrix,
+    concatenate_targets,
+    compute_protein_offsets,
+    split_indices,
+)
 
 
 # ===========================================================================
@@ -76,82 +82,12 @@ MODEL_COLORS = {
 
 
 # ===========================================================================
-# Helper functions — data loading
-# ===========================================================================
-
-def find_pdb_file(protein_dir, protein_id):
-    """Locate the predicted PDB file for a protein.
-
-    Expected path: <protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
-    """
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-def get_pair_block_path(protein_dir, protein_id, layer):
-    """Return the path to a pair block .npy file for a given layer."""
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-def discover_proteins(proteins_dir):
-    """Find all protein subdirectories under the given root.
-
-    Returns a sorted list of (protein_id, protein_dir) tuples.
-    """
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-# ===========================================================================
-# Helper functions — coordinate extraction & distance computation
-# ===========================================================================
-
-def extract_ca_coordinates(pdb_path):
-    """Extract CA atom coordinates from a PDB file across all chains."""
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-
-    residues = []
-    coordinates = []
-
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":  # water
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((
-                    chain.get_id(),
-                    residue.get_resname(),
-                    residue.get_id()[1],
-                ))
-                coordinates.append(ca.get_coord())
-
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    """Vectorized pairwise Euclidean distance matrix."""
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
-    return np.linalg.norm(diff, axis=2)
-
-
-# ===========================================================================
 # Main script
 # ===========================================================================
 
 def parse_args():
     script_dir = Path(__file__).parent
-    default_proteins = script_dir.parent.parent.parent / "proteins"
+    default_proteins = PROJECT_ROOT / "proteins"
     default_output = default_proteins / "multi_protein_results" / "regression_variants"
 
     parser = argparse.ArgumentParser(
@@ -173,10 +109,7 @@ def main():
     proteins_dir = args.proteins_dir.resolve()
     output_dir = args.output_dir.resolve()
 
-    csv_dir = output_dir / "csv_files"
-    vis_dir = output_dir / "visualizations"
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    vis_dir.mkdir(parents=True, exist_ok=True)
+    csv_dir, vis_dir = ensure_output_dirs(output_dir)
 
     print(f"Proteins directory: {proteins_dir}")
     print(f"Output directory:   {output_dir}")
@@ -186,68 +119,12 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Load data for each protein
     # ------------------------------------------------------------------
-    all_proteins = discover_proteins(proteins_dir)
-    print(f"\nDiscovered {len(all_proteins)} protein directories.")
-
-    protein_data = []   # successfully loaded proteins
-    skipped = []        # (protein_id, reason)
-
-    for protein_id, protein_dir in all_proteins:
-        try:
-            # --- Find PDB file ---
-            pdb_path = find_pdb_file(protein_dir, protein_id)
-            if pdb_path is None:
-                skipped.append((protein_id, "no predicted PDB file found"))
-                print(f"[SKIP] {protein_id}: no predicted PDB file found")
-                continue
-
-            # --- Check pair blocks exist ---
-            pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
-            if not pb0_path.exists():
-                skipped.append((protein_id, "pair block 0 not found"))
-                print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
-                continue
-
-            # --- Parse chain ID from protein_id (e.g. "7b3a_A" → "A") ---
-            # --- Extract CA coordinates ---
-            ca_data = extract_ca_coordinates(pdb_path)
-            n_ca = len(ca_data["residues"])
-            if n_ca == 0:
-                skipped.append((protein_id, "no CA atoms found in PDB"))
-                print(f"[SKIP] {protein_id}: no CA atoms found in PDB")
-                continue
-
-            # --- Verify dimension match with pair blocks ---
-            pb0 = np.load(str(pb0_path), mmap_mode="r")
-            pb_dim = pb0.shape[0]
-            del pb0
-
-            if n_ca != pb_dim:
-                skipped.append((protein_id, f"CA count {n_ca} != pair block dim {pb_dim}"))
-                print(f"[SKIP] {protein_id}: CA count {n_ca} != pair block dim {pb_dim}")
-                continue
-
-            # --- Compute distance matrix ---
-            dist_matrix = compute_distance_matrix(ca_data["coordinates"])
-
-            # --- Build upper-triangle pair indices ---
-            struct_i, struct_j = np.triu_indices(n_ca, k=1)
-            y_protein = dist_matrix[struct_i, struct_j]
-
-            protein_data.append({
-                "protein_id": protein_id,
-                "protein_dir": protein_dir,
-                "n_residues": n_ca,
-                "pb_i": struct_i,
-                "pb_j": struct_j,
-                "y": y_protein,
-            })
-            print(f"[OK]   {protein_id}: {n_ca} residues, {len(y_protein):,} pairs")
-
-        except Exception as e:
-            skipped.append((protein_id, f"unexpected error — {e}"))
-            print(f"[SKIP] {protein_id}: unexpected error — {e}")
-            traceback.print_exc()
+    protein_data, skipped = load_local_protein_data(proteins_dir, include_distances=True)
+    print(f"\nDiscovered {len(protein_data) + len(skipped)} protein directories.")
+    for d in protein_data:
+        print(f"[OK]   {d['protein_id']}: {d['n_residues']} residues, {len(d['y']):,} pairs")
+    for protein_id, reason in skipped:
+        print(f"[SKIP] {protein_id}: {reason}")
 
     if not protein_data:
         print("\nERROR: No proteins loaded successfully. Exiting.")
@@ -258,21 +135,19 @@ def main():
     # ------------------------------------------------------------------
     # Phase 2: Pool targets and split
     # ------------------------------------------------------------------
-    y_all = np.concatenate([d["y"] for d in protein_data])
+    y_all = concatenate_targets(protein_data)
     n_total_pairs = len(y_all)
 
-    protein_offsets = []
-    offset = 0
-    for d in protein_data:
-        n = len(d["y"])
-        protein_offsets.append((d["protein_id"], offset, offset + n))
-        offset += n
+    protein_offsets = compute_protein_offsets(protein_data)
 
     print(f"\nTotal pairs across {n_proteins} protein(s): {n_total_pairs:,}")
 
     # Fixed 80/20 train/test split
-    all_idx = np.arange(n_total_pairs)
-    idx_train, idx_test = train_test_split(all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+    idx_train, idx_test = split_indices(
+        n_samples=n_total_pairs,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+    )
     y_train = y_all[idx_train]
     y_test = y_all[idx_test]
 
@@ -286,19 +161,7 @@ def main():
     for layer in range(N_LAYERS):
         try:
             # Build features for this layer across all proteins
-            X_chunks = []
-            for d in protein_data:
-                pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-                pb = np.load(str(pb_path))
-                X_chunk = np.concatenate([
-                    pb[d["pb_i"], d["pb_j"], :],   # (n_pairs, 128)
-                    pb[d["pb_j"], d["pb_i"], :],   # (n_pairs, 128)
-                ], axis=1)                          # (n_pairs, 256)
-                X_chunks.append(X_chunk)
-                del pb
-
-            X_all = np.vstack(X_chunks)
-            del X_chunks
+            X_all = build_layer_feature_matrix(protein_data, layer, mode="base")
 
             # Standardize (fit on train only)
             scaler = StandardScaler()

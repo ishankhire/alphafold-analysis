@@ -42,11 +42,8 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
-
-from Bio.PDB import PDBParser
 
 
 # ===========================================================================
@@ -67,126 +64,15 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 PROTEINS_DIR = PROJECT_ROOT / "proteins"
 OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results"
 
-
-# ===========================================================================
-# Helper functions — data loading
-# ===========================================================================
-
-# FLAG: This function defines the PDB filename pattern.
-# If the naming convention changes, update the pattern here.
-def find_pdb_file(protein_dir, protein_id):
-    """Locate the predicted PDB file for a protein.
-
-    Expected path: <protein_dir>/predicted_pdb/<protein_id>_model_1_ptm_unrelaxed.pdb
-
-    Returns the Path object, or None if not found.
-    """
-    pdb_path = protein_dir / "predicted_pdb" / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    return pdb_path if pdb_path.exists() else None
-
-
-# FLAG: This function defines the pair block path pattern.
-# If the naming convention or directory structure changes, update here.
-def get_pair_block_path(protein_dir, protein_id, layer):
-    """Return the path to a pair block .npy file for a given layer.
-
-    Expected: <protein_dir>/pair_blocks/<protein_id>_pair_block_<layer>.npy
-    """
-    return protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy"
-
-
-# FLAG: This function discovers protein directories.
-# It filters out non-protein directories (e.g. multi_protein_results).
-# If the directory layout changes (e.g. nested folders, manifest file), update here.
-def discover_proteins(proteins_dir):
-    """Find all protein subdirectories under the given root.
-
-    Returns a sorted list of (protein_id, protein_dir) tuples.
-    Skips 'multi_protein_results' and any non-directory entries.
-    """
-    proteins = []
-    for entry in sorted(proteins_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if entry.name == "multi_protein_results":
-            continue
-        proteins.append((entry.name, entry))
-    return proteins
-
-
-# ===========================================================================
-# Helper functions — coordinate extraction & distance computation
-# ===========================================================================
-
-def extract_ca_coordinates(pdb_path):
-    """Extract CA atom coordinates from a PDB file across all chains."""
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("predicted", str(pdb_path))
-
-    residues = []
-    coordinates = []
-
-    model = structure[0]
-    for chain in model:
-        for residue in chain:
-            het_flag = residue.get_id()[0]
-            if het_flag == "W":
-                continue
-            if "CA" in residue:
-                ca = residue["CA"]
-                residues.append((
-                    chain.get_id(),
-                    residue.get_resname(),
-                    residue.get_id()[1],
-                ))
-                coordinates.append(ca.get_coord())
-
-    return {
-        "residues": residues,
-        "coordinates": np.array(coordinates) if coordinates else np.empty((0, 3)),
-    }
-
-
-def compute_distance_matrix(coords):
-    """Vectorized pairwise Euclidean distance matrix.
-
-    Parameters
-    ----------
-    coords : np.ndarray, shape (n, 3)
-
-    Returns
-    -------
-    np.ndarray, shape (n, n) -- symmetric, zero diagonal.
-    """
-    diff = coords[:, np.newaxis, :] - coords[np.newaxis, :, :]
-    return np.linalg.norm(diff, axis=2)
-
-
-def save_coordinates_csv(path, residue_data):
-    """Save residue coordinates to CSV.
-
-    Format: chain, residue, number, x, y, z
-    """
-    with open(path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["chain", "residue", "number", "x", "y", "z"])
-        for res, coord in zip(residue_data["residues"], residue_data["coordinates"]):
-            writer.writerow([
-                res[0], res[1], res[2],
-                f"{coord[0]:.3f}", f"{coord[1]:.3f}", f"{coord[2]:.3f}",
-            ])
-
-
-def save_distance_csv(path, dist_matrix, residue_data):
-    """Save distance matrix to CSV with residue labels as header."""
-    labels = [
-        f"{res[0]}_{res[1]}{res[2]}" for res in residue_data["residues"]
-    ]
-    with open(path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(labels)
-        for row in dist_matrix:
-            writer.writerow([f"{d:.4f}" for d in row])
+sys.path.insert(0, str(PROJECT_ROOT))
+from lib.output_writers import ensure_output_dirs, save_coordinates_csv, save_distance_csv
+from lib.protein_dataset import load_local_protein_data
+from lib.regression_common import (
+    build_layer_feature_matrix,
+    concatenate_targets,
+    compute_protein_offsets,
+    split_indices,
+)
 
 
 # ===========================================================================
@@ -198,10 +84,7 @@ def main():
     output_dir = OUTPUT_DIR.resolve()
     n_layers = N_LAYERS
 
-    csv_dir = output_dir / "csv_files"
-    vis_dir = output_dir / "visualizations"
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    vis_dir.mkdir(parents=True, exist_ok=True)
+    csv_dir, vis_dir = ensure_output_dirs(output_dir)
 
     print(f"Proteins directory: {proteins_dir}")
     print(f"Output directory:   {output_dir}")
@@ -210,77 +93,21 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Load data for each protein
     # ------------------------------------------------------------------
-    # FLAG: discover_proteins scans PROTEINS_DIR for subdirectories.
-    # If the directory layout changes, update discover_proteins().
-    all_proteins = discover_proteins(proteins_dir)
-    print(f"\nDiscovered {len(all_proteins)} protein directories.")
-
-    protein_data = []
-    skipped = []
-
-    for protein_id, protein_dir in all_proteins:
-        try:
-            # FLAG: find_pdb_file uses a hardcoded filename pattern.
-            # If the naming convention changes, update find_pdb_file().
-            pdb_path = find_pdb_file(protein_dir, protein_id)
-            if pdb_path is None:
-                skipped.append((protein_id, "no predicted PDB file found"))
-                print(f"[SKIP] {protein_id}: no predicted PDB file found")
-                continue
-
-            # FLAG: get_pair_block_path uses a hardcoded path pattern.
-            # If the naming convention changes, update get_pair_block_path().
-            pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
-            if not pb0_path.exists():
-                skipped.append((protein_id, "pair block 0 not found"))
-                print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
-                continue
-
-            ca_data = extract_ca_coordinates(pdb_path)
-            n_ca = len(ca_data["residues"])
-            if n_ca == 0:
-                skipped.append((protein_id, "no CA atoms found in PDB"))
-                print(f"[SKIP] {protein_id}: no CA atoms found in PDB")
-                continue
-
-            pb0 = np.load(str(pb0_path), mmap_mode="r")
-            pb_dim = pb0.shape[0]
-            del pb0
-
-            if n_ca != pb_dim:
-                skipped.append((protein_id, f"CA count {n_ca} != pair block dim {pb_dim}"))
-                print(f"[SKIP] {protein_id}: CA count {n_ca} != pair block dim {pb_dim}")
-                continue
-
-            dist_matrix = compute_distance_matrix(ca_data["coordinates"])
-
-            # Save per-protein CSVs
-            prot_csv_dir = protein_dir / "csv_files"
-            prot_csv_dir.mkdir(parents=True, exist_ok=True)
-            save_coordinates_csv(
-                prot_csv_dir / "predicted_residue_coordinates.csv", ca_data
-            )
-            save_distance_csv(
-                prot_csv_dir / "predicted_residue_distances.csv", dist_matrix, ca_data
-            )
-
-            struct_i, struct_j = np.triu_indices(n_ca, k=1)
-            y_protein = dist_matrix[struct_i, struct_j]
-
-            protein_data.append({
-                "protein_id": protein_id,
-                "protein_dir": protein_dir,
-                "n_residues": n_ca,
-                "pb_i": struct_i,
-                "pb_j": struct_j,
-                "y": y_protein,
-            })
-            print(f"[OK]   {protein_id}: {n_ca} residues, {len(y_protein):,} pairs")
-
-        except Exception as e:
-            skipped.append((protein_id, f"unexpected error -- {e}"))
-            print(f"[SKIP] {protein_id}: unexpected error -- {e}")
-            traceback.print_exc()
+    protein_data, skipped = load_local_protein_data(proteins_dir, include_distances=True)
+    print(f"\nDiscovered {len(protein_data) + len(skipped)} protein directories.")
+    for d in protein_data:
+        print(f"[OK]   {d['protein_id']}: {d['n_residues']} residues, {len(d['y']):,} pairs")
+        prot_csv_dir = d["protein_dir"] / "csv_files"
+        prot_csv_dir.mkdir(parents=True, exist_ok=True)
+        residue_data = {"residues": d["residues"], "coordinates": d["coordinates"]}
+        save_coordinates_csv(prot_csv_dir / "predicted_residue_coordinates.csv", residue_data)
+        save_distance_csv(
+            prot_csv_dir / "predicted_residue_distances.csv",
+            d["distance_matrix"],
+            residue_data,
+        )
+    for protein_id, reason in skipped:
+        print(f"[SKIP] {protein_id}: {reason}")
 
     if not protein_data:
         print("\nERROR: No proteins loaded successfully. Exiting.")
@@ -291,20 +118,18 @@ def main():
     # ------------------------------------------------------------------
     # Phase 2: Pool targets and split
     # ------------------------------------------------------------------
-    y_all = np.concatenate([d["y"] for d in protein_data])
+    y_all = concatenate_targets(protein_data)
     n_total_pairs = len(y_all)
 
-    protein_offsets = []
-    offset = 0
-    for d in protein_data:
-        n = len(d["y"])
-        protein_offsets.append((d["protein_id"], offset, offset + n))
-        offset += n
+    protein_offsets = compute_protein_offsets(protein_data)
 
     print(f"\nTotal pairs across {n_proteins} protein(s): {n_total_pairs:,}")
 
-    all_idx = np.arange(n_total_pairs)
-    idx_train, idx_test = train_test_split(all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+    idx_train, idx_test = split_indices(
+        n_samples=n_total_pairs,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+    )
     y_train = y_all[idx_train]
     y_test = y_all[idx_test]
 
@@ -322,21 +147,7 @@ def main():
     print()
     for layer in range(n_layers):
         try:
-            X_chunks = []
-            for d in protein_data:
-                # FLAG: get_pair_block_path uses a hardcoded path pattern.
-                # If the naming convention changes, update get_pair_block_path().
-                pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-                pb = np.load(str(pb_path))
-                X_chunk = np.concatenate([
-                    pb[d["pb_i"], d["pb_j"], :],
-                    pb[d["pb_j"], d["pb_i"], :],
-                ], axis=1)
-                X_chunks.append(X_chunk)
-                del pb
-
-            X_all = np.vstack(X_chunks)
-            del X_chunks
+            X_all = build_layer_feature_matrix(protein_data, layer, mode="base")
 
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_all[idx_train])

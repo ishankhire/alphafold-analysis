@@ -111,7 +111,7 @@ def process_protein(protein_dir, protein_id):
     cif_coords = cif_data["coordinates"]  # shape (n_cif, 3)
 
     # --- Extract PDB CA coordinates (predicted, all entity residues) ---
-    pdb_data = extract_pdb_ca_coordinates(str(pdb_path), chain_id)
+    pdb_data = extract_pdb_ca_coordinates(str(pdb_path))
     n_pdb = len(pdb_data["residues"])
     print(f"  PDB CA atoms: {n_pdb}")
 

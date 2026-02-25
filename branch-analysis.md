@@ -1,5 +1,56 @@
 # Branch Analysis
 
+## Session: 2026-02-25 — Modular regression refactor (local + logistic) and pytest migration
+
+### What changed
+- Added shared `lib` modules:
+  - `lib/aa_features.py` for amino-acid one-hot feature construction.
+  - `lib/classification_common.py` for pair-type labels, confusion reporting helpers, and CSV writers.
+- Extended `lib/protein_dataset.py` with `load_local_protein_data(...)` to centralize:
+  - protein discovery
+  - predicted PDB loading
+  - CA extraction
+  - pair-block dimension validation
+  - upper-triangle index generation
+  - optional distance targets and optional pair-type labels
+- Extended `lib/regression_common.py` with pooled classification/regression helpers:
+  - `concatenate_labels`
+  - `compute_protein_offsets_for_key`
+  - `encode_labels`
+  - `build_layer_feature_matrix`
+
+### Regression scripts refactored to shared modules
+- `scripts/multi_protein/regression/multi_protein_regression.py`
+- `scripts/multi_protein/regression/aa_augmented_regression.py`
+- `scripts/multi_protein/regression/regression_variants_predicted.py`
+- `scripts/multi_protein/regression/mds_reconstruction.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type_with_diagonal.py`
+
+These scripts now use shared loading/indexing and layer feature construction from `lib/` instead of duplicating the same local helper logic.
+
+### Test suite changes
+- Removed outdated `scripts/tests/test_alignment.py` (it depended on `residue_distances.csv` and no longer reflects the current code path).
+- Rewrote `scripts/tests/test_chain_id_removal.py` as pytest.
+- Added pytest unit tests:
+  - `scripts/tests/test_pair_features.py`
+  - `scripts/tests/test_protein_dataset.py`
+  - `scripts/tests/test_regression_common.py`
+  - `scripts/tests/test_aa_features.py`
+  - `scripts/tests/test_classification_common.py`
+  - `scripts/tests/test_output_writers.py`
+
+### Baseline parity artifacts
+- Captured pre-refactor CSV baselines under `scripts/tests/baselines/`:
+  - `layer_regression_r2_predicted.before.csv`
+  - `layer_regression_r2_comparison.before.csv`
+  - `layer_r2_variants.before.csv`
+  - `mds_reconstruction_metrics.before.csv`
+
+### Notes
+- Logistic scripts were refactored but intentionally not executed for validation runtime (by request).
+- Runtime parity execution for sklearn-based scripts/tests is blocked in the current environment because `scikit-learn` and `pytest` are unavailable and network access is restricted for `pip install`.
+
 ## Session: 2026-02-25 — Remove chain_id filtering from all CA extraction functions
 
 ### Problem

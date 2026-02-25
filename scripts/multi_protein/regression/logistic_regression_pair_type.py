@@ -33,16 +33,13 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
     balanced_accuracy_score,
     accuracy_score,
     confusion_matrix,
     precision_recall_fscore_support,
 )
-
-from Bio.PDB import PDBParser
 
 
 # ===========================================================================
@@ -71,6 +68,23 @@ PROTEINS_DIR = PROJECT_ROOT / "proteins"
 
 # OUTPUT_DIR: Path — where all outputs (CSVs, plots) are saved for this script
 OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "logistic_regression"
+
+sys.path.insert(0, str(PROJECT_ROOT))
+from lib.classification_common import (
+    build_pair_type_labels as _build_pair_type_labels,
+    extract_top_confused_pairs as _extract_top_confused_pairs,
+    write_confusion_matrix_csv,
+    write_per_class_report_csv,
+)
+from lib.output_writers import ensure_output_dirs
+from lib.protein_dataset import load_local_protein_data
+from lib.regression_common import (
+    build_layer_feature_matrix,
+    concatenate_labels,
+    compute_protein_offsets_for_key,
+    encode_labels,
+    split_indices,
+)
 
 
 # ===========================================================================
@@ -212,23 +226,9 @@ def build_pair_labels(residue_data):
     struct_j : np.ndarray of int, shape (n_pairs,)
         Column indices from np.triu_indices — the second residue index in each pair.
     """
-    # Extract just the 3-letter residue names (e.g. "ALA", "GLY") from each tuple
-    res_names = [r[1] for r in residue_data["residues"]]  # list of str, length N
-    n = len(res_names)  # int: number of residues in this protein
-
-    # Generate all (i, j) index pairs where i < j (upper triangle, no diagonal).
-    # struct_i and struct_j are 1D int arrays of length N*(N-1)/2.
-    # Example for n=4: struct_i=[0,0,0,1,1,2], struct_j=[1,2,3,2,3,3]
+    n = len(residue_data["residues"])
     struct_i, struct_j = np.triu_indices(n, k=1)
-
-    # For each pair, alphabetically sort the two amino acid names and join with "-".
-    # This ensures the label is order-independent: (GLY, ALA) -> "ALA-GLY".
-    # Result is a 1D numpy array of strings, same length as struct_i/struct_j.
-    labels = np.array([
-        "-".join(sorted([res_names[i], res_names[j]]))
-        for i, j in zip(struct_i, struct_j)
-    ])
-
+    labels = _build_pair_type_labels(residue_data, struct_i, struct_j)
     return labels, struct_i, struct_j
 
 
@@ -260,31 +260,7 @@ def extract_top_confused_pairs(cm, class_names, top_n=20):
         Sorted by count descending. May be shorter than top_n if fewer
         off-diagonal entries are nonzero.
     """
-    # Copy the confusion matrix and zero out the diagonal (correct predictions),
-    # leaving only the misclassification counts
-    cm_off = cm.copy()  # np.ndarray shape (n_classes, n_classes)
-    np.fill_diagonal(cm_off, 0)
-
-    # Flatten to 1D, sort descending, take the top_n largest values.
-    # flat_indices: 1D int array of indices into the flattened matrix.
-    flat_indices = np.argsort(cm_off.ravel())[::-1][:top_n]
-
-    # Convert flat indices back to 2D (row, col) indices.
-    # rows[k], cols[k] = (true_class_index, predicted_class_index) for the k-th
-    # largest misclassification.
-    rows, cols = np.unravel_index(flat_indices, cm.shape)
-
-    results = []
-    for r, c in zip(rows, cols):
-        if cm_off[r, c] == 0:
-            break  # All remaining entries are zero; stop early
-        results.append({
-            "true_class": class_names[r],
-            "predicted_class": class_names[c],
-            "count": int(cm_off[r, c]),
-            "true_total": int(cm[r].sum()),  # Total samples with true label r
-        })
-    return results
+    return _extract_top_confused_pairs(cm, class_names, top_n=top_n)
 
 
 # ===========================================================================
@@ -298,10 +274,7 @@ def main():
     n_layers = N_LAYERS                    # int: 48
 
     # Create output subdirectories for CSVs and visualizations
-    csv_dir = output_dir / "csv_files"         # Path: where CSV results are saved
-    vis_dir = output_dir / "visualizations"    # Path: where plot PNGs are saved
-    csv_dir.mkdir(parents=True, exist_ok=True)
-    vis_dir.mkdir(parents=True, exist_ok=True)
+    csv_dir, vis_dir = ensure_output_dirs(output_dir)
 
     print(f"Proteins directory: {proteins_dir}")
     print(f"Output directory:   {output_dir}")
@@ -317,86 +290,19 @@ def main():
     # until Phase 3 (one layer at a time to manage memory).
 
     # all_proteins: list of (str, Path) — e.g. [("6tf4_A", Path("proteins/6tf4_A")), ...]
-    all_proteins = discover_proteins(proteins_dir)
-    print(f"\nDiscovered {len(all_proteins)} protein directories.")
-
-    # protein_data: list of dict — one entry per successfully loaded protein.
-    #   Each dict contains metadata and index arrays needed for feature extraction.
-    protein_data = []
-
-    # skipped: list of (str, str) — (protein_id, reason) for proteins that couldn't be loaded
-    skipped = []
-
-    for protein_id, protein_dir in all_proteins:
-        try:
-            # --- Check that required files exist ---
-
-            # pdb_path: Path or None — location of the AlphaFold predicted PDB file
-            pdb_path = find_pdb_file(protein_dir, protein_id)
-            if pdb_path is None:
-                skipped.append((protein_id, "no predicted PDB file found"))
-                print(f"[SKIP] {protein_id}: no predicted PDB file found")
-                continue
-
-            # pb0_path: Path — path to layer-0 pair block (used to check dimensions)
-            pb0_path = get_pair_block_path(protein_dir, protein_id, 0)
-            if not pb0_path.exists():
-                skipped.append((protein_id, "pair block 0 not found"))
-                print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
-                continue
-
-            # --- Extract residue information from PDB ---
-
-            # ca_data: dict with 'residues' (list of tuples) and 'coordinates' (ndarray).
-            # We only use 'residues' to get amino acid names for labeling.
-            ca_data = extract_ca_coordinates(pdb_path)
-            n_ca = len(ca_data["residues"])  # int: number of CA atoms (= number of residues)
-            if n_ca == 0:
-                skipped.append((protein_id, "no CA atoms found in PDB"))
-                print(f"[SKIP] {protein_id}: no CA atoms found in PDB")
-                continue
-
-            # --- Verify PDB residue count matches pair block dimensions ---
-            # The pair block has shape (R, R, 128) where R must equal n_ca.
-            # If they don't match, the pair block indices would be wrong.
-
-            # pb0: np.ndarray shape (R, R, 128) — loaded read-only (mmap) just to check shape
-            pb0 = np.load(str(pb0_path), mmap_mode="r")
-            pb_dim = pb0.shape[0]  # int: first dimension R of the pair block
-            del pb0  # Release the memory-mapped file immediately
-
-            if n_ca != pb_dim:
-                skipped.append((protein_id, f"CA count {n_ca} != pair block dim {pb_dim}"))
-                print(f"[SKIP] {protein_id}: CA count {n_ca} != pair block dim {pb_dim}")
-                continue
-
-            # --- Build pair-type labels and index arrays ---
-
-            # labels: np.ndarray of str, shape (n_pairs,) — e.g. ["ALA-GLY", "ALA-VAL", ...]
-            # struct_i: np.ndarray of int, shape (n_pairs,) — row indices for upper-triangle pairs
-            # struct_j: np.ndarray of int, shape (n_pairs,) — col indices for upper-triangle pairs
-            # n_pairs = n_ca * (n_ca - 1) / 2
-            labels, struct_i, struct_j = build_pair_labels(ca_data)
-            n_pair_types = len(set(labels))  # int: number of unique pair types for this protein
-
-            # Store everything needed for this protein in a dict.
-            # pb_i and pb_j will be used in Phase 3 to index into pair blocks:
-            #   pb[pb_i, pb_j, :] extracts the (i->j) direction features
-            #   pb[pb_j, pb_i, :] extracts the (j->i) direction features
-            protein_data.append({
-                "protein_id": protein_id,    # str: e.g. "7b3a_A"
-                "protein_dir": protein_dir,  # Path: e.g. proteins/7b3a_A/
-                "n_residues": n_ca,          # int: number of residues in this protein
-                "pb_i": struct_i,            # np.ndarray of int: row indices for all pairs
-                "pb_j": struct_j,            # np.ndarray of int: col indices for all pairs
-                "labels": labels,            # np.ndarray of str: pair-type label per pair
-            })
-            print(f"[OK]   {protein_id}: {n_ca} residues, {len(labels):,} pairs, {n_pair_types} pair types")
-
-        except Exception as e:
-            skipped.append((protein_id, f"unexpected error -- {e}"))
-            print(f"[SKIP] {protein_id}: unexpected error -- {e}")
-            traceback.print_exc()
+    protein_data, skipped = load_local_protein_data(
+        proteins_dir,
+        include_pair_labels=True,
+    )
+    print(f"\nDiscovered {len(protein_data) + len(skipped)} protein directories.")
+    for d in protein_data:
+        n_pair_types = len(set(d["labels"]))
+        print(
+            f"[OK]   {d['protein_id']}: {d['n_residues']} residues, "
+            f"{len(d['labels']):,} pairs, {n_pair_types} pair types"
+        )
+    for protein_id, reason in skipped:
+        print(f"[SKIP] {protein_id}: {reason}")
 
     if not protein_data:
         print("\nERROR: No proteins loaded successfully. Exiting.")
@@ -411,27 +317,21 @@ def main():
     # This is NOT unique labels — it contains every single pair from every protein,
     # with many duplicates (e.g. "ALA-GLY" appears thousands of times).
     # If protein A has 37,950 pairs and protein B has 20,000 pairs, labels_all has 57,950 entries.
-    labels_all = np.concatenate([d["labels"] for d in protein_data])  # np.ndarray of str, shape (n_total_pairs,)
+    labels_all = concatenate_labels(protein_data)  # np.ndarray of str, shape (n_total_pairs,)
     n_total_pairs = len(labels_all)  # int: total number of residue pairs across all proteins
 
     # protein_offsets: list of (str, int, int) — tracks where each protein's pairs
     # sit within the concatenated labels_all array.
     # Example: [("6tf4_A", 0, 37950), ("7b3a_A", 37950, 75900)]
     # This is used in Phase 6 for the console summary to report per-protein pair counts.
-    protein_offsets = []
-    offset = 0
-    for d in protein_data:
-        n = len(d["labels"])
-        protein_offsets.append((d["protein_id"], offset, offset + n))
-        offset += n
+    protein_offsets = compute_protein_offsets_for_key(protein_data, "labels")
 
     # LabelEncoder converts string labels to integer class IDs.
     # This is NOT one-hot encoding — it maps each unique string to an integer (0 to n_classes-1).
     # Example: "ALA-ALA" -> 0, "ALA-ARG" -> 1, ..., "VAL-VAL" -> 209
     # Sklearn's LogisticRegression internally handles these as categorical classes
     # (using softmax + cross-entropy), NOT as ordinal values with magnitude.
-    label_encoder = LabelEncoder()
-    y_all = label_encoder.fit_transform(labels_all)  # np.ndarray of int, shape (n_total_pairs,)
+    y_all, label_encoder = encode_labels(labels_all)
     n_classes = len(label_encoder.classes_)  # int: number of unique pair types (e.g. ~210)
     class_names = list(label_encoder.classes_)  # list of str: sorted unique class names
 
@@ -441,13 +341,10 @@ def main():
     # Create a train/test split of INDICES (not the data itself, since features
     # are loaded one layer at a time in Phase 3 to save memory).
     # all_idx: np.ndarray of int, shape (n_total_pairs,) — [0, 1, 2, ..., n_total_pairs-1]
-    all_idx = np.arange(n_total_pairs)
-
-    # idx_train, idx_test: np.ndarray of int — indices into labels_all / y_all / X_all.
-    # stratify=y_all ensures each class has proportional representation in both splits,
-    # which is important because some pair types are much rarer than others.
-    idx_train, idx_test = train_test_split(
-        all_idx, test_size=TEST_SIZE, random_state=RANDOM_STATE,
+    idx_train, idx_test = split_indices(
+        n_samples=n_total_pairs,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
         stratify=y_all,
     )
 
@@ -484,34 +381,7 @@ def main():
             # We load each protein's pair block for this layer, extract the 256-dim
             # feature vector for each pair, and stack them into one big matrix.
 
-            X_chunks = []  # list of np.ndarray — one chunk per protein, each shape (n_pairs_i, 256)
-            for d in protein_data:
-                # pb_path: Path — path to this protein's pair block for the current layer
-                pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-
-                # pb: np.ndarray shape (R, R, 128) — the full pair representation matrix.
-                # R = number of residues, 128 = channels per direction.
-                pb = np.load(str(pb_path))
-
-                # For each pair (i, j), concatenate the two directions:
-                #   pb[i, j, :] = 128-dim vector for the i->j direction
-                #   pb[j, i, :] = 128-dim vector for the j->i direction
-                # Result: X_chunk has shape (n_pairs, 256) where n_pairs = len(pb_i).
-                # The pair block is asymmetric (pb[i,j] != pb[j,i]), so both directions
-                # carry distinct information and are both included as features.
-                X_chunk = np.concatenate([
-                    pb[d["pb_i"], d["pb_j"], :],  # shape (n_pairs, 128): i->j features
-                    pb[d["pb_j"], d["pb_i"], :],  # shape (n_pairs, 128): j->i features
-                ], axis=1)  # shape (n_pairs, 256)
-                X_chunks.append(X_chunk)
-                del pb  # Free the full (R, R, 128) array to save memory
-
-            # Stack all proteins' feature chunks into one matrix.
-            # X_all: np.ndarray shape (n_total_pairs, 256) — all pairs from all proteins.
-            # The row ordering matches labels_all: first all pairs from protein 0,
-            # then protein 1, etc.
-            X_all = np.vstack(X_chunks)
-            del X_chunks  # Free the list of chunks
+            X_all = build_layer_feature_matrix(protein_data, layer, mode="base")
 
             # --- Standardize features ---
             # StandardScaler: zero-mean, unit-variance per feature (column).
@@ -635,20 +505,7 @@ def main():
     # Useful for identifying which pair types are easy/hard to classify.
     if last_layer_report is not None:
         f1_csv = csv_dir / "per_class_f1_layer47.csv"
-        with open(f1_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["pair_type", "f1", "precision", "recall", "support"])
-            for i in range(n_classes):
-                sup = int(last_layer_report["support"][i])  # int: test samples for this class
-                if sup == 0:
-                    continue  # Skip classes with no test samples
-                writer.writerow([
-                    class_names[i],
-                    f"{last_layer_report['f1'][i]:.4f}",
-                    f"{last_layer_report['precision'][i]:.4f}",
-                    f"{last_layer_report['recall'][i]:.4f}",
-                    sup,
-                ])
+        write_per_class_report_csv(f1_csv, class_names, last_layer_report)
         print(f"Saved per-class F1 CSV -> {f1_csv}")
 
     # CSV 3: Full confusion matrix for layer 47.
@@ -656,12 +513,7 @@ def main():
     # Row = true class, Column = predicted class. Diagonal = correct predictions.
     if last_layer_cm is not None:
         cm_csv = csv_dir / "confusion_matrix_layer47.csv"
-        with open(cm_csv, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([""] + class_names)  # Header: blank corner + class names
-            for i, row in enumerate(last_layer_cm):
-                # Each row: true class name, then count for each predicted class
-                writer.writerow([class_names[i]] + [int(x) for x in row])
+        write_confusion_matrix_csv(cm_csv, last_layer_cm, class_names)
         print(f"Saved confusion matrix CSV -> {cm_csv}")
 
     # CSV 4: Top confused pairs for layer 47.
