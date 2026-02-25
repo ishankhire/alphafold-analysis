@@ -17,4 +17,4 @@ module load anaconda3                    # Load Python environment
 # NOTE: Using 'python' (not 'srun python') because srun with ntasks=4
 # would launch 4 copies of the script. We request 4 cores so numpy BLAS
 # can use them for multithreaded linear algebra.
-python per_protein_regression.py
+python cluster_per_protein_regression.py

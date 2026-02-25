@@ -1,0 +1,24 @@
+#!/bin/bash
+#SBATCH --job-name=PerProteinRegression
+#SBATCH --account=bekh-delta-cpu
+#SBATCH --partition=cpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=4              # 4 cores for numpy BLAS threading
+#SBATCH --mem=4g                       # 4 GB total (one protein at a time)
+#SBATCH --time=18:00:00                # 18 hour walltime (max: 48h on cpu partition)
+#SBATCH --constraint="scratch"
+#SBATCH -o slurm-%j.out
+#SBATCH -e slurm-%j.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=ikhire3@gatech.edu
+
+module reset                           # drop all modules, set $WORK and $SCRATCH
+module load python                     # load Python environment
+module list                            # job documentation and metadata
+
+echo "job is starting on $(hostname)"
+
+# srun with ntasks-per-node=1 launches exactly one copy of the script.
+# The 4 cores requested via cpus-per-task are available for numpy BLAS threading.
+srun python3 cluster_per_protein_regression.py

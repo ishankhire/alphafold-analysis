@@ -377,3 +377,25 @@ Classical MDS implementation: eigendecomposition of double-centered Gram matrix,
 - **Top-3 eigenvalue fraction reaches only ~0.70 by layer 47** — 30% of variance is in non-3D dimensions, meaning predicted distances are significantly non-Euclidean even at high R².
 - **Small proteins (6tf4_A, 6wmk_A, 67-69 residues) have consistently lower TM-scores** (<0.6) than large proteins (6wqc_A, 7b3a_A, 280-294 residues), likely because fewer pairs constrain the MDS embedding less.
 - **The R² vs TM-score scatter reveals a protein-dependent relationship**: high R² is necessary but not sufficient for good TM-score. For 7b3a_A, TM-scores reach 0.95 at R²>0.97; for 6wmk_A, TM-scores barely reach 0.25 at the same R² values.
+
+## Session: 2026-02-24 — Delta NCSA cluster sbatch files
+
+### Motivation
+Migrating from the ICE cluster to the Delta NCSA cluster. Delta has different Slurm conventions: mandatory `--account` flag, different partition names (`cpu`, `gpuA100x4`, etc.), `module reset` + `module load python` instead of `module load anaconda3`, filesystem constraint annotations (`--constraint="scratch"`), and recommended use of `srun` for launching programs.
+
+### New files
+- **`scripts/multi_protein/regression/delta_regression_job.sbatch`** — Delta version of `regression_job.sbatch` (pooled multi-protein regression)
+- **`scripts/multi_protein/regression/delta_per_protein_regression_job.sbatch`** — Delta version of `per_protein_regression_job.sbatch` (per-protein regression)
+
+### Key differences from ICE sbatch files
+| Aspect | ICE | Delta |
+|--------|-----|-------|
+| Account | not specified | `--account=<YOUR_ACCOUNT>` (required) |
+| Partition | not specified | `--partition=cpu` |
+| Module load | `module load anaconda3` | `module reset` + `module load python` |
+| Filesystem | no annotation | `--constraint="scratch"` |
+| Output files | single `-o` | separate `-o` (stdout) and `-e` (stderr) |
+| Launch | `python script.py` | `srun python3 script.py` |
+| Task layout | `-N1 --ntasks-per-node=4` | `--nodes=1 --ntasks-per-node=1 --cpus-per-task=4` |
+
+Existing ICE sbatch files left untouched.

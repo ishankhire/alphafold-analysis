@@ -37,15 +37,25 @@ protein/                              ← project root
 │   │   └── visualizations/
 │   └── claude_reference/             ← reference PDFs (SLURM guidelines, storage docs)
 ├── scripts/
-│   ├── multi_protein/
+│   ├── cluster_scripts/              ← canonical home for all cluster-ready scripts and sbatch files
+│   │   ├── cluster_per_protein_regression.py         ← cluster: independent regression per protein per layer
+│   │   ├── final_cluster_mutli_protein_regression.py ← cluster: pooled regression with protein-level train/test split
+│   │   ├── regression_job.sbatch                     ← ICE: SLURM job for pooled regression
+│   │   ├── per_protein_regression_job.sbatch         ← ICE: SLURM job for per-protein regression
+│   │   ├── protein_split_regression_job.sbatch       ← ICE: SLURM job for protein-split pooled regression
+│   │   ├── delta_regression_job.sbatch               ← Delta: SLURM job for pooled regression
+│   │   └── delta_per_protein_regression_job.sbatch   ← Delta: SLURM job for per-protein regression
+│   ├── multi_protein/                ← local/dev scripts for analysis and exploration
 │   │   ├── structure_comparison.py   ← CIF vs PDB comparison (RMSD, TM-score)
 │   │   └── regression/
 │   │       ├── multi_protein_regression.py           ← local: pooled regression, visualizations, per-protein CSVs
-│   │       ├── cluster_multi_protein_regression.py   ← cluster: same regression for ICE $SCRATCH layout
+│   │       ├── cluster_multi_protein_regression.py   ← local: same regression for ICE $SCRATCH layout (dev reference)
 │   │       ├── regression_variants_predicted.py      ← model comparison (Linear, Ridge, Lasso)
-│   │       ├── per_protein_regression.py             ← cluster: independent regression per protein per layer
-│   │       ├── regression_job.sbatch                 ← SLURM job for pooled regression
-│   │       └── per_protein_regression_job.sbatch     ← SLURM job for per-protein regression
+│   │       ├── aa_augmented_regression.py            ← regression with amino acid type features
+│   │       ├── logistic_regression_pair_type.py      ← logistic regression for AA pair type classification
+│   │       ├── mds_reconstruction.py                 ← MDS 3D reconstruction from predicted distances
+│   │       ├── train_test_separated_multi_protein_regression.py  ← protein-level train/test split (local dev version)
+│   │       └── check_protein_sizes.py                ← utility: inspect protein dimensions
 │   └── tests/
 │       └── test_alignment.py         ← alignment sanity checks (run standalone)
 ├── .claude/CLAUDE.md
@@ -86,8 +96,10 @@ proteins/<id>/pair_blocks/*.npy ──┐
 predicted_residue_distances.csv ──┤
                                   ▼
    multi_protein/regression/multi_protein_regression.py ──► per-layer R², visualizations, per-protein CSVs (local)
-   multi_protein/regression/cluster_multi_protein_regression.py ──► same regression for ICE cluster
    multi_protein/regression/regression_variants_predicted.py ──► model comparison (Linear, Ridge, Lasso)
+
+   cluster_scripts/final_cluster_mutli_protein_regression.py ──► cluster: pooled regression, protein-level train/test split
+   cluster_scripts/cluster_per_protein_regression.py ──► cluster: independent regression per protein per layer
 
    multi_protein/structure_comparison.py ──► CIF vs PDB RMSD, TM-score, per-residue deviation
 ```
