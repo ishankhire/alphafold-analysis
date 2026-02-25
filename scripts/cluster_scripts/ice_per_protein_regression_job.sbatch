@@ -14,6 +14,11 @@ module load anaconda3                    # Load Python environment
 # Uncomment and set if $SCRATCH is not pre-configured on the cluster:
 # export SCRATCH=/path/to/your/data/root
 
+# Data directories on ICE
+export PAIR_BLOCKS_ROOT=$SCRATCH
+export PDB_ROOT=$SCRATCH/Structures
+export CSV_ROOT=$SCRATCH/csv_files
+
 # NOTE: Using 'python' (not 'srun python') because srun with ntasks=4
 # would launch 4 copies of the script. We request 4 cores so numpy BLAS
 # can use them for multithreaded linear algebra.

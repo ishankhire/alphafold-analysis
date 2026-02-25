@@ -5,17 +5,17 @@ per_protein_regression.py
 ICE cluster variant that trains a SEPARATE linear regression per protein
 per layer (instead of pooling all proteins into one model).
 
-Same cluster directory layout as cluster_multi_protein_regression.py:
-  - PDB files are under:   ROOT_DIR/Structures/my_outputs_align_{id}_representations_load_from_saved_layer_47/predictions/
-  - Pair blocks are under: ROOT_DIR/{protein_id}/{protein_id}_pair_block_{layer}.npy
-  - Output CSVs go to:     ROOT_DIR/csv_files/
+Cluster layout (configured via environment variables set in sbatch files):
+  - Pair blocks:  PAIR_BLOCKS_ROOT/{protein_id}/{protein_id}_pair_block_{layer}.npy
+  - PDB files:    PDB_ROOT/my_outputs_align_{id}_representations_load_from_saved_layer_47/predictions/{id}_model_1_ptm_unrelaxed.pdb
+  - Output CSVs:  CSV_ROOT/
 
 All helper functions are defined inline (no lib/ imports).
 
 Dependencies (all pip-installable):
     pip install numpy scipy matplotlib scikit-learn biopython
 
-Outputs (inside ROOT_DIR/csv_files/):
+Outputs (inside CSV_ROOT/):
     per_protein_regression_metrics.csv      — per-(protein, layer) R2, MAE, RMSE
     per_protein_coefficients.csv            — model coefficients per (protein, layer)
     per_protein_predicted_distances.csv     — actual vs predicted (layer 47 only)
@@ -50,37 +50,29 @@ TEST_SIZE = 0.2
 RANDOM_STATE = 42
 
 # ===========================================================================
-# Hardcoded directories
+# Directories (set via environment variables exported by sbatch files)
 # ===========================================================================
 
-# Auto-detect scratch directory from Slurm environment, with fallback.
-# ⚠️ FLAG: Update this path if your root directory is not on scratch.
-ROOT_DIR = Path(os.environ.get("SCRATCH", "/path/to/your/root/directory"))
-CSV_DIR  = ROOT_DIR / "csv_files"
-
-# Subdirectory inside ROOT_DIR that contains PDB structures.
-# ⚠️ FLAG: If the Structures directory is renamed or moved, update here.
-STRUCTURES_DIR = ROOT_DIR / "Structures"
+PAIR_BLOCKS_ROOT = Path(os.environ["PAIR_BLOCKS_ROOT"])
+PDB_ROOT = Path(os.environ["PDB_ROOT"])
+CSV_DIR = Path(os.environ["CSV_ROOT"])
 
 
 # ===========================================================================
 # Helper functions — data loading
 # ===========================================================================
 
-# ⚠️ FLAG: This function defines the PDB filename pattern.
-# PDB path: ROOT_DIR/Structures/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/predictions/{protein_id}_model_1_ptm_unrelaxed.pdb
-# If the naming convention changes, update the pattern here.
 def find_pdb_file(protein_id):
     """Locate the predicted PDB file for a protein.
 
     Expected path:
-        STRUCTURES_DIR/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/
+        PDB_ROOT/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/
             predictions/{protein_id}_model_1_ptm_unrelaxed.pdb
 
     Returns the Path object, or None if not found.
     """
     pdb_path = (
-        STRUCTURES_DIR
+        PDB_ROOT
         / f"my_outputs_align_{protein_id}_representations_load_from_saved_layer_47"
         / "predictions"
         / f"{protein_id}_model_1_ptm_unrelaxed.pdb"
@@ -88,9 +80,6 @@ def find_pdb_file(protein_id):
     return pdb_path if pdb_path.exists() else None
 
 
-# FLAG: This function defines the pair block path pattern.
-# Pair block path: ROOT_DIR/{protein_id}/{protein_id}_pair_block_{layer}.npy
-# If the naming convention or directory structure changes, update here.
 def get_pair_block_path(protein_dir, protein_id, layer):
     """Return the path to a pair block .npy file for a given layer.
 
@@ -100,21 +89,15 @@ def get_pair_block_path(protein_dir, protein_id, layer):
     return protein_dir / f"{protein_id}_pair_block_{layer}.npy"
 
 
-# FLAG: This function discovers protein directories.
-# It lists subdirectories of ROOT_DIR, excluding 'Structures' and 'csv_files'.
-# If the directory layout changes (e.g. nested folders, manifest file), update here.
-def discover_proteins(root_dir):
-    """Find all protein subdirectories under the given root.
+def discover_proteins(pair_blocks_root):
+    """Find all protein subdirectories under the pair blocks root.
 
     Returns a sorted list of (protein_id, protein_dir) tuples.
-    Skips 'Structures', 'csv_files', and any non-directory entries.
+    Skips non-directory entries.
     """
-    skip_names = {"Structures", "csv_files"}
     proteins = []
-    for entry in sorted(root_dir.iterdir()):
+    for entry in sorted(pair_blocks_root.iterdir()):
         if not entry.is_dir():
-            continue
-        if entry.name in skip_names:
             continue
         proteins.append((entry.name, entry))
     return proteins
@@ -337,14 +320,13 @@ def process_single_protein(protein_id, protein_dir, n_layers):
 # ===========================================================================
 
 def main():
-    root_dir = ROOT_DIR.resolve()
     n_layers = N_LAYERS
 
     csv_dir = CSV_DIR.resolve()
     csv_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Root directory:     {root_dir}")
-    print(f"Structures dir:     {STRUCTURES_DIR}")
+    print(f"Pair blocks root:   {PAIR_BLOCKS_ROOT}")
+    print(f"PDB root:           {PDB_ROOT}")
     print(f"Output CSV dir:     {csv_dir}")
     print(f"Layers:             {n_layers}")
     print(f"Mode:               PER-PROTEIN (independent model per protein per layer)")
@@ -352,7 +334,7 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Discover proteins
     # ------------------------------------------------------------------
-    all_proteins = discover_proteins(root_dir)
+    all_proteins = discover_proteins(PAIR_BLOCKS_ROOT)
     n_total = len(all_proteins)
     print(f"\nDiscovered {n_total} protein directories.")
 
