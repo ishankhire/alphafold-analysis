@@ -1,5 +1,35 @@
 # Branch Analysis
 
+## Session: 2026-02-25 — Remove chain_id filtering from all CA extraction functions
+
+### Problem
+All `extract_ca_coordinates` functions (and `lib/structure.py`'s `extract_pdb_ca_coordinates`)
+were filtering residues by chain ID parsed from the protein_id string (e.g. `"7b3a_A" -> "A"`).
+This caused silent failures for proteins whose PDB file stores residues under a chain letter that
+doesn't match the protein_id suffix (e.g. a PDB named `7ab3_E_...pdb` but containing chain `A`).
+
+### Fix
+Removed `chain_id` parameter and the `if chain.get_id() != chain_id: continue` filter from all
+`extract_ca_coordinates` / `extract_pdb_ca_coordinates` functions. The functions now iterate over
+all chains in the structure. This is safe because each PDB file is already protein-specific (one
+file per protein), so all chains in the file belong to the protein of interest.
+
+### Files changed
+- `scripts/cluster_scripts/final_cluster_multi_protein_regression.py`
+- `scripts/cluster_scripts/cluster_per_protein_regression.py`
+- `scripts/cluster_scripts/test_cluster_multi_protein_regression.py`
+- `scripts/multi_protein/regression/regression_variants_predicted.py`
+- `scripts/multi_protein/regression/aa_augmented_regression.py`
+- `scripts/multi_protein/regression/cluster_multi_protein_regression.py`
+- `scripts/multi_protein/regression/mds_reconstruction.py`
+- `scripts/multi_protein/regression/multi_protein_regression.py`
+- `scripts/multi_protein/regression/train_test_separated_multi_protein_regression.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type_with_diagonal.py`
+- `lib/structure.py` (`extract_pdb_ca_coordinates`)
+
+---
+
 ## Session: 2026-02-07 — Git setup
 
 ### Changes made

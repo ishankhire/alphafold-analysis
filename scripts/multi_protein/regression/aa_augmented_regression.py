@@ -187,54 +187,29 @@ def discover_proteins(proteins_dir):
 # Helper functions — coordinate extraction & distance computation
 # ===========================================================================
 
-def extract_ca_coordinates(pdb_path, chain_id):
+def extract_ca_coordinates(pdb_path):
     """Extract CA (alpha-carbon) atom coordinates and residue metadata from a PDB file.
 
-    Parses the PDB structure using BioPython's PDBParser. For every residue in
-    the specified chain that has a CA atom, records its name and 3D coordinates.
-    Water molecules (het_flag == "W") are skipped, but non-standard residues
-    (e.g. modified amino acids) are included as long as they have a CA atom.
-
-    In this script, BOTH the 'residues' field (for amino acid names used in
-    one-hot encoding) and the 'coordinates' field (for distance matrix computation)
-    are used. The residue names feed into build_aa_onehot_features(), and the
-    coordinates feed into compute_distance_matrix() to produce the regression targets.
-
-    Parameters
-    ----------
-    pdb_path : str or Path
-        Path to the PDB file.
-    chain_id : str
-        Chain identifier to extract (e.g. 'A', 'B').
+    Extracts all residues with a CA atom across all chains. Chain filtering is
+    unnecessary because each PDB file is already specific to a single protein.
+    Water molecules (het_flag == "W") are skipped.
 
     Returns
     -------
     dict with keys:
         'residues' : list of tuple (str, str, int)
             Each tuple is (chain_id, residue_name, residue_number).
-            Example: [("A", "MET", 1), ("A", "ALA", 2), ...].
-            Length = number of residues with a CA atom in the chain.
-            The residue_name (index 1) is the 3-letter amino acid code
-            used for one-hot encoding.
         'coordinates' : np.ndarray of shape (n_residues, 3), dtype float
             XYZ coordinates of each CA atom in Angstroms.
-            Used to compute pairwise CA-CA distances (the regression target y).
     """
-    # BioPython PDB parser; QUIET=True suppresses warnings about missing atoms etc.
     parser = PDBParser(QUIET=True)
-    # "predicted" is an arbitrary structure ID (BioPython requires one for internal storage)
     structure = parser.get_structure("predicted", str(pdb_path))
 
-    residues = []       # list of (chain_id, residue_name, residue_number) tuples
-    coordinates = []    # list of numpy arrays, each shape (3,), one per CA atom
+    residues = []
+    coordinates = []
 
-    # PDB structures can have multiple models (e.g. NMR ensembles); take the first.
-    # AlphaFold predictions always have exactly one model.
     model = structure[0]
     for chain in model:
-        # Only process the requested chain (e.g. chain "A")
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             # het_flag: " " for standard residues, "W" for water, "H_XXX" for heteroatoms.
             # residue.get_id() returns a tuple: (het_flag, sequence_number, insertion_code)
@@ -447,17 +422,12 @@ def main():
                 print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
                 continue
 
-            # chain_id: str — extracted from protein_id by splitting on "_" and taking
-            # the last component. E.g. "7b3a_A" -> "A". This is the PDB chain identifier
-            # used to filter residues in the PDB file.
-            chain_id = protein_id.split("_")[-1]
-
             # --- Extract residue information and coordinates from PDB ---
 
             # ca_data: dict with 'residues' (list of tuples) and 'coordinates' (ndarray).
             # 'residues' provides amino acid names for one-hot encoding.
             # 'coordinates' provides CA atom positions for distance matrix computation.
-            ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+            ca_data = extract_ca_coordinates(pdb_path)
             n_ca = len(ca_data["residues"])  # int: number of CA atoms (= number of residues)
             if n_ca == 0:
                 skipped.append((protein_id, "no CA atoms found in PDB"))

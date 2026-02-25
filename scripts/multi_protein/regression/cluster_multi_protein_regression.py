@@ -123,24 +123,8 @@ def discover_proteins(root_dir):
 # Helper functions — coordinate extraction & distance computation
 # ===========================================================================
 
-def extract_ca_coordinates(pdb_path, chain_id):
-    """Extract CA atom coordinates from a PDB file.
-
-    Extracts ALL residues with a CA atom (no standard-residue filtering).
-
-    Parameters
-    ----------
-    pdb_path : str or Path
-        Path to the PDB file.
-    chain_id : str
-        Chain identifier to extract (e.g. 'A', 'B').
-
-    Returns
-    -------
-    dict with keys:
-        'residues'    : list of (chain_id, residue_name, residue_number) tuples
-        'coordinates' : np.ndarray of shape (n_residues, 3)
-    """
+def extract_ca_coordinates(pdb_path):
+    """Extract CA atom coordinates from a PDB file across all chains."""
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("predicted", str(pdb_path))
 
@@ -149,8 +133,6 @@ def extract_ca_coordinates(pdb_path, chain_id):
 
     model = structure[0]
     for chain in model:
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             het_flag = residue.get_id()[0]
             if het_flag == "W":
@@ -235,9 +217,7 @@ def main():
 
             # FLAG: chain ID is parsed from protein_id (e.g. "7b3a_A" -> "A").
             # If the naming convention changes, update this line.
-            chain_id = protein_id.split("_")[-1]
-
-            ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+            ca_data = extract_ca_coordinates(pdb_path)
             n_ca = len(ca_data["residues"])
             if n_ca == 0:
                 skipped.append((protein_id, "no CA atoms found in PDB"))

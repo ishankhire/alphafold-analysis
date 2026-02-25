@@ -154,30 +154,12 @@ def discover_proteins(proteins_dir):
     return proteins
 
 
-def extract_ca_coordinates(pdb_path, chain_id):
+def extract_ca_coordinates(pdb_path):
     """Extract CA (alpha-carbon) atom coordinates and residue metadata from a PDB file.
 
-    Parses the PDB structure using BioPython's PDBParser. For every residue in
-    the specified chain that has a CA atom, records its name and 3D coordinates.
-    Water molecules (het_flag == "W") are skipped, but non-standard residues
-    (e.g. modified amino acids) are included as long as they have a CA atom.
-
-    Parameters
-    ----------
-    pdb_path : str or Path
-        Path to the PDB file.
-    chain_id : str
-        Chain identifier to extract (e.g. 'A', 'B').
-
-    Returns
-    -------
-    dict with keys:
-        'residues' : list of tuple (str, str, int)
-            Each tuple is (chain_id, residue_name, residue_number).
-            Example: [("A", "MET", 1), ("A", "ALA", 2), ...].
-            Length = number of residues with a CA atom in the chain.
-        'coordinates' : np.ndarray of shape (n_residues, 3)
-            XYZ coordinates of each CA atom in Angstroms.
+    Extracts all residues with a CA atom across all chains. Chain filtering is
+    unnecessary because each PDB file is already specific to a single protein.
+    Water molecules (het_flag == "W") are skipped.
     """
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("predicted", str(pdb_path))
@@ -187,8 +169,6 @@ def extract_ca_coordinates(pdb_path, chain_id):
 
     model = structure[0]
     for chain in model:
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             het_flag = residue.get_id()[0]
             if het_flag == "W":
@@ -331,9 +311,7 @@ def main():
                 print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
                 continue
 
-            chain_id = protein_id.split("_")[-1]
-
-            ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+            ca_data = extract_ca_coordinates(pdb_path)
             n_ca = len(ca_data["residues"])
             if n_ca == 0:
                 skipped.append((protein_id, "no CA atoms found in PDB"))

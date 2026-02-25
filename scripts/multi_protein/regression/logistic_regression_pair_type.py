@@ -147,50 +147,21 @@ def discover_proteins(proteins_dir):
     return proteins
 
 
-def extract_ca_coordinates(pdb_path, chain_id):
+def extract_ca_coordinates(pdb_path):
     """Extract CA (alpha-carbon) atom coordinates and residue metadata from a PDB file.
 
-    Parses the PDB structure using BioPython's PDBParser. For every residue in
-    the specified chain that has a CA atom, records its name and 3D coordinates.
-    Water molecules (het_flag == "W") are skipped, but non-standard residues
-    (e.g. modified amino acids) are included as long as they have a CA atom.
-
-    NOTE: In this script, only the 'residues' field (specifically the residue names)
-    is actually used — to build amino acid pair-type labels. The 'coordinates' field
-    is computed but never referenced. This function was copied from
-    multi_protein_regression.py where coordinates ARE needed for distance regression.
-
-    Parameters
-    ----------
-    pdb_path : str or Path
-        Path to the PDB file.
-    chain_id : str
-        Chain identifier to extract (e.g. 'A', 'B').
-
-    Returns
-    -------
-    dict with keys:
-        'residues' : list of tuple (str, str, int)
-            Each tuple is (chain_id, residue_name, residue_number).
-            Example: [("A", "MET", 1), ("A", "ALA", 2), ...].
-            Length = number of residues with a CA atom in the chain.
-        'coordinates' : np.ndarray of shape (n_residues, 3)
-            XYZ coordinates of each CA atom in Angstroms.
-            (Not used in this script — see note above.)
+    Extracts all residues with a CA atom across all chains. Chain filtering is
+    unnecessary because each PDB file is already specific to a single protein.
+    Water molecules (het_flag == "W") are skipped.
     """
-    # BioPython PDB parser; QUIET=True suppresses warnings about missing atoms etc.
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("predicted", str(pdb_path))
 
-    residues = []       # list of (chain_id, residue_name, residue_number) tuples
-    coordinates = []    # list of numpy arrays, each shape (3,), one per CA atom
+    residues = []
+    coordinates = []
 
-    # PDB structures can have multiple models (e.g. NMR ensembles); take the first
     model = structure[0]
     for chain in model:
-        # Only process the requested chain
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             # het_flag: " " for standard residues, "W" for water, "H_XXX" for heteroatoms
             het_flag = residue.get_id()[0]
@@ -374,14 +345,11 @@ def main():
                 print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
                 continue
 
-            # chain_id: str — extracted from protein_id (e.g. "7b3a_A" -> "A")
-            chain_id = protein_id.split("_")[-1]
-
             # --- Extract residue information from PDB ---
 
             # ca_data: dict with 'residues' (list of tuples) and 'coordinates' (ndarray).
             # We only use 'residues' to get amino acid names for labeling.
-            ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+            ca_data = extract_ca_coordinates(pdb_path)
             n_ca = len(ca_data["residues"])  # int: number of CA atoms (= number of residues)
             if n_ca == 0:
                 skipped.append((protein_id, "no CA atoms found in PDB"))

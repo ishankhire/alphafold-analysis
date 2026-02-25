@@ -65,16 +65,17 @@ def extract_residue_coordinates(cif_file: str, chain_id: str = None) -> dict:
     }
 
 
-def extract_pdb_ca_coordinates(pdb_file: str, chain_id: str = "A") -> dict:
+def extract_pdb_ca_coordinates(pdb_file: str) -> dict:
     """Parse a PDB file and extract the 3D position of the alpha-carbon (CA)
-    for every standard amino acid residue.
+    for every standard amino acid residue across all chains.
+
+    Chain filtering is unnecessary because each PDB file is already
+    specific to a single protein.
 
     Parameters
     ----------
     pdb_file : str
         Path to the .pdb structure file.
-    chain_id : str
-        Chain to extract (default 'A').
 
     Returns
     -------
@@ -90,8 +91,6 @@ def extract_pdb_ca_coordinates(pdb_file: str, chain_id: str = "A") -> dict:
 
     model = structure[0]
     for chain in model:
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             if not is_aa(residue, standard=True):
                 continue

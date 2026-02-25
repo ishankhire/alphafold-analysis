@@ -85,15 +85,13 @@ def discover_proteins(proteins_dir):
     return proteins
 
 
-def extract_ca_coordinates(pdb_path, chain_id):
+def extract_ca_coordinates(pdb_path):
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("predicted", str(pdb_path))
     residues = []
     coordinates = []
     model = structure[0]
     for chain in model:
-        if chain.get_id() != chain_id:
-            continue
         for residue in chain:
             het_flag = residue.get_id()[0]
             if het_flag == "W":
@@ -263,8 +261,7 @@ def main():
                 print(f"[SKIP] {protein_id}: pair block 0 not found at {pb0_path}")
                 continue
 
-            chain_id = protein_id.split("_")[-1]
-            ca_data = extract_ca_coordinates(pdb_path, chain_id=chain_id)
+            ca_data = extract_ca_coordinates(pdb_path)
             n_ca = len(ca_data["residues"])
             if n_ca == 0:
                 skipped.append((protein_id, "no CA atoms found in PDB"))
