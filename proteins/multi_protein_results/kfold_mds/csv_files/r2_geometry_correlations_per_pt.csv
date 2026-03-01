@@ -1,0 +1,8 @@
+metric,note,raw_pearson_r,raw_pearson_p,partial_pearson_r,partial_pearson_p,n_points
+TM-score,higher = better fold,0.580919,0.000000,0.048330,0.290639,480
+RMSD,lower = better,-0.645425,0.000000,-0.248505,0.000000,480
+Frac top-3 eigenvalues,higher = more 3D-like,0.773782,0.000000,0.238113,0.000000,480
+Neg eigenvalue fraction,lower = more metric,-0.549832,0.000000,0.061427,0.179089,480
+Stress,lower = better MDS fit,-0.737310,0.000000,-0.265305,0.000000,480
+Triangle violation frac,lower = more metric,0.107883,0.018062,0.096458,0.034626,480
+Triangle mean violation,lower = better,-0.568309,0.000000,-0.159420,0.000455,480

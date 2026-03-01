@@ -1,5 +1,62 @@
 # Branch Analysis
 
+## Session: 2026-03-01 — Add neighbor-context pair regression probe
+
+### What changed
+Added a new local regression script:
+- `scripts/multi_protein/regression/neighbor_context_pair_regression.py`
+
+The script compares three pooled pair-level linear probes across all 48 layers on
+a fixed 4-protein subset (`6tf4_A`, `6wmk_A`, `6wqc_A`, `6xqj_A`):
+- Baseline: `[pb[i,j,:], pb[j,i,:]]` (256 dims)
+- Neighbor-context: baseline + `(i-1,j)`, `(i+1,j)`, `(i,j-1)`, `(i,j+1)` (768 dims)
+- Fixed-random control: baseline + four fixed random off-diagonal cells (768 dims)
+
+### Edge handling decision
+Edge pairs are retained. If an orthogonal neighbor would fall outside the pair
+matrix bounds, that neighbor block is zero-padded instead of dropping the pair.
+This keeps the full upper triangle while preserving a fixed feature width.
+
+### Why
+This implements the first idea in `llm_generated_research_ideas.md` with a
+dimension-matched control, so we can test whether local pair context improves
+distance regression beyond what would be expected from simply adding parameters.
+
+### Output path decision
+To avoid overwriting existing pooled regression outputs, the new script writes to:
+- `proteins/multi_protein_results/neighbor_context_pair_features/csv_files/`
+- `proteins/multi_protein_results/neighbor_context_pair_features/visualizations/`
+
+### Additional outputs
+The script also exports:
+- per-layer pooled R^2 comparisons for all three probes
+- deterministic random control cell coordinates
+- a unified pooled coefficient CSV with one coefficient vector per layer per model
+- layer-47 predicted vs actual distances for all residue pairs
+- comparison plots for R^2-by-layer and layer-47 predictions
+
+## Session: 2026-02-25 — Add multi-protein regression with diagonal pair features
+
+### What changed
+Added a new local regression script:
+- `scripts/multi_protein/regression/multi_protein_regression_with_diagonal.py`
+
+It is based on `multi_protein_regression.py` but changes input features per pair
+from 256-dim to 512-dim by appending diagonal self-representations:
+- Baseline: `[pb[i,j,:], pb[j,i,:]]` (256)
+- New: `[pb[i,j,:], pb[j,i,:], pb[i,i,:], pb[j,j,:]]` (512)
+
+### Why
+This enables a direct test of whether residue self-representations (diagonal entries)
+improve CA-CA distance regression performance in the pooled multi-protein setting.
+
+### Output path decision
+To avoid overwriting baseline pooled outputs, the new script writes to:
+- `proteins/multi_protein_results/regression_with_diagonal/csv_files/`
+- `proteins/multi_protein_results/regression_with_diagonal/visualizations/`
+
+Per-protein CSV writes remain unchanged (same behavior as baseline script).
+
 ## Session: 2026-02-25 — Remove chain_id filtering from all CA extraction functions
 
 ### Problem
@@ -478,3 +535,22 @@ Five utility functions were copy-pasted across 6-7 multi-protein regression scri
 - All 6 refactored scripts pass import checks
 - `multi_protein_regression.py` run end-to-end: produces identical R² values (peak 0.9842 at layer 45)
 - `mds_reconstruction.py` run end-to-end: produces identical TM-scores and RMSD values
+
+## Session: 2026-02-26 — Test Delta k-fold R² visualizations
+
+### Motivation
+Create quick sanity-check plots from the Delta test-run k-fold regression outputs so fold-level behavior and aggregate performance can be inspected without rerunning cluster jobs.
+
+### New files
+- **`scripts/multi_protein/regression/plot_test_delta_kfold_r2.py`**
+  - Reads:
+    - `delta_files/test_linear_regression_csv_files/test_kfold_regression_r2.csv`
+    - `delta_files/test_linear_regression_csv_files/test_kfold_regression_r2_summary.csv`
+  - Writes to:
+    - `proteins/multi_protein_results/test delta files/visualizations/test_kfold_r2_per_fold_and_mean.png`
+    - `proteins/multi_protein_results/test delta files/visualizations/test_kfold_r2_mean_std.png`
+
+### Notes
+- Output folder name intentionally includes spaces to match request: `test delta files`.
+- First plot shows each fold's R²-vs-layer curve with the cross-fold mean overlaid.
+- Second plot shows mean R² with ±1 std shading.

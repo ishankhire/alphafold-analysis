@@ -13,7 +13,7 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 - `lib/` — shared library: alignment utilities (`build_alignment`, `validate_alignment`) and structure utilities (`extract_residue_coordinates`, `compute_distance_matrix`, etc.)
 - `proteins/<id>_A/` — per-protein data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
 - `proteins/multi_protein_results/` — aggregated multi-protein outputs (created at runtime)
-- `proteins/claude_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
+- `proteins/llm_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
 - `scripts/multi_protein/` — local/dev analysis scripts and regression variants
 
@@ -32,7 +32,7 @@ Scripts run on two SLURM clusters: **Delta** and **ICE**. Each has its own sbatc
 | ICE | `regression_job.sbatch`, `per_protein_regression_job.sbatch`, `protein_split_regression_job.sbatch` | Uses `module load anaconda3`, `$SCRATCH` for data root |
 | Delta | `delta_regression_job.sbatch`, `delta_per_protein_regression_job.sbatch` | Uses `module load python`, `srun`, `--account=bekh-delta-cpu` |
 
-**Reference documentation** lives in `proteins/claude_reference/`:
+**Reference documentation** lives in `proteins/llm_reference/`:
 - `delta_slurm_guide.pdf` — Delta cluster SLURM specifics
 - `slurm_guidelines.pdf` — general SLURM guidelines
 - `storage_on_ice.pdf` — ICE storage and `$SCRATCH` layout

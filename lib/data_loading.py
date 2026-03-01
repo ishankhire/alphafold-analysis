@@ -18,7 +18,7 @@ def discover_proteins(proteins_dir):
     for entry in sorted(proteins_dir.iterdir()):
         if not entry.is_dir():
             continue
-        if entry.name == "multi_protein_results":
+        if entry.name == "multi_protein_results" or entry.name == "llm_reference":
             continue
         proteins.append((entry.name, entry))
     return proteins
