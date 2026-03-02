@@ -16,7 +16,7 @@ Outputs (all to CSV_ROOT, prefixed "test2_"):
     test2_kfold_regression_r2.csv
     test2_kfold_regression_r2_summary.csv
     test2_kfold_regression_coefficients.csv
-    test2_kfold_mds_metrics.csv
+    test2_kfold_mds_metrics.csv  (train + test rows with split and per-protein R2)
     test2_kfold_mds_summary.csv
     test2_kfold_regression_summary.txt
 """
@@ -128,24 +128,26 @@ def compute_distance_matrix(coords):
 
 
 # ===========================================================================
-# Helper — build feature matrix for a list of proteins at a given layer
+# Helper — build per-protein feature chunks and stack from cache
 # ===========================================================================
 
-def build_feature_matrix(proteins, layer):
-    """Load pair blocks and build the concatenated feature matrix for one layer."""
-    chunks = []
-    for d in proteins:
-        pb_path = get_pair_block_path(d["protein_dir"], d["protein_id"], layer)
-        pb = np.load(str(pb_path))
-        chunk = np.concatenate([
-            pb[d["pb_i"], d["pb_j"], :],
-            pb[d["pb_j"], d["pb_i"], :],
-        ], axis=1)
-        chunks.append(chunk)
-        del pb
-    X = np.vstack(chunks)
-    del chunks
-    return X
+def build_feature_chunk(protein_record, layer):
+    """Load one protein/layer pair block and extract its dense feature chunk."""
+    pb_path = get_pair_block_path(
+        protein_record["protein_dir"], protein_record["protein_id"], layer
+    )
+    pb = np.load(str(pb_path))
+    chunk = np.concatenate([
+        pb[protein_record["pb_i"], protein_record["pb_j"], :],
+        pb[protein_record["pb_j"], protein_record["pb_i"], :],
+    ], axis=1)
+    del pb
+    return chunk
+
+
+def stack_cached_chunks(proteins, chunk_map):
+    """Stack cached per-protein chunks in the supplied protein order."""
+    return np.vstack([chunk_map[d["protein_id"]] for d in proteins])
 
 
 # ===========================================================================
@@ -312,6 +314,28 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
     }
 
 
+def make_failed_geometry_row(fold_idx, layer, protein_id, split, n_residues, per_protein_r2):
+    """Return a placeholder per-protein row when geometry analysis fails."""
+    return {
+        "fold": fold_idx,
+        "layer": layer,
+        "protein_id": protein_id,
+        "split": split,
+        "n_residues": n_residues,
+        "per_protein_r2": per_protein_r2,
+        "rmsd": float("nan"),
+        "tm_score": float("nan"),
+        "frac_top3_eigenvalues": float("nan"),
+        "n_negative_eigenvalues": -1,
+        "neg_eigenvalue_fraction": float("nan"),
+        "n_negative_predictions": -1,
+        "stress": float("nan"),
+        "triangle_violation_fraction": float("nan"),
+        "triangle_mean_violation": float("nan"),
+        "triangle_max_violation": float("nan"),
+    }
+
+
 # ===========================================================================
 # Main
 # ===========================================================================
@@ -418,6 +442,7 @@ def main():
     total_pairs = sum(len(d["y"]) for d in protein_data)
     print(f"  Total proteins: {n_proteins}")
     print(f"  Total pairs:    {total_pairs:,}")
+    fold_data = []
     for fold_idx, (train_idx, test_idx) in enumerate(folds):
         train_ids = [protein_data[i]["protein_id"] for i in train_idx]
         test_ids = [protein_data[i]["protein_id"] for i in test_idx]
@@ -425,17 +450,6 @@ def main():
         n_test_pairs = sum(len(protein_data[i]["y"]) for i in test_idx)
         print(f"  Fold {fold_idx}: {len(train_idx)} train / {len(test_idx)} test proteins, "
               f"{n_train_pairs:,} train / {n_test_pairs:,} test pairs")
-    print(f"{'='*60}\n")
-
-    # ------------------------------------------------------------------
-    # Phase 3: K-fold cross-validated layer-wise regression + MDS
-    # ------------------------------------------------------------------
-    results_grid = []
-    coefs_grid = []
-    mds_rows = []
-    last_fold_preds = None
-
-    for fold_idx, (train_idx, test_idx) in enumerate(folds):
         train_proteins = [protein_data[i] for i in train_idx]
         test_proteins = [protein_data[i] for i in test_idx]
 
@@ -456,15 +470,42 @@ def main():
             test_offsets.append((d["protein_id"], offset, offset + n))
             offset += n
 
-        fold_results = []
-        fold_coefs = []
+        fold_data.append({
+            "train_proteins": train_proteins,
+            "test_proteins": test_proteins,
+            "y_train": y_train,
+            "y_test": y_test,
+            "train_offsets": train_offsets,
+            "test_offsets": test_offsets,
+        })
+    print(f"{'='*60}\n")
 
-        print(f"--- Fold {fold_idx} ({len(train_idx)} train / {len(test_idx)} test proteins) ---")
+    # ------------------------------------------------------------------
+    # Phase 3: K-fold cross-validated layer-wise regression + MDS
+    # ------------------------------------------------------------------
+    results_grid = [[None for _ in range(n_layers)] for _ in range(N_FOLDS)]
+    coefs_grid = [[None for _ in range(n_layers)] for _ in range(N_FOLDS)]
+    mds_rows = []
+    last_fold_preds = None
 
-        for layer in range(n_layers):
+    for layer in range(n_layers):
+        print(f"--- Layer {layer:2d} (cached across all folds) ---")
+        chunk_map = {
+            d["protein_id"]: build_feature_chunk(d, layer)
+            for d in protein_data
+        }
+
+        for fold_idx, fold_info in enumerate(fold_data):
+            train_proteins = fold_info["train_proteins"]
+            test_proteins = fold_info["test_proteins"]
+            y_train = fold_info["y_train"]
+            y_test = fold_info["y_test"]
+            train_offsets = fold_info["train_offsets"]
+            test_offsets = fold_info["test_offsets"]
+
             try:
-                X_train_raw = build_feature_matrix(train_proteins, layer)
-                X_test_raw = build_feature_matrix(test_proteins, layer)
+                X_train_raw = stack_cached_chunks(train_proteins, chunk_map)
+                X_test_raw = stack_cached_chunks(test_proteins, chunk_map)
 
                 scaler = StandardScaler()
                 X_train = scaler.fit_transform(X_train_raw)
@@ -480,24 +521,59 @@ def main():
                 mae = mean_absolute_error(y_test, y_pred_test)
                 rmse = math.sqrt(np.mean((y_test - y_pred_test) ** 2))
 
-                fold_results.append({
+                results_grid[fold_idx][layer] = {
                     "r2_test": r2_test, "r2_train": r2_train,
                     "mae_test": mae, "rmse_test": rmse,
-                })
+                }
 
                 coef_row = {"fold": fold_idx, "layer": layer,
                             "intercept": float(model.intercept_)}
                 coef_row.update({f"coef_{i}": float(c)
                                  for i, c in enumerate(model.coef_)})
-                fold_coefs.append(coef_row)
+                coefs_grid[fold_idx][layer] = coef_row
 
                 print(f"  Fold {fold_idx} Layer {layer:2d}  "
                       f"R2_test={r2_test:.4f}  R2_train={r2_train:.4f}  "
                       f"MAE={mae:.2f}  RMSE={rmse:.2f}", end="")
 
+                # --- MDS + triangle inequality on train proteins ---
+                tm_train_vals = []
+                for d, (pid, start, end) in zip(train_proteins, train_offsets):
+                    per_protein_r2 = (
+                        float(r2_score(y_train[start:end], y_pred_train[start:end]))
+                        if end - start > 1 else float("nan")
+                    )
+                    try:
+                        metrics = analyze_protein_geometry(
+                            d["n_residues"],
+                            d["coordinates"],
+                            d["pb_i"],
+                            d["pb_j"],
+                            y_pred_train[start:end],
+                        )
+                        mds_rows.append({
+                            "fold": fold_idx,
+                            "layer": layer,
+                            "protein_id": pid,
+                            "split": "train",
+                            "n_residues": d["n_residues"],
+                            "per_protein_r2": per_protein_r2,
+                            **metrics,
+                        })
+                        tm_train_vals.append(metrics["tm_score"])
+                    except Exception as e:
+                        print(f"\n    Train MDS failed for {pid}: {e}")
+                        mds_rows.append(make_failed_geometry_row(
+                            fold_idx, layer, pid, "train", d["n_residues"], per_protein_r2
+                        ))
+
                 # --- MDS + triangle inequality on test proteins ---
-                tm_vals = []
+                tm_test_vals = []
                 for d, (pid, start, end) in zip(test_proteins, test_offsets):
+                    per_protein_r2 = (
+                        float(r2_score(y_test[start:end], y_pred_test[start:end]))
+                        if end - start > 1 else float("nan")
+                    )
                     try:
                         metrics = analyze_protein_geometry(
                             d["n_residues"],
@@ -510,30 +586,25 @@ def main():
                             "fold": fold_idx,
                             "layer": layer,
                             "protein_id": pid,
+                            "split": "test",
                             "n_residues": d["n_residues"],
+                            "per_protein_r2": per_protein_r2,
                             **metrics,
                         })
-                        tm_vals.append(metrics["tm_score"])
+                        tm_test_vals.append(metrics["tm_score"])
                     except Exception as e:
-                        print(f"\n    MDS failed for {pid}: {e}")
-                        mds_rows.append({
-                            "fold": fold_idx, "layer": layer,
-                            "protein_id": pid, "n_residues": d["n_residues"],
-                            "rmsd": float("nan"), "tm_score": float("nan"),
-                            "frac_top3_eigenvalues": float("nan"),
-                            "n_negative_eigenvalues": -1,
-                            "neg_eigenvalue_fraction": float("nan"),
-                            "n_negative_predictions": -1,
-                            "stress": float("nan"),
-                            "triangle_violation_fraction": float("nan"),
-                            "triangle_mean_violation": float("nan"),
-                            "triangle_max_violation": float("nan"),
-                        })
+                        print(f"\n    Test MDS failed for {pid}: {e}")
+                        mds_rows.append(make_failed_geometry_row(
+                            fold_idx, layer, pid, "test", d["n_residues"], per_protein_r2
+                        ))
 
-                if tm_vals:
-                    print(f"  TM={np.mean(tm_vals):.4f}")
-                else:
-                    print()
+                tm_train_str = (
+                    f"{np.mean(tm_train_vals):.4f}" if tm_train_vals else "nan"
+                )
+                tm_test_str = (
+                    f"{np.mean(tm_test_vals):.4f}" if tm_test_vals else "nan"
+                )
+                print(f"  TM_train={tm_train_str}  TM_test={tm_test_str}")
 
                 if fold_idx == N_FOLDS - 1 and layer == n_layers - 1:
                     last_fold_preds = {
@@ -552,15 +623,15 @@ def main():
             except Exception as e:
                 print(f"  Fold {fold_idx} Layer {layer:2d}  ERROR: {e}")
                 traceback.print_exc()
-                fold_results.append({
+                results_grid[fold_idx][layer] = {
                     "r2_test": float("nan"), "r2_train": float("nan"),
                     "mae_test": float("nan"), "rmse_test": float("nan"),
-                })
-                fold_coefs.append({"fold": fold_idx, "layer": layer,
-                                   "intercept": 0.0})
+                }
+                coefs_grid[fold_idx][layer] = {
+                    "fold": fold_idx, "layer": layer, "intercept": 0.0
+                }
 
-        results_grid.append(fold_results)
-        coefs_grid.append(fold_coefs)
+        del chunk_map
 
     # ------------------------------------------------------------------
     # Phase 4: Aggregate metrics across folds
@@ -647,7 +718,7 @@ def main():
     # CSV 4: MDS metrics (per fold, layer, protein)
     mds_csv = csv_dir / "test2_kfold_mds_metrics.csv"
     mds_fields = [
-        "fold", "layer", "protein_id", "n_residues",
+        "fold", "layer", "protein_id", "split", "n_residues", "per_protein_r2",
         "rmsd", "tm_score",
         "frac_top3_eigenvalues", "n_negative_eigenvalues", "neg_eigenvalue_fraction",
         "n_negative_predictions", "stress",
@@ -728,10 +799,13 @@ def main():
         f.write(f"\nLayer 47 MDS results:\n")
         for row in mds_rows:
             if row["layer"] == n_layers - 1:
-                f.write(f"  {row['protein_id']}: TM={row['tm_score']:.4f}  "
+                f.write(f"  {row['protein_id']} ({row['split']}): TM={row['tm_score']:.4f}  "
                         f"RMSD={row['rmsd']:.2f}A  "
                         f"Top3EV={row['frac_top3_eigenvalues']:.4f}  "
                         f"TriViol={row['triangle_violation_fraction']:.6f}\n")
+
+        f.write("\nNote: test2_kfold_mds_metrics.csv now includes both train and test "
+                "proteins, with per-protein R2 in the per_protein_r2 column.\n")
 
         f.write(f"\nLayer-by-layer R2_test (mean +/- std):\n")
         for i, s in enumerate(layer_summaries):

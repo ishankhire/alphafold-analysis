@@ -554,3 +554,94 @@ Create quick sanity-check plots from the Delta test-run k-fold regression output
 - Output folder name intentionally includes spaces to match request: `test delta files`.
 - First plot shows each fold's R²-vs-layer curve with the cross-fold mean overlaid.
 - Second plot shows mean R² with ±1 std shading.
+
+## Session: 2026-03-02 — Local benchmark harness for k-fold MDS runtime attribution
+
+### Motivation
+The `test2` cluster run is slower than expected, and the next decision depends on separating three effects:
+- baseline runtime of the current k-fold MDS regression workflow
+- savings from reordering loops to cache one layer of features at a time
+- additional savings from replacing stacked full-matrix OLS with exact streaming OLS
+
+To make that comparison explicit without changing the production analysis entrypoints, a standalone local benchmark harness was added.
+
+### New files
+- **`scripts/multi_protein/regression/benchmark_kfold_mds_runtime.py`**
+  - Runs three modes: `baseline`, `layer_cache`, and `layer_cache_streaming`
+  - Reuses the same local protein loading and k-fold split logic across all modes
+  - Keeps the MDS + triangle geometry logic unchanged on purpose, so the runtime comparison isolates regression/data-path differences
+  - Writes timing breakdowns, mode summaries, and validation CSVs under `proteins/multi_protein_results/kfold_mds_runtime_benchmark/`
+
+### Key design choices
+- `baseline` preserves the current fold-first, stacked `StandardScaler + LinearRegression` path.
+- `layer_cache` changes only loop order and per-layer feature reuse, so its delta versus `baseline` isolates cache/IO savings.
+- `layer_cache_streaming` keeps the same one-layer cache, then replaces stacked OLS with exact chunked normal-equation accumulation, so its delta versus `layer_cache` isolates streaming-solver savings.
+- Validation compares regression metrics, coefficients, per-protein predictions, and geometry outputs across modes with strict tolerances for `baseline` vs `layer_cache` and relaxed floating-point tolerances when `layer_cache_streaming` is involved.
+
+### Execution note
+This benchmark must be run with the repo venv:
+- `./.venv/bin/python scripts/multi_protein/regression/benchmark_kfold_mds_runtime.py ...`
+
+The local system `python3` does not have the required packages.
+
+## Session: 2026-03-02 — `test2` cluster layer-cache refactor with full train/test geometry
+
+### Motivation
+The `test2` cluster regression run was spending too much time repeatedly loading the same pair-block data across folds. At the same time, the per-protein geometry export only covered test proteins, but the desired output was to show every protein in every fold/layer, including train proteins.
+
+### Modified files
+- **`scripts/cluster_scripts/test2_multi_protein_regression.py`**
+  - Reworked the main regression loop from `fold -> layer` to `layer -> fold`
+  - Added a one-layer feature cache so each protein's `(layer, feature chunk)` is loaded once and reused across all folds
+  - Kept the regression math unchanged: still `StandardScaler + LinearRegression` on stacked train/test matrices
+  - Expanded `test2_kfold_mds_metrics.csv` rows to include both train and test proteins
+  - Added `split` and `per_protein_r2` to the per-protein MDS metrics rows
+  - Runs full MDS / triangle analysis on train and test predictions alike
+  - Updated logging and text summary so train/test geometry is explicit
+
+### Notes
+- Aggregate regression CSV outputs are intentionally unchanged.
+- `test2_kfold_mds_summary.csv` now summarizes all train + test geometry rows because the goal is to show all proteins.
+- Running geometry on both splits increases the geometry workload by about 5x per layer, so total runtime is expected to increase materially even though the layer-cache change reduces repeated I/O.
+
+## Session: 2026-03-02 — Symmetric vs antisymmetric pair regression probe
+
+### What changed
+Added a new local regression script:
+- `scripts/multi_protein/regression/symmetric_antisymmetric_pair_regression.py`
+
+The script compares four pooled pair-level linear probes across all 48 layers on
+the same fixed 4-protein subset used by the neighbor-context analysis
+(`6tf4_A`, `6wmk_A`, `6wqc_A`, `6xqj_A`):
+- Baseline: `[pb[i,j,:], pb[j,i,:]]` (256 dims)
+- Symmetric-only: `S = 0.5 * (pb[i,j,:] + pb[j,i,:])` (128 dims)
+- Antisymmetric-only: `A = 0.5 * (pb[i,j,:] - pb[j,i,:])` (128 dims)
+- Combined decomposition: `[S, A]` (256 dims)
+
+### Validation logic
+The script checks the decomposition explicitly for every loaded layer/protein
+batch:
+- `upper == S + A`
+- `lower == S - A`
+
+It also verifies that the feature shapes match the expected 128-dim and 256-dim
+layouts before fitting each probe.
+
+### Why
+This implements the second idea in `llm_generated_research_ideas.md` in a form
+that cleanly separates symmetric and directional signal. Because `[S, A]` is an
+invertible linear reparameterization of `[pb[i,j], pb[j,i]]`, the combined probe
+should match the baseline up to numerical precision. That built-in equivalence
+acts as a sanity check on the feature construction and regression pipeline.
+
+### Output path decision
+To avoid overwriting existing pooled regression outputs, the new script writes to:
+- `proteins/multi_protein_results/symmetric_antisymmetric_pair_features/csv_files/`
+- `proteins/multi_protein_results/symmetric_antisymmetric_pair_features/visualizations/`
+
+### Additional outputs
+The script exports:
+- per-layer pooled R^2 comparisons for all four probes
+- a unified pooled coefficient CSV with one coefficient vector per layer per model
+- layer-47 predicted vs actual distances for all residue pairs
+- comparison plots for R^2-by-layer and layer-47 predictions

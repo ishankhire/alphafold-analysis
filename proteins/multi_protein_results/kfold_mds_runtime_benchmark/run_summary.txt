@@ -1,0 +1,35 @@
+K-fold MDS Runtime Benchmark
+==============================
+
+Timestamp: 2026-03-01 19:54:34
+Args: --max-proteins 4 --max-layers 2 --n-folds 2
+Modes: baseline, layer_cache, layer_cache_streaming
+Loaded proteins (4): 6tf4_A, 6wmk_A, 6wqc_A, 6xqj_A
+Skipped proteins: 0
+
+Fold breakdown:
+  Fold 0: train=6tf4_A, 6wqc_A | test=6wmk_A, 6xqj_A
+  Fold 1: train=6wmk_A, 6xqj_A | test=6tf4_A, 6wqc_A
+
+Mode runtimes:
+  baseline: 0.918s
+  layer_cache: 0.713s
+  layer_cache_streaming: 0.699s
+
+Savings:
+  cache_only_savings: 0.204s (22.26% of reference)
+  streaming_only_savings: 0.014s (1.96% of reference)
+  combined_savings: 0.218s (23.78% of reference)
+
+Validation summary:
+  Regression baseline_vs_layer_cache: PASS
+  Regression layer_cache_vs_layer_cache_streaming: FAIL
+  Regression baseline_vs_layer_cache_streaming: FAIL
+  Geometry baseline_vs_layer_cache: PASS
+  Geometry layer_cache_vs_layer_cache_streaming: FAIL
+  Geometry baseline_vs_layer_cache_streaming: FAIL
+
+Notes:
+  - All compared runs reused the same folds.
+  - Geometry logic is intentionally unchanged.
+  - Run this script with ./.venv/bin/python, not system python3.
