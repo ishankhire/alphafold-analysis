@@ -1,4 +1,2 @@
 comparison,max_abs_rmsd_delta,max_abs_tm_score_delta,max_abs_frac_top3_eigenvalues_delta,max_abs_n_negative_eigenvalues_delta,max_abs_neg_eigenvalue_fraction_delta,max_abs_n_negative_predictions_delta,max_abs_stress_delta,max_abs_triangle_violation_fraction_delta,max_abs_triangle_mean_violation_delta,max_abs_triangle_max_violation_delta,passed
 baseline_vs_layer_cache,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,True
-layer_cache_vs_layer_cache_streaming,0.000022,0.000001,0.000001,1.000000,0.000001,0.000000,0.000002,0.000073,0.000380,0.000157,False
-baseline_vs_layer_cache_streaming,0.000022,0.000001,0.000001,1.000000,0.000001,0.000000,0.000002,0.000073,0.000380,0.000157,False

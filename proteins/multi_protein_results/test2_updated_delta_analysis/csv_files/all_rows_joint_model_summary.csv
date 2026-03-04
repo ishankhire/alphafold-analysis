@@ -1,0 +1,5 @@
+scope,model_name,n_rows,model_r2,coef_per_protein_r2,coef_n_residues,coef_split_train,std_coef_per_protein_r2,std_coef_n_residues,std_coef_split_train,layer_coef_mean_abs_std,layer_coef_max_abs_std
+all_rows,r2_only,6000,0.333229,0.361937,nan,nan,0.129836,nan,nan,nan,nan
+all_rows,size_only,6000,0.171187,nan,0.000624,nan,nan,0.093059,nan,nan,nan
+all_rows,r2_plus_size,6000,0.378000,0.307890,0.000344,nan,0.110447,0.051388,nan,nan,nan
+all_rows,adjusted,6000,0.553102,0.092346,0.000540,0.004497,0.033127,0.080560,0.001799,0.026719,0.056553

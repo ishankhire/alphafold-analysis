@@ -1,0 +1,2 @@
+source_mode,sampled_cases,max_abs_rmsd_delta,max_abs_tm_score_delta,max_abs_frac_top3_eigenvalues_delta,max_abs_n_negative_eigenvalues_delta,max_abs_neg_eigenvalue_fraction_delta,max_abs_n_negative_predictions_delta,max_abs_stress_delta,max_abs_triangle_violation_fraction_delta,max_abs_triangle_mean_violation_delta,max_abs_triangle_max_violation_delta,passed
+layer_cache,58,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,True

@@ -1,5 +1,77 @@
 # Branch Analysis
 
+## Session: 2026-03-04 — Add residue-weighted size-diagnostic cluster regression
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/diagnostic_residue_weighted_regression.py`
+- `scripts/cluster_scripts/diagnostic_residue_weighted_regression.sbatch`
+
+### Why
+The current pooled multi-protein regression is dominated by large proteins
+because pair count scales quadratically with residue count. This diagnostic
+tests whether equalizing protein contribution, normalizing distances within each
+protein, and conditioning the linear probe on protein size improves
+generalization across the full protein set.
+
+### Key design decisions
+- All valid proteins are retained, including proteins with more than 500 residues
+- Each unordered residue pair is used exactly once via lower-triangle indexing
+- Only one directional pair representation is used per pair (`pb[i, j, :]` for `i > j`),
+  reducing the base feature width from 256 to 128
+- The script uses one deterministic size-stratified 80/20 protein split
+- Weighted variants give each training protein equal total loss mass via
+  per-pair weights of `1 / n_pairs`
+- Size-conditioned variants include both `[X, X * g(n)]` interaction models and
+  stricter `X * g(n)`-only models for `g(n) in {n, sqrt(n), log(n), n^2}`
+- The normalized-distance variant reports both native normalized metrics and
+  oracle-rescaled absolute-distance diagnostics
+- Outputs are written to a dedicated CSV directory to avoid overwriting
+  existing regression runs
+
+## Session: 2026-03-03 — Diagnostic regression script for R² investigation
+
+### What changed
+Added two new files for the Delta cluster:
+- `scripts/cluster_scripts/diagnostic_regression.py`
+- `scripts/cluster_scripts/diagnostic_delta_job.sbatch`
+
+### Why
+The full 184-protein run shows pooled R² ~0.53 and mean per-protein R² near 0.
+To diagnose this, the new script strips away k-fold CV, MDS, and multi-layer
+iteration. It runs only layer 47, excludes proteins >500 residues, randomly
+samples 100 proteins 3 times with 80/20 splits, and collects per-protein
+diagnostics (distance distribution stats, feature variance, residual analysis).
+
+### Key design decisions
+- 3 random samples (seeds 42, 123, 456) to test cross-sample stability
+- Per-protein metrics include mean/std/max true distance and mean feature
+  variance to correlate with R² failures
+- Outlier consistency analysis identifies proteins that fail across multiple
+  samples (not just due to random split)
+- Outputs go to `$HOME/diagnostic_csv_files` to avoid overwriting production CSVs
+
+## Session: 2026-03-03 — Document core multi-protein regression failure mode
+
+### What changed
+Added a new analysis note:
+- `regression_problems.md`
+
+### Why
+The 184-protein cluster regression results show a large drop in pooled `R^2`
+relative to the earlier 10/25-protein runs. The new note captures the main
+diagnosis: the current setup uses one global linear model and evaluates it on
+all concatenated residue pairs, which implicitly weights proteins by pair count
+and hides substantial protein-level failures.
+
+### Key conclusion recorded
+- The drop is primarily a conceptual/modeling issue, not an obvious regression
+  code bug.
+- Small benchmark subsets were optimistic because they were fixed sorted
+  subsets, not representative random samples.
+- Per-protein performance is much worse than the pooled metric suggests,
+  especially for shorter proteins.
+
 ## Session: 2026-03-01 — Add neighbor-context pair regression probe
 
 ### What changed
@@ -645,3 +717,74 @@ The script exports:
 - a unified pooled coefficient CSV with one coefficient vector per layer per model
 - layer-47 predicted vs actual distances for all residue pairs
 - comparison plots for R^2-by-layer and layer-47 predictions
+
+## Session: 2026-03-02 — Test2 Delta post-run geometry analysis
+
+### Motivation
+The updated `test2` Delta run now includes train and test geometry rows for every
+protein, so the follow-up question is no longer whether the run completed, but
+whether the refactor preserved the old results and what the richer per-protein
+geometry table says about TM-score, protein size, and train-vs-test behavior.
+
+### New files
+- **`scripts/multi_protein/regression/analyze_test2_delta_geometry.py`**
+  - Reads:
+    - `delta_files/test2_linear_reg_data/`
+    - `delta_files/updated_test2_linear_reg_data/`
+  - Writes:
+    - `proteins/multi_protein_results/test2_updated_delta_analysis/`
+    - `analysis_summaries/test2_updated_delta_validation_and_geometry_analysis.md`
+
+### Analysis decisions
+- Keep parity checking lightweight: verify the unchanged regression CSVs and that
+  the old MDS table matches the updated `split=test` subset, then summarize that
+  briefly in the Markdown report instead of creating a standalone parity artifact.
+- Plot two versions of per-protein R^2 trajectories:
+  - train-only mean across each protein's 4 train rows
+  - 5-row mean across each protein's 4 train + 1 test rows
+- Add explicit train-minus-test gap plots so averaging does not hide overfitting.
+- Use pooled train+test rows for descriptive correlations, but also compute
+  within-`(fold, layer, split)` correlations to avoid over-interpreting repeated
+  measurements as independent samples.
+- Use `TM-score ~ per_protein_r2 + n_residues` as the primary linear model, with
+  a sensitivity model that adds `layer` and `split` only as confounder controls.
+
+## Session: 2026-03-02 — Production cluster script upgraded to full `test2` geometry workflow
+
+### What changed
+Rewrote the production cluster entrypoint:
+- `scripts/cluster_scripts/cluster_multi_protein_regression.py`
+
+The script now matches the `test2` regression + geometry workflow, but runs on
+all discovered proteins instead of truncating to a 25-protein subset.
+
+### Key implementation changes
+- Reordered the main regression loop from `fold -> layer` to `layer -> fold`
+  so each protein's feature chunk for a given layer is loaded once and reused
+  across all folds.
+- Added inline classical MDS reconstruction, Kabsch superposition, TM-score,
+  eigenvalue diagnostics, stress, and triangle-inequality analysis.
+- Expanded the per-protein geometry export to include both train and test
+  proteins for every fold/layer, with explicit `split` and `per_protein_r2`.
+- Kept the regression math unchanged: `StandardScaler + LinearRegression`
+  with the same 5-fold protein-level CV setup.
+
+### Output changes
+- Added:
+  - `kfold_mds_metrics.csv`
+  - `kfold_mds_summary.csv`
+- Retained:
+  - `kfold_predicted_distances.csv` as a backward-compatible extra artifact,
+    still limited to the last fold and last layer
+- Existing aggregate regression outputs keep the same filenames:
+  - `kfold_regression_r2.csv`
+  - `kfold_regression_r2_summary.csv`
+  - `kfold_regression_coefficients.csv`
+  - `kfold_regression_summary.txt`
+
+### Notes
+- `kfold_mds_summary.csv` aggregates across all geometry rows (train + test),
+  mirroring the updated `test2` behavior.
+- Runtime is expected to increase versus the old production script because it
+  now runs full geometry analysis on both splits, although the per-layer cache
+  reduces repeated pair-block loading.

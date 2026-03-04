@@ -2,7 +2,7 @@
 """
 per_protein_regression.py
 ==========================
-ICE cluster variant that trains a SEPARATE linear regression per protein
+Variant that trains a SEPARATE linear regression per protein
 per layer (instead of pooling all proteins into one model).
 
 Cluster layout (configured via environment variables set in sbatch files):

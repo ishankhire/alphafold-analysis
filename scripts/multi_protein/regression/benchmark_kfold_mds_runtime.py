@@ -4,13 +4,13 @@ benchmark_kfold_mds_runtime.py
 ==============================
 Standalone local benchmark harness for the k-fold MDS regression workflow.
 
-It compares three execution modes:
-  1. baseline               -- current fold->layer order with stacked OLS
-  2. layer_cache            -- layer->fold order, cache one layer at a time
-  3. layer_cache_streaming  -- layer cache + exact streaming OLS
+It compares two execution modes:
+  1. baseline    -- current fold->layer order with stacked OLS
+  2. layer_cache -- layer->fold order, cache one layer at a time
 
-The script keeps the geometry logic unchanged so runtime comparisons isolate
-data-loading and regression-path changes.
+The script computes geometry on all proteins in each fold, uses an optimized
+but exact triangle-violation routine, and runs a sampled legacy-vs-optimized
+geometry validation pass after the benchmark completes.
 
 Run this script with the repo venv:
     ./.venv/bin/python scripts/multi_protein/regression/benchmark_kfold_mds_runtime.py
@@ -19,6 +19,7 @@ Run this script with the repo venv:
 import argparse
 import csv
 import math
+import os
 import sys
 import time
 import traceback
@@ -26,6 +27,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.model_selection import KFold
@@ -51,7 +53,7 @@ RANDOM_STATE = 42
 PROTEINS_DIR = PROJECT_ROOT / "proteins"
 OUTPUT_ROOT = PROTEINS_DIR / "multi_protein_results"
 
-VALID_MODES = ("baseline", "layer_cache", "layer_cache_streaming")
+VALID_MODES = ("baseline", "layer_cache")
 REGRESSION_METRIC_KEYS = ("r2_train", "r2_test", "mae_test", "rmse_test")
 GEOMETRY_KEYS = (
     "rmsd",
@@ -66,6 +68,8 @@ GEOMETRY_KEYS = (
     "triangle_max_violation",
 )
 GEOMETRY_INT_KEYS = ("n_negative_eigenvalues", "n_negative_predictions")
+TRIANGLE_BLOCK_SIZE = 16
+GEOMETRY_OPT_COMPARISON = "legacy_vs_optimized_geometry_sampled"
 STAGE_COLUMNS = (
     "feature_build_train_total",
     "feature_build_test_total",
@@ -77,11 +81,6 @@ STAGE_COLUMNS = (
     "regression_fit_total",
     "predict_train_total",
     "predict_test_total",
-    "stream_stats_pass_total",
-    "stream_normal_equations_pass_total",
-    "stream_solve_total",
-    "stream_train_metrics_pass_total",
-    "stream_test_metrics_pass_total",
     "geometry_total",
 )
 
@@ -115,14 +114,8 @@ def classical_mds(distance_matrix, n_dims=3):
     return coords, eigenvalues
 
 
-def compute_triangle_violations(pred_dist):
-    """Compute triangle inequality violations using min-indirect-path approach.
-
-    For each pair (i,k), finds the minimum indirect path min_j(d(i,j) + d(j,k)).
-    A violation occurs when d(i,k) > min_indirect(i,k).
-
-    Returns (violation_fraction, mean_violation, max_violation).
-    """
+def compute_triangle_violations_legacy(pred_dist):
+    """Legacy exact triangle-violation calculation using a per-j Python loop."""
     R = pred_dist.shape[0]
     min_indirect = np.full((R, R), np.inf)
     for j in range(R):
@@ -148,12 +141,39 @@ def compute_triangle_violations(pred_dist):
     return violation_fraction, mean_violation, max_violation
 
 
-def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
-    """Run MDS reconstruction + triangle inequality analysis on one protein's
-    predicted distances.
+def compute_triangle_violations_optimized(pred_dist, block_size=TRIANGLE_BLOCK_SIZE):
+    """Exact triangle-violation calculation using blocked vectorized reduction."""
+    R = pred_dist.shape[0]
+    min_indirect = np.full((R, R), np.inf)
+    for j_start in range(0, R, block_size):
+        j_end = min(R, j_start + block_size)
+        left = pred_dist[:, j_start:j_end]
+        right = pred_dist[j_start:j_end, :]
+        candidates = left[:, :, np.newaxis] + right[np.newaxis, :, :]
+        block_min = np.min(candidates, axis=1)
+        min_indirect = np.minimum(min_indirect, block_min)
+    np.fill_diagonal(min_indirect, 0.0)
 
-    Returns a dict of metrics, or a dict of NaNs if analysis fails.
-    """
+    mask = pred_dist > min_indirect
+    np.fill_diagonal(mask, False)
+    n_violations = mask.sum()
+    total_pairs = R * (R - 1)
+
+    violation_fraction = float(n_violations / total_pairs) if total_pairs > 0 else 0.0
+
+    if n_violations > 0:
+        violations = pred_dist[mask] - min_indirect[mask]
+        mean_violation = float(violations.mean())
+        max_violation = float(violations.max())
+    else:
+        mean_violation = 0.0
+        max_violation = 0.0
+
+    return violation_fraction, mean_violation, max_violation
+
+
+def analyze_protein_geometry_impl(n_residues, true_coords, pb_i, pb_j, y_pred, triangle_fn):
+    """Run MDS reconstruction + triangle inequality analysis on one protein."""
     R = n_residues
 
     pred_dist = np.zeros((R, R))
@@ -193,7 +213,7 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
     d_mds = mds_dist[triu_i, triu_j]
     stress = float(np.sqrt(np.sum((d_pred - d_mds) ** 2) / np.sum(d_pred ** 2)))
 
-    viol_frac, viol_mean, viol_max = compute_triangle_violations(pred_dist)
+    viol_frac, viol_mean, viol_max = triangle_fn(pred_dist)
 
     return {
         "rmsd": rmsd,
@@ -207,6 +227,30 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
         "triangle_mean_violation": viol_mean,
         "triangle_max_violation": viol_max,
     }
+
+
+def analyze_protein_geometry_legacy(n_residues, true_coords, pb_i, pb_j, y_pred):
+    """Legacy geometry path using the original triangle-violation algorithm."""
+    return analyze_protein_geometry_impl(
+        n_residues,
+        true_coords,
+        pb_i,
+        pb_j,
+        y_pred,
+        triangle_fn=compute_triangle_violations_legacy,
+    )
+
+
+def analyze_protein_geometry_optimized(n_residues, true_coords, pb_i, pb_j, y_pred):
+    """Optimized geometry path using exact blocked triangle-violation reduction."""
+    return analyze_protein_geometry_impl(
+        n_residues,
+        true_coords,
+        pb_i,
+        pb_j,
+        y_pred,
+        triangle_fn=compute_triangle_violations_optimized,
+    )
 
 
 # ===========================================================================
@@ -223,12 +267,17 @@ def parse_args():
     parser.add_argument(
         "--modes",
         type=str,
-        default="baseline,layer_cache,layer_cache_streaming",
+        default="baseline,layer_cache",
     )
     parser.add_argument(
         "--output-subdir",
         type=str,
         default="kfold_mds_runtime_benchmark",
+    )
+    parser.add_argument(
+        "--geometry-workers",
+        type=int,
+        default=min(4, os.cpu_count() or 1),
     )
     args = parser.parse_args()
 
@@ -246,6 +295,8 @@ def parse_args():
         parser.error(f"--max-layers must be between 1 and {N_LAYERS_DEFAULT}.")
     if args.n_folds < 2:
         parser.error("--n-folds must be at least 2.")
+    if args.geometry_workers < 1:
+        parser.error("--geometry-workers must be at least 1.")
 
     args.modes = modes
     return args
@@ -271,13 +322,6 @@ def build_feature_chunk(protein_record, layer):
 def stack_cached_chunks(protein_records, chunk_map):
     """Stack cached per-protein chunks in the provided protein order."""
     return np.vstack([chunk_map[d["protein_id"]] for d in protein_records])
-
-
-def safe_std(std_vec):
-    """Avoid divide-by-zero when standardizing constant features."""
-    std_out = np.array(std_vec, copy=True)
-    std_out[std_out == 0.0] = 1.0
-    return std_out
 
 
 def compute_regression_metrics(y_true, y_pred):
@@ -323,6 +367,53 @@ def build_offsets(protein_records):
 
 def format_seconds(value):
     return f"{value:.6f}"
+
+
+def make_geometry_work_items(protein_records, prediction_map, split):
+    """Build deterministic per-protein geometry work items for one split."""
+    work_items = []
+    for d in protein_records:
+        work_items.append(
+            {
+                "protein_id": d["protein_id"],
+                "split": split,
+                "record": d,
+                "y_pred": prediction_map[d["protein_id"]],
+            }
+        )
+    return work_items
+
+
+def run_geometry_work_item(work_item, analyze_fn):
+    """Analyze one protein and return an ordered geometry row."""
+    d = work_item["record"]
+    metrics = analyze_fn(
+        d["n_residues"],
+        d["coordinates"],
+        d["pb_i"],
+        d["pb_j"],
+        work_item["y_pred"],
+    )
+    row = {
+        "split": work_item["split"],
+        **metrics,
+    }
+    return work_item["protein_id"], row
+
+
+def run_geometry_batch(records_with_predictions, n_jobs, analyze_fn):
+    """Run ordered per-protein geometry, optionally in parallel."""
+    if n_jobs == 1:
+        ordered_results = [
+            run_geometry_work_item(work_item, analyze_fn)
+            for work_item in records_with_predictions
+        ]
+    else:
+        ordered_results = Parallel(n_jobs=n_jobs, prefer="threads")(
+            delayed(run_geometry_work_item)(work_item, analyze_fn)
+            for work_item in records_with_predictions
+        )
+    return {protein_id: row for protein_id, row in ordered_results}
 
 
 def load_protein_data(max_proteins):
@@ -400,26 +491,11 @@ def build_folds(protein_data, n_folds):
     kf = KFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_STATE)
     return list(kf.split(np.arange(len(protein_data))))
 
-
-def extract_prediction_map(test_records, y_pred_test):
+def extract_prediction_map(protein_records, y_pred):
     prediction_map = {}
-    for d, (pid, start, end) in zip(test_records, build_offsets(test_records)):
-        prediction_map[pid] = np.array(y_pred_test[start:end], copy=True)
+    for d, (pid, start, end) in zip(protein_records, build_offsets(protein_records)):
+        prediction_map[pid] = np.array(y_pred[start:end], copy=True)
     return prediction_map
-
-
-def compute_geometry_map(test_records, prediction_map):
-    geometry_map = {}
-    for d in test_records:
-        pid = d["protein_id"]
-        geometry_map[pid] = analyze_protein_geometry(
-            d["n_residues"],
-            d["coordinates"],
-            d["pb_i"],
-            d["pb_j"],
-            prediction_map[pid],
-        )
-    return geometry_map
 
 
 def run_stacked_regression_common(
@@ -431,6 +507,7 @@ def run_stacked_regression_common(
     X_train_raw,
     X_test_raw,
     timing_rows,
+    geometry_workers,
 ):
     y_train = np.concatenate([d["y"] for d in train_records])
     y_test = np.concatenate([d["y"] for d in test_records])
@@ -494,10 +571,25 @@ def run_stacked_regression_common(
 
     train_metrics = compute_regression_metrics(y_train, y_pred_train)
     test_metrics = compute_regression_metrics(y_test, y_pred_test)
-    prediction_map = extract_prediction_map(test_records, y_pred_test)
+    train_prediction_map = extract_prediction_map(train_records, y_pred_train)
+    test_prediction_map = extract_prediction_map(test_records, y_pred_test)
+    protein_predictions = {}
+    protein_predictions.update(train_prediction_map)
+    protein_predictions.update(test_prediction_map)
 
     t_stage = time.perf_counter()
-    geometry_map = compute_geometry_map(test_records, prediction_map)
+    geometry_work_items = []
+    geometry_work_items.extend(
+        make_geometry_work_items(train_records, train_prediction_map, "train")
+    )
+    geometry_work_items.extend(
+        make_geometry_work_items(test_records, test_prediction_map, "test")
+    )
+    geometry_map = run_geometry_batch(
+        geometry_work_items,
+        geometry_workers,
+        analyze_protein_geometry_optimized,
+    )
     record_stage(
         timing_rows,
         mode,
@@ -517,13 +609,13 @@ def run_stacked_regression_common(
     }
 
     del X_train, X_test, y_pred_train, y_pred_test
-    return result_row, prediction_map, geometry_map
+    return result_row, protein_predictions, geometry_map
 
 
-def run_mode_baseline(protein_data, folds, n_layers):
+def run_mode_baseline(protein_data, folds, n_layers, geometry_workers):
     mode = "baseline"
     results_grid = {}
-    test_predictions = {}
+    protein_predictions = {}
     geometry_rows = {}
     timing_rows = []
     t_mode = time.perf_counter()
@@ -574,10 +666,11 @@ def run_mode_baseline(protein_data, folds, n_layers):
                 X_train_raw,
                 X_test_raw,
                 timing_rows,
+                geometry_workers,
             )
             results_grid[(fold_idx, layer)] = result_row
             for pid, pred in prediction_map.items():
-                test_predictions[(fold_idx, layer, pid)] = pred
+                protein_predictions[(fold_idx, layer, pid)] = pred
             for pid, geom in geometry_map.items():
                 geometry_rows[(fold_idx, layer, pid)] = geom
 
@@ -597,17 +690,17 @@ def run_mode_baseline(protein_data, folds, n_layers):
     return {
         "mode": mode,
         "results_grid": results_grid,
-        "test_predictions": test_predictions,
+        "protein_predictions": protein_predictions,
         "geometry_rows": geometry_rows,
         "timing_rows": timing_rows,
         "mode_total_seconds": mode_total_seconds,
     }
 
 
-def run_mode_layer_cache(protein_data, folds, n_layers):
+def run_mode_layer_cache(protein_data, folds, n_layers, geometry_workers):
     mode = "layer_cache"
     results_grid = {}
-    test_predictions = {}
+    protein_predictions = {}
     geometry_rows = {}
     timing_rows = []
     t_mode = time.perf_counter()
@@ -665,10 +758,11 @@ def run_mode_layer_cache(protein_data, folds, n_layers):
                 X_train_raw,
                 X_test_raw,
                 timing_rows,
+                geometry_workers,
             )
             results_grid[(fold_idx, layer)] = result_row
             for pid, pred in prediction_map.items():
-                test_predictions[(fold_idx, layer, pid)] = pred
+                protein_predictions[(fold_idx, layer, pid)] = pred
             for pid, geom in geometry_map.items():
                 geometry_rows[(fold_idx, layer, pid)] = geom
 
@@ -690,180 +784,7 @@ def run_mode_layer_cache(protein_data, folds, n_layers):
     return {
         "mode": mode,
         "results_grid": results_grid,
-        "test_predictions": test_predictions,
-        "geometry_rows": geometry_rows,
-        "timing_rows": timing_rows,
-        "mode_total_seconds": mode_total_seconds,
-    }
-
-
-def run_mode_layer_cache_streaming(protein_data, folds, n_layers):
-    mode = "layer_cache_streaming"
-    results_grid = {}
-    test_predictions = {}
-    geometry_rows = {}
-    timing_rows = []
-    t_mode = time.perf_counter()
-
-    print(f"\n=== Mode: {mode} ===")
-    for layer in range(n_layers):
-        print(f"[{mode}] layer {layer + 1}/{n_layers}")
-        t_stage = time.perf_counter()
-        chunk_map = {
-            d["protein_id"]: build_feature_chunk(d, layer)
-            for d in protein_data
-        }
-        record_stage(
-            timing_rows,
-            mode,
-            -1,
-            layer,
-            "cache_build_layer",
-            time.perf_counter() - t_stage,
-        )
-
-        for fold_idx, (train_idx, test_idx) in enumerate(folds):
-            train_records = [protein_data[i] for i in train_idx]
-            test_records = [protein_data[i] for i in test_idx]
-            y_train = np.concatenate([d["y"] for d in train_records])
-            y_test = np.concatenate([d["y"] for d in test_records])
-            t_total = time.perf_counter()
-
-            t_stage = time.perf_counter()
-            n_train = 0
-            sum_x = np.zeros(FEATURE_DIM, dtype=np.float64)
-            sum_x2 = np.zeros(FEATURE_DIM, dtype=np.float64)
-            sum_y = 0.0
-            for d in train_records:
-                chunk = chunk_map[d["protein_id"]]
-                chunk64 = chunk.astype(np.float64, copy=False)
-                n_train += chunk.shape[0]
-                sum_x += chunk64.sum(axis=0)
-                sum_x2 += np.square(chunk64).sum(axis=0)
-                sum_y += float(np.sum(d["y"], dtype=np.float64))
-            x_mean = sum_x / n_train
-            x_var = np.maximum(sum_x2 / n_train - x_mean ** 2, 0.0)
-            x_scale = safe_std(np.sqrt(x_var))
-            y_mean = sum_y / n_train
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "stream_stats_pass",
-                time.perf_counter() - t_stage,
-            )
-
-            t_stage = time.perf_counter()
-            XtX = np.zeros((FEATURE_DIM, FEATURE_DIM), dtype=np.float64)
-            Xty = np.zeros(FEATURE_DIM, dtype=np.float64)
-            for d in train_records:
-                chunk = chunk_map[d["protein_id"]].astype(np.float64, copy=False)
-                Z = (chunk - x_mean) / x_scale
-                y_centered = d["y"].astype(np.float64, copy=False) - y_mean
-                XtX += Z.T @ Z
-                Xty += Z.T @ y_centered
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "stream_normal_equations_pass",
-                time.perf_counter() - t_stage,
-            )
-
-            t_stage = time.perf_counter()
-            coef = np.linalg.lstsq(XtX, Xty, rcond=None)[0]
-            intercept = float(y_mean)
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "stream_solve",
-                time.perf_counter() - t_stage,
-            )
-
-            t_stage = time.perf_counter()
-            train_pred_chunks = []
-            for d in train_records:
-                chunk = chunk_map[d["protein_id"]].astype(np.float64, copy=False)
-                Z = (chunk - x_mean) / x_scale
-                train_pred_chunks.append(intercept + (Z @ coef))
-            y_pred_train = np.concatenate(train_pred_chunks)
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "stream_train_metrics_pass",
-                time.perf_counter() - t_stage,
-            )
-
-            t_stage = time.perf_counter()
-            prediction_map = {}
-            test_pred_chunks = []
-            for d in test_records:
-                chunk = chunk_map[d["protein_id"]].astype(np.float64, copy=False)
-                Z = (chunk - x_mean) / x_scale
-                pred = intercept + (Z @ coef)
-                prediction_map[d["protein_id"]] = np.array(pred, copy=True)
-                test_pred_chunks.append(pred)
-            y_pred_test = np.concatenate(test_pred_chunks)
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "stream_test_metrics_pass",
-                time.perf_counter() - t_stage,
-            )
-
-            t_stage = time.perf_counter()
-            geometry_map = compute_geometry_map(test_records, prediction_map)
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "geometry",
-                time.perf_counter() - t_stage,
-            )
-
-            train_metrics = compute_regression_metrics(y_train, y_pred_train)
-            test_metrics = compute_regression_metrics(y_test, y_pred_test)
-            results_grid[(fold_idx, layer)] = {
-                "r2_train": train_metrics["r2"],
-                "r2_test": test_metrics["r2"],
-                "mae_test": test_metrics["mae"],
-                "rmse_test": test_metrics["rmse"],
-                "intercept": intercept,
-                "coef": np.array(coef, copy=True),
-            }
-            for pid, pred in prediction_map.items():
-                test_predictions[(fold_idx, layer, pid)] = pred
-            for pid, geom in geometry_map.items():
-                geometry_rows[(fold_idx, layer, pid)] = geom
-
-            record_stage(
-                timing_rows,
-                mode,
-                fold_idx,
-                layer,
-                "total_fold_layer",
-                time.perf_counter() - t_total,
-            )
-
-            del XtX, Xty, y_pred_train, y_pred_test, train_pred_chunks, test_pred_chunks
-
-        del chunk_map
-
-    mode_total_seconds = time.perf_counter() - t_mode
-    print(f"[{mode}] total runtime: {mode_total_seconds:.2f}s")
-    return {
-        "mode": mode,
-        "results_grid": results_grid,
-        "test_predictions": test_predictions,
+        "protein_predictions": protein_predictions,
         "geometry_rows": geometry_rows,
         "timing_rows": timing_rows,
         "mode_total_seconds": mode_total_seconds,
@@ -871,14 +792,6 @@ def run_mode_layer_cache_streaming(protein_data, folds, n_layers):
 
 
 def get_tolerances(comparison_name):
-    if "layer_cache_streaming" in comparison_name:
-        return {
-            "metric": 1e-6,
-            "intercept": 1e-6,
-            "coef": 1e-6,
-            "pred": 1e-6,
-            "geometry_float": 1e-5,
-        }
     return {
         "metric": 1e-10,
         "intercept": 1e-10,
@@ -969,8 +882,8 @@ def validate_modes(mode_a_result, mode_b_result, comparison_name):
                 }
             )
 
-    pred_keys_a = set(mode_a_result["test_predictions"].keys())
-    pred_keys_b = set(mode_b_result["test_predictions"].keys())
+    pred_keys_a = set(mode_a_result["protein_predictions"].keys())
+    pred_keys_b = set(mode_b_result["protein_predictions"].keys())
     if pred_keys_a != pred_keys_b:
         failure_rows.append(
             {
@@ -987,8 +900,8 @@ def validate_modes(mode_a_result, mode_b_result, comparison_name):
 
     for key in sorted(pred_keys_a & pred_keys_b):
         fold_idx, layer, protein_id = key
-        a_pred = mode_a_result["test_predictions"][key]
-        b_pred = mode_b_result["test_predictions"][key]
+        a_pred = mode_a_result["protein_predictions"][key]
+        b_pred = mode_b_result["protein_predictions"][key]
         diff = np.abs(a_pred - b_pred)
         local_max = float(diff.max()) if diff.size else 0.0
         max_abs_pred_delta = max(max_abs_pred_delta, local_max)
@@ -1029,6 +942,19 @@ def validate_modes(mode_a_result, mode_b_result, comparison_name):
         fold_idx, layer, protein_id = key
         a_geom = mode_a_result["geometry_rows"][key]
         b_geom = mode_b_result["geometry_rows"][key]
+        if a_geom["split"] != b_geom["split"]:
+            failure_rows.append(
+                {
+                    "comparison": comparison_name,
+                    "kind": "geometry",
+                    "fold": fold_idx,
+                    "layer": layer,
+                    "protein_id": protein_id,
+                    "metric": "split",
+                    "observed_delta": 1.0,
+                    "tolerance": 0.0,
+                }
+            )
         for metric in GEOMETRY_KEYS:
             delta = abs(a_geom[metric] - b_geom[metric])
             max_geometry_deltas[metric] = max(max_geometry_deltas[metric], float(delta))
@@ -1075,6 +1001,64 @@ def validate_modes(mode_a_result, mode_b_result, comparison_name):
     return regression_summary, geometry_summary, failure_rows
 
 
+def run_sampled_geometry_optimization_validation(
+    source_mode,
+    source_result,
+    protein_records_by_id,
+):
+    failure_rows = []
+    max_geometry_deltas = {key: 0.0 for key in GEOMETRY_KEYS}
+    geometry_keys = sorted(source_result["geometry_rows"].keys())
+    sampled_keys = geometry_keys[::20] if geometry_keys else []
+
+    for fold_idx, layer, protein_id in sampled_keys:
+        optimized_geom = source_result["geometry_rows"][(fold_idx, layer, protein_id)]
+        protein_record = protein_records_by_id[protein_id]
+        y_pred = source_result["protein_predictions"][(fold_idx, layer, protein_id)]
+        legacy_geom = analyze_protein_geometry_legacy(
+            protein_record["n_residues"],
+            protein_record["coordinates"],
+            protein_record["pb_i"],
+            protein_record["pb_j"],
+            y_pred,
+        )
+
+        for metric in GEOMETRY_KEYS:
+            delta = abs(optimized_geom[metric] - legacy_geom[metric])
+            max_geometry_deltas[metric] = max(max_geometry_deltas[metric], float(delta))
+            tol = 0.0 if metric in GEOMETRY_INT_KEYS else 1e-10
+            if delta > tol:
+                failure_rows.append(
+                    {
+                        "comparison": GEOMETRY_OPT_COMPARISON,
+                        "kind": "geometry_optimization",
+                        "fold": fold_idx,
+                        "layer": layer,
+                        "protein_id": protein_id,
+                        "metric": metric,
+                        "observed_delta": float(delta),
+                        "tolerance": tol,
+                    }
+                )
+
+    summary_row = {
+        "source_mode": source_mode,
+        "sampled_cases": len(sampled_keys),
+        "max_abs_rmsd_delta": max_geometry_deltas["rmsd"],
+        "max_abs_tm_score_delta": max_geometry_deltas["tm_score"],
+        "max_abs_frac_top3_eigenvalues_delta": max_geometry_deltas["frac_top3_eigenvalues"],
+        "max_abs_n_negative_eigenvalues_delta": max_geometry_deltas["n_negative_eigenvalues"],
+        "max_abs_neg_eigenvalue_fraction_delta": max_geometry_deltas["neg_eigenvalue_fraction"],
+        "max_abs_n_negative_predictions_delta": max_geometry_deltas["n_negative_predictions"],
+        "max_abs_stress_delta": max_geometry_deltas["stress"],
+        "max_abs_triangle_violation_fraction_delta": max_geometry_deltas["triangle_violation_fraction"],
+        "max_abs_triangle_mean_violation_delta": max_geometry_deltas["triangle_mean_violation"],
+        "max_abs_triangle_max_violation_delta": max_geometry_deltas["triangle_max_violation"],
+        "passed": not failure_rows,
+    }
+    return summary_row, failure_rows
+
+
 def build_runtime_summary_rows(mode_results):
     all_timing_rows = []
     for result in mode_results.values():
@@ -1102,8 +1086,6 @@ def build_runtime_summary_rows(mode_results):
 
     derived_specs = (
         ("cache_only_savings", "baseline", "layer_cache"),
-        ("streaming_only_savings", "layer_cache", "layer_cache_streaming"),
-        ("combined_savings", "baseline", "layer_cache_streaming"),
     )
     for label, reference, target in derived_specs:
         if reference in mode_results and target in mode_results:
@@ -1249,6 +1231,37 @@ def write_validation_failures(csv_path, failure_rows):
             )
 
 
+def write_geometry_optimization_validation(csv_path, summary_row):
+    fieldnames = [
+        "source_mode",
+        "sampled_cases",
+        "max_abs_rmsd_delta",
+        "max_abs_tm_score_delta",
+        "max_abs_frac_top3_eigenvalues_delta",
+        "max_abs_n_negative_eigenvalues_delta",
+        "max_abs_neg_eigenvalue_fraction_delta",
+        "max_abs_n_negative_predictions_delta",
+        "max_abs_stress_delta",
+        "max_abs_triangle_violation_fraction_delta",
+        "max_abs_triangle_mean_violation_delta",
+        "max_abs_triangle_max_violation_delta",
+        "passed",
+    ]
+    with open(csv_path, "w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        out_row = {
+            "source_mode": summary_row["source_mode"],
+            "sampled_cases": summary_row["sampled_cases"],
+            "passed": str(bool(summary_row["passed"])),
+        }
+        for field in fieldnames:
+            if field in ("source_mode", "sampled_cases", "passed"):
+                continue
+            out_row[field] = format_seconds(float(summary_row[field]))
+        writer.writerow(out_row)
+
+
 def write_run_summary(
     summary_path,
     args,
@@ -1258,12 +1271,13 @@ def write_run_summary(
     mode_results,
     regression_summaries,
     geometry_summaries,
+    geometry_optimization_summary,
     runtime_summary_rows,
 ):
     savings_lookup = {
         row["mode"]: row
         for row in runtime_summary_rows
-        if row["mode"] in {"cache_only_savings", "streaming_only_savings", "combined_savings"}
+        if row["mode"] == "cache_only_savings"
     }
 
     with open(summary_path, "w") as handle:
@@ -1298,7 +1312,7 @@ def write_run_summary(
                 )
 
         handle.write("\nSavings:\n")
-        for label in ("cache_only_savings", "streaming_only_savings", "combined_savings"):
+        for label in ("cache_only_savings",):
             if label in savings_lookup:
                 row = savings_lookup[label]
                 handle.write(
@@ -1317,10 +1331,19 @@ def write_run_summary(
                 f"  Geometry {row['comparison']}: "
                 f"{'PASS' if row['passed'] else 'FAIL'}\n"
             )
+        handle.write(
+            "  Geometry optimization sample "
+            f"({geometry_optimization_summary['sampled_cases']} cases from "
+            f"{geometry_optimization_summary['source_mode']}): "
+            f"{'PASS' if geometry_optimization_summary['passed'] else 'FAIL'}\n"
+        )
 
         handle.write("\nNotes:\n")
         handle.write("  - All compared runs reused the same folds.\n")
-        handle.write("  - Geometry logic is intentionally unchanged.\n")
+        handle.write("  - Geometry runs on all proteins in each fold (train + test).\n")
+        handle.write(
+            "  - A 5% sampled legacy-vs-optimized geometry equivalence check was run.\n"
+        )
         handle.write(
             "  - Run this script with ./.venv/bin/python, not system python3.\n"
         )
@@ -1353,13 +1376,17 @@ def main():
     runners = {
         "baseline": run_mode_baseline,
         "layer_cache": run_mode_layer_cache,
-        "layer_cache_streaming": run_mode_layer_cache_streaming,
     }
     mode_results = {}
 
     for mode in args.modes:
         try:
-            mode_results[mode] = runners[mode](protein_data, folds, args.max_layers)
+            mode_results[mode] = runners[mode](
+                protein_data,
+                folds,
+                args.max_layers,
+                args.geometry_workers,
+            )
         except Exception:
             print(f"\nERROR while running mode {mode}:")
             traceback.print_exc()
@@ -1372,14 +1399,6 @@ def main():
     comparisons = []
     if "baseline" in mode_results and "layer_cache" in mode_results:
         comparisons.append(("baseline", "layer_cache", "baseline_vs_layer_cache"))
-    if "layer_cache" in mode_results and "layer_cache_streaming" in mode_results:
-        comparisons.append(
-            ("layer_cache", "layer_cache_streaming", "layer_cache_vs_layer_cache_streaming")
-        )
-    if "baseline" in mode_results and "layer_cache_streaming" in mode_results:
-        comparisons.append(
-            ("baseline", "layer_cache_streaming", "baseline_vs_layer_cache_streaming")
-        )
 
     print("\nValidation:")
     for mode_a, mode_b, name in comparisons:
@@ -1396,9 +1415,25 @@ def main():
             f"geometry={'PASS' if geometry_summary['passed'] else 'FAIL'}"
         )
 
+    protein_records_by_id = {d["protein_id"]: d for d in protein_data}
+    geometry_opt_source_mode = "layer_cache" if "layer_cache" in mode_results else "baseline"
+    geometry_optimization_summary, geometry_opt_failures = (
+        run_sampled_geometry_optimization_validation(
+            geometry_opt_source_mode,
+            mode_results[geometry_opt_source_mode],
+            protein_records_by_id,
+        )
+    )
+    failure_rows.extend(geometry_opt_failures)
+    print(
+        "  legacy_vs_optimized_geometry_sampled: "
+        f"{'PASS' if geometry_optimization_summary['passed'] else 'FAIL'} "
+        f"({geometry_optimization_summary['sampled_cases']} sampled cases)"
+    )
+
     runtime_summary_rows, all_timing_rows = build_runtime_summary_rows(mode_results)
 
-    for label in ("cache_only_savings", "streaming_only_savings", "combined_savings"):
+    for label in ("cache_only_savings",):
         row = next((r for r in runtime_summary_rows if r["mode"] == label), None)
         if row is not None:
             print(
@@ -1416,6 +1451,10 @@ def main():
         csv_dir / "validation_geometry_summary.csv",
         geometry_summaries,
     )
+    write_geometry_optimization_validation(
+        csv_dir / "geometry_optimization_validation.csv",
+        geometry_optimization_summary,
+    )
     write_validation_failures(csv_dir / "validation_failures.csv", failure_rows)
     write_run_summary(
         output_dir / "run_summary.txt",
@@ -1426,6 +1465,7 @@ def main():
         mode_results,
         regression_summaries,
         geometry_summaries,
+        geometry_optimization_summary,
         runtime_summary_rows,
     )
 

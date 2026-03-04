@@ -1,0 +1,205 @@
+TEST2 RUN — 5-Fold Cross-Validated Linear Regression
+with MDS Reconstruction + Triangle Inequality Analysis
+(First 25 proteins)
+=======================================================
+
+Split strategy:  5-FOLD PROTEIN-LEVEL CV
+Random state:    42
+Feature dim:     256
+Layers:          48
+Total proteins:  25
+Total pairs:     1,062,903
+
+Fold breakdown:
+  Fold 0: 20 train / 5 test proteins, 794,345 / 268,558 pairs
+         Test proteins: 6tf4_A, 7atr_A, 7b0d_A, 7b29_A, 7bcb_B
+  Fold 1: 20 train / 5 test proteins, 927,047 / 135,856 pairs
+         Test proteins: 6wmk_A, 6zpp_A, 7au7_A, 7b1w_F, 7bbz_A
+  Fold 2: 20 train / 5 test proteins, 808,850 / 254,053 pairs
+         Test proteins: 6wqc_A, 6xqj_A, 6z01_A, 7b1k_B, 7b28_F
+  Fold 3: 20 train / 5 test proteins, 735,150 / 327,753 pairs
+         Test proteins: 7b2a_A, 7b2o_A, 7b4q_A, 7b7t_A, 7bcj_A
+  Fold 4: 20 train / 5 test proteins, 986,220 / 76,683 pairs
+         Test proteins: 7ab3_E, 7ar0_B, 7awk_A, 7b26_C, 7b3a_A
+
+Best layer:      45 (R2_test = 0.932428 +/- 0.024616)
+Last layer (47): R2_test = 0.921961 +/- 0.024913
+
+Layer 47 MDS results:
+  6wmk_A (train): TM=0.6497  RMSD=2.59A  Top3EV=0.5941  TriViol=0.880648
+  6wqc_A (train): TM=0.8932  RMSD=2.26A  Top3EV=0.6312  TriViol=0.919876
+  6xqj_A (train): TM=0.3726  RMSD=10.46A  Top3EV=0.5381  TriViol=0.612890
+  6z01_A (train): TM=0.8636  RMSD=3.94A  Top3EV=0.6060  TriViol=0.952149
+  6zpp_A (train): TM=0.6147  RMSD=5.04A  Top3EV=0.6065  TriViol=0.759454
+  7ab3_E (train): TM=0.7763  RMSD=2.22A  Top3EV=0.6031  TriViol=0.814963
+  7ar0_B (train): TM=0.7948  RMSD=2.41A  Top3EV=0.5737  TriViol=0.863746
+  7au7_A (train): TM=0.5836  RMSD=10.49A  Top3EV=0.6754  TriViol=0.872464
+  7awk_A (train): TM=0.8021  RMSD=2.39A  Top3EV=0.6113  TriViol=0.828265
+  7b1k_B (train): TM=0.7261  RMSD=4.67A  Top3EV=0.6559  TriViol=0.906151
+  7b1w_F (train): TM=0.8850  RMSD=2.92A  Top3EV=0.5821  TriViol=0.899510
+  7b26_C (train): TM=0.4747  RMSD=8.49A  Top3EV=0.6171  TriViol=0.832526
+  7b28_F (train): TM=0.8366  RMSD=2.43A  Top3EV=0.6032  TriViol=0.824908
+  7b2a_A (train): TM=0.8373  RMSD=2.42A  Top3EV=0.6249  TriViol=0.843373
+  7b2o_A (train): TM=0.9002  RMSD=2.48A  Top3EV=0.5906  TriViol=0.915371
+  7b3a_A (train): TM=0.9108  RMSD=2.10A  Top3EV=0.6338  TriViol=0.936790
+  7b4q_A (train): TM=0.9251  RMSD=2.06A  Top3EV=0.5947  TriViol=0.941164
+  7b7t_A (train): TM=0.9582  RMSD=1.91A  Top3EV=0.5836  TriViol=0.955556
+  7bbz_A (train): TM=0.7220  RMSD=6.23A  Top3EV=0.5763  TriViol=0.921492
+  7bcj_A (train): TM=0.5366  RMSD=5.51A  Top3EV=0.5484  TriViol=0.578511
+  6tf4_A (test): TM=0.4894  RMSD=3.79A  Top3EV=0.6469  TriViol=0.704659
+  7atr_A (test): TM=0.9193  RMSD=2.61A  Top3EV=0.5887  TriViol=0.947394
+  7b0d_A (test): TM=0.7446  RMSD=6.44A  Top3EV=0.5846  TriViol=0.916046
+  7b29_A (test): TM=0.8281  RMSD=2.43A  Top3EV=0.6140  TriViol=0.832068
+  7bcb_B (test): TM=0.5283  RMSD=4.26A  Top3EV=0.6805  TriViol=0.796831
+  6tf4_A (train): TM=0.3978  RMSD=4.96A  Top3EV=0.6349  TriViol=0.648575
+  6wqc_A (train): TM=0.9037  RMSD=2.13A  Top3EV=0.6323  TriViol=0.933087
+  6xqj_A (train): TM=0.3307  RMSD=11.56A  Top3EV=0.5362  TriViol=0.598217
+  6z01_A (train): TM=0.8704  RMSD=4.02A  Top3EV=0.6103  TriViol=0.952997
+  7ab3_E (train): TM=0.7546  RMSD=2.30A  Top3EV=0.5892  TriViol=0.808681
+  7ar0_B (train): TM=0.8097  RMSD=2.20A  Top3EV=0.5598  TriViol=0.870603
+  7atr_A (train): TM=0.9261  RMSD=2.49A  Top3EV=0.5980  TriViol=0.958591
+  7awk_A (train): TM=0.7950  RMSD=2.36A  Top3EV=0.5931  TriViol=0.818724
+  7b0d_A (train): TM=0.7303  RMSD=6.85A  Top3EV=0.5923  TriViol=0.921134
+  7b1k_B (train): TM=0.7056  RMSD=4.98A  Top3EV=0.6475  TriViol=0.887063
+  7b26_C (train): TM=0.4425  RMSD=9.19A  Top3EV=0.6115  TriViol=0.868963
+  7b28_F (train): TM=0.8606  RMSD=2.17A  Top3EV=0.5894  TriViol=0.866223
+  7b29_A (train): TM=0.8691  RMSD=1.96A  Top3EV=0.6051  TriViol=0.870179
+  7b2a_A (train): TM=0.8694  RMSD=2.00A  Top3EV=0.6153  TriViol=0.869129
+  7b2o_A (train): TM=0.8891  RMSD=2.74A  Top3EV=0.5861  TriViol=0.918264
+  7b3a_A (train): TM=0.9161  RMSD=2.02A  Top3EV=0.6369  TriViol=0.947056
+  7b4q_A (train): TM=0.9138  RMSD=2.25A  Top3EV=0.5983  TriViol=0.948824
+  7b7t_A (train): TM=0.9532  RMSD=2.03A  Top3EV=0.6005  TriViol=0.958285
+  7bcb_B (train): TM=0.4780  RMSD=4.71A  Top3EV=0.6783  TriViol=0.778315
+  7bcj_A (train): TM=0.4365  RMSD=6.96A  Top3EV=0.5003  TriViol=0.662100
+  6wmk_A (test): TM=0.5962  RMSD=3.03A  Top3EV=0.5945  TriViol=0.872123
+  6zpp_A (test): TM=0.5473  RMSD=5.95A  Top3EV=0.5995  TriViol=0.749373
+  7au7_A (test): TM=0.6037  RMSD=10.76A  Top3EV=0.6689  TriViol=0.903376
+  7b1w_F (test): TM=0.8774  RMSD=3.13A  Top3EV=0.5773  TriViol=0.906455
+  7bbz_A (test): TM=0.6986  RMSD=6.67A  Top3EV=0.5785  TriViol=0.921275
+  6tf4_A (train): TM=0.4555  RMSD=4.20A  Top3EV=0.6393  TriViol=0.682949
+  6wmk_A (train): TM=0.6035  RMSD=3.01A  Top3EV=0.5724  TriViol=0.874254
+  6zpp_A (train): TM=0.5721  RMSD=5.57A  Top3EV=0.6038  TriViol=0.724032
+  7ab3_E (train): TM=0.7798  RMSD=2.17A  Top3EV=0.5910  TriViol=0.814963
+  7ar0_B (train): TM=0.7807  RMSD=2.51A  Top3EV=0.5612  TriViol=0.869460
+  7atr_A (train): TM=0.9219  RMSD=2.59A  Top3EV=0.5916  TriViol=0.954571
+  7au7_A (train): TM=0.5837  RMSD=10.52A  Top3EV=0.6718  TriViol=0.894784
+  7awk_A (train): TM=0.7909  RMSD=2.44A  Top3EV=0.6038  TriViol=0.825999
+  7b0d_A (train): TM=0.7367  RMSD=6.43A  Top3EV=0.5854  TriViol=0.926084
+  7b1w_F (train): TM=0.8859  RMSD=2.88A  Top3EV=0.5731  TriViol=0.907047
+  7b26_C (train): TM=0.4464  RMSD=8.93A  Top3EV=0.6162  TriViol=0.843948
+  7b29_A (train): TM=0.8338  RMSD=2.38A  Top3EV=0.6070  TriViol=0.851698
+  7b2a_A (train): TM=0.8424  RMSD=2.37A  Top3EV=0.6197  TriViol=0.856071
+  7b2o_A (train): TM=0.8999  RMSD=2.48A  Top3EV=0.5854  TriViol=0.919692
+  7b3a_A (train): TM=0.9157  RMSD=2.04A  Top3EV=0.6325  TriViol=0.937455
+  7b4q_A (train): TM=0.9228  RMSD=2.13A  Top3EV=0.5878  TriViol=0.942555
+  7b7t_A (train): TM=0.9619  RMSD=1.81A  Top3EV=0.5896  TriViol=0.958766
+  7bbz_A (train): TM=0.7095  RMSD=6.31A  Top3EV=0.5775  TriViol=0.929733
+  7bcb_B (train): TM=0.4875  RMSD=4.55A  Top3EV=0.6801  TriViol=0.777815
+  7bcj_A (train): TM=0.5031  RMSD=5.88A  Top3EV=0.5237  TriViol=0.606094
+  6wqc_A (test): TM=0.8962  RMSD=2.22A  Top3EV=0.6256  TriViol=0.923243
+  6xqj_A (test): TM=0.3435  RMSD=10.98A  Top3EV=0.5395  TriViol=0.586369
+  6z01_A (test): TM=0.8541  RMSD=4.13A  Top3EV=0.6056  TriViol=0.954432
+  7b1k_B (test): TM=0.7054  RMSD=4.82A  Top3EV=0.6537  TriViol=0.906786
+  7b28_F (test): TM=0.8375  RMSD=2.43A  Top3EV=0.5916  TriViol=0.841094
+  6tf4_A (train): TM=0.4525  RMSD=4.25A  Top3EV=0.6417  TriViol=0.630936
+  6wmk_A (train): TM=0.5753  RMSD=2.99A  Top3EV=0.5471  TriViol=0.858056
+  6wqc_A (train): TM=0.8970  RMSD=2.24A  Top3EV=0.6261  TriViol=0.914467
+  6xqj_A (train): TM=0.3629  RMSD=10.72A  Top3EV=0.5410  TriViol=0.673820
+  6z01_A (train): TM=0.8940  RMSD=3.43A  Top3EV=0.6077  TriViol=0.952307
+  6zpp_A (train): TM=0.6143  RMSD=4.99A  Top3EV=0.6030  TriViol=0.787246
+  7ab3_E (train): TM=0.7669  RMSD=2.26A  Top3EV=0.5842  TriViol=0.788121
+  7ar0_B (train): TM=0.7740  RMSD=2.58A  Top3EV=0.5536  TriViol=0.856000
+  7atr_A (train): TM=0.9355  RMSD=2.29A  Top3EV=0.5891  TriViol=0.948204
+  7au7_A (train): TM=0.5858  RMSD=10.18A  Top3EV=0.6773  TriViol=0.898470
+  7awk_A (train): TM=0.7943  RMSD=2.41A  Top3EV=0.6039  TriViol=0.821705
+  7b0d_A (train): TM=0.7456  RMSD=6.02A  Top3EV=0.5776  TriViol=0.933401
+  7b1k_B (train): TM=0.7125  RMSD=4.59A  Top3EV=0.6607  TriViol=0.917381
+  7b1w_F (train): TM=0.8795  RMSD=2.92A  Top3EV=0.5797  TriViol=0.905763
+  7b26_C (train): TM=0.4784  RMSD=8.12A  Top3EV=0.6208  TriViol=0.830912
+  7b28_F (train): TM=0.8285  RMSD=2.49A  Top3EV=0.5921  TriViol=0.828455
+  7b29_A (train): TM=0.8231  RMSD=2.46A  Top3EV=0.6045  TriViol=0.831301
+  7b3a_A (train): TM=0.9003  RMSD=2.27A  Top3EV=0.6220  TriViol=0.933717
+  7bbz_A (train): TM=0.7299  RMSD=5.90A  Top3EV=0.5719  TriViol=0.929359
+  7bcb_B (train): TM=0.5376  RMSD=4.09A  Top3EV=0.6754  TriViol=0.776147
+  7b2a_A (test): TM=0.8296  RMSD=2.50A  Top3EV=0.6218  TriViol=0.841281
+  7b2o_A (test): TM=0.8869  RMSD=2.66A  Top3EV=0.5838  TriViol=0.920608
+  7b4q_A (test): TM=0.9004  RMSD=2.45A  Top3EV=0.5861  TriViol=0.943495
+  7b7t_A (test): TM=0.9391  RMSD=2.41A  Top3EV=0.5669  TriViol=0.955576
+  7bcj_A (test): TM=0.5285  RMSD=5.55A  Top3EV=0.5352  TriViol=0.559128
+  6tf4_A (train): TM=0.4414  RMSD=4.16A  Top3EV=0.6248  TriViol=0.649932
+  6wmk_A (train): TM=0.6156  RMSD=2.99A  Top3EV=0.5951  TriViol=0.879795
+  6wqc_A (train): TM=0.8939  RMSD=2.26A  Top3EV=0.6217  TriViol=0.936338
+  6xqj_A (train): TM=0.3330  RMSD=11.31A  Top3EV=0.5370  TriViol=0.521551
+  6z01_A (train): TM=0.8703  RMSD=3.91A  Top3EV=0.6022  TriViol=0.955349
+  6zpp_A (train): TM=0.5598  RMSD=5.74A  Top3EV=0.5905  TriViol=0.752102
+  7atr_A (train): TM=0.9229  RMSD=2.54A  Top3EV=0.5885  TriViol=0.959758
+  7au7_A (train): TM=0.5938  RMSD=10.52A  Top3EV=0.6681  TriViol=0.880446
+  7b0d_A (train): TM=0.7376  RMSD=6.59A  Top3EV=0.5852  TriViol=0.920341
+  7b1k_B (train): TM=0.6979  RMSD=4.97A  Top3EV=0.6429  TriViol=0.890437
+  7b1w_F (train): TM=0.8739  RMSD=3.11A  Top3EV=0.5711  TriViol=0.908035
+  7b28_F (train): TM=0.8559  RMSD=2.21A  Top3EV=0.5800  TriViol=0.870288
+  7b29_A (train): TM=0.8579  RMSD=2.07A  Top3EV=0.5954  TriViol=0.878000
+  7b2a_A (train): TM=0.8631  RMSD=2.07A  Top3EV=0.6078  TriViol=0.875550
+  7b2o_A (train): TM=0.8869  RMSD=2.72A  Top3EV=0.5797  TriViol=0.914602
+  7b4q_A (train): TM=0.9134  RMSD=2.25A  Top3EV=0.5851  TriViol=0.950529
+  7b7t_A (train): TM=0.9491  RMSD=2.13A  Top3EV=0.5888  TriViol=0.959348
+  7bbz_A (train): TM=0.7099  RMSD=6.39A  Top3EV=0.5705  TriViol=0.929102
+  7bcb_B (train): TM=0.4688  RMSD=4.83A  Top3EV=0.6761  TriViol=0.793495
+  7bcj_A (train): TM=0.4654  RMSD=6.45A  Top3EV=0.4918  TriViol=0.606560
+  7ab3_E (test): TM=0.7527  RMSD=2.33A  Top3EV=0.5810  TriViol=0.835523
+  7ar0_B (test): TM=0.7935  RMSD=2.33A  Top3EV=0.5519  TriViol=0.883048
+  7awk_A (test): TM=0.7955  RMSD=2.36A  Top3EV=0.5878  TriViol=0.838521
+  7b26_C (test): TM=0.4355  RMSD=9.22A  Top3EV=0.6106  TriViol=0.856735
+  7b3a_A (test): TM=0.9089  RMSD=2.13A  Top3EV=0.6287  TriViol=0.949130
+
+Note: test2_kfold_mds_metrics.csv now includes both train and test proteins, with per-protein R2 in the per_protein_r2 column.
+
+Layer-by-layer R2_test (mean +/- std):
+  Layer  0: 0.476692 +/- 0.047776
+  Layer  1: 0.483789 +/- 0.046801
+  Layer  2: 0.483402 +/- 0.052060
+  Layer  3: 0.488447 +/- 0.047618
+  Layer  4: 0.515612 +/- 0.052166
+  Layer  5: 0.524774 +/- 0.043860
+  Layer  6: 0.532115 +/- 0.044598
+  Layer  7: 0.539026 +/- 0.038508
+  Layer  8: 0.565652 +/- 0.032599
+  Layer  9: 0.583810 +/- 0.029488
+  Layer 10: 0.596147 +/- 0.024304
+  Layer 11: 0.607690 +/- 0.023061
+  Layer 12: 0.620634 +/- 0.025982
+  Layer 13: 0.680798 +/- 0.032115
+  Layer 14: 0.684105 +/- 0.030888
+  Layer 15: 0.723470 +/- 0.037233
+  Layer 16: 0.791475 +/- 0.043318
+  Layer 17: 0.800685 +/- 0.040410
+  Layer 18: 0.818688 +/- 0.045119
+  Layer 19: 0.822694 +/- 0.045562
+  Layer 20: 0.833016 +/- 0.047112
+  Layer 21: 0.828463 +/- 0.046782
+  Layer 22: 0.834745 +/- 0.050023
+  Layer 23: 0.832283 +/- 0.047739
+  Layer 24: 0.825861 +/- 0.044081
+  Layer 25: 0.823345 +/- 0.042800
+  Layer 26: 0.817660 +/- 0.040372
+  Layer 27: 0.821143 +/- 0.038473
+  Layer 28: 0.821353 +/- 0.039068
+  Layer 29: 0.828056 +/- 0.037152
+  Layer 30: 0.829173 +/- 0.037070
+  Layer 31: 0.833854 +/- 0.037803
+  Layer 32: 0.843563 +/- 0.032659
+  Layer 33: 0.843669 +/- 0.031931
+  Layer 34: 0.846329 +/- 0.029929
+  Layer 35: 0.858728 +/- 0.034670
+  Layer 36: 0.864656 +/- 0.035301
+  Layer 37: 0.869125 +/- 0.035787
+  Layer 38: 0.871943 +/- 0.036694
+  Layer 39: 0.881059 +/- 0.030856
+  Layer 40: 0.881261 +/- 0.029187
+  Layer 41: 0.886935 +/- 0.027336
+  Layer 42: 0.884429 +/- 0.028612
+  Layer 43: 0.908794 +/- 0.026249
+  Layer 44: 0.928656 +/- 0.025023
+  Layer 45: 0.932428 +/- 0.024616
+  Layer 46: 0.923645 +/- 0.026374
+  Layer 47: 0.921961 +/- 0.024913

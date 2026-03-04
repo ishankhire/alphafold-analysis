@@ -1,7 +1,4 @@
-mode,total_seconds,mean_seconds_per_fold_layer,n_fold_layer_runs,feature_build_train_total,feature_build_test_total,assemble_train_from_cache_total,assemble_test_from_cache_total,cache_build_layer_total,scale_fit_transform_train_total,scale_transform_test_total,regression_fit_total,predict_train_total,predict_test_total,stream_stats_pass_total,stream_normal_equations_pass_total,stream_solve_total,stream_train_metrics_pass_total,stream_test_metrics_pass_total,geometry_total,percent_of_reference
-baseline,0.917640,0.229410,4,0.116802,0.088690,0.000000,0.000000,0.000000,0.172672,0.029070,0.397593,0.007119,0.007790,0.000000,0.000000,0.000000,0.000000,0.000000,0.080605,
-layer_cache,0.713383,0.178346,4,0.000000,0.000000,0.010215,0.009360,0.058826,0.134106,0.025541,0.373638,0.009824,0.007038,0.000000,0.000000,0.000000,0.000000,0.000000,0.072878,
-layer_cache_streaming,0.699428,0.174857,4,0.000000,0.000000,0.000000,0.000000,0.069512,0.000000,0.000000,0.000000,0.000000,0.000000,0.080056,0.214185,0.017407,0.119844,0.115076,0.077154,
-cache_only_savings,0.204257,,,,,,,,,,,,,,,,,,,22.258948
-streaming_only_savings,0.013955,,,,,,,,,,,,,,,,,,,1.956213
-combined_savings,0.218212,,,,,,,,,,,,,,,,,,,23.779729
+mode,total_seconds,mean_seconds_per_fold_layer,n_fold_layer_runs,feature_build_train_total,feature_build_test_total,assemble_train_from_cache_total,assemble_test_from_cache_total,cache_build_layer_total,scale_fit_transform_train_total,scale_transform_test_total,regression_fit_total,predict_train_total,predict_test_total,geometry_total,percent_of_reference
+baseline,168.024960,1.166840,144,15.090279,8.007999,0.000000,0.000000,0.000000,23.166749,3.500089,83.646862,2.604529,0.571785,29.976765,
+layer_cache,149.001394,1.034732,144,0.000000,0.000000,1.409918,0.972014,6.623050,22.888480,2.393660,82.757472,2.259635,0.643397,28.055446,
+cache_only_savings,19.023566,,,,,,,,,,,,,,11.321869

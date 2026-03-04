@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4              # 4 cores for numpy BLAS threading
 #SBATCH --mem=32g                      # 32 GB (25 proteins + MDS overhead)
-#SBATCH --time=03:00:00                # 3 hour walltime
+#SBATCH --time=04:00:00                # 3 hour walltime
 #SBATCH --constraint="scratch"
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err

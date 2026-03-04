@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4              # 4 cores for numpy BLAS threading
 #SBATCH --mem=64g                      # 64 GB total
-#SBATCH --time=12:00:00                # 8 hour walltime (max: 48h on cpu partition)
+#SBATCH --time=18:00:00                # 18 hour walltime (max: 48h on cpu partition)
 #SBATCH --constraint="scratch"
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
@@ -15,6 +15,11 @@
 
 module reset                           # drop all modules, set $WORK and $SCRATCH
 module load python                     # load Python environment
+
+# Activate virtual environment with dependencies
+# (one-time setup: python3 -m venv ~/protein_venv && source ~/protein_venv/bin/activate && pip install numpy scipy matplotlib scikit-learn biopython)
+source ~/protein_venv/bin/activate
+
 module list                            # job documentation and metadata
 
 echo "job is starting on $(hostname)"
@@ -26,4 +31,4 @@ export CSV_ROOT=$HOME/linear_regression_csv_files
 
 # srun with ntasks-per-node=1 launches exactly one copy of the script.
 # The 4 cores requested via cpus-per-task are available for numpy BLAS threading.
-srun python3 final_cluster_multi_protein_regression.py
+srun python3 -u cluster_multi_protein_regression.py
