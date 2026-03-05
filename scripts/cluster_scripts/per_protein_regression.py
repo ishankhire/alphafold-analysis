@@ -18,6 +18,7 @@ Dependencies (all pip-installable):
 Outputs (inside CSV_ROOT/):
     per_protein_regression_metrics.csv      — per-(protein, layer) R2, MAE, RMSE
     per_protein_coefficients.csv            — model coefficients per (protein, layer)
+    per_protein_mds_tm_scores.csv           — per-(protein, layer) MDS RMSD + TM-score
     per_protein_predicted_distances.csv     — actual vs predicted (layer 47 only)
     per_protein_regression_summary.txt      — human-readable summary
 """
@@ -168,6 +169,81 @@ def compute_distance_matrix(coords):
 
 
 # ===========================================================================
+# Classical MDS + TM-score helpers
+# ===========================================================================
+
+def classical_mds(distance_matrix, n_dims=3):
+    """Classical (Torgerson) MDS: recover coordinates from pairwise distances."""
+    D_sq = distance_matrix ** 2
+
+    row_mean = D_sq.mean(axis=1, keepdims=True)
+    col_mean = D_sq.mean(axis=0, keepdims=True)
+    grand_mean = D_sq.mean()
+    B = -0.5 * (D_sq - row_mean - col_mean + grand_mean)
+
+    eigenvalues, eigenvectors = np.linalg.eigh(B)
+    idx = np.argsort(eigenvalues)[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+
+    top_evals = np.maximum(eigenvalues[:n_dims], 0.0)
+    coords = eigenvectors[:, :n_dims] * np.sqrt(top_evals)
+    return coords
+
+
+def superimpose_structures(fixed_coords, moving_coords):
+    """Kabsch algorithm for optimal rigid superimposition."""
+    fixed_center = fixed_coords.mean(axis=0)
+    moving_center = moving_coords.mean(axis=0)
+    fixed_centered = fixed_coords - fixed_center
+    moving_centered = moving_coords - moving_center
+
+    covariance = moving_centered.T @ fixed_centered
+    U, _, Vt = np.linalg.svd(covariance)
+    det_sign = np.linalg.det(Vt.T @ U.T)
+    sign_matrix = np.diag([1.0, 1.0, np.sign(det_sign)])
+    rotation = Vt.T @ sign_matrix @ U.T
+
+    transformed = (moving_centered @ rotation.T) + fixed_center
+    diff = fixed_coords - transformed
+    rmsd = np.sqrt(np.mean(np.sum(diff ** 2, axis=1)))
+    return transformed, float(rmsd)
+
+
+def compute_tm_score(fixed_coords, transformed_coords, length_target):
+    """Compute TM-score between two superimposed structures."""
+    d0 = 1.24 * (max(length_target, 16) - 15) ** (1.0 / 3.0) - 1.8
+    d0 = max(d0, 0.5)
+
+    distances = np.sqrt(np.sum((fixed_coords - transformed_coords) ** 2, axis=1))
+    scores = 1.0 / (1.0 + (distances / d0) ** 2)
+    return float(np.sum(scores) / length_target)
+
+
+def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
+    """Run MDS reconstruction + rigid superimposition for one protein/layer."""
+    pred_dist = np.zeros((n_residues, n_residues))
+    pred_dist[pb_i, pb_j] = y_pred
+    pred_dist[pb_j, pb_i] = y_pred
+    pred_dist = np.maximum(pred_dist, 0.0)
+
+    mds_coords = classical_mds(pred_dist, n_dims=3)
+    mds_reflected = mds_coords.copy()
+    mds_reflected[:, 2] *= -1
+
+    transformed_orig, rmsd_orig = superimpose_structures(true_coords, mds_coords)
+    transformed_flip, rmsd_flip = superimpose_structures(true_coords, mds_reflected)
+
+    if rmsd_flip < rmsd_orig:
+        transformed, rmsd = transformed_flip, rmsd_flip
+    else:
+        transformed, rmsd = transformed_orig, rmsd_orig
+
+    tm_score = compute_tm_score(true_coords, transformed, n_residues)
+    return {"tm_score": tm_score, "rmsd": rmsd}
+
+
+# ===========================================================================
 # Per-protein regression
 # ===========================================================================
 
@@ -191,6 +267,7 @@ def process_single_protein(protein_id, protein_dir, n_layers):
         'n_pairs'                : int
         'metrics'                : list of 48 dicts (layer, r2_train, r2_test, mae_test, rmse_test)
         'coefficients'           : list of 48 dicts (layer, intercept, coef_0..coef_255)
+        'mds_metrics'            : list of 48 dicts (layer, tm_score, rmsd)
         'last_layer_predictions' : dict with struct_i, struct_j, actual, predicted, split arrays
 
     Raises
@@ -250,6 +327,7 @@ def process_single_protein(protein_id, protein_dir, n_layers):
     # --- Layer-wise regression ---
     metrics = []
     coefficients = []
+    mds_metrics = []
     last_layer_preds = None
 
     for layer in range(n_layers):
@@ -290,11 +368,33 @@ def process_single_protein(protein_id, protein_dir, n_layers):
         })
         coefficients.append(coef_row)
 
-        if layer == n_layers - 1:
-            X_all_std = scaler.transform(X)
-            last_layer_preds = model.predict(X_all_std)
+        X_all_std = scaler.transform(X)
+        y_pred_all = model.predict(X_all_std)
 
-        del X, X_train, X_test
+        try:
+            geom = analyze_protein_geometry(
+                n_ca,
+                ca_data["coordinates"],
+                struct_i,
+                struct_j,
+                y_pred_all,
+            )
+            tm_score = geom["tm_score"]
+            rmsd = geom["rmsd"]
+        except Exception:
+            tm_score = float("nan")
+            rmsd = float("nan")
+
+        mds_metrics.append({
+            "layer": layer,
+            "tm_score": tm_score,
+            "rmsd": rmsd,
+        })
+
+        if layer == n_layers - 1:
+            last_layer_preds = y_pred_all
+
+        del X, X_train, X_test, X_all_std
 
     return {
         "protein_id": protein_id,
@@ -302,6 +402,7 @@ def process_single_protein(protein_id, protein_dir, n_layers):
         "n_pairs": n_pairs,
         "metrics": metrics,
         "coefficients": coefficients,
+        "mds_metrics": mds_metrics,
         "last_layer_predictions": {
             "struct_i": struct_i,
             "struct_j": struct_j,
@@ -349,6 +450,7 @@ def main():
     # Accumulate metrics and coefficients in memory (small: ~24K rows)
     all_metrics = []
     all_coefs = []
+    all_mds = []
     succeeded = []
     skipped = []
 
@@ -357,17 +459,26 @@ def main():
     # ------------------------------------------------------------------
     for idx, (protein_id, protein_dir) in enumerate(all_proteins):
         t0 = time.time()
-        print(f"\n[{idx + 1}/{n_total}] Processing {protein_id} ...", flush=True)
+        start_ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t0))
+        print(
+            f"\n[{idx + 1}/{n_total}] Processing {protein_id} ... "
+            f"(start {start_ts})",
+            flush=True,
+        )
 
         try:
             result = process_single_protein(protein_id, protein_dir, n_layers)
         except ValueError as e:
             skipped.append((protein_id, str(e)))
-            print(f"  [SKIP] {e}")
+            end_t = time.time()
+            end_ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_t))
+            print(f"  [SKIP] {e} (end {end_ts}, {end_t - t0:.1f}s)")
             continue
         except Exception as e:
             skipped.append((protein_id, f"unexpected error -- {e}"))
-            print(f"  [SKIP] unexpected error -- {e}")
+            end_t = time.time()
+            end_ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(end_t))
+            print(f"  [SKIP] unexpected error -- {e} (end {end_ts}, {end_t - t0:.1f}s)")
             traceback.print_exc()
             continue
 
@@ -385,6 +496,14 @@ def main():
             c["protein_id"] = protein_id
             all_coefs.append(c)
 
+        # Accumulate MDS/TM metrics (add protein_id to each row)
+        for mds in result["mds_metrics"]:
+            all_mds.append({
+                "protein_id": protein_id,
+                "n_residues": result["n_residues"],
+                **mds,
+            })
+
         # Stream predicted distances to disk immediately
         preds = result["last_layer_predictions"]
         if preds["predicted"] is not None:
@@ -400,6 +519,7 @@ def main():
             f_pred.flush()
 
         elapsed = time.time() - t0
+        end_ts = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         best_layer = max(result["metrics"], key=lambda m: m["r2_test"])
         succeeded.append({
             "protein_id": protein_id,
@@ -411,7 +531,7 @@ def main():
         })
         print(f"  [OK] {result['n_residues']} residues, {result['n_pairs']:,} pairs, "
               f"best R2={best_layer['r2_test']:.4f} (layer {best_layer['layer']}), "
-              f"{elapsed:.1f}s")
+              f"end {end_ts}, {elapsed:.1f}s")
 
     f_pred.close()
     print(f"\nSaved predictions CSV  -> {pred_path}")
@@ -436,7 +556,21 @@ def main():
             ])
     print(f"Saved metrics CSV      -> {metrics_path}")
 
-    # CSV 2: Coefficients
+    # CSV 2: MDS/TM metrics
+    mds_path = csv_dir / "per_protein_mds_tm_scores.csv"
+    with open(mds_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "protein_id", "layer", "n_residues", "tm_score", "rmsd",
+        ])
+        for m in all_mds:
+            writer.writerow([
+                m["protein_id"], m["layer"], m["n_residues"],
+                f"{m['tm_score']:.6f}", f"{m['rmsd']:.6f}",
+            ])
+    print(f"Saved MDS/TM CSV       -> {mds_path}")
+
+    # CSV 3: Coefficients
     coef_path = csv_dir / "per_protein_coefficients.csv"
     coef_fieldnames = (
         ["protein_id", "layer", "intercept"]

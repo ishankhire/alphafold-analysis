@@ -13,6 +13,7 @@ __pycache__/
 *.cif
 pca_projections/
 feature_magnitudes/
+linear_regression_csv_files/kfold_predicted_distances.csv
 
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy

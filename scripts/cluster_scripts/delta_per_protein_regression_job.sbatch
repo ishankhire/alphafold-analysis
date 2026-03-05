@@ -15,6 +15,11 @@
 
 module reset                           # drop all modules, set $WORK and $SCRATCH
 module load python                     # load Python environment
+
+# Activate virtual environment with dependencies
+# (one-time setup: python3 -m venv ~/protein_venv && source ~/protein_venv/bin/activate && pip install numpy scipy matplotlib scikit-learn biopython)
+source ~/protein_venv/bin/activate
+
 module list                            # job documentation and metadata
 
 echo "job is starting on $(hostname)"
@@ -26,4 +31,4 @@ export CSV_ROOT=$HOME/linear_regression_csv_files
 
 # srun with ntasks-per-node=1 launches exactly one copy of the script.
 # The 4 cores requested via cpus-per-task are available for numpy BLAS threading.
-srun python3 cluster_per_protein_regression.py
+srun python3 -u per_protein_regression.py

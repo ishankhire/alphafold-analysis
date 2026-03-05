@@ -1,5 +1,40 @@
 # Branch Analysis
 
+## Session: 2026-03-04 — Extend residue-weighted diagnostic to paired-feature v2
+
+### What changed
+Updated the existing cluster diagnostic:
+- `scripts/cluster_scripts/diagnostic_residue_weighted_regression.py`
+
+### Why
+The first diagnostic still showed a strong small-vs-large protein calibration
+gap, and it was using a simplified 128-dim one-direction feature that was not
+directly comparable to the production 256-dim paired regression. This revision
+restores the paired feature layout and adds more targeted diagnostics for
+protein-length effects.
+
+### Key design decisions
+- Restored the production-style paired feature per unordered residue pair:
+  `[pb[i,j,:], pb[j,i,:]]` (256 dims), while still using one lower-triangle row
+  per unordered pair
+- Added `v2` output filenames to avoid overwriting earlier diagnostic outputs
+- Added three new diagnostic variants:
+  - a `<500` residue pooled baseline
+  - a protein-equal baseline with `n_residues`, `|i-j|`, and `log(|i-j|+1)`
+    appended as scalar features
+  - a bucketed fixed-bin model family (`0-150`, `150-300`, `300-500`, `500+`)
+- Expanded split bookkeeping so the script now writes split membership for:
+  - the shared global split
+  - the `<500` split
+  - each bucketed sub-split
+- Added explicit calibration metrics to the per-protein outputs:
+  - `pred - true` mean/std/variance
+  - mean `pred / true` ratio
+- Added a new bucket-level bias CSV and summary text section to show whether
+  specific size buckets are systematically over- or under-predicted
+- Kept the script structure flat and procedural: no new CLI, no new model
+  classes, and no separate entrypoint
+
 ## Session: 2026-03-04 — Add residue-weighted size-diagnostic cluster regression
 
 ### What changed
@@ -22,8 +57,8 @@ generalization across the full protein set.
 - The script uses one deterministic size-stratified 80/20 protein split
 - Weighted variants give each training protein equal total loss mass via
   per-pair weights of `1 / n_pairs`
-- Size-conditioned variants include both `[X, X * g(n)]` interaction models and
-  stricter `X * g(n)`-only models for `g(n) in {n, sqrt(n), log(n), n^2}`
+- Size-conditioned variants use `[X, X * g(n)]` interaction models for
+  `g(n) in {n, sqrt(n), log(n), n^2}`
 - The normalized-distance variant reports both native normalized metrics and
   oracle-rescaled absolute-distance diagnostics
 - Outputs are written to a dedicated CSV directory to avoid overwriting
