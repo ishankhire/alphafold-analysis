@@ -1,0 +1,6 @@
+variant,model_type,feature_mode,feature_dim,uses_protein_equal_weighting,max_depth,split_feature_index,trained_leaf_count,n_train_proteins,n_test_proteins,n_train_pairs,n_test_pairs,train_mean_per_protein_r2,test_mean_per_protein_r2,test_median_per_protein_r2,test_negative_r2_count,test_negative_r2_fraction,elapsed_seconds
+baseline_base256_lr,linear_regression,base,256,1,0,-1,nan,147,37,6786240,1568385,-0.050191,0.064409,0.314891,9,0.243243,1219.967869
+baseline_plus_aa_onehot296_lr,linear_regression,base_plus_aa,296,1,0,-1,nan,147,37,6786240,1568385,-0.050454,0.063322,0.314703,9,0.243243,99.615370
+baseline_plus_diag512_lr,linear_regression,base_plus_diag,512,1,0,-1,nan,147,37,6786240,1568385,-0.448860,-0.525058,-0.011656,19,0.513514,328.282154
+baseline_plus_size_linear_tree,linear_tree,base_plus_size,257,1,2,256,4.000000,147,37,6786240,1568385,0.862370,0.848705,0.873482,0,0.000000,2815.290989
+baseline_plus_diag512_size_linear_tree,linear_tree,base_plus_diag_plus_size,513,1,2,512,4.000000,147,37,6786240,1568385,0.820766,0.809805,0.822666,0,0.000000,6079.828306

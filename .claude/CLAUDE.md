@@ -76,6 +76,12 @@ from lib.structure import extract_residue_coordinates, compute_distance_matrix, 
 
 **Path resolution:** All scripts compute paths via `ROOT_DIR = os.path.dirname(...)` so they work regardless of working directory.
 
+## Script Configuration Policy
+
+- Default to fixed script configuration (repo-relative paths/constants in code).
+- Do not add CLI arguments unless they are necessary for multi-environment use, reproducibility control, or unavoidable input/output variability.
+- If CLI arguments are necessary, keep them minimal and justify them in the script docstring or code comments.
+
 ## Change Log
 
 When making important or substantive changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes — what was changed, why, and any key decisions. Keep it focused: skip minor or trivial edits, but document anything that affects analysis logic, data flow, or architecture.

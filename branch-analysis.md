@@ -1,5 +1,57 @@
 # Branch Analysis
 
+## Session: 2026-03-07 — Patch lineartree/sklearn compatibility in amino-acid diagnostic
+
+### What changed
+Updated:
+- `scripts/cluster_scripts/diagnostic_amino_acid_encodings_regression.py`
+
+### Why
+Delta runs failed in linear-tree variants with:
+`AttributeError: 'LinearTreeRegressor' object has no attribute '_validate_data'`.
+This indicates a compatibility mismatch between the installed `lineartree`
+version and newer `scikit-learn` behavior in the cluster environment.
+
+### Key design decisions
+- Added a small runtime compatibility shim that injects `_validate_data` into
+  `LinearTreeRegressor` only when missing.
+- The shim delegates to sklearn validation utilities (`check_X_y` /
+  `check_array`) and handles keyword differences (`force_all_finite` vs
+  `ensure_all_finite`) across sklearn versions.
+- Patch is applied only when tree variants are requested and only if the method
+  is absent, so native behavior is preserved when environments are already
+  compatible.
+
+## Session: 2026-03-05 — Add amino-acid/diagonal/linear-tree layer-47 diagnostic on Delta
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/diagnostic_amino_acid_encodings_regression.py`
+- `scripts/cluster_scripts/diagnostic_amino_acid_encodings_regression.sbatch`
+
+### Why
+The residue-weighted diagnostics showed that simple global linear probes can
+underperform compared to size-bucketed models. This new diagnostic isolates
+five feature/model variants at layer 47, with protein-equal training weights,
+to test whether amino-acid identity, diagonal pair features, and learned
+size-based piecewise linear models improve per-protein `R^2` without manually
+hard-coding size bins.
+
+### Key design decisions
+- One deterministic protein-level 80/20 split (`seed=42`) shared by all variants
+- One unordered residue pair per row via lower-triangle indexing (`i > j`)
+- All variants train with protein-equal sample weighting (`1 / n_pairs` per row)
+- Variant set fixed to:
+  - baseline 256-dim linear regression
+  - baseline + 40-dim amino-acid one-hot augmentation (296 dims total)
+  - baseline + diagonal self-pair features (`pb[i,i,:]`, `pb[j,j,:]`, 512 dims)
+  - baseline + linear tree split on raw `n_residues`
+  - diagonal baseline + linear tree split on raw `n_residues`
+- Linear-tree variants enforce a strict small-leaf regime with `max_depth=2`
+  (at most 4 leaves) and split only on the appended `n_residues` column
+- Outputs are written to a dedicated Delta CSV directory:
+  `$HOME/diagnostic_amino_acid_encodings_csv_files`
+
 ## Session: 2026-03-04 — Extend residue-weighted diagnostic to paired-feature v2
 
 ### What changed
@@ -823,3 +875,64 @@ all discovered proteins instead of truncating to a 25-protein subset.
 - Runtime is expected to increase versus the old production script because it
   now runs full geometry analysis on both splits, although the per-layer cache
   reduces repeated pair-block loading.
+
+## Session: 2026-03-05 — Delta per-protein visualization suite (no-CLI)
+
+### What changed
+Added a new fixed-configuration analysis script:
+- `scripts/multi_protein/regression/analyze_delta_per_protein_visualizations.py`
+
+The script reads Delta per-protein outputs from:
+- `delta_files/per_protein_files/per_protein_regression_metrics.csv`
+- `delta_files/per_protein_files/per_protein_mds_tm_scores.csv`
+- `delta_files/per_protein_files/per_protein_coefficients.csv`
+
+and writes visualizations/summaries under:
+- `delta_files/per_protein_files/visualizations/`
+
+### Implemented analyses
+- Numeric train-vs-test R^2 gap summaries:
+  - `r2_train_vs_test_gap_summary.txt`
+  - `r2_train_vs_test_gap_by_layer.csv`
+- Test R^2 across layers with line conventions:
+  - thin per-protein lines
+  - thick black global mean
+  - size-bucket means for `small (<100)`, `medium (100-249)`, `large (250-499)`, `very_large (>=500)`
+- TM-score across layers with the same line conventions.
+- Protein x protein (184 x 184, size-sorted) heatmaps at layers `0,5,10,20,30,40,47` for:
+  - cosine similarity
+  - Euclidean distance
+  - Manhattan distance
+  with no more than two heatmaps per image page and fixed per-metric color scales across the selected layers.
+- Mean within-protein 48 x 48 layer-relation heatmaps (averaged across proteins) for:
+  - cosine similarity
+  - Euclidean distance
+  - Manhattan distance
+- Mean within-protein 48 x 48 cosine similarity by size bucket (2x2 panel).
+- Layer-47 TM-score vs test R^2 scatter + correlation CSV:
+  - `layer47_tm_vs_r2_scatter.png`
+  - `layer47_tm_vs_r2_correlation.csv`
+
+### Validation safeguards added
+- Required-column checks for all three input CSVs.
+- Strict `(protein_id, layer)` key consistency checks across metrics/TM/coefficients.
+- Strict coverage check: `184 proteins x 48 layers`.
+- Symmetry/diagonal checks for all pairwise matrices:
+  - cosine diagonal approximately 1
+  - Euclidean/Manhattan diagonals 0
+- Output contract check ensuring all required files are generated, including exactly 4 paged images per pair-grid metric.
+
+### Documentation updates
+Added a new **Script Configuration Policy** section to:
+- `AGENTS.md`
+- `.claude/CLAUDE.md`
+
+Policy summary:
+- default to fixed script configuration
+- avoid CLI args unless necessary
+- if needed, keep CLI minimal and justify in docstring/comments
+
+### Design decisions
+- Coefficient vectors for all similarity/distance analyses use `coef_0..coef_255` only (intercept excluded).
+- Pair-grid heatmap ordering is by protein size ascending, tie-broken by protein ID.
+- Spearman correlation is computed via rank-correlation implementation without adding extra runtime dependencies.

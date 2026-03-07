@@ -1,0 +1,142 @@
+Diagnostic Amino Acid Encodings Regression — Layer 47
+================================================================
+
+Pair blocks root:   /work/hdd/bekh/thayes/openfold_reps
+PDB root:           /work/hdd/bekh/thayes/openfold_reps_outputs_sm
+Output CSV dir:     /u/ikhire/diagnostic_amino_acid_encodings_csv_files
+Layer:              47
+Representation:     one lower-triangle row per unordered pair
+Training weighting: protein-equal (per-pair weight = 1 / n_pairs)
+Train/test split:   protein-level 80/20, seed=42
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Train proteins:      147
+Test proteins:       37
+
+Variant comparison:
+  Variant                                       FeatDim  TestMeanPP_R2  TestMedian    NegFrac
+  baseline_base256_lr                               256         0.0644      0.3149     0.2432
+  baseline_plus_aa_onehot296_lr                     296         0.0633      0.3147     0.2432
+  baseline_plus_diag512_lr                          512        -0.5251     -0.0117     0.5135
+  baseline_plus_size_linear_tree                    257         0.8487      0.8735     0.0000
+  baseline_plus_diag512_size_linear_tree            513         0.8098      0.8227     0.0000
+
+Best variant by test mean per-protein R2: baseline_plus_size_linear_tree (0.8487)
+
+Top 10 worst test proteins for baseline_base256_lr:
+  7dkk_A: R2=-2.1754, n_res=89, mean(pred-true)=+10.4211
+  7ntn_A: R2=-2.1006, n_res=81, mean(pred-true)=+9.2212
+  7prd_A: R2=-0.8150, n_res=125, mean(pred-true)=+8.8052
+  7s02_C: R2=-0.7248, n_res=36, mean(pred-true)=+11.4777
+  7kuw_A: R2=-0.4939, n_res=62, mean(pred-true)=+9.4690
+  7b28_F: R2=-0.3133, n_res=165, mean(pred-true)=+5.1659
+  7ee3_C: R2=-0.2957, n_res=124, mean(pred-true)=+4.8719
+  7b29_A: R2=-0.1433, n_res=162, mean(pred-true)=+4.7937
+  7ta9_A: R2=-0.0308, n_res=288, mean(pred-true)=-1.8533
+  7bcj_A: R2=0.0058, n_res=147, mean(pred-true)=+6.7515
+Top 10 best test proteins for baseline_base256_lr:
+  7t8o_B: R2=0.5854, n_res=229, mean(pred-true)=+1.6172
+  7thh_A: R2=0.5232, n_res=131, mean(pred-true)=+4.7969
+  7rg7_A: R2=0.5055, n_res=306, mean(pred-true)=-1.0644
+  7cjs_B: R2=0.4984, n_res=254, mean(pred-true)=-1.2847
+  7mrs_B: R2=0.4719, n_res=188, mean(pred-true)=+1.2885
+  7dqg_A: R2=0.4645, n_res=186, mean(pred-true)=+1.2236
+  7au7_A: R2=0.4331, n_res=263, mean(pred-true)=-5.1719
+  7lvz_D: R2=0.4321, n_res=256, mean(pred-true)=+0.9139
+  7mwr_A: R2=0.4148, n_res=204, mean(pred-true)=+1.2520
+  7ewu_B: R2=0.4023, n_res=219, mean(pred-true)=-3.6060
+
+Top 10 worst test proteins for baseline_plus_aa_onehot296_lr:
+  7dkk_A: R2=-2.1734, n_res=89, mean(pred-true)=+10.4181
+  7ntn_A: R2=-2.1079, n_res=81, mean(pred-true)=+9.2328
+  7prd_A: R2=-0.8200, n_res=125, mean(pred-true)=+8.8246
+  7s02_C: R2=-0.7314, n_res=36, mean(pred-true)=+11.5109
+  7kuw_A: R2=-0.4969, n_res=62, mean(pred-true)=+9.4823
+  7b28_F: R2=-0.3182, n_res=165, mean(pred-true)=+5.1936
+  7ee3_C: R2=-0.2958, n_res=124, mean(pred-true)=+4.8754
+  7b29_A: R2=-0.1459, n_res=162, mean(pred-true)=+4.8123
+  7ta9_A: R2=-0.0314, n_res=288, mean(pred-true)=-1.8514
+  7bcj_A: R2=0.0049, n_res=147, mean(pred-true)=+6.7716
+Top 10 best test proteins for baseline_plus_aa_onehot296_lr:
+  7t8o_B: R2=0.5847, n_res=229, mean(pred-true)=+1.6040
+  7thh_A: R2=0.5217, n_res=131, mean(pred-true)=+4.8003
+  7rg7_A: R2=0.5060, n_res=306, mean(pred-true)=-1.0440
+  7cjs_B: R2=0.4975, n_res=254, mean(pred-true)=-1.3134
+  7mrs_B: R2=0.4715, n_res=188, mean(pred-true)=+1.2954
+  7dqg_A: R2=0.4650, n_res=186, mean(pred-true)=+1.2306
+  7au7_A: R2=0.4326, n_res=263, mean(pred-true)=-5.1789
+  7lvz_D: R2=0.4311, n_res=256, mean(pred-true)=+0.9217
+  7mwr_A: R2=0.4146, n_res=204, mean(pred-true)=+1.2605
+  7ewu_B: R2=0.4029, n_res=219, mean(pred-true)=-3.6156
+
+Top 10 worst test proteins for baseline_plus_diag512_lr:
+  7ntn_A: R2=-4.8085, n_res=81, mean(pred-true)=+13.3613
+  7dkk_A: R2=-4.6905, n_res=89, mean(pred-true)=+14.3602
+  7prd_A: R2=-2.3857, n_res=125, mean(pred-true)=+12.5178
+  7s02_C: R2=-2.1169, n_res=36, mean(pred-true)=+16.1837
+  7kuw_A: R2=-1.9664, n_res=62, mean(pred-true)=+13.4559
+  7ee3_C: R2=-1.2087, n_res=124, mean(pred-true)=+9.0491
+  7b28_F: R2=-0.7076, n_res=165, mean(pred-true)=+7.2385
+  7bcj_A: R2=-0.6891, n_res=147, mean(pred-true)=+9.6943
+  7kik_A: R2=-0.5772, n_res=137, mean(pred-true)=+8.0946
+  7b29_A: R2=-0.5441, n_res=162, mean(pred-true)=+6.9703
+Top 10 best test proteins for baseline_plus_diag512_lr:
+  7cjs_B: R2=0.2098, n_res=254, mean(pred-true)=-2.0774
+  7mrs_B: R2=0.2013, n_res=188, mean(pred-true)=+1.3125
+  7lvz_D: R2=0.1847, n_res=256, mean(pred-true)=+0.5672
+  7dqg_A: R2=0.1811, n_res=186, mean(pred-true)=+1.5464
+  7b2o_A: R2=0.1690, n_res=331, mean(pred-true)=-1.1425
+  7ef6_A: R2=0.1664, n_res=250, mean(pred-true)=-2.4488
+  7ewu_B: R2=0.1428, n_res=219, mean(pred-true)=-4.0615
+  7fbh_A: R2=0.1365, n_res=303, mean(pred-true)=+0.4743
+  7rg7_A: R2=0.1148, n_res=306, mean(pred-true)=-2.7093
+  7au7_A: R2=0.0944, n_res=263, mean(pred-true)=-6.8086
+
+Top 10 worst test proteins for baseline_plus_size_linear_tree:
+  7bny_B: R2=0.5673, n_res=152, mean(pred-true)=+1.7929
+  7bcj_A: R2=0.7046, n_res=147, mean(pred-true)=+2.7774
+  7ntn_A: R2=0.7231, n_res=81, mean(pred-true)=-0.1393
+  7prd_A: R2=0.7234, n_res=125, mean(pred-true)=+2.1265
+  7lsv_B: R2=0.7511, n_res=178, mean(pred-true)=+2.2198
+  7o49_F: R2=0.7583, n_res=650, mean(pred-true)=+3.4546
+  7dkk_A: R2=0.8015, n_res=89, mean(pred-true)=+0.8707
+  7fe3_A: R2=0.8078, n_res=678, mean(pred-true)=+1.5505
+  7b28_F: R2=0.8099, n_res=165, mean(pred-true)=+1.2399
+  7v6p_A: R2=0.8243, n_res=283, mean(pred-true)=-2.6447
+Top 10 best test proteins for baseline_plus_size_linear_tree:
+  7t8o_B: R2=0.9292, n_res=229, mean(pred-true)=+0.0948
+  7cjs_B: R2=0.9210, n_res=254, mean(pred-true)=+0.4693
+  7kuw_A: R2=0.9199, n_res=62, mean(pred-true)=-1.0086
+  7mrs_B: R2=0.9195, n_res=188, mean(pred-true)=+0.2601
+  7b3a_A: R2=0.9168, n_res=280, mean(pred-true)=+0.0848
+  7thh_A: R2=0.9133, n_res=131, mean(pred-true)=+0.3877
+  7mwr_A: R2=0.9088, n_res=204, mean(pred-true)=-0.0137
+  7p3t_B: R2=0.9081, n_res=302, mean(pred-true)=-0.2086
+  7swh_A: R2=0.9049, n_res=454, mean(pred-true)=-0.7933
+  7ffa_A: R2=0.9028, n_res=431, mean(pred-true)=-0.7590
+
+Top 10 worst test proteins for baseline_plus_diag512_size_linear_tree:
+  7bny_B: R2=0.4332, n_res=152, mean(pred-true)=+4.0717
+  7bcj_A: R2=0.6132, n_res=147, mean(pred-true)=+3.9149
+  7lsv_B: R2=0.7221, n_res=178, mean(pred-true)=+2.5735
+  7rg7_A: R2=0.7428, n_res=306, mean(pred-true)=+2.0509
+  7prd_A: R2=0.7452, n_res=125, mean(pred-true)=+1.5975
+  7s02_C: R2=0.7484, n_res=36, mean(pred-true)=+3.6924
+  7ntn_A: R2=0.7531, n_res=81, mean(pred-true)=-0.2457
+  7dtp_A: R2=0.7677, n_res=477, mean(pred-true)=+1.3678
+  7dqg_A: R2=0.7677, n_res=186, mean(pred-true)=-0.2263
+  7e2v_A: R2=0.7678, n_res=550, mean(pred-true)=-1.2002
+Top 10 best test proteins for baseline_plus_diag512_size_linear_tree:
+  7kuw_A: R2=0.9322, n_res=62, mean(pred-true)=+0.1867
+  7v5y_B: R2=0.9182, n_res=85, mean(pred-true)=+0.0036
+  7thh_A: R2=0.9089, n_res=131, mean(pred-true)=-0.1065
+  7mwr_A: R2=0.9034, n_res=204, mean(pred-true)=-0.5213
+  7mrs_B: R2=0.8960, n_res=188, mean(pred-true)=+0.5586
+  7cjs_B: R2=0.8897, n_res=254, mean(pred-true)=+1.0493
+  7b3a_A: R2=0.8831, n_res=280, mean(pred-true)=-0.4275
+  7p3t_B: R2=0.8817, n_res=302, mean(pred-true)=+0.2113
+  7b29_A: R2=0.8672, n_res=162, mean(pred-true)=+0.4698
+  7kik_A: R2=0.8616, n_res=137, mean(pred-true)=+1.4150
+
