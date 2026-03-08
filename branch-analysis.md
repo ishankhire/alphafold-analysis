@@ -1,5 +1,47 @@
 # Branch Analysis
 
+## Session: 2026-03-08 — Add dedicated linear-tree diagnostic variants with rule/coef exports
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/diagnostic_linear_tree_regression.py`
+- `scripts/cluster_scripts/diagnostic_linear_tree_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You requested a new, separate cluster diagnostic (without modifying the existing
+amino-acid diagnostic) that runs five linear-tree variants focused on triangle
+usage and sequential-distance features, while exposing tree split rules and
+leaf regression coefficients for interpretability.
+
+### Key design decisions
+- Created a new script rather than modifying existing diagnostics.
+- All five variants are linear-tree models with:
+  - `max_depth=2` (at most 4 leaves)
+  - split feature restricted to raw `n_residues`
+  - `n_residues` included as a regression feature in every leaf model
+- Preserved protein-equal training weights (`1 / n_pairs`) and one shared
+  protein-level 80/20 split (`seed=42`).
+- Added sequential-distance feature variants:
+  - raw `seq_sep = |i-j|`
+  - cumulative indicators `I[sep==1]`, `I[sep<=2]`, `I[sep<=4]`
+- Applied train-only z-scoring to all non-`n_residues` features; kept
+  `n_residues` unscaled so tree thresholds remain interpretable in residue
+  units.
+- Added two tree-interpretability outputs:
+  - `diagnostic_linear_tree_rules.csv` (node-level split rules)
+  - `diagnostic_linear_tree_leaf_coefficients_raw.csv` (leaf-level raw
+    coefficients and intercepts, long-form by feature)
+- Added a test-only scatter sample export:
+  - `diagnostic_linear_tree_test_scatter_sample.csv`
+  - up to 100,000 rows per variant
+  - protein-equal sampling to avoid large-protein dominance
+- Added a dedicated Delta sbatch file targeting the new script and output
+  directory (`$HOME/diagnostic_linear_tree_csv_files`), keeping old sbatch
+  wiring untouched.
+
 ## Session: 2026-03-07 — Patch lineartree/sklearn compatibility in amino-acid diagnostic
 
 ### What changed
