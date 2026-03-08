@@ -16,7 +16,7 @@ Model policy for every variant:
 - linear-tree regressor
 - max_depth=2
 - split only on raw n_residues
-- n_residues is included as a regression feature in every leaf model
+- n_residues is used only for splitting (excluded from leaf regression)
 
 Outputs (inside CSV_ROOT/):
     diagnostic_linear_tree_variant_summary.csv
@@ -731,6 +731,10 @@ def run_variant(variant, train_records, test_records, variant_index):
     split_idx = int(variant["split_feature_index"])
     n_scale_features = split_idx  # keep raw n_residues unscaled for split thresholds
     fit_and_apply_standardization(x_train, x_test, n_scale_features=n_scale_features)
+    if feature_names[split_idx] != "n_residues":
+        raise ValueError(
+            f"Expected split feature to be n_residues, got {feature_names[split_idx]}"
+        )
 
     train_weights = compute_split_pair_weights(train_records, normalize_mean=True)
 
@@ -744,7 +748,7 @@ def run_variant(variant, train_records, test_records, variant_index):
         base_estimator=LinearRegression(copy_X=False),
         max_depth=int(variant["max_depth"]),
         split_features=[split_idx],
-        linear_features=list(range(x_train.shape[1])),
+        linear_features=list(range(split_idx)),
     )
     model.fit(x_train, y_train, sample_weight=train_weights)
 

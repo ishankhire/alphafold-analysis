@@ -978,3 +978,19 @@ Policy summary:
 - Coefficient vectors for all similarity/distance analyses use `coef_0..coef_255` only (intercept excluded).
 - Pair-grid heatmap ordering is by protein size ascending, tie-broken by protein ID.
 - Spearman correlation is computed via rank-correlation implementation without adding extra runtime dependencies.
+
+## Session: 2026-03-08 — Linear-tree leaf feature policy correction
+
+### What changed
+- Updated `scripts/cluster_scripts/diagnostic_linear_tree_regression.py` so `n_residues` is no longer used as a leaf regression feature.
+- Linear-tree fit now uses:
+  - `split_features=[split_idx]` (unchanged, still splits on `n_residues`)
+  - `linear_features=list(range(split_idx))` (changed, excludes `n_residues` from leaf regressors)
+- Updated the module header policy text to reflect this behavior.
+
+### Why
+- Restore intended comparison behavior with prior diagnostics where `n_residues` controls partitioning but does not act as a direct regressor inside each leaf.
+- Reduce risk of leaf models over-relying on protein-size signals for pair-level prediction.
+
+### Safety check added
+- Added an explicit runtime check that the configured split feature resolves to `"n_residues"` before training.
