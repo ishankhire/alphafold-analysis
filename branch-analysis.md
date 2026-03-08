@@ -1,5 +1,51 @@
 # Branch Analysis
 
+## Session: 2026-03-08 — Add fast standalone DecisionTree and XGBoost diagnostics for Delta
+
+### What changed
+Added five new cluster files:
+- `scripts/cluster_scripts/diagnostic_tree_regression_common.py`
+- `scripts/cluster_scripts/diagnostic_decision_tree_regression.py`
+- `scripts/cluster_scripts/diagnostic_xgboost_regression.py`
+- `scripts/cluster_scripts/diagnostic_decision_tree_regression.sbatch`
+- `scripts/cluster_scripts/diagnostic_xgboost_regression.sbatch`
+
+### Why
+The next regression pass needs to test nonlinear tree models while keeping
+runtime low enough for practical Delta iteration. The goal is to compare an
+interpretable single decision tree against XGBoost on the same layer-47,
+protein-level split, without the runtime and feature-width overhead of the
+previous amino-acid and bidirectional-feature diagnostics.
+
+### Key design decisions
+- Split the work into two standalone jobs so DecisionTree and XGBoost can be
+  submitted, timed, and debugged independently on the cluster
+- Use only one lower-triangle row per unordered residue pair (`i > j`)
+- Use only the lower-direction pair representation `pb[i,j,:]` instead of the
+  previous concatenated `[pb[i,j,:], pb[j,i,:]]` feature
+- Drop amino-acid features entirely to reduce feature width and keep the probe
+  focused on geometry-relevant signals
+- Retain cheap scalar features for tree splitting:
+  - `n_residues`
+  - `|i-j|`
+  - `log1p(|i-j|)`
+  - indicators for `seq_sep == 1`, `seq_sep <= 2`, and `seq_sep <= 4`
+- Cap training rows at `5,000` residue pairs per training protein to target a
+  roughly sub-2.5-hour runtime per job while still preserving protein-equal
+  weighting
+- Keep validation/test evaluation protein-level:
+  - outer 80/20 train/test protein split
+  - inner fit/validation split inside train proteins for model selection
+- Emit explicit interpretability artifacts instead of only scalar metrics:
+  - decision-tree text dump, node table, and feature importances
+  - XGBoost full tree dump, parsed node table, root-split summary, split-count
+    summary, and gain/weight/cover feature-importance tables
+- Refit the final XGBoost model on the combined sampled train proteins using
+  the validation-selected boosting length, avoiding reuse of the validation set
+  as an early-stopping eval set in the final model
+- Keep sequence-separation diagnostics as outputs rather than hard constraints,
+  so short-range behavior can be inspected without clipping predictions
+
 ## Session: 2026-03-08 — Add dedicated linear-tree diagnostic variants with rule/coef exports
 
 ### What changed
