@@ -43,6 +43,9 @@ previous amino-acid and bidirectional-feature diagnostics.
 - Refit the final XGBoost model on the combined sampled train proteins using
   the validation-selected boosting length, avoiding reuse of the validation set
   as an early-stopping eval set in the final model
+- Use protein-equal sample weights on the XGBoost validation eval set as well,
+  so early stopping selects boosting rounds against the same equal-per-protein
+  objective used for training and model comparison
 - Keep sequence-separation diagnostics as outputs rather than hard constraints,
   so short-range behavior can be inspected without clipping predictions
 
@@ -82,11 +85,48 @@ leaf regression coefficients for interpretability.
     coefficients and intercepts, long-form by feature)
 - Added a test-only scatter sample export:
   - `diagnostic_linear_tree_test_scatter_sample.csv`
-  - up to 100,000 rows per variant
+- up to 100,000 rows per variant
   - protein-equal sampling to avoid large-protein dominance
 - Added a dedicated Delta sbatch file targeting the new script and output
   directory (`$HOME/diagnostic_linear_tree_csv_files`), keeping old sbatch
   wiring untouched.
+
+## Session: 2026-03-08 — Add reproducible post-hoc analysis for Delta tree diagnostics
+
+### What changed
+Added one new local analysis script:
+- `scripts/multi_protein/regression/analyze_delta_tree_diagnostics.py`
+
+### Why
+The new DecisionTree, XGBoost, and linear-tree Delta runs produced many
+interpretability CSVs, but they were still difficult to read directly. This
+analysis pass turns those existing outputs into a reproducible report focused on:
+- what each CSV actually means
+- how much `n_residues` and sequence-separation features matter
+- how to summarize the giant decision tree without reading 805 leaves by hand
+- whether depth-4 XGBoost settings were already good enough
+- whether the lower-triangle linear-tree coefficients overlap significantly with
+  the tree/XGBoost importance rankings
+
+### Key design decisions
+- Read the existing `delta_files/...` CSV artifacts directly rather than rerun
+  any model training.
+- Keep the report grounded in the exact training pipeline used by the cluster
+  scripts:
+  - protein-level train/validation/test split
+  - protein-equal sample weights
+  - 5,000-pair train cap per protein
+  - lower-triangle-only representation for DecisionTree/XGBoost
+- Treat XGBoost `gain` as the primary importance metric, while still exporting
+  `weight` and `cover` so routing frequency and exposure can be separated from
+  predictive value.
+- Build a compact decision-tree visualization that truncates at shallow depth,
+  since the full depth-10 / 805-leaf tree is not human-readable as one figure.
+- Compare linear-tree coefficients to tree/XGBoost importance only in the shared
+  128-channel lower-triangle feature space (`lower_triangle_only_linear_tree`).
+- Quantify top-rank overlap significance with exact hypergeometric tail tests
+  over a 128-feature universe and apply Benjamini-Hochberg FDR correction across
+  all overlap tests.
 
 ## Session: 2026-03-07 — Patch lineartree/sklearn compatibility in amino-acid diagnostic
 

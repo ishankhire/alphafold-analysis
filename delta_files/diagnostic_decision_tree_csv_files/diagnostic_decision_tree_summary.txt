@@ -1,0 +1,80 @@
+Diagnostic Decision Tree Regression - Layer 47
+==============================================
+
+Pair blocks root: /work/hdd/bekh/thayes/openfold_reps
+PDB root:         /work/hdd/bekh/thayes/openfold_reps_outputs_sm
+Output CSV dir:   /u/ikhire/diagnostic_decision_tree_csv_files
+Layer:            47
+Representation:   lower triangle only, pb[i,j,:] only
+Train cap:        5,000 pairs per fit/train protein
+Split seeds:      test=42, validation=43
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Fit proteins:        117
+Validation proteins: 30
+Train proteins:      147
+Test proteins:       37
+Elapsed seconds:     1703.0
+
+Best configuration:
+  best_validation_mean_per_protein_r2: 0.939546
+  elapsed_seconds: 1703.002263
+  feature_dim: 134
+  max_depth: 10
+  min_samples_leaf: 50
+  min_samples_split: 100
+  model_name: decision_tree
+  n_fit_proteins: 117
+  n_leaves: 805
+  n_loaded_proteins: 184
+  n_test_proteins: 37
+  n_test_rows_used: 1568385
+  n_train_proteins: 147
+  n_train_rows_used: 705234
+  n_validation_proteins: 30
+  test_mean_per_protein_r2: 0.920436
+  test_median_per_protein_r2: 0.946082
+  test_negative_r2_fraction: 0.000000
+  test_pair_weighted_mae: 2.345703
+  test_pair_weighted_r2: 0.927912
+  test_pair_weighted_rmse: 4.225611
+  train_cap_per_protein: 5000
+  train_mean_per_protein_r2: 0.950909
+  train_pair_weighted_mae: 1.793557
+  train_pair_weighted_r2: 0.955843
+  train_pair_weighted_rmse: 3.266827
+  trained_n_leaves: 805
+  trained_tree_depth: 10
+  tree_depth: 10
+
+Final metrics:
+  Train mean per-protein R2: 0.9509
+  Test mean per-protein R2:  0.9204
+  Test median per-protein R2: 0.9461
+  Test negative R2 fraction: 0.0000
+
+Worst 10 test proteins:
+  7bny_B: R2=0.5059, mean(pred-true)=-4.7741
+  7rg7_A: R2=0.8313, mean(pred-true)=-0.1876
+  7au7_A: R2=0.8443, mean(pred-true)=-0.7313
+  7dqg_A: R2=0.8692, mean(pred-true)=+0.6802
+  7s02_C: R2=0.8754, mean(pred-true)=+1.0699
+  7o49_F: R2=0.8796, mean(pred-true)=+0.5471
+  7lsv_B: R2=0.8883, mean(pred-true)=+0.1901
+  7v6p_A: R2=0.9004, mean(pred-true)=-0.9842
+  7dtp_A: R2=0.9068, mean(pred-true)=+0.7936
+  7prd_A: R2=0.9104, mean(pred-true)=+0.9070
+
+Best 10 test proteins:
+  7b3a_A: R2=0.9767, mean(pred-true)=+0.0478
+  7mwr_A: R2=0.9750, mean(pred-true)=+0.1591
+  7ta9_A: R2=0.9712, mean(pred-true)=-0.0394
+  7p3t_B: R2=0.9692, mean(pred-true)=-0.0174
+  7swh_A: R2=0.9623, mean(pred-true)=+0.0131
+  7v5y_B: R2=0.9620, mean(pred-true)=-0.4464
+  7b29_A: R2=0.9615, mean(pred-true)=+0.3217
+  7mrs_B: R2=0.9584, mean(pred-true)=-0.0424
+  7lvz_D: R2=0.9570, mean(pred-true)=+0.3735
+  7ouq_A: R2=0.9566, mean(pred-true)=+0.3102

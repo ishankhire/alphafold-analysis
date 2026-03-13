@@ -1,0 +1,21 @@
+R2 vs protein size correlations (test split):
+- both_triangles_linear_tree: Pearson r=0.104, Spearman rho=0.149, mean R2=0.8487
+- both_triangles_plus_aa_onehot_linear_tree: Pearson r=-0.018, Spearman rho=0.006, mean R2=0.8553
+- both_triangles_plus_seqdist_linear_tree: Pearson r=0.090, Spearman rho=0.145, mean R2=0.8493
+- both_triangles_plus_seqdist_plus_bins_linear_tree: Pearson r=0.093, Spearman rho=0.155, mean R2=0.8492
+- lower_triangle_only_linear_tree: Pearson r=-0.179, Spearman rho=-0.225, mean R2=0.8489
+
+Tree split thresholds:
+- both_triangles_linear_tree: depth0 nan @ 448, depth1 L @ 313, depth1 R @ 567
+- both_triangles_plus_aa_onehot_linear_tree: depth0 nan @ 448, depth1 L @ 294, depth1 R @ 567
+- both_triangles_plus_seqdist_linear_tree: depth0 nan @ 448, depth1 L @ 313, depth1 R @ 567
+- both_triangles_plus_seqdist_plus_bins_linear_tree: depth0 nan @ 448, depth1 L @ 313, depth1 R @ 567
+- lower_triangle_only_linear_tree: depth0 nan @ 374, depth1 L @ 252, depth1 R @ 507
+
+Sequence-feature variants vs both_triangles baseline by sequence-separation bucket (delta MAE; negative is better):
+- both_triangles_plus_seqdist_linear_tree: 1: -0.205, 2-4: -0.080, 5-16: -0.070, 17-64: -0.049, 65+: +0.012
+- both_triangles_plus_seqdist_plus_bins_linear_tree: 1: -0.326, 2-4: -0.067, 5-16: -0.006, 17-64: -0.001, 65+: +0.060
+
+Sequence-feature variants vs both_triangles baseline by actual-distance bucket (delta MAE; negative is better):
+- both_triangles_plus_seqdist_linear_tree: 0-8A: -0.103, 8-16A: -0.052, 16-24A: +0.001, 24-32A: -0.032, 32A+: -0.017
+- both_triangles_plus_seqdist_plus_bins_linear_tree: 0-8A: -0.120, 8-16A: -0.053, 16-24A: +0.033, 24-32A: +0.040, 32A+: +0.076

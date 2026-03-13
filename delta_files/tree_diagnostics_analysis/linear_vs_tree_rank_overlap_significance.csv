@@ -1,0 +1,49 @@
+bucket_label,path_rule,n_samples,comparison,top_k,overlap_count,p_value_hypergeom,p_value_hypergeom_fdr,spearman_rho
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,decision_tree_importance,10,5,0.000202,0.000752,0.234915
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,decision_tree_importance,20,9,0.000550,0.001466,0.234915
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,decision_tree_importance,30,13,0.004663,0.007994,0.234915
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_gain,10,4,0.003252,0.006504,0.376820
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_gain,20,9,0.000550,0.001466,0.376820
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_gain,30,15,0.000219,0.000752,0.376820
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_weight,10,5,0.000202,0.000752,0.376728
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_weight,20,10,0.000066,0.000450,0.376728
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_weight,30,15,0.000219,0.000752,0.376728
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_cover,10,1,0.570392,0.667776,0.210201
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_cover,20,3,0.644086,0.687026,0.210201
+253-374,n_residues <= 374.000000 AND n_residues > 252.000000,1447104,xgboost_cover,30,9,0.231452,0.284864,0.210201
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,decision_tree_importance,10,4,0.003252,0.006504,0.359286
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,decision_tree_importance,20,10,0.000066,0.000450,0.359286
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,decision_tree_importance,30,14,0.001113,0.002671,0.359286
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_gain,10,3,0.031142,0.046713,0.317135
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_gain,20,10,0.000066,0.000450,0.317135
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_gain,30,15,0.000219,0.000752,0.317135
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_weight,10,5,0.000202,0.000752,0.333753
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_weight,20,11,0.000006,0.000094,0.333753
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_weight,30,14,0.001113,0.002671,0.333753
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_cover,10,2,0.176256,0.222639,0.143123
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_cover,20,3,0.644086,0.687026,0.143123
+375-507,n_residues > 374.000000 AND n_residues <= 507.000000,2353455,xgboost_cover,30,7,0.594298,0.679198,0.143123
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,decision_tree_importance,10,2,0.176256,0.222639,0.079126
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,decision_tree_importance,20,7,0.016827,0.026923,0.079126
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,decision_tree_importance,30,10,0.113547,0.160302,0.079126
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_gain,10,2,0.176256,0.222639,0.182487
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_gain,20,9,0.000550,0.001466,0.182487
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_gain,30,12,0.016202,0.026817,0.182487
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_weight,10,3,0.031142,0.046713,0.156964
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_weight,20,8,0.003486,0.006693,0.156964
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_weight,30,11,0.046886,0.068198,0.156964
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_cover,10,0,1.000000,1.000000,0.139873
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_cover,20,3,0.644086,0.687026,0.139873
+> 507,n_residues > 374.000000 AND n_residues > 507.000000,1853428,xgboost_cover,30,8,0.400269,0.480323,0.139873
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,decision_tree_importance,10,4,0.003252,0.006504,0.290605
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,decision_tree_importance,20,9,0.000550,0.001466,0.290605
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,decision_tree_importance,30,13,0.004663,0.007994,0.290605
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_gain,10,4,0.003252,0.006504,0.379441
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_gain,20,10,0.000066,0.000450,0.379441
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_gain,30,17,0.000005,0.000094,0.379441
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_weight,10,5,0.000202,0.000752,0.275986
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_weight,20,12,0.000000,0.000019,0.275986
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_weight,30,13,0.004663,0.007994,0.275986
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_cover,10,2,0.176256,0.222639,0.110854
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_cover,20,2,0.865212,0.902830,0.110854
+<= 252,n_residues <= 374.000000 AND n_residues <= 252.000000,1132253,xgboost_cover,30,5,0.896781,0.915861,0.110854

@@ -14,7 +14,9 @@ __pycache__/
 pca_projections/
 feature_magnitudes/
 linear_regression_csv_files/kfold_predicted_distances.csv
+delta_files/*predicted*
+delta_files/main_regression_csv/kfold_predicted_distances.csv
+delta_files/per_protein_files/per_protein_predicted_distances.csv
 
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy
-

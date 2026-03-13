@@ -1,0 +1,146 @@
+Diagnostic Linear Tree Regression — Layer 47
+================================================================
+
+Pair blocks root:   /work/hdd/bekh/thayes/openfold_reps
+PDB root:           /work/hdd/bekh/thayes/openfold_reps_outputs_sm
+Output CSV dir:     /u/ikhire/diagnostic_linear_tree_csv_files
+Layer:              47
+Representation:     one lower-triangle row per unordered pair
+Training weighting: protein-equal (per-pair weight = 1 / n_pairs)
+Model family:       linear-tree only
+Tree policy:        max_depth=2, split only on raw n_residues
+Scaling policy:     z-score all non-n_residues features
+Scatter sampling:   test-only, protein-equal, up to 100,000 rows per variant
+Train/test split:   protein-level 80/20, seed=42
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Train proteins:      147
+Test proteins:       37
+
+Variant comparison:
+  Variant                                              FeatDim  Splits  Leaves  TestMeanPP_R2  TestMedian    NegFrac
+  lower_triangle_only_linear_tree                          129       3       4         0.8489      0.8486     0.0000
+  both_triangles_linear_tree                               257       3       4         0.8487      0.8735     0.0000
+  both_triangles_plus_aa_onehot_linear_tree                297       3       4         0.8553      0.8611     0.0000
+  both_triangles_plus_seqdist_linear_tree                  258       3       4         0.8493      0.8758     0.0000
+  both_triangles_plus_seqdist_plus_bins_linear_tree        261       3       4         0.8492      0.8767     0.0000
+
+Best variant by test mean per-protein R2: both_triangles_plus_aa_onehot_linear_tree (0.8553)
+
+Top 10 worst test proteins for lower_triangle_only_linear_tree:
+  7bny_B: R2=0.6323, n_res=152, mean(pred-true)=-1.0191
+  7rg7_A: R2=0.7551, n_res=306, mean(pred-true)=+2.7120
+  7prd_A: R2=0.7619, n_res=125, mean(pred-true)=+2.2394
+  7ffa_A: R2=0.7811, n_res=431, mean(pred-true)=-2.0070
+  7ntn_A: R2=0.7852, n_res=81, mean(pred-true)=-0.2207
+  7e2v_A: R2=0.7897, n_res=550, mean(pred-true)=-0.1720
+  7lsv_B: R2=0.8038, n_res=178, mean(pred-true)=+1.3341
+  7bcj_A: R2=0.8061, n_res=147, mean(pred-true)=+1.5344
+  7dkk_A: R2=0.8261, n_res=89, mean(pred-true)=+0.4895
+  7dtp_A: R2=0.8271, n_res=477, mean(pred-true)=+1.5760
+Top 10 best test proteins for lower_triangle_only_linear_tree:
+  7mwr_A: R2=0.9469, n_res=204, mean(pred-true)=-0.1700
+  7v5y_B: R2=0.9361, n_res=85, mean(pred-true)=-0.2447
+  7t8o_B: R2=0.9351, n_res=229, mean(pred-true)=-0.2099
+  7kuw_A: R2=0.9336, n_res=62, mean(pred-true)=-0.4377
+  7mrs_B: R2=0.9290, n_res=188, mean(pred-true)=+0.3607
+  7b3a_A: R2=0.9070, n_res=280, mean(pred-true)=+0.2388
+  7thh_A: R2=0.9053, n_res=131, mean(pred-true)=+0.1188
+  7cjs_B: R2=0.9004, n_res=254, mean(pred-true)=+1.1341
+  7p3t_B: R2=0.8967, n_res=302, mean(pred-true)=-0.0971
+  7kik_A: R2=0.8947, n_res=137, mean(pred-true)=+0.6768
+
+Top 10 worst test proteins for both_triangles_linear_tree:
+  7bny_B: R2=0.5673, n_res=152, mean(pred-true)=+1.7929
+  7bcj_A: R2=0.7046, n_res=147, mean(pred-true)=+2.7774
+  7ntn_A: R2=0.7231, n_res=81, mean(pred-true)=-0.1393
+  7prd_A: R2=0.7234, n_res=125, mean(pred-true)=+2.1265
+  7lsv_B: R2=0.7511, n_res=178, mean(pred-true)=+2.2198
+  7o49_F: R2=0.7583, n_res=650, mean(pred-true)=+3.4546
+  7dkk_A: R2=0.8015, n_res=89, mean(pred-true)=+0.8707
+  7fe3_A: R2=0.8078, n_res=678, mean(pred-true)=+1.5505
+  7b28_F: R2=0.8099, n_res=165, mean(pred-true)=+1.2399
+  7v6p_A: R2=0.8243, n_res=283, mean(pred-true)=-2.6447
+Top 10 best test proteins for both_triangles_linear_tree:
+  7t8o_B: R2=0.9292, n_res=229, mean(pred-true)=+0.0948
+  7cjs_B: R2=0.9210, n_res=254, mean(pred-true)=+0.4693
+  7kuw_A: R2=0.9199, n_res=62, mean(pred-true)=-1.0086
+  7mrs_B: R2=0.9195, n_res=188, mean(pred-true)=+0.2601
+  7b3a_A: R2=0.9168, n_res=280, mean(pred-true)=+0.0848
+  7thh_A: R2=0.9133, n_res=131, mean(pred-true)=+0.3877
+  7mwr_A: R2=0.9088, n_res=204, mean(pred-true)=-0.0137
+  7p3t_B: R2=0.9081, n_res=302, mean(pred-true)=-0.2086
+  7swh_A: R2=0.9049, n_res=454, mean(pred-true)=-0.7933
+  7ffa_A: R2=0.9028, n_res=431, mean(pred-true)=-0.7590
+
+Top 10 worst test proteins for both_triangles_plus_aa_onehot_linear_tree:
+  7bny_B: R2=0.6089, n_res=152, mean(pred-true)=+1.3428
+  7o49_F: R2=0.7596, n_res=650, mean(pred-true)=+3.3028
+  7bcj_A: R2=0.7655, n_res=147, mean(pred-true)=+2.2924
+  7ntn_A: R2=0.7721, n_res=81, mean(pred-true)=+0.0020
+  7rg7_A: R2=0.7756, n_res=306, mean(pred-true)=+1.2771
+  7prd_A: R2=0.7765, n_res=125, mean(pred-true)=+1.7913
+  7lsv_B: R2=0.7945, n_res=178, mean(pred-true)=+2.0472
+  7fe3_A: R2=0.8089, n_res=678, mean(pred-true)=+1.5904
+  7dkk_A: R2=0.8108, n_res=89, mean(pred-true)=+0.6852
+  7b28_F: R2=0.8202, n_res=165, mean(pred-true)=+1.1661
+Top 10 best test proteins for both_triangles_plus_aa_onehot_linear_tree:
+  7t8o_B: R2=0.9346, n_res=229, mean(pred-true)=-0.3039
+  7b3a_A: R2=0.9310, n_res=280, mean(pred-true)=-0.2890
+  7mrs_B: R2=0.9282, n_res=188, mean(pred-true)=+0.3602
+  7mwr_A: R2=0.9254, n_res=204, mean(pred-true)=-0.1016
+  7cjs_B: R2=0.9216, n_res=254, mean(pred-true)=+0.0850
+  7v5y_B: R2=0.9204, n_res=85, mean(pred-true)=-0.9194
+  7thh_A: R2=0.9201, n_res=131, mean(pred-true)=+0.2193
+  7kuw_A: R2=0.9182, n_res=62, mean(pred-true)=-0.8613
+  7lvz_D: R2=0.9172, n_res=256, mean(pred-true)=+0.7698
+  7swh_A: R2=0.9077, n_res=454, mean(pred-true)=-0.7514
+
+Top 10 worst test proteins for both_triangles_plus_seqdist_linear_tree:
+  7bny_B: R2=0.5672, n_res=152, mean(pred-true)=+1.7226
+  7bcj_A: R2=0.7064, n_res=147, mean(pred-true)=+2.7285
+  7ntn_A: R2=0.7258, n_res=81, mean(pred-true)=-0.1643
+  7prd_A: R2=0.7260, n_res=125, mean(pred-true)=+2.0808
+  7lsv_B: R2=0.7532, n_res=178, mean(pred-true)=+2.1950
+  7o49_F: R2=0.7541, n_res=650, mean(pred-true)=+3.4786
+  7fe3_A: R2=0.8018, n_res=678, mean(pred-true)=+1.6590
+  7dkk_A: R2=0.8033, n_res=89, mean(pred-true)=+0.8394
+  7b28_F: R2=0.8103, n_res=165, mean(pred-true)=+1.2307
+  7rg7_A: R2=0.8231, n_res=306, mean(pred-true)=+0.9419
+Top 10 best test proteins for both_triangles_plus_seqdist_linear_tree:
+  7t8o_B: R2=0.9292, n_res=229, mean(pred-true)=+0.1173
+  7cjs_B: R2=0.9210, n_res=254, mean(pred-true)=+0.5026
+  7mrs_B: R2=0.9207, n_res=188, mean(pred-true)=+0.2616
+  7kuw_A: R2=0.9193, n_res=62, mean(pred-true)=-1.0535
+  7b3a_A: R2=0.9179, n_res=280, mean(pred-true)=+0.1322
+  7thh_A: R2=0.9132, n_res=131, mean(pred-true)=+0.3587
+  7mwr_A: R2=0.9095, n_res=204, mean(pred-true)=-0.0091
+  7p3t_B: R2=0.9087, n_res=302, mean(pred-true)=-0.1402
+  7swh_A: R2=0.9081, n_res=454, mean(pred-true)=-0.8045
+  7ffa_A: R2=0.9022, n_res=431, mean(pred-true)=-0.7025
+
+Top 10 worst test proteins for both_triangles_plus_seqdist_plus_bins_linear_tree:
+  7bny_B: R2=0.5679, n_res=152, mean(pred-true)=+1.6418
+  7bcj_A: R2=0.7076, n_res=147, mean(pred-true)=+2.7375
+  7ntn_A: R2=0.7247, n_res=81, mean(pred-true)=-0.1449
+  7prd_A: R2=0.7303, n_res=125, mean(pred-true)=+2.0634
+  7lsv_B: R2=0.7525, n_res=178, mean(pred-true)=+2.1893
+  7o49_F: R2=0.7578, n_res=650, mean(pred-true)=+3.3207
+  7fe3_A: R2=0.8011, n_res=678, mean(pred-true)=+1.7579
+  7dkk_A: R2=0.8036, n_res=89, mean(pred-true)=+0.8492
+  7b28_F: R2=0.8106, n_res=165, mean(pred-true)=+1.2577
+  7rg7_A: R2=0.8232, n_res=306, mean(pred-true)=+0.9041
+Top 10 best test proteins for both_triangles_plus_seqdist_plus_bins_linear_tree:
+  7t8o_B: R2=0.9286, n_res=229, mean(pred-true)=+0.1504
+  7cjs_B: R2=0.9206, n_res=254, mean(pred-true)=+0.5444
+  7mrs_B: R2=0.9194, n_res=188, mean(pred-true)=+0.2445
+  7kuw_A: R2=0.9169, n_res=62, mean(pred-true)=-1.0961
+  7b3a_A: R2=0.9161, n_res=280, mean(pred-true)=+0.1118
+  7thh_A: R2=0.9134, n_res=131, mean(pred-true)=+0.3549
+  7swh_A: R2=0.9082, n_res=454, mean(pred-true)=-0.8294
+  7p3t_B: R2=0.9062, n_res=302, mean(pred-true)=-0.1368
+  7mwr_A: R2=0.9062, n_res=204, mean(pred-true)=-0.0759
+  7ffa_A: R2=0.9027, n_res=431, mean(pred-true)=-0.7115
+

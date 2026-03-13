@@ -148,6 +148,7 @@ def train_model(config, fit_bundle, val_bundle):
         fit_bundle["y"],
         sample_weight=fit_bundle["weights"],
         eval_set=[(val_bundle["x"], val_bundle["y"])],
+        sample_weight_eval_set=[val_bundle["weights"]],
         verbose=False,
     )
     best_iteration = getattr(model, "best_iteration", None)
