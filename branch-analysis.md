@@ -1,5 +1,123 @@
 # Branch Analysis
 
+## Session: 2026-03-14 — Add lower-triangle Gaussian-gated MoE diagnostic for Delta
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/diagnostics/diagnostic_moe_reg.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_moe_reg.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a dedicated layer-47 diagnostic to test whether soft, size-gated
+mixture-of-experts models can improve on the current lower-triangle linear
+baseline without hard size boundaries, while keeping the workflow aligned with
+the existing Delta diagnostics.
+
+### Key design decisions
+- Kept the new work in a standalone diagnostic instead of modifying the
+  existing linear-tree or plain-linear scripts, so prior runs remain
+  reproducible.
+- Reused the tree-diagnostic common helpers for:
+  - protein discovery and PDB / pair-block validation
+  - lower-triangle target construction
+  - protein-level fit / validation / train / test splits
+  - deterministic per-protein row caps
+  - protein-equal metric summaries and CSV formatting
+- Restricted expert features to the lower-triangle pair representation only:
+  `pb[i,j,:]` with 128 channels and no seq-separation or `n_residues`
+  regressors.
+- Added five fixed variants in one script:
+  - one single-expert lower-triangle linear baseline
+  - 2-expert and 3-expert soft size-gated MoE
+  - 2-expert and 3-expert shared-global-plus-residual MoE
+- Used `log(n_residues)` as the only gating feature and implemented a 1D
+  Gaussian gate, so proteins are softly assigned to experts by size while
+  predictions on validation/test rely only on gate weights and do not leak the
+  targets.
+- Chose protein-equal generalized EM rather than exact pooled row-level EM:
+  - expert training weights are `responsibility / n_pairs_used`
+  - expert posteriors are updated from protein-average negative log-likelihood
+  - long proteins do not dominate gating or expert fitting
+- Kept experts as plain `LinearRegression(copy_X=False)` models because earlier
+  ridge-vs-linear comparisons suggested regularization was not the main
+  bottleneck; degenerate expert collapse is logged rather than hidden.
+- For shared-global variants, fit a frozen shared lower-triangle linear model
+  first and train the MoE on residual targets, so the MoE acts as a soft
+  correction on top of the global probe.
+- Exported MoE-specific diagnostics beyond the standard summary/per-protein
+  tables:
+  - raw-scale coefficients for baseline, shared, and expert residual models
+  - final Gaussian gate parameters and expert noise variances
+  - protein-level responsibility tables for training posteriors and
+    gate-only inference weights
+  - EM training traces across restarts
+  - gate-weight curves over a residue-count grid
+- Sized the Delta sbatch job above the earlier tree jobs (`8` CPUs, `128g`,
+  `08:00:00`) because the script now runs multiple EM restarts across four MoE
+  variants in addition to the baseline.
+
+## Session: 2026-03-14 — Add protein-aware context linear-tree diagnostic for Delta
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/diagnostics/diagnostic_lin_tree_context_reg.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_lin_tree_context_reg.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You requested a new layer-47 linear-tree diagnostic that stays close to the
+existing linear-tree workflow while testing local context feature expansions
+and correcting `lineartree` split eligibility so tree thresholds reflect
+protein-equivalent mass rather than raw pair-row counts.
+
+### Key design decisions
+- Created a new standalone diagnostic instead of modifying the existing
+  `diagnostic_linear_tree_regression.py`, so the prior baseline remains
+  reproducible.
+- Kept the overall evaluation shape identical to the earlier linear-tree run:
+  - one lower-triangle row per unordered residue pair
+  - one shared protein-level 80/20 train/test split (`seed=42`)
+  - layer 47 only
+  - `max_depth=2`
+  - split only on raw `n_residues`
+- Replaced the old feature variants with four context variants:
+  - center only, lower triangle
+  - axial neighbors, lower triangle
+  - axial + diagonal neighbors, lower triangle
+  - axial neighbors with both directed pair representations
+- Used fixed context slots with zero-padding for out-of-bounds offsets and for
+  lower-triangle variants whenever a shifted coordinate crosses to the diagonal
+  or upper triangle.
+- Switched training weights to `normalize_mean=False`, so each protein's
+  training rows sum to `1.0` and weighted thresholds have a direct
+  protein-equivalent interpretation.
+- Added a local monkey patch for `lineartree._classes._parallel_binning_fit`
+  that:
+  - enforces `min_samples_split` using total weight mass when the model enables
+    protein-aware thresholds
+  - enforces `min_samples_leaf` using left/right child weight mass
+  - leaves the unweighted code path unchanged
+  - preserves raw row counts in stored node metadata for compatibility
+- Configured the new protein-aware tree thresholds as:
+  - `min_samples_split = 6`
+  - `min_samples_leaf = 5`
+- Reused `cluster_regression_helpers.py` for PDB loading, distance matrices,
+  and MDS/TM-score/triangle diagnostics instead of copying those routines into
+  the new script.
+- Added three new geometry/weight outputs beyond the standard linear-tree
+  family:
+  - per-protein geometry metrics for every variant and split
+  - variant-level geometry summary CSV
+  - node/leaf diagnostics with both raw row counts and protein-equivalent mass
+- Increased the dedicated Delta sbatch resources to `128g` and `08:00:00`
+  because the widest context variant is substantially larger than the earlier
+  256-297 feature runs.
+
 ## Session: 2026-03-08 — Add fast standalone DecisionTree and XGBoost diagnostics for Delta
 
 ### What changed
@@ -1080,3 +1198,41 @@ Policy summary:
 
 ### Safety check added
 - Added an explicit runtime check that the configured split feature resolves to `"n_residues"` before training.
+
+## Session: 2026-03-14 — Add shared cluster regression helper module for future scripts
+
+### What changed
+Added one new top-level cluster helper module:
+- `scripts/cluster_scripts/cluster_regression_helpers.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+New cluster diagnostics were accumulating identical path/PDB/distance helpers,
+plus one shared amino-acid pairing utility and a stable set of geometry
+diagnostics copied from the production multi-protein regression script. This
+module creates one canonical place for those stable helpers so future scripts
+can reuse them without increasing duplication.
+
+### Key design decisions
+- Kept scope intentionally narrow:
+  - PDB and pair-block path helpers
+  - protein discovery
+  - CA extraction
+  - pairwise distance computation
+  - amino-acid pair indexing
+  - classical MDS / TM-score / triangle-violation geometry helpers
+- Did not move feature-engineering, split logic, weighting, or model-training
+  code, since those are the parts most likely to diverge across experiments.
+- Used the float32-returning CA extraction behavior from the newer diagnostics
+  so residue metadata and coordinate arrays match current cluster diagnostic
+  expectations.
+- Preserved the geometry helper signatures and return shapes from
+  `cluster_multi_protein_regression.py` so future scripts can opt into that
+  exact analysis without an adapter layer.
+- Resolved `PDB_ROOT` lazily inside `find_pdb_file` rather than at module import
+  time so the helper can be imported safely outside an sbatch environment during
+  local smoke tests.
+- Left all existing scripts untouched in this step; the module is intended for
+  future diagnostics and regressions rather than a broad retrofit.
