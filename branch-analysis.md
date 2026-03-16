@@ -1236,3 +1236,53 @@ can reuse them without increasing duplication.
   local smoke tests.
 - Left all existing scripts untouched in this step; the module is intended for
   future diagnostics and regressions rather than a broad retrofit.
+
+## Session: 2026-03-16 — Add lower-triangle protein-fairness linear diagnostic for Delta
+
+### What changed
+Added:
+- `scripts/cluster_scripts/diagnostics/diagnostic_protein_fairness_regression.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a focused layer-47 lower-triangle diagnostic that isolates two
+objective changes discussed during analysis:
+- variance-normalized protein-equal linear regression
+- iterative protein-level fairness reweighting
+
+The goal is to test whether the bottleneck is the training objective rather
+than the feature set or the model family.
+
+### Key design decisions
+- Kept the new work in a standalone script so the older lower-triangle linear
+  diagnostics remain reproducible.
+- Restricted features to the layer-47 lower-triangle center representation
+  `pb[i, j, :]` only:
+  - no upper-triangle pairs
+  - no sequence-separation features
+  - no explicit `n_residues` feature
+- Added a plain protein-equal MSE baseline alongside the two requested
+  objective variants so the new objectives can be interpreted against the
+  current weighted-linear behavior.
+- Implemented the fitting path as a streaming weighted normal-equation solve
+  over per-protein lower-triangle blocks rather than materializing one giant
+  all-protein feature matrix:
+  - avoids bringing back a per-protein cap just to make the diagnostic fit in
+    memory
+  - preserves exact weighted linear-regression behavior up to a tiny ridge
+    stabilizer
+- Treated the variance-normalized objective as weighted least squares with
+  per-pair weight `1 / (n_pairs * Var(y_protein))`, which keeps the predictor
+  linear while moving the objective closer to mean per-protein `R^2`.
+- Implemented fairness reweighting as repeated linear refits:
+  - compute each train protein's normalized loss
+  - increase/decrease a protein-level multiplier using a clipped power rule
+  - refit with weights proportional to that multiplier
+  This keeps every individual fit linear in the features while allowing the
+  training procedure to focus more strongly on underperforming proteins.
+- Exported objective-specific diagnostics in addition to the standard summary:
+  - per-protein train/test rows with `R^2`, MSE, NMSE, MAE, and mean bias
+  - round-level fairness summaries and per-protein reweight history
+  - raw-scale coefficient CSV for the final fitted model of each variant
