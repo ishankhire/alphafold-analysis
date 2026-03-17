@@ -1,5 +1,87 @@
 # Branch Analysis
 
+## Session: 2026-03-16 — Add fixed-threshold all-layer piecewise linear context regression for Delta
+
+### What changed
+Added two new Delta cluster files:
+- `scripts/cluster_scripts/piecewise_linear_regression.py`
+- `scripts/cluster_scripts/piecewise_linear_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a standalone all-layer follow-up to the layer-47 context linear-tree
+diagnostic that keeps the same data-loading, context-feature, split, weighting,
+and geometry-analysis pipeline, but replaces learned tree splits with fixed
+leaf regions derived from the selected layer-47 thresholds.
+
+### Key design decisions
+- Kept the work in a new standalone cluster script instead of modifying the
+  existing context linear-tree diagnostic, so the original tree run remains
+  reproducible and the fixed-threshold comparison has its own output family.
+- Reused the same two context feature variants from the reference diagnostic:
+  - lower-triangle center only
+  - lower-triangle center plus axial context
+- Preserved the reference train/test setup:
+  - one deterministic protein-level 80/20 split with `seed=42`
+  - protein-equal pair weights with each protein summing to `1.0`
+  - z-scoring of all non-`n_residues` features using train-only moments
+- Replaced the learned depth-2 tree with four fixed residue-count leaf models
+  per variant and per layer:
+  - `LL`, `LR`, `RL`, `RR`
+  - routing uses only raw `n_residues`
+  - each leaf fits its own ordinary `LinearRegression`
+- Hardcoded the selected layer-47 thresholds into an exported rules CSV so the
+  exact routing policy is explicit and easy to analyze later.
+- Extended the diagnostic from layer 47 only to all 48 AlphaFold layers while
+  keeping per-protein geometry exports and adding region-mass diagnostics for
+  both train and test.
+- Added explicit start/end timestamps and elapsed-time prints after every layer
+  so cluster logs make layer runtimes easy to monitor during long runs.
+
+## Session: 2026-03-16 — Add local analysis for context linear-tree Delta outputs
+
+### What changed
+Added one new local analysis script:
+- `scripts/multi_protein/regression/analyze_delta_lin_tree_context_reg.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+The context linear-tree diagnostic run now emits enough threshold-search and
+leaf-coefficient detail to compare depth-1 vs depth-2 behavior directly, but
+the raw CSVs are cumbersome to interpret by hand. You wanted a fixed-path
+analysis pass that turns those diagnostics into threshold-response plots,
+depth-payoff summaries, and leaf-similarity heatmaps.
+
+### Key design decisions
+- Kept the analysis in a standalone local script rather than folding it into
+  the cluster diagnostic, so the original run outputs stay reproducible and the
+  post-hoc visualizations can evolve independently.
+- Read only the exported diagnostic CSVs:
+  - threshold-search rows
+  - selected split rules
+  - variant-level summary metrics
+  - leaf coefficient tables
+  - leaf weight diagnostics
+- Added one split-profile figure per variant with separate root and child
+  panels:
+  - root rows use full-test mean per-protein `R^2`
+  - child rows use routed-subset mean per-protein `R^2`
+- Made that scope mismatch explicit in both the figure labels and the text
+  summary so child-node curves are not misread as global model comparisons.
+- Added a compact depth-comparison CSV/plot that reports:
+  - the final depth-2 score
+  - the trained-root depth-1 proxy already exported by the diagnostic
+  - the best standalone root-only threshold from threshold search
+- Reconstructed final-leaf coefficient vectors (`LL`, `LR`, `RL`, `RR`) from
+  the long-form coefficient CSV and computed cosine-similarity heatmaps with a
+  shared color scale across both context variants.
+- Recorded leaf protein-equivalent mass in the text summary to help interpret
+  whether coefficient differences line up with uneven routed data mass.
+
 ## Session: 2026-03-14 — Add lower-triangle Gaussian-gated MoE diagnostic for Delta
 
 ### What changed
