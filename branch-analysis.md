@@ -1286,3 +1286,35 @@ than the feature set or the model family.
   - per-protein train/test rows with `R^2`, MSE, NMSE, MAE, and mean bias
   - round-level fairness summaries and per-protein reweight history
   - raw-scale coefficient CSV for the final fitted model of each variant
+
+## Session: 2026-03-16 — Add Delta sbatch for the protein-fairness diagnostic
+
+### What changed
+Added:
+- `scripts/cluster_scripts/diagnostics/diagnostic_protein_fairness_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You asked for a matching cluster submission script so the new lower-triangle
+protein-fairness diagnostic can be launched on Delta with the same environment
+and path conventions as the other diagnostics in this directory.
+
+### Key design decisions
+- Followed the existing Delta diagnostic pattern already used by the nearby
+  feature-variant and context-linear-tree sbatch files:
+  - `--account=bekh-delta-cpu`
+  - `--partition=cpu`
+  - `module reset`
+  - `module load python`
+  - `srun python3 -u ...`
+- Kept the standard Delta environment-variable path wiring:
+  - `PAIR_BLOCKS_ROOT=/work/hdd/bekh/thayes/openfold_reps`
+  - `PDB_ROOT=/work/hdd/bekh/thayes/openfold_reps_outputs_sm`
+  - variant-specific `CSV_ROOT=$HOME/diagnostic_protein_fairness_csv_files`
+- Pointed the sbatch file at the new Python entrypoint exactly:
+  `diagnostic_protein_fairness_regression.py`
+- Chose a conservative resource shape (`8` CPUs, `128g`, `12:00:00`) because
+  the fairness diagnostic streams all lower-triangle rows and may refit the
+  linear model several times in the iterative reweighting variant.
