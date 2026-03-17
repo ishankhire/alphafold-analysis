@@ -1,0 +1,44 @@
+Context Linear-Tree Diagnostic Analysis
+=====================================
+
+Scope caveat
+-----------
+Root threshold-search rows report full-test mean per-protein R^2.
+Child threshold-search rows report routed-subset mean per-protein R^2 only
+for proteins/pairs that already entered that node, so child curves should be
+read as local split-quality diagnostics rather than direct global comparisons.
+
+Depth payoff
+------------
+Center-Only Context
+  final depth-2 mean test R^2:      0.849767
+  trained-root depth-1 proxy:       0.785513
+  best standalone root-only:        0.785513
+  gain vs trained-root proxy:       +0.064254
+  gain vs best root-only threshold: +0.064254
+  selected thresholds: ROOT=371.5, L=255.5, R=503.0
+  routed test scopes: ROOT=37 proteins/1,568,385 pairs, L=31 proteins/667,960 pairs, R=6 proteins/900,425 pairs
+
+Axial-Context
+  final depth-2 mean test R^2:      0.889880
+  trained-root depth-1 proxy:       0.800219
+  best standalone root-only:        0.804091
+  gain vs trained-root proxy:       +0.089661
+  gain vs best root-only threshold: +0.085789
+  selected thresholds: ROOT=371.5, L=232.5, R=503.0
+  routed test scopes: ROOT=37 proteins/1,568,385 pairs, L=31 proteins/667,960 pairs, R=6 proteins/900,425 pairs
+
+Leaf coefficient cosine summary
+-------------------------------
+Center-Only Context
+  mean off-diagonal cosine: 0.713880
+  most similar pair:        LL vs LR (0.844129)
+  least similar pair:       LL vs RR (0.586055)
+  leaf protein-equivalent mass: LL=82.0, LR=30.0, RL=24.0, RR=11.0
+
+Axial-Context
+  mean off-diagonal cosine: 0.752314
+  most similar pair:        LR vs RL (0.831454)
+  least similar pair:       LL vs RR (0.612291)
+  leaf protein-equivalent mass: LL=72.0, LR=40.0, RL=24.0, RR=11.0
+
