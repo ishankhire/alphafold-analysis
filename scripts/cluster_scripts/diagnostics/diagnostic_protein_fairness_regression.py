@@ -38,6 +38,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import train_test_split
 
 
@@ -57,6 +58,17 @@ from diagnostic_tree_regression_common import (  # noqa: E402
     compute_r2,
     load_protein_records,
     write_csv,
+)
+from diagnostic_residue_weighted_regression import (  # noqa: E402
+    BASE_FEATURE_DIM as RESIDUE_BASE_FEATURE_DIM,
+    apply_scaler_in_place as residue_apply_scaler_in_place,
+    build_feature_chunk as residue_build_feature_chunk,
+    build_scope_spec as residue_build_scope_spec,
+    build_variant_matrices as residue_build_variant_matrices,
+    build_zscore_lookup as residue_build_zscore_lookup,
+    compute_scaler_from_protein_stats as residue_compute_scaler_from_protein_stats,
+    get_bucket_info as residue_get_bucket_info,
+    materialize_scope as residue_materialize_scope,
 )
 
 
@@ -78,30 +90,73 @@ ROUND_HISTORY_CSV_NAME = "diagnostic_protein_fairness_round_history.csv"
 COEFFICIENT_CSV_NAME = "diagnostic_protein_fairness_coefficients.csv"
 SUMMARY_TXT_NAME = "diagnostic_protein_fairness_summary.txt"
 
-FEATURE_NAMES = [f"pair_ch_{idx}" for idx in range(N_CHANNELS)]
+CENTER_FEATURE_NAMES = [f"pair_ch_{idx}" for idx in range(N_CHANNELS)]
+PAIRED_FEATURE_NAMES = [f"pair_ij_ch_{idx}" for idx in range(N_CHANNELS)] + [
+    f"pair_ji_ch_{idx}" for idx in range(N_CHANNELS)
+]
 
 VARIANTS = [
     {
         "name": "baseline_protein_equal_mse_linear",
+        "variant_type": "stream_center",
         "objective_mode": "protein_equal_mse",
         "uses_iterative_fairness": False,
+        "split_scheme": "random_protein_split",
+        "feature_dim": N_CHANNELS,
+        "ridge_alpha": RIDGE_ALPHA,
+        "solver_name": "streaming_weighted_normal_equations",
     },
     {
         "name": "protein_equal_nmse_linear",
+        "variant_type": "stream_center",
         "objective_mode": "protein_equal_nmse",
         "uses_iterative_fairness": False,
+        "split_scheme": "random_protein_split",
+        "feature_dim": N_CHANNELS,
+        "ridge_alpha": RIDGE_ALPHA,
+        "solver_name": "streaming_weighted_normal_equations",
     },
     {
         "name": "protein_fairness_reweighted_nmse_linear",
+        "variant_type": "stream_center",
         "objective_mode": "protein_equal_nmse",
         "uses_iterative_fairness": True,
+        "split_scheme": "random_protein_split",
+        "feature_dim": N_CHANNELS,
+        "ridge_alpha": RIDGE_ALPHA,
+        "solver_name": "streaming_weighted_normal_equations",
+    },
+    {
+        "name": "baseline_protein_equal_abs_exact_residue_v2",
+        "variant_type": "residue_exact",
+        "objective_mode": "protein_equal_mse",
+        "uses_iterative_fairness": False,
+        "split_scheme": "size_stratified_scope_split",
+        "feature_dim": RESIDUE_BASE_FEATURE_DIM,
+        "ridge_alpha": 0.0,
+        "solver_name": "sklearn_linear_regression",
+    },
+    {
+        "name": "baseline_protein_equal_abs_exact_residue_v2_ridge_1e-8",
+        "variant_type": "residue_exact",
+        "objective_mode": "protein_equal_mse",
+        "uses_iterative_fairness": False,
+        "split_scheme": "size_stratified_scope_split",
+        "feature_dim": RESIDUE_BASE_FEATURE_DIM,
+        "ridge_alpha": 1e-8,
+        "solver_name": "sklearn_ridge_regression",
     },
 ]
 
 SUMMARY_FIELDNAMES = [
     "variant",
+    "variant_type",
     "objective_mode",
     "uses_iterative_fairness",
+    "split_scheme",
+    "feature_dim",
+    "ridge_alpha",
+    "solver_name",
     "n_train_proteins",
     "n_test_proteins",
     "n_train_rows",
@@ -131,6 +186,7 @@ SUMMARY_FIELDNAMES = [
 
 PER_PROTEIN_FIELDNAMES = [
     "variant",
+    "split_scheme",
     "split",
     "protein_id",
     "n_residues",
@@ -148,6 +204,7 @@ PER_PROTEIN_FIELDNAMES = [
 ]
 
 SPLIT_FIELDNAMES = [
+    "split_scheme",
     "split",
     "protein_id",
     "n_residues",
@@ -239,6 +296,48 @@ def prepare_records(records):
         prepared_record["target_mean"] = float(np.mean(record["y_abs"], dtype=np.float64))
         prepared.append(prepared_record)
     return prepared
+
+
+def prepare_residue_exact_records(records):
+    """Attach the old residue-weighted diagnostic fields needed for exact controls."""
+    prepared = []
+    for record in records:
+        max_distance = float(np.max(record["y_abs"]))
+        if max_distance <= 0.0:
+            max_distance = FLOAT_EPS
+        target_variance = float(np.var(record["y_abs"], dtype=np.float64))
+        if target_variance <= FLOAT_EPS:
+            target_variance = FLOAT_EPS
+        bucket_info = residue_get_bucket_info(int(record["n_residues"]))
+        log_seq_sep = np.log1p(record["seq_sep"]).astype(np.float32, copy=False)
+
+        prepared_record = dict(record)
+        prepared_record["target_variance"] = target_variance
+        prepared_record["log_seq_sep"] = log_seq_sep
+        prepared_record["seq_sep_mean"] = float(np.mean(record["seq_sep"], dtype=np.float64))
+        prepared_record["seq_sep_sq_mean"] = float(
+            np.mean(record["seq_sep"] * record["seq_sep"], dtype=np.float64)
+        )
+        prepared_record["log_seq_sep_mean"] = float(np.mean(log_seq_sep, dtype=np.float64))
+        prepared_record["log_seq_sep_sq_mean"] = float(
+            np.mean(log_seq_sep * log_seq_sep, dtype=np.float64)
+        )
+        prepared_record["max_distance"] = max_distance
+        prepared_record["y_norm"] = np.asarray(record["y_abs"] / max_distance, dtype=np.float64)
+        prepared_record["bucket_label"] = bucket_info["label"]
+        prepared.append(prepared_record)
+    return prepared
+
+
+def build_residue_exact_chunk_map(records):
+    """Materialize the exact paired-feature chunks used by the old residue baseline."""
+    chunk_map = {}
+    for record in records:
+        chunk = residue_build_feature_chunk(record, LAYER)
+        record["base_feature_mean"] = np.asarray(np.mean(chunk, axis=0), dtype=np.float64)
+        record["base_feature_sq_mean"] = np.asarray(np.mean(chunk * chunk, axis=0), dtype=np.float64)
+        chunk_map[record["protein_id"]] = chunk
+    return chunk_map
 
 
 def iter_record_blocks(record):
@@ -679,25 +778,165 @@ def summarize_split(records, model, standardization):
     }
 
 
-def build_split_rows(train_records, test_records):
+def summarize_dense_split(records, y_true, y_pred):
+    """Compute the same per-protein diagnostics for dense stacked predictions."""
+    per_rows = []
+    per_r2_values = []
+    per_nmse_values = []
+    negative_r2 = 0
+
+    pair_sum_y = 0.0
+    pair_sum_y2 = 0.0
+    pair_sum_abs = 0.0
+    pair_sum_sqerr = 0.0
+    pair_total_n = 0
+
+    protein_weight_sum = 0.0
+    protein_weighted_sum_y = 0.0
+    protein_weighted_sum_y2 = 0.0
+    protein_weighted_sum_abs = 0.0
+    protein_weighted_sum_sqerr = 0.0
+
+    start = 0
+    for record in records:
+        end = start + int(record["n_pairs"])
+        y_true_p = np.asarray(y_true[start:end], dtype=np.float64)
+        y_pred_p = np.asarray(y_pred[start:end], dtype=np.float64)
+        start = end
+
+        if y_true_p.size == 0:
+            continue
+
+        err_p = y_pred_p - y_true_p
+        sum_y = float(np.sum(y_true_p, dtype=np.float64))
+        sum_y2 = float(np.sum(y_true_p * y_true_p, dtype=np.float64))
+        sum_pred = float(np.sum(y_pred_p, dtype=np.float64))
+        sum_abs = float(np.sum(np.abs(err_p), dtype=np.float64))
+        sum_sqerr = float(np.sum(err_p * err_p, dtype=np.float64))
+        n_rows = int(y_true_p.size)
+
+        mean_y = sum_y / float(n_rows)
+        mean_pred = sum_pred / float(n_rows)
+        mse_value = sum_sqerr / float(n_rows)
+        mae_value = sum_abs / float(n_rows)
+        rmse_value = float(math.sqrt(mse_value))
+        ss_tot = sum_y2 - 2.0 * mean_y * sum_y + float(n_rows) * mean_y * mean_y
+        if ss_tot <= FLOAT_EPS:
+            r2_value = float("nan")
+        else:
+            r2_value = float(1.0 - (sum_sqerr / ss_tot))
+
+        nmse_value = float(mse_value / max(float(record["target_variance"]), FLOAT_EPS))
+        if not math.isnan(r2_value):
+            per_r2_values.append(float(r2_value))
+            if r2_value < 0.0:
+                negative_r2 += 1
+        per_nmse_values.append(nmse_value)
+
+        per_rows.append(
+            {
+                "protein_id": record["protein_id"],
+                "n_residues": int(record["n_residues"]),
+                "size_bin": int(record["size_bin"]),
+                "n_pairs": int(record["n_pairs"]),
+                "target_variance": float(record["target_variance"]),
+                "per_protein_r2": float(r2_value),
+                "per_protein_mse": float(mse_value),
+                "per_protein_nmse": float(nmse_value),
+                "per_protein_mae": float(mae_value),
+                "per_protein_rmse": float(rmse_value),
+                "mean_true_distance": float(mean_y),
+                "mean_predicted_distance": float(mean_pred),
+                "mean_error_pred_minus_true": float(mean_pred - mean_y),
+            }
+        )
+
+        pair_sum_y += sum_y
+        pair_sum_y2 += sum_y2
+        pair_sum_abs += sum_abs
+        pair_sum_sqerr += sum_sqerr
+        pair_total_n += int(n_rows)
+
+        row_weight = 1.0 / float(n_rows)
+        protein_weight_sum += 1.0
+        protein_weighted_sum_y += row_weight * sum_y
+        protein_weighted_sum_y2 += row_weight * sum_y2
+        protein_weighted_sum_abs += row_weight * sum_abs
+        protein_weighted_sum_sqerr += row_weight * sum_sqerr
+
+    pair_mean = pair_sum_y / max(float(pair_total_n), 1.0)
+    pair_ss_tot = (
+        pair_sum_y2
+        - 2.0 * pair_mean * pair_sum_y
+        + float(pair_total_n) * pair_mean * pair_mean
+    )
+    if pair_ss_tot <= FLOAT_EPS:
+        pair_r2 = float("nan")
+    else:
+        pair_r2 = float(1.0 - (pair_sum_sqerr / pair_ss_tot))
+
+    pair_mae = pair_sum_abs / max(float(pair_total_n), 1.0)
+    pair_rmse = float(math.sqrt(pair_sum_sqerr / max(float(pair_total_n), 1.0)))
+
+    protein_mean_y = protein_weighted_sum_y / max(protein_weight_sum, 1.0)
+    protein_ss_tot = (
+        protein_weighted_sum_y2
+        - 2.0 * protein_mean_y * protein_weighted_sum_y
+        + protein_weight_sum * protein_mean_y * protein_mean_y
+    )
+    if protein_ss_tot <= FLOAT_EPS:
+        protein_weighted_r2 = float("nan")
+    else:
+        protein_weighted_r2 = float(1.0 - (protein_weighted_sum_sqerr / protein_ss_tot))
+
+    return {
+        "pair_weighted_r2": pair_r2,
+        "protein_weighted_r2": protein_weighted_r2,
+        "pair_weighted_mae": float(pair_mae),
+        "pair_weighted_rmse": float(pair_rmse),
+        "mean_per_protein_r2": (
+            float(np.mean(per_r2_values)) if per_r2_values else float("nan")
+        ),
+        "median_per_protein_r2": (
+            float(np.median(per_r2_values)) if per_r2_values else float("nan")
+        ),
+        "negative_r2_fraction": (
+            float(negative_r2 / len(per_r2_values)) if per_r2_values else float("nan")
+        ),
+        "mean_per_protein_nmse": (
+            float(np.mean(per_nmse_values)) if per_nmse_values else float("nan")
+        ),
+        "median_per_protein_nmse": (
+            float(np.median(per_nmse_values)) if per_nmse_values else float("nan")
+        ),
+        "max_per_protein_nmse": (
+            float(np.max(per_nmse_values)) if per_nmse_values else float("nan")
+        ),
+        "per_rows": per_rows,
+    }
+
+
+def build_split_rows(split_collections):
     """Format protein-level split assignments."""
     rows = []
-    for split_name, split_records in [("train", train_records), ("test", test_records)]:
-        for record in split_records:
-            rows.append(
-                {
-                    "split": split_name,
-                    "protein_id": record["protein_id"],
-                    "n_residues": int(record["n_residues"]),
-                    "size_bin": int(record["size_bin"]),
-                    "n_pairs": int(record["n_pairs"]),
-                    "target_variance": float(record["target_variance"]),
-                }
-            )
+    for split_scheme, train_records, test_records in split_collections:
+        for split_name, split_records in [("train", train_records), ("test", test_records)]:
+            for record in split_records:
+                rows.append(
+                    {
+                        "split_scheme": split_scheme,
+                        "split": split_name,
+                        "protein_id": record["protein_id"],
+                        "n_residues": int(record["n_residues"]),
+                        "size_bin": int(record["size_bin"]),
+                        "n_pairs": int(record["n_pairs"]),
+                        "target_variance": float(record["target_variance"]),
+                    }
+                )
     return rows
 
 
-def build_coefficient_rows(variant_name, model, standardization):
+def build_coefficient_rows(variant_name, model, standardization, feature_names):
     """Convert standardized coefficients back to the raw feature scale."""
     coef_raw = np.asarray(model["coef"], dtype=np.float64) / standardization["scale"]
     intercept_raw = float(
@@ -713,7 +952,7 @@ def build_coefficient_rows(variant_name, model, standardization):
             "coefficient_raw_scale": intercept_raw,
         }
     ]
-    for feature_index, feature_name in enumerate(FEATURE_NAMES):
+    for feature_index, feature_name in enumerate(feature_names):
         rows.append(
             {
                 "variant": variant_name,
@@ -725,7 +964,23 @@ def build_coefficient_rows(variant_name, model, standardization):
     return rows
 
 
-def evaluate_variant(variant, train_records, test_records, standardization):
+def build_objective_stats_from_rows(per_rows, objective_mode):
+    """Compute train objective summary stats from per-protein output rows."""
+    values = []
+    for row in per_rows:
+        if objective_mode == "protein_equal_mse":
+            values.append(float(row["per_protein_mse"]))
+        elif objective_mode == "protein_equal_nmse":
+            values.append(float(row["per_protein_nmse"]))
+        else:
+            raise ValueError(f"Unsupported objective_mode: {objective_mode}")
+    if not values:
+        return float("nan"), float("nan"), float("nan")
+    array = np.asarray(values, dtype=np.float64)
+    return float(np.mean(array)), float(np.std(array)), float(np.max(array))
+
+
+def evaluate_stream_center_variant(variant, train_records, test_records, standardization):
     """Fit one variant and collect summary/per-protein outputs."""
     t0 = time.time()
     model, round_summary_rows, round_history_rows, final_losses = fit_variant_model(
@@ -741,6 +996,7 @@ def evaluate_variant(variant, train_records, test_records, standardization):
         for row in metric_group["per_rows"]:
             out = dict(row)
             out["variant"] = variant["name"]
+            out["split_scheme"] = variant["split_scheme"]
             out["split"] = split_name
             per_protein_rows.append(out)
 
@@ -754,8 +1010,13 @@ def evaluate_variant(variant, train_records, test_records, standardization):
 
     summary_row = {
         "variant": variant["name"],
+        "variant_type": variant["variant_type"],
         "objective_mode": variant["objective_mode"],
         "uses_iterative_fairness": bool(variant["uses_iterative_fairness"]),
+        "split_scheme": variant["split_scheme"],
+        "feature_dim": int(variant["feature_dim"]),
+        "ridge_alpha": float(variant["ridge_alpha"]),
+        "solver_name": variant["solver_name"],
         "n_train_proteins": int(len(train_records)),
         "n_test_proteins": int(len(test_records)),
         "n_train_rows": int(sum(record["n_pairs"] for record in train_records)),
@@ -783,12 +1044,135 @@ def evaluate_variant(variant, train_records, test_records, standardization):
         "elapsed_seconds": float(time.time() - t0),
     }
 
-    coefficient_rows = build_coefficient_rows(variant["name"], model, standardization)
+    coefficient_rows = build_coefficient_rows(
+        variant["name"],
+        model,
+        standardization,
+        CENTER_FEATURE_NAMES,
+    )
     return {
         "summary_row": summary_row,
         "per_protein_rows": per_protein_rows,
         "round_summary_rows": round_summary_rows,
         "round_history_rows": round_history_rows,
+        "coefficient_rows": coefficient_rows,
+    }
+
+
+def evaluate_residue_exact_variant(variant, exact_scope, exact_chunk_map):
+    """Evaluate an exact-control variant matched to the old residue baseline."""
+    t0 = time.time()
+    scope_data = residue_materialize_scope(exact_scope, exact_chunk_map)
+    transform_lookup = residue_build_zscore_lookup(
+        exact_scope["train_proteins"],
+        exact_scope["all_proteins"],
+        "none",
+    )
+    scaler_mean, scaler_scale = residue_compute_scaler_from_protein_stats(
+        exact_scope["train_proteins"],
+        feature_mode="base",
+        transform_lookup=transform_lookup,
+        pair_weighted=False,
+    )
+    x_train, x_test = residue_build_variant_matrices(
+        feature_mode="base",
+        x_train_base=scope_data["x_train_base"],
+        x_test_base=scope_data["x_test_base"],
+        g_train_rows=np.empty((scope_data["x_train_base"].shape[0],), dtype=np.float32),
+        g_test_rows=np.empty((scope_data["x_test_base"].shape[0],), dtype=np.float32),
+    )
+    standardization = {"mean": scaler_mean.astype(np.float64), "scale": scaler_scale.astype(np.float64)}
+    residue_apply_scaler_in_place(x_train, scaler_mean, scaler_scale)
+    residue_apply_scaler_in_place(x_test, scaler_mean, scaler_scale)
+
+    if float(variant["ridge_alpha"]) > 0.0:
+        model = Ridge(
+            alpha=float(variant["ridge_alpha"]),
+            fit_intercept=True,
+            copy_X=False,
+        )
+    else:
+        model = LinearRegression(copy_X=False)
+    model.fit(
+        x_train,
+        scope_data["y_train_abs"],
+        sample_weight=scope_data["train_weights_model"],
+    )
+
+    y_pred_train = np.asarray(model.predict(x_train), dtype=np.float64)
+    y_pred_test = np.asarray(model.predict(x_test), dtype=np.float64)
+    train_metrics = summarize_dense_split(
+        exact_scope["train_proteins"],
+        scope_data["y_train_abs"],
+        y_pred_train,
+    )
+    test_metrics = summarize_dense_split(
+        exact_scope["test_proteins"],
+        scope_data["y_test_abs"],
+        y_pred_test,
+    )
+
+    per_protein_rows = []
+    for split_name, metric_group in [("train", train_metrics), ("test", test_metrics)]:
+        for row in metric_group["per_rows"]:
+            out = dict(row)
+            out["variant"] = variant["name"]
+            out["split_scheme"] = variant["split_scheme"]
+            out["split"] = split_name
+            per_protein_rows.append(out)
+
+    final_mean_loss, final_std_loss, final_max_loss = build_objective_stats_from_rows(
+        train_metrics["per_rows"],
+        variant["objective_mode"],
+    )
+
+    summary_row = {
+        "variant": variant["name"],
+        "variant_type": variant["variant_type"],
+        "objective_mode": variant["objective_mode"],
+        "uses_iterative_fairness": bool(variant["uses_iterative_fairness"]),
+        "split_scheme": variant["split_scheme"],
+        "feature_dim": int(variant["feature_dim"]),
+        "ridge_alpha": float(variant["ridge_alpha"]),
+        "solver_name": variant["solver_name"],
+        "n_train_proteins": int(len(exact_scope["train_proteins"])),
+        "n_test_proteins": int(len(exact_scope["test_proteins"])),
+        "n_train_rows": int(scope_data["y_train_abs"].size),
+        "n_test_rows": int(scope_data["y_test_abs"].size),
+        "train_pair_weighted_r2": float(train_metrics["pair_weighted_r2"]),
+        "test_pair_weighted_r2": float(test_metrics["pair_weighted_r2"]),
+        "train_protein_weighted_r2": float(train_metrics["protein_weighted_r2"]),
+        "test_protein_weighted_r2": float(test_metrics["protein_weighted_r2"]),
+        "train_pair_weighted_mae": float(train_metrics["pair_weighted_mae"]),
+        "test_pair_weighted_mae": float(test_metrics["pair_weighted_mae"]),
+        "train_pair_weighted_rmse": float(train_metrics["pair_weighted_rmse"]),
+        "test_pair_weighted_rmse": float(test_metrics["pair_weighted_rmse"]),
+        "train_mean_per_protein_r2": float(train_metrics["mean_per_protein_r2"]),
+        "test_mean_per_protein_r2": float(test_metrics["mean_per_protein_r2"]),
+        "test_median_per_protein_r2": float(test_metrics["median_per_protein_r2"]),
+        "test_negative_r2_fraction": float(test_metrics["negative_r2_fraction"]),
+        "train_mean_per_protein_nmse": float(train_metrics["mean_per_protein_nmse"]),
+        "test_mean_per_protein_nmse": float(test_metrics["mean_per_protein_nmse"]),
+        "test_median_per_protein_nmse": float(test_metrics["median_per_protein_nmse"]),
+        "test_max_per_protein_nmse": float(test_metrics["max_per_protein_nmse"]),
+        "fairness_rounds_completed": 1,
+        "final_train_objective_mean": final_mean_loss,
+        "final_train_objective_std": final_std_loss,
+        "final_train_objective_max": final_max_loss,
+        "elapsed_seconds": float(time.time() - t0),
+    }
+
+    coefficient_rows = build_coefficient_rows(
+        variant["name"],
+        {"coef": np.asarray(model.coef_, dtype=np.float64), "intercept": float(model.intercept_)},
+        standardization,
+        PAIRED_FEATURE_NAMES,
+    )
+    return {
+        "summary_row": summary_row,
+        "per_protein_rows": per_protein_rows,
+        "round_summary_rows": [],
+        "round_history_rows": [],
         "coefficient_rows": coefficient_rows,
     }
 
@@ -799,8 +1183,7 @@ def build_summary_text(
     all_proteins,
     loaded_records,
     skipped,
-    train_records,
-    test_records,
+    split_lookup,
     summary_rows,
 ):
     """Write a short human-readable summary for quick inspection."""
@@ -816,13 +1199,16 @@ def build_summary_text(
     with path.open("w") as handle:
         handle.write(f"{TITLE}\n")
         handle.write(f"{'=' * len(TITLE)}\n\n")
-        handle.write("Model family:      shared linear regression\n")
-        handle.write("Feature policy:    lower-triangle center only, layer 47, 128 channels\n")
+        handle.write("Model family:      shared linear regression and matched linear controls\n")
+        handle.write(
+            "Feature policy:    layer-47 lower-triangle center-only fairness variants "
+            "plus exact 256-d paired-feature residue-baseline controls\n"
+        )
         handle.write("Target policy:     absolute CA distances\n")
         handle.write(f"Train/test split:  protein-level 80/20, seed={RANDOM_STATE}\n")
         handle.write(
-            "Objectives:        mean protein MSE, mean protein NMSE, and iterative "
-            "fairness-reweighted mean protein NMSE\n"
+            "Objectives:        mean protein MSE, mean protein NMSE, iterative "
+            "fairness-reweighted mean protein NMSE, and exact old-baseline controls\n"
         )
         handle.write(
             "Linearity:         every fitted predictor is still y = x @ beta + b; "
@@ -831,14 +1217,18 @@ def build_summary_text(
         )
         handle.write(f"Proteins discovered: {len(all_proteins)}\n")
         handle.write(f"Proteins loaded:     {len(loaded_records)}\n")
-        handle.write(f"Train proteins:      {len(train_records)}\n")
-        handle.write(f"Test proteins:       {len(test_records)}\n")
+        for split_scheme, split_info in split_lookup.items():
+            handle.write(
+                f"Train/test ({split_scheme}): {len(split_info['train'])} / {len(split_info['test'])}\n"
+            )
         handle.write(f"Elapsed seconds:     {elapsed_seconds:.2f}\n\n")
 
         handle.write("Variant summary:\n")
         for row in summary_rows:
             handle.write(
                 f"  {row['variant']}: "
+                f"split={row['split_scheme']}, "
+                f"dim={int(row['feature_dim'])}, "
                 f"test mean per-protein R2={float(row['test_mean_per_protein_r2']):.4f}, "
                 f"test protein-weighted R2={float(row['test_protein_weighted_r2']):.4f}, "
                 f"test mean per-protein NMSE={float(row['test_mean_per_protein_nmse']):.4f}, "
@@ -876,10 +1266,17 @@ def main():
     assign_size_bins(prepared_records, N_SIZE_BINS)
     train_records, test_records = split_global_records(prepared_records)
     standardization = compute_feature_standardization(train_records)
+    residue_exact_records = prepare_residue_exact_records(protein_data)
+    residue_exact_chunk_map = build_residue_exact_chunk_map(residue_exact_records)
+    residue_exact_scope = residue_build_scope_spec("global_shared", residue_exact_records)
+    if residue_exact_scope is None:
+        raise RuntimeError("Failed to build the exact residue baseline split scope.")
 
     print(f"Loaded proteins: {len(prepared_records)}")
-    print(f"Train proteins:  {len(train_records)}")
-    print(f"Test proteins:   {len(test_records)}")
+    print(f"Train proteins (random):  {len(train_records)}")
+    print(f"Test proteins  (random):  {len(test_records)}")
+    print(f"Train proteins (exact):   {len(residue_exact_scope['train_proteins'])}")
+    print(f"Test proteins  (exact):   {len(residue_exact_scope['test_proteins'])}")
 
     summary_rows = []
     per_protein_rows = []
@@ -889,7 +1286,21 @@ def main():
 
     for variant in VARIANTS:
         print(f"\n[Variant] {variant['name']}")
-        result = evaluate_variant(variant, train_records, test_records, standardization)
+        if variant["variant_type"] == "stream_center":
+            result = evaluate_stream_center_variant(
+                variant,
+                train_records,
+                test_records,
+                standardization,
+            )
+        elif variant["variant_type"] == "residue_exact":
+            result = evaluate_residue_exact_variant(
+                variant,
+                residue_exact_scope,
+                residue_exact_chunk_map,
+            )
+        else:
+            raise ValueError(f"Unsupported variant_type: {variant['variant_type']}")
         summary_rows.append(result["summary_row"])
         per_protein_rows.extend(result["per_protein_rows"])
         round_summary_rows.extend(result["round_summary_rows"])
@@ -902,7 +1313,16 @@ def main():
             f"rounds={result['summary_row']['fairness_rounds_completed']}"
         )
 
-    split_rows = build_split_rows(train_records, test_records)
+    split_rows = build_split_rows(
+        [
+            ("random_protein_split", train_records, test_records),
+            (
+                "size_stratified_scope_split",
+                residue_exact_scope["train_proteins"],
+                residue_exact_scope["test_proteins"],
+            ),
+        ]
+    )
 
     write_csv(csv_dir / SUMMARY_CSV_NAME, SUMMARY_FIELDNAMES, summary_rows)
     write_csv(csv_dir / PER_PROTEIN_CSV_NAME, PER_PROTEIN_FIELDNAMES, per_protein_rows)
@@ -928,8 +1348,13 @@ def main():
         all_proteins=all_proteins,
         loaded_records=prepared_records,
         skipped=skipped,
-        train_records=train_records,
-        test_records=test_records,
+        split_lookup={
+            "random_protein_split": {"train": train_records, "test": test_records},
+            "size_stratified_scope_split": {
+                "train": residue_exact_scope["train_proteins"],
+                "test": residue_exact_scope["test_proteins"],
+            },
+        },
         summary_rows=summary_rows,
     )
 

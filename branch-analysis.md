@@ -1400,3 +1400,36 @@ and path conventions as the other diagnostics in this directory.
 - Chose a conservative resource shape (`8` CPUs, `128g`, `12:00:00`) because
   the fairness diagnostic streams all lower-triangle rows and may refit the
   linear model several times in the iterative reweighting variant.
+
+## Session: 2026-03-16 — Add exact residue-baseline controls to the protein-fairness diagnostic
+
+### What changed
+Updated:
+- `scripts/cluster_scripts/diagnostics/diagnostic_protein_fairness_regression.py`
+- `branch-analysis.md`
+
+### Why
+You wanted an apples-to-apples comparison against the old
+`baseline_protein_equal_abs` residue-weighted diagnostic so we can separate
+objective effects from feature/split/solver differences. You also wanted one
+matched control that changes only the addition of a tiny ridge penalty.
+
+### Key design decisions
+- Added two new control variants inside the fairness diagnostic:
+  - `baseline_protein_equal_abs_exact_residue_v2`
+  - `baseline_protein_equal_abs_exact_residue_v2_ridge_1e-8`
+- Kept the existing fairness variants unchanged:
+  - they still use the lower-triangle center-only 128-d feature family
+  - they still use the script's original random protein split
+- Built a second setup path inside the same script for the exact controls:
+  - 256-d paired features `[pb[i,j,:], pb[j,i,:]]`
+  - the old residue-diagnostic size-bin assignment and safe optional
+    stratified split logic
+  - the old protein-equal sample weighting path
+  - the old train-only protein-equal feature scaling path
+- Used `sklearn` `LinearRegression` for the exact no-ridge control and
+  `sklearn` `Ridge(alpha=1e-8)` for the ridge perturbation control so the only
+  intended change between those two variants is the tiny ridge penalty.
+- Expanded the output metadata to record which split scheme, feature dimension,
+  and solver each variant used, so comparisons are explicit in the CSVs rather
+  than inferred from the variant name.
