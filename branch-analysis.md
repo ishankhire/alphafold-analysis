@@ -1,5 +1,34 @@
 # Branch Analysis
 
+## Session: 2026-03-17 — Add fast 128d float32 vs float64 linear-regression check
+
+### What changed
+Added one new standalone diagnostic script:
+- `scripts/cluster_scripts/diagnostics/diagnostic_float_precision_128d_regression.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a very small follow-up script to isolate whether solver precision
+alone changes the layer-47 128d linear-regression result, without the larger
+ridge-stability diagnostic machinery.
+
+### Key design decisions
+- Kept the script narrowly scoped to one feature family:
+  - lower-triangle 128d center features `pb[i,j,:]`
+- Preserved the same core training setup for both runs:
+  - one protein-level 80/20 split with size-bin stratification when feasible
+  - protein-equal training weights
+  - train-only protein-equal feature standardization
+  - plain `LinearRegression`
+- Ran the fit twice with identical data and split:
+  - once with `float32` feature / target arrays
+  - once with `float64` feature / target arrays
+- Limited output to exactly what was needed for the check:
+  - test mean per-protein `R^2` printed to stdout
+  - a tiny CSV with one row per dtype
+
 ## Session: 2026-03-17 — Add ridge-stability diagnostic and Delta sbatch for exact 128d/256d controls
 
 ### What changed
