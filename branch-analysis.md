@@ -1,5 +1,60 @@
 # Branch Analysis
 
+## Session: 2026-03-17 — Add ridge-stability diagnostic and Delta sbatch for exact 128d/256d controls
+
+### What changed
+Added two new Delta diagnostic files:
+- `scripts/cluster_scripts/diagnostics/diagnostic_ridge_stability_regression.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_ridge_stability_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a dedicated follow-up to the protein-fairness exact-control work to
+explain why a tiny ridge penalty (`alpha=1e-8`) can move the 256d paired-feature
+baseline so far from the no-ridge solution, while also testing whether ridge or
+lasso tuning can improve `R^2`.
+
+### Key design decisions
+- Kept the new work in a standalone diagnostic instead of modifying
+  `diagnostic_protein_fairness_regression.py`, so the earlier fairness run
+  remains reproducible and the ridge-stability analysis has its own output
+  family.
+- Preserved the residue-exact baseline setup as the default outer evaluation:
+  - lower-triangle unordered residue pairs only
+  - protein-level 80/20 split with size-bin stratification when feasible
+  - protein-equal training weights
+  - train-only protein-equal feature standardization
+  - absolute-distance targets
+- Added both feature families side by side:
+  - `128d`: center-only `pb[i,j,:]`
+  - `256d`: paired `[pb[i,j,:], pb[j,i,:]]`
+- Ran the main instability comparison with matched linear and ridge fits for
+  both feature sets, then extended that with two intercept ablations:
+  - `fit_intercept=True`
+  - `fit_intercept=False`
+  - centered-target / no-intercept fits
+- Added weighted design-spectrum diagnostics from the standardized train design
+  to expose singular-value structure, effective rank, and near-null directions
+  for each feature set and split family.
+- Added explicit symmetry diagnostics for the 256d design:
+  - weighted train correlations between matched `ij` / `ji` channels
+  - symmetric / antisymmetric coefficient decompositions for every 256d fit
+- Added ridge-vs-linear comparison rows that summarize coefficient cosine
+  similarity, intercept shifts, coefficient-difference norms, and per-protein
+  bias deltas on the test split.
+- Added a small performance-tuning section using inner 5-fold protein-level CV
+  on the outer-train proteins:
+  - ridge alpha sweep across `1e-12` to `100`
+  - lasso alpha sweep across `1e-6` to `3e-2`
+  - alpha chosen by validation mean per-protein `R^2`
+- Added a limited split-family ablation for `ridge(alpha=1e-8)` only, comparing
+  the default stratified outer split against a plain random protein split.
+- Sized the new Delta sbatch above the fairness diagnostic (`8` CPUs, `128g`,
+  `08:00:00`) because this script now performs multiple outer fits plus nested
+  ridge and lasso CV sweeps.
+
 ## Session: 2026-03-16 — Add fixed-threshold all-layer piecewise linear context regression for Delta
 
 ### What changed
