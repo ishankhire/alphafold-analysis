@@ -5,6 +5,7 @@
 ### What changed
 Added one new standalone diagnostic script:
 - `scripts/cluster_scripts/diagnostics/diagnostic_float_precision_128d_regression.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_float_precision_128d_regression.sbatch`
 
 Updated:
 - `branch-analysis.md`
