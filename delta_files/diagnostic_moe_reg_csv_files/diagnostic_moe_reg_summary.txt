@@ -1,0 +1,59 @@
+Diagnostic Mixture-of-Experts Regression - Layer 47
+===================================================
+
+Output CSV dir:   /u/ikhire/diagnostic_moe_reg_csv_files
+Layer:            47
+Representation:   lower triangle only, pb[i,j,:] only
+Gate feature:     log(n_residues)
+Gate family:      1D Gaussian
+Objective:        protein-equal generalized EM
+Train cap:        5,000 pairs per fit/train protein
+EM defaults:      restarts=5, max_iters=50, tol=0.0001
+Elapsed seconds:  7630.1
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Fit proteins:        117
+Validation proteins: 30
+Train proteins:      147
+Test proteins:       37
+
+Ranked by validation mean per-protein R2:
+  shared_global_residual_moe_k3: val=0.9012, test=0.8430, restart=3
+  shared_global_residual_moe_k2: val=0.9001, test=0.8500, restart=4
+  lower_triangle_linear_baseline: val=0.8942, test=0.8616, restart=-1
+  soft_size_gated_linear_moe_k3: val=0.5354, test=-6.0321, restart=1
+  soft_size_gated_linear_moe_k2: val=-1.7205, test=-2.7762, restart=1
+
+Ranked by test mean per-protein R2:
+  lower_triangle_linear_baseline: test=0.8616, val=0.8942, min_mass=1.000
+  shared_global_residual_moe_k2: test=0.8500, val=0.9001, min_mass=4.331
+  shared_global_residual_moe_k3: test=0.8430, val=0.9012, min_mass=3.636
+  soft_size_gated_linear_moe_k2: test=-2.7762, val=-1.7205, min_mass=2.401
+  soft_size_gated_linear_moe_k3: test=-6.0321, val=0.5354, min_mass=1.024
+
+Best variant by test R2: lower_triangle_linear_baseline
+Worst 10 test proteins:
+  7bny_B: R2=0.6330, gate_entropy=-0.0000, top_expert=0
+  7ntn_A: R2=0.7036, gate_entropy=-0.0000, top_expert=0
+  7prd_A: R2=0.7550, gate_entropy=-0.0000, top_expert=0
+  7dkk_A: R2=0.7851, gate_entropy=-0.0000, top_expert=0
+  7lsv_B: R2=0.7922, gate_entropy=-0.0000, top_expert=0
+  7bcj_A: R2=0.7950, gate_entropy=-0.0000, top_expert=0
+  7s02_C: R2=0.8070, gate_entropy=-0.0000, top_expert=0
+  7b28_F: R2=0.8149, gate_entropy=-0.0000, top_expert=0
+  7rg7_A: R2=0.8227, gate_entropy=-0.0000, top_expert=0
+  7ee3_C: R2=0.8247, gate_entropy=-0.0000, top_expert=0
+
+Best 10 test proteins:
+  7fe3_A: R2=0.9369, gate_entropy=-0.0000, top_expert=0
+  7swh_A: R2=0.9351, gate_entropy=-0.0000, top_expert=0
+  7b3a_A: R2=0.9257, gate_entropy=-0.0000, top_expert=0
+  7mwr_A: R2=0.9248, gate_entropy=-0.0000, top_expert=0
+  7p3t_B: R2=0.9218, gate_entropy=-0.0000, top_expert=0
+  7mrs_B: R2=0.9156, gate_entropy=-0.0000, top_expert=0
+  7cjs_B: R2=0.9146, gate_entropy=-0.0000, top_expert=0
+  7t8o_B: R2=0.9144, gate_entropy=-0.0000, top_expert=0
+  7v5y_B: R2=0.9134, gate_entropy=-0.0000, top_expert=0
+  7ffa_A: R2=0.9079, gate_entropy=-0.0000, top_expert=0

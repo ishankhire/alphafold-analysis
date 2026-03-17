@@ -1,0 +1,33 @@
+Diagnostic Sampling/Weighting K-Fold Regression — Layer 47
+==========================================================
+
+Output CSV dir:   /u/ikhire/diagnostic_sampling_weighting_kfold_csv_files
+Layer:            47
+Representation:   lower triangle only, pb[i,j,:] only
+Cross-validation: protein-level 5-fold
+Size bins:        5 rank-based bins for stratified folds
+Train cap:        5,000 pairs per train protein when capped
+Elapsed seconds:  1277.1
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Cached LT rows:      8,354,625
+
+Ranked by fold-mean test mean per-protein R2:
+  cap5k_protein_equal_stratified_kfold: mean=0.8720 +/- 0.0116, pairR2=0.8915
+  cap5k_protein_equal_random_kfold: mean=0.8701 +/- 0.0105, pairR2=0.8911
+  cap5k_pair_weighted_random_kfold: mean=0.8680 +/- 0.0101, pairR2=0.8909
+  all_pairs_protein_equal_stratified_kfold: mean=0.0124 +/- 0.1291, pairR2=0.3759
+  all_pairs_protein_equal_random_kfold: mean=0.0078 +/- 0.0941, pairR2=0.3614
+
+Key ablation deltas (mean test mean per-protein R2):
+  uncapped stratified - uncapped random: +0.0047
+  capped stratified - capped random: +0.0019
+  capped - uncapped within stratified: +0.8595
+  capped - uncapped within random: +0.8623
+  capped pair-weighted - capped protein-equal within random: -0.0021
+
+Capping effect by size bin:
+  Stratified folds: bin0=+1.5751, bin1=+0.7593, bin2=+0.6888, bin3=+0.6772, bin4=+0.5929; strongest=bin0 (+1.5751)
+  Random folds:     bin0=+1.5657, bin1=+0.7660, bin2=+0.6802, bin3=+0.6909, bin4=+0.6039; strongest=bin0 (+1.5657)

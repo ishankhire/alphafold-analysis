@@ -1,0 +1,44 @@
+Diagnostic Feature Variant Regression — Layer 47
+================================================
+
+Output CSV dir:   /u/ikhire/diagnostic_feature_variant_csv_files
+Layer:            47
+Representation:   lower triangle only targets, layer-47 pair channels
+Train/test split: protein-level random 80/20
+Training weights: protein-equal weighted least squares
+Geometry:         train + test MDS / TM-score / triangle analysis
+Elapsed seconds:  1879.8
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Train proteins:      147
+Test proteins:       37
+
+Ranked by test mean per-protein R2:
+  baseline_plus_axial_diag_cap_5k: test_mean_per_protein_R2=0.8995, test_pair_weighted_R2=0.9292, test_tm_score_mean=0.6813
+  baseline_plus_axial_cap_5k: test_mean_per_protein_R2=0.8978, test_pair_weighted_R2=0.9290, test_tm_score_mean=0.6823
+  baseline_cap_1k: test_mean_per_protein_R2=0.8697, test_pair_weighted_R2=0.9147, test_tm_score_mean=0.6541
+  baseline_cap_2p5k: test_mean_per_protein_R2=0.8696, test_pair_weighted_R2=0.9142, test_tm_score_mean=0.6538
+  baseline_cap_5k_predfloor_3p3A: test_mean_per_protein_R2=0.8683, test_pair_weighted_R2=0.9126, test_tm_score_mean=0.6443
+  interaction_raw_n_cap_5k: test_mean_per_protein_R2=0.8668, test_pair_weighted_R2=0.8795, test_tm_score_mean=0.6451
+  baseline_plus_seqsep_eq1_le2_cap_5k: test_mean_per_protein_R2=0.8630, test_pair_weighted_R2=0.9085, test_tm_score_mean=0.6425
+  baseline_cap_5k: test_mean_per_protein_R2=0.8619, test_pair_weighted_R2=0.9107, test_tm_score_mean=0.6445
+  baseline_cap_10k: test_mean_per_protein_R2=0.8314, test_pair_weighted_R2=0.8979, test_tm_score_mean=0.6291
+  baseline_cap_20k: test_mean_per_protein_R2=0.7986, test_pair_weighted_R2=0.8780, test_tm_score_mean=0.5903
+
+Geometry standouts:
+  Best TM-score: baseline_plus_axial_cap_5k (0.6823)
+  Best RMSD: baseline_plus_axial_cap_5k (5.0130)
+
+Smallest available test-bin bias check (bin 0):
+  baseline_cap_5k smallest-bin mean error (pred - true): +0.2612
+  baseline_cap_5k_predfloor_3p3A smallest-bin mean error (pred - true): +0.3601
+  delta from prediction floor: +0.0989
+
+Feature comparisons vs baseline_cap_5k:
+  interaction_raw_n_cap_5k: delta_test_mean_per_protein_R2=+0.0049, delta_test_tm_score_mean=+0.0007
+  baseline_cap_5k_predfloor_3p3A: delta_test_mean_per_protein_R2=+0.0064, delta_test_tm_score_mean=-0.0002
+  baseline_plus_axial_cap_5k: delta_test_mean_per_protein_R2=+0.0359, delta_test_tm_score_mean=+0.0378
+  baseline_plus_axial_diag_cap_5k: delta_test_mean_per_protein_R2=+0.0376, delta_test_tm_score_mean=+0.0368
+  baseline_plus_seqsep_eq1_le2_cap_5k: delta_test_mean_per_protein_R2=+0.0011, delta_test_tm_score_mean=-0.0019

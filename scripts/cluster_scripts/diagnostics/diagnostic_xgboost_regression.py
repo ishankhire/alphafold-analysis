@@ -27,7 +27,7 @@ from diagnostic_tree_regression_common import (
 )
 
 try:
-    from xgboost import XGBRegressor
+    from xgboost import XGBRegressor # type: ignore
 except Exception as exc:  # pragma: no cover - environment specific
     fail_missing_dependency("xgboost", exc)
 

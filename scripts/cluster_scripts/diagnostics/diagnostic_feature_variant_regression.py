@@ -47,6 +47,12 @@ CLUSTER_SCRIPTS_DIR = SCRIPT_DIR.parent
 if str(CLUSTER_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(CLUSTER_SCRIPTS_DIR))
 
+from cluster_regression_helpers import (  # noqa: E402
+    analyze_protein_geometry,
+    extract_ca_coordinates,
+    find_pdb_file,
+    get_pair_block_path,
+)
 from diagnostic_tree_regression_common import (  # noqa: E402
     CSV_DIR,
     FLOAT_EPS,
@@ -56,14 +62,10 @@ from diagnostic_tree_regression_common import (  # noqa: E402
     TEST_SIZE,
     build_seq_sep_diagnostics,
     compute_mae,
-    compute_distance_matrix,
     compute_pair_weights,
     compute_r2,
     compute_rmse,
     deterministic_sample_indices,
-    extract_ca_coordinates,
-    find_pdb_file,
-    get_pair_block_path,
     load_protein_records,
     write_csv,
 )
@@ -304,129 +306,6 @@ SCATTER_FIELDNAMES = [
     "predicted_distance",
     "error_pred_minus_true",
 ]
-
-
-def classical_mds(distance_matrix, n_dims=3):
-    """Classical (Torgerson) MDS for distance-matrix reconstruction."""
-    d_sq = distance_matrix ** 2
-    row_mean = d_sq.mean(axis=1, keepdims=True)
-    col_mean = d_sq.mean(axis=0, keepdims=True)
-    grand_mean = d_sq.mean()
-    gram = -0.5 * (d_sq - row_mean - col_mean + grand_mean)
-
-    eigenvalues, eigenvectors = np.linalg.eigh(gram)
-    order = np.argsort(eigenvalues)[::-1]
-    eigenvalues = eigenvalues[order]
-    eigenvectors = eigenvectors[:, order]
-
-    top_evals = np.maximum(eigenvalues[:n_dims], 0.0)
-    coords = eigenvectors[:, :n_dims] * np.sqrt(top_evals)
-    return coords, eigenvalues
-
-
-def superimpose_structures(fixed_coords, moving_coords):
-    """Kabsch alignment for RMSD / TM-score geometry summaries."""
-    fixed_center = fixed_coords.mean(axis=0)
-    moving_center = moving_coords.mean(axis=0)
-    fixed_centered = fixed_coords - fixed_center
-    moving_centered = moving_coords - moving_center
-
-    covariance = moving_centered.T @ fixed_centered
-    u_mat, _, vt_mat = np.linalg.svd(covariance)
-    det_sign = np.linalg.det(vt_mat.T @ u_mat.T)
-    sign_matrix = np.diag([1.0, 1.0, np.sign(det_sign)])
-    rotation = vt_mat.T @ sign_matrix @ u_mat.T
-
-    transformed = (moving_centered @ rotation.T) + fixed_center
-    diff = fixed_coords - transformed
-    rmsd = np.sqrt(np.mean(np.sum(diff ** 2, axis=1)))
-    return transformed, rmsd
-
-
-def compute_tm_score_local(fixed_coords, transformed_coords, length_target):
-    """Compute TM-score after superposition."""
-    d0 = 1.24 * (max(length_target, 16) - 15) ** (1.0 / 3.0) - 1.8
-    d0 = max(d0, 0.5)
-    distances = np.sqrt(np.sum((fixed_coords - transformed_coords) ** 2, axis=1))
-    scores = 1.0 / (1.0 + (distances / d0) ** 2)
-    return float(np.sum(scores) / length_target)
-
-
-def compute_triangle_violations(pred_dist):
-    """Compute triangle-inequality violations using shortest two-hop paths."""
-    n_residues = pred_dist.shape[0]
-    min_indirect = np.full((n_residues, n_residues), np.inf)
-    for jdx in range(n_residues):
-        candidate = pred_dist[:, jdx:jdx + 1] + pred_dist[jdx:jdx + 1, :]
-        min_indirect = np.minimum(min_indirect, candidate)
-    np.fill_diagonal(min_indirect, 0.0)
-
-    mask = pred_dist > min_indirect
-    np.fill_diagonal(mask, False)
-    n_violations = int(mask.sum())
-    total_pairs = n_residues * (n_residues - 1)
-    violation_fraction = float(n_violations / total_pairs) if total_pairs > 0 else 0.0
-
-    if n_violations > 0:
-        violations = pred_dist[mask] - min_indirect[mask]
-        mean_violation = float(np.mean(violations))
-        max_violation = float(np.max(violations))
-    else:
-        mean_violation = 0.0
-        max_violation = 0.0
-
-    return violation_fraction, mean_violation, max_violation
-
-
-def analyze_protein_geometry_local(n_residues, true_coords, pair_i, pair_j, y_pred):
-    """Run MDS reconstruction + geometry diagnostics for one protein."""
-    pred_dist = np.zeros((n_residues, n_residues), dtype=np.float64)
-    pred_dist[pair_i, pair_j] = y_pred
-    pred_dist[pair_j, pair_i] = y_pred
-
-    n_negative_preds = int(np.sum(y_pred < 0))
-    pred_dist = np.maximum(pred_dist, 0.0)
-
-    mds_coords, eigenvalues = classical_mds(pred_dist, n_dims=3)
-    positive_mask = eigenvalues > 0
-    positive_sum = np.sum(eigenvalues[positive_mask]) if np.any(positive_mask) else 1.0
-    frac_top3 = float(np.sum(np.maximum(eigenvalues[:3], 0.0)) / positive_sum)
-    n_negative_evals = int(np.sum(eigenvalues < 0))
-    negative_fraction = (
-        float(abs(np.sum(eigenvalues[eigenvalues < 0])) / positive_sum)
-        if n_negative_evals > 0
-        else 0.0
-    )
-
-    reflected_coords = mds_coords.copy()
-    reflected_coords[:, 2] *= -1
-    transformed_orig, rmsd_orig = superimpose_structures(true_coords, mds_coords)
-    transformed_flip, rmsd_flip = superimpose_structures(true_coords, reflected_coords)
-    if rmsd_flip < rmsd_orig:
-        transformed, rmsd = transformed_flip, rmsd_flip
-    else:
-        transformed, rmsd = transformed_orig, rmsd_orig
-
-    tm_score = compute_tm_score_local(true_coords, transformed, n_residues)
-    reconstructed_dist = compute_distance_matrix(transformed)
-    triu_i, triu_j = np.triu_indices(n_residues, k=1)
-    d_pred = pred_dist[triu_i, triu_j]
-    d_mds = reconstructed_dist[triu_i, triu_j]
-    stress = float(np.sqrt(np.sum((d_pred - d_mds) ** 2) / np.sum(d_pred ** 2)))
-
-    violation_fraction, mean_violation, max_violation = compute_triangle_violations(pred_dist)
-    return {
-        "rmsd": float(rmsd),
-        "tm_score": float(tm_score),
-        "frac_top3_eigenvalues": frac_top3,
-        "n_negative_eigenvalues": n_negative_evals,
-        "neg_eigenvalue_fraction": negative_fraction,
-        "n_negative_predictions": n_negative_preds,
-        "stress": stress,
-        "triangle_violation_fraction": violation_fraction,
-        "triangle_mean_violation": mean_violation,
-        "triangle_max_violation": max_violation,
-    }
 
 
 def assign_rank_size_bins(records, n_bins):
@@ -752,11 +631,6 @@ def collect_geometry_rows(variant_name, split_name, split_records, y_true, y_pre
             rows.append(make_failed_geometry_row(variant_name, split_name, record, per_protein_r2))
         start = end
     return rows
-
-
-def analyze_protein_geometry(n_residues, true_coords, pair_i, pair_j, y_pred):
-    """Local alias kept so the rest of the script reads naturally."""
-    return analyze_protein_geometry_local(n_residues, true_coords, pair_i, pair_j, y_pred)
 
 
 def summarize_geometry_rows(geometry_rows):

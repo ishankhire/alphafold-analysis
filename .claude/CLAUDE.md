@@ -8,6 +8,15 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 **Dependencies:** numpy, scipy, matplotlib, biopython, scikit-learn (no package manager — `pip install` manually).
 
+## Python Environment
+
+- A local project virtual environment exists at `./.venv`.
+- Use it for local Python scripts, tests, and import/parity checks that need `scikit-learn`, `biopython`, or other analysis dependencies:
+  ```bash
+  source .venv/bin/activate
+  ```
+- Many cluster sbatch files currently activate `~/protein_venv`. Treat that as the cluster/runtime convention, but for local validation in this repo prefer `./.venv` over the system Python.
+
 ## Key Directories
 
 - `lib/` — shared library: alignment utilities (`build_alignment`, `validate_alignment`) and structure utilities (`extract_residue_coordinates`, `compute_distance_matrix`, etc.)
@@ -75,6 +84,19 @@ from lib.structure import extract_residue_coordinates, compute_distance_matrix, 
 **Visualizations:** All plots saved to `proteins/<id>/visualizations/` or `proteins/multi_protein_results/visualizations/`.
 
 **Path resolution:** All scripts compute paths via `ROOT_DIR = os.path.dirname(...)` so they work regardless of working directory.
+
+**Shared cluster helper:** A reusable helper module now lives at `scripts/cluster_scripts/cluster_regression_helpers.py`.
+
+- Use this helper for future cluster scripts when you need stable shared utilities such as:
+  - `find_pdb_file`
+  - `get_pair_block_path`
+  - `discover_proteins`
+  - `extract_ca_coordinates`
+  - `compute_distance_matrix`
+  - `build_sorted_aa_pair_indices`
+  - geometry helpers such as `classical_mds`, `compute_tm_score`, and `analyze_protein_geometry`
+- Do not feel obligated to retrofit older scripts just to use this helper; it is intended mainly to reduce duplication in new cluster work.
+- For scripts under `scripts/cluster_scripts/diagnostics/`, add the parent `scripts/cluster_scripts` directory to `sys.path` before importing `cluster_regression_helpers`.
 
 ## Script Configuration Policy
 

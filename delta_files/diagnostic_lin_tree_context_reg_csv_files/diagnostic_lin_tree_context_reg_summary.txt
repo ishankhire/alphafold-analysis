@@ -1,0 +1,92 @@
+Diagnostic Context Linear Tree Regression — Layer 47
+================================================================
+
+Pair blocks root:   /work/hdd/bekh/thayes/openfold_reps
+PDB root:           /work/hdd/bekh/thayes/openfold_reps_outputs_sm
+Output CSV dir:     /u/ikhire/diagnostic_lin_tree_context_reg_csv_files
+Layer:              47
+Representation:     one lower-triangle row per unordered pair
+Training weighting: protein-equal (each protein sums to 1.0)
+Model family:       linear-tree only
+Tree policy:        max_depth=2, split only on raw n_residues, weighted min_split=20, weighted min_leaf=10
+Threshold policy:   protein_aware_midpoints_capped_10 (10 candidates per node)
+Split selection:    greedy weighted training loss only
+Leakage policy:     no validation/test set used for split selection
+Threshold diagnostics: candidate test metrics are logged only for analysis
+Scaling policy:     z-score all non-n_residues features
+Scatter sampling:   test-only, protein-equal, up to 100,000 rows per variant
+Train/test split:   protein-level 80/20, seed=42
+
+Proteins discovered: 184
+Proteins loaded:     184
+Proteins skipped:    0
+Train proteins:      147
+Test proteins:       37
+
+Variant comparison:
+  Variant                                       FeatDim  Splits  Leaves  TestMeanPP_R2  TestTM     Stress   TriViol
+  lower_triangle_center_only_linear_tree                    129       3       4         0.8498    0.6456    0.1512  0.829321
+  lower_triangle_plus_axial_context_linear_tree             641       3       4         0.8899    0.6775    0.1296  0.744855
+
+Best variant by test mean per-protein R2: lower_triangle_plus_axial_context_linear_tree (0.8899)
+
+Top 10 worst test proteins for lower_triangle_center_only_linear_tree:
+  7bny_B: R2=0.6276, n_res=152, mean(pred-true)=-0.9149
+  7rg7_A: R2=0.7453, n_res=306, mean(pred-true)=+3.0788
+  7prd_A: R2=0.7645, n_res=125, mean(pred-true)=+2.2228
+  7ntn_A: R2=0.7815, n_res=81, mean(pred-true)=-0.2620
+  7ffa_A: R2=0.7895, n_res=431, mean(pred-true)=-1.8813
+  7e2v_A: R2=0.7900, n_res=550, mean(pred-true)=-0.1877
+  7bcj_A: R2=0.7993, n_res=147, mean(pred-true)=+1.5912
+  7lsv_B: R2=0.7995, n_res=178, mean(pred-true)=+1.3065
+  7dkk_A: R2=0.8246, n_res=89, mean(pred-true)=+0.5700
+  7dtp_A: R2=0.8259, n_res=477, mean(pred-true)=+1.7359
+Top 10 best test proteins for lower_triangle_center_only_linear_tree:
+  7mwr_A: R2=0.9466, n_res=204, mean(pred-true)=-0.2217
+  7t8o_B: R2=0.9356, n_res=229, mean(pred-true)=-0.2751
+  7kuw_A: R2=0.9354, n_res=62, mean(pred-true)=-0.4645
+  7v5y_B: R2=0.9353, n_res=85, mean(pred-true)=-0.3633
+  7mrs_B: R2=0.9291, n_res=188, mean(pred-true)=+0.2853
+  7cjs_B: R2=0.9238, n_res=254, mean(pred-true)=-0.2226
+  7b3a_A: R2=0.9095, n_res=280, mean(pred-true)=+0.2615
+  7thh_A: R2=0.9061, n_res=131, mean(pred-true)=+0.0139
+  7p3t_B: R2=0.9008, n_res=302, mean(pred-true)=-0.1384
+  7kik_A: R2=0.8953, n_res=137, mean(pred-true)=+0.6310
+  Test geometry summary: TM=0.6456, RMSD=5.7381, Stress=0.1512, TriViol=0.829321, NegEigFrac=0.400200
+  Selected root split: meanPP_R2=0.7855, medianPP_R2=0.7913, negFrac=0.0000, TM=0.5929, Stress=0.1863
+
+Top 10 worst test proteins for lower_triangle_plus_axial_context_linear_tree:
+  7bny_B: R2=0.6975, n_res=152, mean(pred-true)=-0.0200
+  7rg7_A: R2=0.8024, n_res=306, mean(pred-true)=+1.7152
+  7lsv_B: R2=0.8257, n_res=178, mean(pred-true)=+1.9004
+  7e2v_A: R2=0.8339, n_res=550, mean(pred-true)=-0.1109
+  7au7_A: R2=0.8360, n_res=263, mean(pred-true)=-1.6817
+  7bcj_A: R2=0.8498, n_res=147, mean(pred-true)=+1.4234
+  7prd_A: R2=0.8500, n_res=125, mean(pred-true)=+1.4645
+  7ffa_A: R2=0.8528, n_res=431, mean(pred-true)=-1.2894
+  7fe3_A: R2=0.8623, n_res=678, mean(pred-true)=+1.5706
+  7o49_F: R2=0.8632, n_res=650, mean(pred-true)=+1.1817
+Top 10 best test proteins for lower_triangle_plus_axial_context_linear_tree:
+  7mwr_A: R2=0.9620, n_res=204, mean(pred-true)=-0.1832
+  7t8o_B: R2=0.9574, n_res=229, mean(pred-true)=+0.0731
+  7kuw_A: R2=0.9546, n_res=62, mean(pred-true)=-0.6216
+  7v5y_B: R2=0.9531, n_res=85, mean(pred-true)=-0.0833
+  7b3a_A: R2=0.9434, n_res=280, mean(pred-true)=+0.0657
+  7mrs_B: R2=0.9425, n_res=188, mean(pred-true)=+0.6899
+  7p3t_B: R2=0.9384, n_res=302, mean(pred-true)=-0.4194
+  7b29_A: R2=0.9299, n_res=162, mean(pred-true)=+0.3622
+  7cjs_B: R2=0.9294, n_res=254, mean(pred-true)=+0.7817
+  7ee3_C: R2=0.9246, n_res=124, mean(pred-true)=+0.0570
+  Test geometry summary: TM=0.6775, RMSD=5.3571, Stress=0.1296, TriViol=0.744855, NegEigFrac=0.315236
+  Selected root split: meanPP_R2=0.8002, medianPP_R2=0.8200, negFrac=0.0000, TM=0.5879, Stress=0.1884
+
+Geometry summary by variant/split:
+  lower_triangle_center_only_linear_tree (test): TM=0.6456, RMSD=5.7381, Stress=0.1512, TriViol=0.829321, NegEigFrac=0.400200
+  lower_triangle_center_only_linear_tree (train): TM=0.6785, RMSD=5.5963, Stress=0.1454, TriViol=0.875784, NegEigFrac=0.426328
+  lower_triangle_plus_axial_context_linear_tree (test): TM=0.6775, RMSD=5.3571, Stress=0.1296, TriViol=0.744855, NegEigFrac=0.315236
+  lower_triangle_plus_axial_context_linear_tree (train): TM=0.7098, RMSD=5.2273, Stress=0.1226, TriViol=0.787306, NegEigFrac=0.343169
+
+Note: diagnostic_lin_tree_context_reg_geometry_metrics.csv includes both train and test proteins with per-protein predictive and geometry diagnostics.
+Note: diagnostic_lin_tree_context_reg_leaf_weight_diagnostics.csv reports raw row counts and protein-equivalent training mass for every node and leaf.
+Note: diagnostic_lin_tree_context_reg_threshold_search.csv records every tested threshold with training losses plus diagnostic test-set mean per-protein R2 for the relevant scope.
+Note: diagnostic_lin_tree_context_reg_root_split_geometry_metrics.csv stores per-protein test geometry metrics for the selected root split.

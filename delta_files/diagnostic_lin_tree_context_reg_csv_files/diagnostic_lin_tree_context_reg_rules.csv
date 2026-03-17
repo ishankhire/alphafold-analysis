@@ -1,0 +1,7 @@
+variant,node_id,node_path,depth,split_feature_index,split_feature_name,threshold,left_child_node_id,right_child_node_id,n_samples,loss,path_rule,split_rule
+lower_triangle_center_only_linear_tree,0,,0,128,n_residues,371.500000,1,2,6786240,46.226630,ROOT,n_residues <= 371.500000 -> 1; > 371.500000 -> 2
+lower_triangle_center_only_linear_tree,1,L,1,128,n_residues,255.500000,3,4,2509606,19.957250,n_residues <= 371.500000,n_residues <= 255.500000 -> 3; > 255.500000 -> 4
+lower_triangle_center_only_linear_tree,2,R,1,128,n_residues,503.000000,5,6,4276634,54.776470,n_residues > 371.500000,n_residues <= 503.000000 -> 5; > 503.000000 -> 6
+lower_triangle_plus_axial_context_linear_tree,0,,0,640,n_residues,371.500000,1,2,6786240,44.759230,ROOT,n_residues <= 371.500000 -> 1; > 371.500000 -> 2
+lower_triangle_plus_axial_context_linear_tree,1,L,1,640,n_residues,232.500000,3,4,2509606,16.042130,n_residues <= 371.500000,n_residues <= 232.500000 -> 3; > 232.500000 -> 4
+lower_triangle_plus_axial_context_linear_tree,2,R,1,640,n_residues,503.000000,5,6,4276634,42.473230,n_residues > 371.500000,n_residues <= 503.000000 -> 5; > 503.000000 -> 6
