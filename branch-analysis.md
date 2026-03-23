@@ -1,5 +1,32 @@
 # Branch Analysis
 
+## Session: 2026-03-23 — Add repo-wide float64 reminder for dense regression diagnostics
+
+### What changed
+Updated local agent docs:
+- `AGENTS.md`
+- `.claude/CLAUDE.md`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+Recent precision diagnostics showed that large dense least-squares fits on
+pair-block features can behave pathologically in `float32`, while `float64`
+materially improves stability and downstream `R^2`.
+
+### Key design decisions
+- Added the reminder in both local instruction files so the precision lesson is
+  easy to find regardless of which agent is editing the repo.
+- Scoped the note to the operations where it matters most here:
+  - dense linear regression
+  - least-squares
+  - PCA / SVD
+  - related matrix-based diagnostics on pair-block features
+- Kept `float32` available as an explicit opt-in for:
+  - intentional precision-comparison experiments
+  - memory/performance tradeoff studies
+
 ## Session: 2026-03-23 — Move local regression inputs to sibling protein_data root
 
 ### What changed

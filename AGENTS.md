@@ -17,6 +17,12 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
   ```
 - Many cluster sbatch files currently activate `~/protein_venv`. Treat that as the cluster/runtime convention, but for local validation in this repo prefer `./.venv` over the system Python.
 
+## Numerical Precision
+
+- For dense linear regression, least-squares, PCA, SVD, and related matrix-based diagnostics on pair-block features, default to converting materialized feature matrices and regression targets to `float64` before scaling and fitting.
+- Treat `float32` as opt-in for this repo: use it only when the experiment is explicitly about float precision or when memory/performance tradeoffs are the point.
+- Reason: recent large all-row diagnostics in this repo showed that `float32` dense least-squares can become numerically pathological, while `float64` materially improves stability and performance.
+
 ## Key Directories
 
 - `lib/` — shared library: alignment utilities (`build_alignment`, `validate_alignment`) and structure utilities (`extract_residue_coordinates`, `compute_distance_matrix`, etc.)
