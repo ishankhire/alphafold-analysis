@@ -1,5 +1,48 @@
 # Branch Analysis
 
+## Session: 2026-03-23 — Move local regression inputs to sibling protein_data root
+
+### What changed
+Updated local agent docs:
+- `AGENTS.md`
+- `.claude/CLAUDE.md`
+
+Updated local multi-protein regression scripts:
+- `scripts/multi_protein/regression/aa_augmented_regression.py`
+- `scripts/multi_protein/regression/benchmark_kfold_mds_runtime.py`
+- `scripts/multi_protein/regression/kfold_mds_regression.py`
+- `scripts/multi_protein/regression/linear_regression_sequential_distance.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type.py`
+- `scripts/multi_protein/regression/logistic_regression_pair_type_with_diagonal.py`
+- `scripts/multi_protein/regression/mds_reconstruction.py`
+- `scripts/multi_protein/regression/multi_protein_regression.py`
+- `scripts/multi_protein/regression/multi_protein_regression_with_diagonal.py`
+- `scripts/multi_protein/regression/neighbor_context_pair_regression.py`
+- `scripts/multi_protein/regression/regression_variants_predicted.py`
+- `scripts/multi_protein/regression/symmetric_antisymmetric_pair_regression.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+The per-protein pair representations and predicted PDB inputs were moved out of
+the repo workspace from `protein/proteins/` into the sibling directory
+`../protein_data/`, but the local regression scripts were still defaulting to
+the old input root.
+
+### Key design decisions
+- Split local input and output roots in every affected local regression script:
+  - inputs now come from `PROJECT_ROOT.parent / "protein_data"`
+  - aggregated outputs stay in `PROJECT_ROOT / "proteins" / "multi_protein_results"`
+- Left `lib.data_loading` unchanged because its per-protein subdirectory
+  expectations still match the new layout inside each `../protein_data/<id>/`
+  directory.
+- Preserved per-protein CSV writes relative to each discovered `protein_dir`, so
+  those outputs continue to land beside the moved protein data.
+- Updated the repo guidance docs so future agents know that local per-protein
+  inputs live outside the workspace and are reached from the repo root via
+  `../protein_data/`.
+
 ## Session: 2026-03-23 — Add local analysis script for precision / row-cap / PCA diagnostic
 
 ### What changed

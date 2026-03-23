@@ -14,6 +14,8 @@ geometry validation pass after the benchmark completes.
 
 Run this script with the repo venv:
     ./.venv/bin/python scripts/multi_protein/regression/benchmark_kfold_mds_runtime.py
+
+Local protein inputs are discovered from the sibling ../protein_data directory.
 """
 
 import argparse
@@ -50,8 +52,8 @@ N_CHANNELS = 128
 FEATURE_DIM = 2 * N_CHANNELS
 RANDOM_STATE = 42
 
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_ROOT = PROTEINS_DIR / "multi_protein_results"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
 
 VALID_MODES = ("baseline", "layer_cache")
 REGRESSION_METRIC_KEYS = ("r2_train", "r2_test", "mae_test", "rmse_test")
@@ -417,7 +419,7 @@ def run_geometry_batch(records_with_predictions, n_jobs, analyze_fn):
 
 
 def load_protein_data(max_proteins):
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     all_proteins = discover_proteins(proteins_dir)
     print(f"Discovered {len(all_proteins)} protein directories.")
     if max_proteins is not None:

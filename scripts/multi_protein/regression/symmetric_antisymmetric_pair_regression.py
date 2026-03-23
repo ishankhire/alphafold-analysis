@@ -10,7 +10,7 @@ AlphaFold pair representations on a fixed 4-protein subset:
 3. Antisymmetric-only: A = 0.5 * (pb[i,j,:] - pb[j,i,:])
 4. Symmetric+Antisymmetric: [S, A]
 
-Outputs (inside proteins/multi_protein_results/symmetric_antisymmetric_pair_features/):
+Outputs (inside repo proteins/multi_protein_results/symmetric_antisymmetric_pair_features/):
     csv_files/layer_r2_comparison.csv
     csv_files/selected_protein_pair_counts.csv
     csv_files/layer_regression_coefficients_comparison.csv
@@ -91,8 +91,9 @@ MODEL_COLORS = {
 # ===========================================================================
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "symmetric_antisymmetric_pair_features"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
+OUTPUT_DIR = OUTPUT_ROOT / "symmetric_antisymmetric_pair_features"
 
 
 # ===========================================================================
@@ -175,14 +176,14 @@ def fit_probe(X_all, idx_train, idx_test, y_train, y_test):
 # ===========================================================================
 
 def main():
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     output_dir = OUTPUT_DIR.resolve()
     csv_dir = output_dir / "csv_files"
     vis_dir = output_dir / "visualizations"
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Selected proteins:  {', '.join(SELECTED_PROTEIN_IDS)}")
     print(f"Layers:             {N_LAYERS}")

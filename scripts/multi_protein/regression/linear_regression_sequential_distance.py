@@ -18,7 +18,7 @@ All pairs are from the upper triangle (i < j), so j - i is always positive.
 Feature vector (384-dim):
     [cross_pair (128)] + [pb[i,i,:] (128)] + [pb[j,j,:] (128)]
 
-Outputs (inside proteins/multi_protein_results/linear_regression_sequential_distance/):
+Outputs (inside repo proteins/multi_protein_results/linear_regression_sequential_distance/):
     csv_files/layer_metrics.csv
     visualizations/layer_r2.png
     visualizations/scatter_layer47.png
@@ -60,8 +60,9 @@ MAX_PROTEINS = 4
 # ===========================================================================
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "linear_regression_sequential_distance"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
+OUTPUT_DIR = OUTPUT_ROOT / "linear_regression_sequential_distance"
 
 
 # ===========================================================================
@@ -94,7 +95,7 @@ def build_sequential_distance_targets(n_residues):
 # ===========================================================================
 
 def main():
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     output_dir = OUTPUT_DIR.resolve()
 
     csv_dir = output_dir / "csv_files"
@@ -102,7 +103,7 @@ def main():
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {N_LAYERS}")
     print(f"Feature dim:        {FEATURE_DIM} (128 cross-pair + 256 diagonal)")

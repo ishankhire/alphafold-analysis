@@ -17,7 +17,7 @@ distances beyond what the pair representation already encodes.
 Dependencies (all pip-installable):
     pip install numpy scipy matplotlib scikit-learn biopython
 
-Outputs (inside proteins/multi_protein_results/aa_augmented_regression/):
+Outputs (inside repo proteins/multi_protein_results/aa_augmented_regression/):
     csv_files/layer_regression_r2_comparison.csv
     csv_files/layer_regression_coefficients_augmented.csv
     visualizations/layer_r2_comparison.png
@@ -96,15 +96,18 @@ AUGMENTED_FEATURE_DIM = FEATURE_DIM + AA_FEATURE_DIM  # 296
 #   Level 4: (parent of __file__ itself, since __file__ is a file not a dir)
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
-# PROTEINS_DIR: Path — contains all protein subdirectories (e.g. 7b3a_A/, 6tf4_A/)
-# and the multi_protein_results/ folder for cross-protein outputs.
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
+# DATA_ROOT: Path — contains all local protein subdirectories (e.g. 7b3a_A/, 6tf4_A/)
+# under the sibling ../protein_data/ directory.
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+
+# OUTPUT_ROOT: Path — aggregated multi-protein outputs stay under the repo workspace.
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
 
 # OUTPUT_DIR: Path — where all outputs (CSVs, plots) are saved for this script.
 # Stored under multi_protein_results/ because this analysis pools data across proteins.
 # Uses a dedicated "aa_augmented_regression" subfolder to avoid conflicting with
 # other multi-protein regression outputs.
-OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "aa_augmented_regression"
+OUTPUT_DIR = OUTPUT_ROOT / "aa_augmented_regression"
 
 
 # ===========================================================================
@@ -205,7 +208,7 @@ def main():
       Phase 6: Print a console summary of the run.
     """
     # Resolve to absolute paths for clearer logging and deterministic path handling
-    proteins_dir = PROTEINS_DIR.resolve()  # Path: absolute path to proteins/
+    proteins_dir = DATA_ROOT.resolve()     # Path: absolute path to ../protein_data/
     output_dir = OUTPUT_DIR.resolve()      # Path: absolute path to output directory
     n_layers = N_LAYERS                    # int: 48 — local alias for the layer count constant
 
@@ -217,7 +220,7 @@ def main():
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {n_layers}")
     print(f"Feature dims:       baseline={FEATURE_DIM}, augmented={AUGMENTED_FEATURE_DIM}")
@@ -234,7 +237,7 @@ def main():
     # loading the actual pair block data until Phase 3 (one layer at a time to manage
     # memory, since each pair block is shape (R, R, 128) and can be large).
 
-    # all_proteins: list of (str, Path) — e.g. [("6tf4_A", Path("proteins/6tf4_A")), ...]
+    # all_proteins: list of (str, Path) — e.g. [("6tf4_A", Path("../protein_data/6tf4_A")), ...]
     all_proteins = discover_proteins(proteins_dir)
     print(f"\nDiscovered {len(all_proteins)} protein directories.")
 
@@ -330,7 +333,7 @@ def main():
             # aa_features is the 40-dim one-hot encoding appended in the augmented model.
             protein_data.append({
                 "protein_id": protein_id,      # str: e.g. "7b3a_A"
-                "protein_dir": protein_dir,    # Path: e.g. proteins/7b3a_A/
+                "protein_dir": protein_dir,    # Path: e.g. ../protein_data/7b3a_A/
                 "n_residues": n_ca,            # int: number of residues in this protein
                 "pb_i": struct_i,              # np.ndarray of int, shape (n_pairs,): row indices for all pairs
                 "pb_j": struct_j,              # np.ndarray of int, shape (n_pairs,): col indices for all pairs

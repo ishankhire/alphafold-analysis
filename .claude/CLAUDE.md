@@ -20,17 +20,18 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 ## Key Directories
 
 - `lib/` — shared library: alignment utilities (`build_alignment`, `validate_alignment`) and structure utilities (`extract_residue_coordinates`, `compute_distance_matrix`, etc.)
-- `proteins/<id>_A/` — per-protein data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
-- `proteins/multi_protein_results/` — aggregated multi-protein outputs (created at runtime)
+- `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
+- `proteins/multi_protein_results/` — aggregated multi-protein outputs created inside the repo at runtime
 - `proteins/llm_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
 - `scripts/multi_protein/` — local/dev analysis scripts and regression variants
 
 ## Data Essentials
 
-- **Pair blocks:** `proteins/<id>/pair_blocks/<id>_pair_block_{0..47}.npy` — shape `(R, R, 128)` where R = entity sequence length, 128 channels
-- **PDB structures:** `proteins/<id>/predicted_pdb/` — AlphaFold predicted structures; CA coordinates extracted inline by regression scripts
-- **Outputs:** CSVs go to `csv_files/`, plots go to `visualizations/` (per-protein or `multi_protein_results/`)
+- **Local data root:** when working from the `protein` workspace, the moved per-protein inputs live in the sibling directory `../protein_data/`
+- **Pair blocks:** `../protein_data/<id>/pair_blocks/<id>_pair_block_{0..47}.npy` — shape `(R, R, 128)` where R = entity sequence length, 128 channels
+- **PDB structures:** `../protein_data/<id>/predicted_pdb/` — AlphaFold predicted structures; CA coordinates extracted inline by regression scripts
+- **Outputs:** per-protein CSVs and plots still live beside each protein under `../protein_data/<id>/`, while aggregated multi-protein outputs stay under `proteins/multi_protein_results/`
 
 ## Cluster Setup
 

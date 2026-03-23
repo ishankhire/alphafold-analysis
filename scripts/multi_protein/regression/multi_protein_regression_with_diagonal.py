@@ -3,9 +3,9 @@
 multi_protein_regression_with_diagonal.py
 ==========================================
 Local regression script for the project repository. Runs on your machine
-against the standard project directory layout:
-    proteins/<id>/predicted_pdb/  — AlphaFold predicted PDB files
-    proteins/<id>/pair_blocks/    — pair representation .npy files
+against the local workspace layout:
+    ../protein_data/<id>/predicted_pdb/  — AlphaFold predicted PDB files
+    ../protein_data/<id>/pair_blocks/    — pair representation .npy files
 
 What it does:
   1. Extracts CA coordinates from AlphaFold predicted PDB files
@@ -26,7 +26,7 @@ Outputs:
         csv_files/predicted_residue_coordinates.csv
         csv_files/predicted_residue_distances.csv
 
-    Multi-protein summary (inside proteins/multi_protein_results/regression_with_diagonal/):
+    Multi-protein summary (inside repo proteins/multi_protein_results/regression_with_diagonal/):
         csv_files/layer_regression_r2_predicted.csv
         csv_files/layer_regression_coefficients_predicted.csv
         csv_files/predicted_distances_last_layer_predicted.csv
@@ -70,8 +70,9 @@ RANDOM_STATE = 42
 # ===========================================================================
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "regression_with_diagonal"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
+OUTPUT_DIR = OUTPUT_ROOT / "regression_with_diagonal"
 
 
 # ===========================================================================
@@ -110,7 +111,7 @@ def save_distance_csv(path, dist_matrix, residue_data):
 # ===========================================================================
 
 def main():
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     output_dir = OUTPUT_DIR.resolve()
     n_layers = N_LAYERS
 
@@ -119,7 +120,7 @@ def main():
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {n_layers}")
     print(f"Feature dim:        {FEATURE_DIM} (cross-pair 256 + diagonal 256)")
@@ -127,7 +128,7 @@ def main():
     # ------------------------------------------------------------------
     # Phase 1: Load data for each protein
     # ------------------------------------------------------------------
-    # FLAG: discover_proteins scans PROTEINS_DIR for subdirectories.
+    # FLAG: discover_proteins scans the local protein data root for subdirectories.
     # If the directory layout changes, update discover_proteins().
     all_proteins = discover_proteins(proteins_dir)
     print(f"\nDiscovered {len(all_proteins)} protein directories.")

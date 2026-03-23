@@ -15,14 +15,14 @@ For each of the 48 layers:
   - Standardization: StandardScaler fit on training rows only
   - Models: LinearRegression, Ridge(alpha=1.0), Lasso(alpha=1.0)
 
-Outputs (inside output_dir/regression_variants/):
+Outputs (inside output_dir/):
     csv_files/layer_r2_variants.csv
     visualizations/layer_r2_comparison.png
     visualizations/pred_vs_actual_comparison_layer47.png
 
 Usage:
     python regression_variants_predicted.py
-    python regression_variants_predicted.py --proteins_dir /data/proteins --output_dir /data/results
+    python regression_variants_predicted.py --proteins_dir ../protein_data --output_dir proteins/multi_protein_results/regression_variants
 """
 
 import argparse
@@ -41,6 +41,10 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score
+
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from lib.data_loading import discover_proteins, find_pdb_file, get_pair_block_path
@@ -81,16 +85,15 @@ MODEL_COLORS = {
 # ===========================================================================
 
 def parse_args():
-    script_dir = Path(__file__).parent
-    default_proteins = script_dir.parent.parent.parent / "proteins"
-    default_output = default_proteins / "multi_protein_results" / "regression_variants"
+    default_proteins = DATA_ROOT
+    default_output = OUTPUT_ROOT / "regression_variants"
 
     parser = argparse.ArgumentParser(
         description="Compare Linear, Ridge, and Lasso regression probes across 48 layers."
     )
     parser.add_argument(
         "--proteins_dir", type=Path, default=default_proteins,
-        help="Root directory containing protein subdirectories (default: %(default)s)",
+        help="Root directory containing per-protein inputs (default: %(default)s)",
     )
     parser.add_argument(
         "--output_dir", type=Path, default=default_output,
@@ -109,7 +112,7 @@ def main():
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {N_LAYERS}")
     print(f"Models:             {', '.join(MODEL_LABELS.values())}")

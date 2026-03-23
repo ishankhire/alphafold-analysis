@@ -10,7 +10,7 @@ structures to actual PDB coordinates via TM-score and RMSD.
 This goes beyond R² by testing whether predicted distances are *geometrically
 coherent* — i.e., do they correspond to a realizable 3D protein structure?
 
-Outputs (inside proteins/multi_protein_results/mds_reconstruction/):
+Outputs (inside repo proteins/multi_protein_results/mds_reconstruction/):
     csv_files/mds_reconstruction_metrics.csv
     csv_files/mds_eigenvalue_spectrum.csv
     csv_files/mds_reconstructed_coords_layer47.csv
@@ -56,8 +56,9 @@ RANDOM_STATE = 42
 # Layers to save full eigenvalue spectra for
 EIGENVALUE_LAYERS = [0, 11, 23, 35, 47]
 
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "mds_reconstruction"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
+OUTPUT_DIR = OUTPUT_ROOT / "mds_reconstruction"
 
 
 # ===========================================================================
@@ -176,14 +177,14 @@ def classical_mds(distance_matrix, n_dims=3):
 # ===========================================================================
 
 def main():
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     output_dir = OUTPUT_DIR.resolve()
     csv_dir = output_dir / "csv_files"
     vis_dir = output_dir / "visualizations"
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {N_LAYERS}")
 

@@ -10,10 +10,10 @@ then tests geometric coherence via:
   2. Eigenvalue diagnostics (top-3 fraction, negative eigenvalue fraction)
   3. Triangle inequality violations (min-indirect-path approach)
 
-Local version: uses lib/ imports, runs on all locally available proteins
-with 3-fold CV.
+Local version: uses lib/ imports, reads proteins from ../protein_data,
+runs on all locally available proteins with 3-fold CV.
 
-Outputs (inside proteins/multi_protein_results/kfold_mds/):
+Outputs (inside repo proteins/multi_protein_results/kfold_mds/):
     csv_files/kfold_regression_r2.csv
     csv_files/kfold_regression_r2_summary.csv
     csv_files/kfold_mds_metrics.csv
@@ -62,8 +62,9 @@ FEATURE_DIM = 2 * N_CHANNELS  # 256
 N_FOLDS = 3
 RANDOM_STATE = 42
 
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
-OUTPUT_DIR = PROTEINS_DIR / "multi_protein_results" / "kfold_mds"
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
+OUTPUT_DIR = OUTPUT_ROOT / "kfold_mds"
 
 
 # ===========================================================================
@@ -229,7 +230,7 @@ def build_feature_matrix(proteins, layer):
 def main():
     t_start = time.time()
 
-    proteins_dir = PROTEINS_DIR.resolve()
+    proteins_dir = DATA_ROOT.resolve()
     output_dir = OUTPUT_DIR.resolve()
     csv_dir = output_dir / "csv_files"
     vis_dir = output_dir / "visualizations"
@@ -239,7 +240,7 @@ def main():
     print(f"{'='*60}")
     print(f"K-fold MDS Regression (local)")
     print(f"{'='*60}")
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {N_LAYERS}")
     print(f"Folds:              {N_FOLDS}")

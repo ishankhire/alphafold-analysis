@@ -13,7 +13,7 @@ pair type (e.g., "ALA-GLY").  Features are the concatenated pair-block vectors
 Dependencies (all pip-installable):
     pip install numpy scipy matplotlib scikit-learn biopython
 
-Outputs (inside proteins/multi_protein_results/logistic_regression/):
+Outputs (inside repo proteins/multi_protein_results/logistic_regression/):
     csv_files/layer_balanced_accuracy.csv
     csv_files/per_class_f1_layer47.csv
     csv_files/confusion_matrix_layer47.csv
@@ -69,11 +69,14 @@ TOP_N_CONFUSED = 20    # How many top misclassified pair types to report in outp
 #   from scripts/multi_protein/regression/logistic_regression_pair_type.py
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 
-# PROTEINS_DIR: Path — contains all protein subdirectories (e.g. 7b3a_A/, 6tf4_A/)
-PROTEINS_DIR = PROJECT_ROOT / "proteins"
+# DATA_ROOT: Path — contains all local protein subdirectories under ../protein_data/
+DATA_ROOT = PROJECT_ROOT.parent / "protein_data"
+
+# OUTPUT_ROOT: Path — aggregated multi-protein outputs stay in the repo workspace.
+OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results"
 
 # OUTPUT_DIR: Path — where all outputs (CSVs, plots) are saved for this script
-OUTPUT_DIR   = PROTEINS_DIR / "multi_protein_results" / "logistic_regression"
+OUTPUT_DIR = OUTPUT_ROOT / "logistic_regression"
 
 
 # ===========================================================================
@@ -187,7 +190,7 @@ def extract_top_confused_pairs(cm, class_names, top_n=20):
 
 def main():
     # Resolve to absolute paths for clearer logging
-    proteins_dir = PROTEINS_DIR.resolve()  # Path: absolute path to proteins/
+    proteins_dir = DATA_ROOT.resolve()     # Path: absolute path to ../protein_data/
     output_dir = OUTPUT_DIR.resolve()      # Path: absolute path to output directory
     n_layers = N_LAYERS                    # int: 48
 
@@ -197,7 +200,7 @@ def main():
     csv_dir.mkdir(parents=True, exist_ok=True)
     vis_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Proteins directory: {proteins_dir}")
+    print(f"Protein data root:  {proteins_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Layers:             {n_layers}")
 
@@ -210,7 +213,7 @@ def main():
     # We build pair-type labels here but defer loading the actual pair block data
     # until Phase 3 (one layer at a time to manage memory).
 
-    # all_proteins: list of (str, Path) — e.g. [("6tf4_A", Path("proteins/6tf4_A")), ...]
+    # all_proteins: list of (str, Path) — e.g. [("6tf4_A", Path("../protein_data/6tf4_A")), ...]
     all_proteins = discover_proteins(proteins_dir)
     print(f"\nDiscovered {len(all_proteins)} protein directories.")
 
@@ -279,7 +282,7 @@ def main():
             #   pb[pb_j, pb_i, :] extracts the (j->i) direction features
             protein_data.append({
                 "protein_id": protein_id,    # str: e.g. "7b3a_A"
-                "protein_dir": protein_dir,  # Path: e.g. proteins/7b3a_A/
+                "protein_dir": protein_dir,  # Path: e.g. ../protein_data/7b3a_A/
                 "n_residues": n_ca,          # int: number of residues in this protein
                 "pb_i": struct_i,            # np.ndarray of int: row indices for all pairs
                 "pb_j": struct_j,            # np.ndarray of int: col indices for all pairs
