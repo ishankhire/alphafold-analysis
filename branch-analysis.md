@@ -1,5 +1,42 @@
 # Branch Analysis
 
+## Session: 2026-03-23 — Add unified context-feature sweep diagnostic for held-out R² comparisons
+
+### What changed
+Added one new Delta/local-compatible diagnostic:
+- `scripts/cluster_scripts/diagnostics/diagnostic_context_feature_sweep_regression.py`
+
+Added one matching Delta sbatch launcher:
+- `scripts/cluster_scripts/diagnostics/diagnostic_context_feature_sweep_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted one apples-to-apples sweep over context and feature-augmentation
+variants after the float-precision issue was resolved, with a shared held-out
+evaluation protocol and coefficient export for every final fitted model.
+
+### Key design decisions
+- Kept the sweep in one standalone diagnostic so all requested variants share:
+  - one deterministic size-stratified protein split
+  - one protein-equal weighting policy
+  - one train-only standardization path
+  - one primary leaderboard metric: test mean per-protein `R^2`
+- Implemented the requested linear variants in one fixed in-code table instead
+  of spreading them across several older diagnostics.
+- Exported coefficients for every final fitted model, including:
+  - all linear variants
+  - the final CV-selected ridge baseline
+- Added a compact ranked leaderboard CSV and text summary on top of the raw
+  per-protein and coefficient tables, so the best variants are easy to inspect.
+- Treated the float64 question as an in-memory materialization ablation for the
+  `baseline256` feature family, since the stored pair-block `.npy` files are
+  already `float32` on disk.
+- Made pair-block and PDB path resolution work for both:
+  - Delta cluster layout via the documented environment variables
+  - the local sibling `../protein_data/` layout used for smoke testing
+
 ## Session: 2026-03-23 — Add repo-wide float64 reminder for dense regression diagnostics
 
 ### What changed
