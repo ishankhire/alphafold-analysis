@@ -1,5 +1,34 @@
 # Branch Analysis
 
+## Session: 2026-03-22 — Add float-precision vs protein-size takeaway summary note
+
+### What changed
+Added one new analysis summary:
+- `analysis_summaries/float_precision_size_takeaways.md`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a durable repo note that captures the main conclusions from the
+float32 vs float64 debugging discussion, especially the overlap between solver
+precision issues and protein-size / dataset-heterogeneity effects.
+
+### Key design decisions
+- Kept the note focused on the most decision-relevant conclusions:
+  - what is actually proven about float32-backed code paths
+  - what remains a likely interpretation rather than a proof
+  - which next analyses would best separate competing explanations
+- Explicitly distinguished pooled pair-level scripts from later
+  protein-level diagnostics, since that difference matters for interpreting
+  the older 25-protein versus 184-protein results.
+- Recorded both sides of the current picture instead of forcing a single-cause
+  story:
+  - float32 least-squares appears to become much less reliable as row count
+    grows
+  - size-aware weighting / bucketing still improves results, which points to a
+    real heterogeneity problem beyond precision alone
+
 ## Session: 2026-03-17 — Add fast 128d float32 vs float64 linear-regression check
 
 ### What changed
