@@ -1,5 +1,52 @@
 # Branch Analysis
 
+## Session: 2026-03-22 — Add layer-47 precision / row-cap / PCA / bucketed diagnostic
+
+### What changed
+Added two new Delta diagnostic files:
+- `scripts/cluster_scripts/diagnostics/diagnostic_precision_rowcap_pca_regression.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_precision_rowcap_pca_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted one combined follow-up diagnostic that can separate row-count-driven
+float32 instability from genuine protein-size heterogeneity, while also
+exporting the coefficient vectors needed for later similarity analyses.
+
+### Key design decisions
+- Kept the work in one standalone layer-47 diagnostic so the comparison uses:
+  - one deterministic protein-level size-stratified 80/20 split
+  - one shared output family
+  - one consistent per-protein evaluation policy across all variants
+- Focused the global exact-control sweep on the requested matrix:
+  - `128d` lower-triangle center features
+  - `256d` paired lower-triangle features
+  - `row_cap_per_train_protein in {5000, 20000, all}`
+  - `float32` and `float64` for protein-equal fits
+  - one extra `256d` float64 pair-equal all-row control
+- Computed the singular-spectrum diagnostics from the weighted standardized
+  `d x d` Gram matrix instead of a massive full-row SVD, so the script can
+  report effective rank and float32 / float64 cutoff counts cheaply once the
+  design matrix is materialized.
+- Added a weighted train-row PCA ablation only for the `128d` float64
+  protein-equal all-row baseline:
+  - fit over `k in {1, 2, 5, 10, 20, 50, 100, 128}`
+  - export both PC-space coefficients and back-projected raw-space
+    coefficients for direct later similarity tests
+- Added one manual fixed-bucket `128d` float64 protein-equal variant using the
+  integer bucket boundaries implied by the earlier tree thresholds:
+  - `<=255`
+  - `256-371`
+  - `372-500`
+  - `501+`
+- Exported coefficients for every fitted model, including:
+  - every global raw linear fit
+  - every PCA fit in PC space
+  - every PCA back-projected raw-space coefficient vector
+  - every bucket-specific linear model
+
 ## Session: 2026-03-22 — Add float-precision vs protein-size takeaway summary note
 
 ### What changed
