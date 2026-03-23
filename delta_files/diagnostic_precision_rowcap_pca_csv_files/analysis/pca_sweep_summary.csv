@@ -1,0 +1,9 @@
+variant_id,pca_k,test_mean_per_protein_r2,test_median_per_protein_r2,test_negative_r2_fraction,elapsed_seconds
+pca_128d_float64_protein_equal_cap_all_pca_1,1,0.018958,0.121284,0.324324,3.211653
+pca_128d_float64_protein_equal_cap_all_pca_2,2,-0.002042,0.220308,0.216216,4.212357
+pca_128d_float64_protein_equal_cap_all_pca_5,5,0.291372,0.432387,0.189189,4.543082
+pca_128d_float64_protein_equal_cap_all_pca_10,10,0.600743,0.669656,0.054054,5.513148
+pca_128d_float64_protein_equal_cap_all_pca_20,20,0.750642,0.788955,0.000000,8.819162
+pca_128d_float64_protein_equal_cap_all_pca_50,50,0.827772,0.857438,0.000000,19.883790
+pca_128d_float64_protein_equal_cap_all_pca_100,100,0.861751,0.884508,0.000000,52.050785
+pca_128d_float64_protein_equal_cap_all_pca_128,128,0.874779,0.900102,0.000000,67.518283

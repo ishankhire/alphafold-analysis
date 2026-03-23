@@ -1,0 +1,26 @@
+Diagnostic Precision / Row-Cap / PCA Regression - Layer 47
+==========================================================
+
+Headline comparisons:
+- 128d protein-equal all rows: float32 test mean per-protein R2=-0.0044, float64 test mean per-protein R2=0.8748
+- 256d protein-equal all rows: float32 test mean per-protein R2=0.0520, float64 test mean per-protein R2=0.9051
+- 256d float64 pair-equal all rows: test mean per-protein R2=0.8567
+- 128d float64 bucketed vs global all rows: bucketed=0.8859, global=0.8748
+
+PCA sweep:
+- k=1: test mean per-protein R2=0.0190
+- k=2: test mean per-protein R2=-0.0020
+- k=5: test mean per-protein R2=0.2914
+- k=10: test mean per-protein R2=0.6007
+- k=20: test mean per-protein R2=0.7506
+- k=50: test mean per-protein R2=0.8278
+- k=100: test mean per-protein R2=0.8618
+- k=128: test mean per-protein R2=0.8748
+
+Spectrum cutoffs:
+- 128d protein_equal cap=5000: n_cutoff_float32=11, n_cutoff_float64=0, effective_rank=46.44
+- 128d protein_equal cap=20000: n_cutoff_float32=104, n_cutoff_float64=0, effective_rank=46.43
+- 128d protein_equal cap=all: n_cutoff_float32=124, n_cutoff_float64=0, effective_rank=46.44
+- 256d protein_equal cap=5000: n_cutoff_float32=90, n_cutoff_float64=0, effective_rank=69.97
+- 256d protein_equal cap=20000: n_cutoff_float32=231, n_cutoff_float64=0, effective_rank=69.98
+- 256d protein_equal cap=all: n_cutoff_float32=253, n_cutoff_float64=0, effective_rank=69.99

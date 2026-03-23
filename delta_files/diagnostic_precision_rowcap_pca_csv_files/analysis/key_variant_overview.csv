@@ -1,0 +1,7 @@
+variant_id,variant_label,feature_set,dtype,weighting_scheme,row_cap_per_train_protein,bucket_scheme,test_mean_per_protein_r2,test_median_per_protein_r2,test_negative_r2_fraction,elapsed_seconds
+global_raw_128d_float32_protein_equal_cap_all,128d f32 cap=all,128d,float32,protein_equal,all,,-0.004376,0.215695,0.243243,35.395097
+global_raw_128d_float64_protein_equal_cap_all,128d f64 cap=all,128d,float64,protein_equal,all,,0.874779,0.900102,0.000000,62.721395
+bucketed_128d_float64_protein_equal_cap_all_manual_255_371_500,128d f64 bucketed,128d,float64,protein_equal,all,manual_255_371_500,0.885930,0.894830,0.000000,68.163971
+global_raw_256d_float32_protein_equal_cap_all,256d f32 cap=all,256d,float32,protein_equal,all,,0.052013,0.241736,0.243243,68.674614
+global_raw_256d_float64_protein_equal_cap_all,256d f64 cap=all,256d,float64,protein_equal,all,,0.905149,0.923336,0.000000,140.593529
+global_raw_256d_float64_pair_equal_cap_all,256d f64 pair-equal,256d,float64,pair_equal,all,,0.856670,0.896748,0.000000,145.358270
