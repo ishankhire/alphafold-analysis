@@ -1,5 +1,46 @@
 # Branch Analysis
 
+## Session: 2026-03-23 — Add local analysis script for precision / row-cap / PCA diagnostic
+
+### What changed
+Added one new local analysis script:
+- `scripts/multi_protein/regression/analyze_delta_precision_rowcap_pca.py`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a reproducible post-hoc analysis pass over the new
+`diagnostic_precision_rowcap_pca` outputs that would summarize the main
+conclusions, quantify residual size effects, and measure coefficient similarity
+across the manual size buckets.
+
+### Key design decisions
+- Kept the work in a standalone local analysis script instead of extending the
+  cluster diagnostic, so the original run outputs stay reproducible and the
+  interpretability layer can evolve independently.
+- Focused the report on the user-facing questions that motivated the diagnostic:
+  - how much of the old failure was float precision
+  - whether size effects remain after switching to float64
+  - whether the manual bucket models learn meaningfully different coefficient
+    vectors
+- Exported both machine-readable tables and a markdown report:
+  - key-variant overview
+  - row-cap and PCA summaries
+  - per-bucket test `R^2` aggregates
+  - size-vs-`R^2` correlation summaries
+  - bucketed coefficient cosine-similarity tables
+  - top shifted channels between bucket models
+- Compared bucket coefficients in both standardized and raw-scale spaces, while
+  treating raw-scale comparisons as the main interpretive view because the
+  bucketed models use different scalers.
+- Added a small, focused visualization set rather than a large figure dump:
+  - row-cap precision sweep
+  - PCA sweep
+  - test `R^2` by size bucket for key variants
+  - bucketed-coefficient cosine heatmap
+  - test size-vs-`R^2` scatter panels
+
 ## Session: 2026-03-22 — Add layer-47 precision / row-cap / PCA / bucketed diagnostic
 
 ### What changed
