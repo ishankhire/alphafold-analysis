@@ -42,7 +42,6 @@ from pathlib import Path
 
 import numpy as np
 from Bio.PDB import PDBParser
-from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 
 
@@ -721,47 +720,6 @@ def compute_scaler_from_variant(train_records, variant):
     return mean, scale
 
 
-def materialize_split(records, variant, scaler_mean, scaler_scale):
-    """Stack one split into dense standardized feature and target arrays."""
-    total_rows = int(sum(record["n_pairs"] for record in records))
-    feature_dim = feature_dim_for_variant(variant)
-
-    x = np.empty((total_rows, feature_dim), dtype=np.float64)
-    y = np.empty((total_rows,), dtype=np.float64)
-    offsets = []
-
-    start = 0
-    for record in records:
-        raw_chunk = build_protein_feature_chunk(record, variant)
-        n_rows = int(record["n_pairs"])
-        end = start + n_rows
-
-        x_block = raw_chunk.astype(np.float64, copy=True)
-        x_block -= scaler_mean
-        x_block /= scaler_scale
-
-        x[start:end, :] = x_block
-        y[start:end] = np.asarray(record["y_abs"], dtype=np.float64)
-        offsets.append((start, end))
-        start = end
-
-    return x, y, offsets
-
-
-def compute_split_pair_weights(records, normalize_mean=True):
-    """Per-pair weights with equal total mass per protein."""
-    pieces = [
-        np.full(record["n_pairs"], 1.0 / record["n_pairs"], dtype=np.float64)
-        for record in records
-    ]
-    if not pieces:
-        return np.empty((0,), dtype=np.float64)
-    weights = np.concatenate(pieces)
-    if normalize_mean and weights.size > 0:
-        weights *= weights.size / np.sum(weights)
-    return weights
-
-
 def compute_r2(y_true, y_pred):
     """Compute unweighted pooled R-squared."""
     y_true = np.asarray(y_true, dtype=np.float64)
@@ -794,15 +752,83 @@ def compute_rmse(y_true, y_pred):
     return float(math.sqrt(np.mean((y_true - y_pred) ** 2)))
 
 
-def summarize_dense_split(records, offsets, y_true, y_pred):
-    """Compute pooled and per-protein metrics for one split."""
+def standardized_feature_block(record, variant, scaler_mean, scaler_scale):
+    """Return one protein's standardized feature matrix in float64."""
+    raw_chunk = build_protein_feature_chunk(record, variant)
+    x_block = raw_chunk.astype(np.float64, copy=True)
+    x_block -= scaler_mean
+    x_block /= scaler_scale
+    return x_block
+
+
+def normalized_block_weight(record, split_records):
+    """Return the per-row training weight for one protein block."""
+    if not split_records:
+        return 0.0
+    total_rows = float(sum(item["n_pairs"] for item in split_records))
+    if total_rows <= 0.0:
+        return 0.0
+    return total_rows / (float(len(split_records)) * float(record["n_pairs"]))
+
+
+def fit_model(model_family, train_records, variant, scaler_mean, scaler_scale, alpha=float("nan")):
+    """Fit one standardized-space regression model via streamed normal equations."""
+    feature_dim = feature_dim_for_variant(variant)
+    system_dim = feature_dim + 1
+    xtwx = np.zeros((system_dim, system_dim), dtype=np.float64)
+    xtwy = np.zeros((system_dim,), dtype=np.float64)
+
+    for record in train_records:
+        x_block = standardized_feature_block(record, variant, scaler_mean, scaler_scale)
+        y_block = np.asarray(record["y_abs"], dtype=np.float64)
+        row_weight = normalized_block_weight(record, train_records)
+        weights = np.full((int(record["n_pairs"]),), row_weight, dtype=np.float64)
+
+        weighted_x = x_block * weights[:, None]
+        xtwx[0, 0] += float(np.sum(weights, dtype=np.float64))
+        intercept_feature = np.sum(weighted_x, axis=0, dtype=np.float64)
+        xtwx[0, 1:] += intercept_feature
+        xtwx[1:, 0] += intercept_feature
+        xtwx[1:, 1:] += x_block.T @ weighted_x
+        xtwy[0] += float(np.sum(weights * y_block, dtype=np.float64))
+        xtwy[1:] += x_block.T @ (weights * y_block)
+
+    if model_family == "ridge_cv":
+        xtwx[1:, 1:] += float(alpha) * np.eye(feature_dim, dtype=np.float64)
+    elif model_family != "linear":  # pragma: no cover - fixed run table
+        raise ValueError(f"Unsupported model_family: {model_family}")
+
+    try:
+        solution = np.linalg.solve(xtwx, xtwy)
+    except np.linalg.LinAlgError:
+        solution = np.linalg.lstsq(xtwx, xtwy, rcond=None)[0]
+
+    return {
+        "coef_std": np.asarray(solution[1:], dtype=np.float64),
+        "intercept_std": float(solution[0]),
+    }
+
+
+def predict_from_fitted(x_block, fitted):
+    """Predict from one standardized feature block."""
+    return float(fitted["intercept_std"]) + (x_block @ np.asarray(fitted["coef_std"], dtype=np.float64))
+
+
+def summarize_split(records, variant, scaler_mean, scaler_scale, fitted):
+    """Compute pooled and per-protein metrics for one split without stacking all rows."""
     per_rows = []
     per_r2_values = []
     negative_r2 = 0
+    pair_sum_y = 0.0
+    pair_sum_y2 = 0.0
+    pair_sum_abs = 0.0
+    pair_sum_sqerr = 0.0
+    pair_total_n = 0
 
-    for record, (start, end) in zip(records, offsets):
-        y_true_p = np.asarray(y_true[start:end], dtype=np.float64)
-        y_pred_p = np.asarray(y_pred[start:end], dtype=np.float64)
+    for record in records:
+        x_block = standardized_feature_block(record, variant, scaler_mean, scaler_scale)
+        y_true_p = np.asarray(record["y_abs"], dtype=np.float64)
+        y_pred_p = np.asarray(predict_from_fitted(x_block, fitted), dtype=np.float64)
         mse_value = float(np.mean((y_pred_p - y_true_p) ** 2))
         r2_value = compute_r2(y_true_p, y_pred_p)
         if not math.isnan(r2_value):
@@ -827,10 +853,30 @@ def summarize_dense_split(records, offsets, y_true, y_pred):
             }
         )
 
+        err_p = y_pred_p - y_true_p
+        pair_sum_y += float(np.sum(y_true_p, dtype=np.float64))
+        pair_sum_y2 += float(np.sum(y_true_p * y_true_p, dtype=np.float64))
+        pair_sum_abs += float(np.sum(np.abs(err_p), dtype=np.float64))
+        pair_sum_sqerr += float(np.sum(err_p * err_p, dtype=np.float64))
+        pair_total_n += int(y_true_p.size)
+
+    pair_mean = pair_sum_y / max(float(pair_total_n), 1.0)
+    pair_ss_tot = (
+        pair_sum_y2
+        - 2.0 * pair_mean * pair_sum_y
+        + float(pair_total_n) * pair_mean * pair_mean
+    )
+    if pair_ss_tot <= FLOAT_EPS:
+        pair_r2 = float("nan")
+    else:
+        pair_r2 = float(1.0 - (pair_sum_sqerr / pair_ss_tot))
+    pair_mae = pair_sum_abs / max(float(pair_total_n), 1.0)
+    pair_rmse = float(math.sqrt(pair_sum_sqerr / max(float(pair_total_n), 1.0)))
+
     return {
-        "pair_weighted_r2": compute_r2(y_true, y_pred),
-        "pair_weighted_mae": compute_mae(y_true, y_pred),
-        "pair_weighted_rmse": compute_rmse(y_true, y_pred),
+        "pair_weighted_r2": float(pair_r2),
+        "pair_weighted_mae": float(pair_mae),
+        "pair_weighted_rmse": float(pair_rmse),
         "mean_per_protein_r2": (
             float(np.mean(per_r2_values)) if per_r2_values else float("nan")
         ),
@@ -846,23 +892,6 @@ def summarize_dense_split(records, offsets, y_true, y_pred):
             else float("nan")
         ),
         "per_rows": per_rows,
-    }
-
-
-def fit_model(model_family, x_train, y_train, sample_weight, alpha=float("nan")):
-    """Fit one standardized-space regression model."""
-    if model_family == "linear":
-        model = LinearRegression(fit_intercept=True)
-    elif model_family == "ridge_cv":
-        model = Ridge(alpha=float(alpha), fit_intercept=True)
-    else:  # pragma: no cover - fixed run table
-        raise ValueError(f"Unsupported model_family: {model_family}")
-
-    model.fit(x_train, y_train, sample_weight=sample_weight)
-    return {
-        "model": model,
-        "coef_std": np.asarray(model.coef_, dtype=np.float64),
-        "intercept_std": float(getattr(model, "intercept_", 0.0)),
     }
 
 
@@ -924,22 +953,16 @@ def evaluate_variant(variant, train_records, test_records):
     """Fit one final outer-split variant and collect summary outputs."""
     t0 = time.time()
     scaler_mean, scaler_scale = compute_scaler_from_variant(train_records, variant)
-    x_train, y_train, train_offsets = materialize_split(train_records, variant, scaler_mean, scaler_scale)
-    x_test, y_test, test_offsets = materialize_split(test_records, variant, scaler_mean, scaler_scale)
-    train_weights = compute_split_pair_weights(train_records, normalize_mean=True)
-
     fitted = fit_model(
         model_family=variant["model_family"],
-        x_train=x_train,
-        y_train=y_train,
-        sample_weight=train_weights,
+        train_records=train_records,
+        variant=variant,
+        scaler_mean=scaler_mean,
+        scaler_scale=scaler_scale,
         alpha=variant.get("alpha", float("nan")),
     )
-    y_pred_train = np.asarray(fitted["model"].predict(x_train), dtype=np.float64)
-    y_pred_test = np.asarray(fitted["model"].predict(x_test), dtype=np.float64)
-
-    train_metrics = summarize_dense_split(train_records, train_offsets, y_train, y_pred_train)
-    test_metrics = summarize_dense_split(test_records, test_offsets, y_test, y_pred_test)
+    train_metrics = summarize_split(train_records, variant, scaler_mean, scaler_scale, fitted)
+    test_metrics = summarize_split(test_records, variant, scaler_mean, scaler_scale, fitted)
 
     coef_raw, intercept_raw = standardized_to_raw_coefficients(
         fitted["coef_std"],
@@ -969,8 +992,8 @@ def evaluate_variant(variant, train_records, test_records):
         "intercept_mode": INTERCEPT_MODE,
         "n_train_proteins": int(len(train_records)),
         "n_test_proteins": int(len(test_records)),
-        "n_train_rows": int(y_train.size),
-        "n_test_rows": int(y_test.size),
+        "n_train_rows": int(sum(record["n_pairs"] for record in train_records)),
+        "n_test_rows": int(sum(record["n_pairs"] for record in test_records)),
         "train_mean_per_protein_r2": float(train_metrics["mean_per_protein_r2"]),
         "test_mean_per_protein_r2": float(test_metrics["mean_per_protein_r2"]),
         "train_pair_weighted_r2": float(train_metrics["pair_weighted_r2"]),
@@ -1021,28 +1044,21 @@ def run_ridge_alpha_sweep(variant, outer_train_records):
         for fold in folds:
             t0 = time.time()
             scaler_mean, scaler_scale = compute_scaler_from_variant(fold["train_records"], variant)
-            x_train, y_train, _ = materialize_split(
-                fold["train_records"],
-                variant,
-                scaler_mean,
-                scaler_scale,
+            fitted = fit_model(
+                model_family="ridge_cv",
+                train_records=fold["train_records"],
+                variant=variant,
+                scaler_mean=scaler_mean,
+                scaler_scale=scaler_scale,
+                alpha=alpha,
             )
-            x_val, y_val, val_offsets = materialize_split(
+            val_metrics = summarize_split(
                 fold["val_records"],
                 variant,
                 scaler_mean,
                 scaler_scale,
+                fitted,
             )
-            train_weights = compute_split_pair_weights(fold["train_records"], normalize_mean=True)
-            fitted = fit_model(
-                model_family="ridge_cv",
-                x_train=x_train,
-                y_train=y_train,
-                sample_weight=train_weights,
-                alpha=alpha,
-            )
-            y_val_pred = np.asarray(fitted["model"].predict(x_val), dtype=np.float64)
-            val_metrics = summarize_dense_split(fold["val_records"], val_offsets, y_val, y_val_pred)
 
             row = {
                 "variant": variant["name"],
@@ -1183,6 +1199,39 @@ def build_summary_text(
                 handle.write(f"  {protein_id}: {reason}\n")
 
 
+def flush_outputs(
+    csv_dir,
+    summary_rows,
+    per_protein_rows,
+    split_rows,
+    coefficient_rows,
+    alpha_cv_rows,
+    alpha_selection_rows,
+    all_proteins,
+    loaded_records,
+    skipped,
+    elapsed_seconds,
+):
+    """Persist the current partial or final outputs to disk."""
+    leaderboard_rows = build_leaderboard_rows(summary_rows)
+    write_csv(csv_dir / SUMMARY_CSV_NAME, SUMMARY_FIELDNAMES, summary_rows)
+    write_csv(csv_dir / LEADERBOARD_CSV_NAME, LEADERBOARD_FIELDNAMES, leaderboard_rows)
+    write_csv(csv_dir / PER_PROTEIN_CSV_NAME, PER_PROTEIN_FIELDNAMES, per_protein_rows)
+    write_csv(csv_dir / SPLIT_CSV_NAME, SPLIT_FIELDNAMES, split_rows)
+    write_csv(csv_dir / COEFFICIENT_CSV_NAME, COEFFICIENT_FIELDNAMES, coefficient_rows)
+    write_csv(csv_dir / ALPHA_CV_CSV_NAME, ALPHA_CV_FIELDNAMES, alpha_cv_rows)
+    write_csv(csv_dir / ALPHA_SELECTION_CSV_NAME, ALPHA_SELECTION_FIELDNAMES, alpha_selection_rows)
+    build_summary_text(
+        csv_dir / SUMMARY_TXT_NAME,
+        elapsed_seconds=elapsed_seconds,
+        all_proteins=all_proteins,
+        loaded_records=loaded_records,
+        skipped=skipped,
+        leaderboard_rows=leaderboard_rows,
+        alpha_selection_rows=alpha_selection_rows,
+    )
+
+
 def main():
     t0 = time.time()
     pair_blocks_root_env = os.environ.get("PAIR_BLOCKS_ROOT")
@@ -1222,12 +1271,39 @@ def main():
     alpha_cv_rows = []
     alpha_selection_rows = []
 
+    flush_outputs(
+        csv_dir=csv_dir,
+        summary_rows=summary_rows,
+        per_protein_rows=per_protein_rows,
+        split_rows=split_rows,
+        coefficient_rows=coefficient_rows,
+        alpha_cv_rows=alpha_cv_rows,
+        alpha_selection_rows=alpha_selection_rows,
+        all_proteins=all_proteins,
+        loaded_records=records,
+        skipped=skipped,
+        elapsed_seconds=float(time.time() - t0),
+    )
+
     for variant in LINEAR_VARIANTS:
         print(f"\n[Run] {variant['name']}", flush=True)
         result = evaluate_variant(variant, train_records, test_records)
         summary_rows.append(result["summary_row"])
         per_protein_rows.extend(result["per_protein_rows"])
         coefficient_rows.extend(result["coefficient_rows"])
+        flush_outputs(
+            csv_dir=csv_dir,
+            summary_rows=summary_rows,
+            per_protein_rows=per_protein_rows,
+            split_rows=split_rows,
+            coefficient_rows=coefficient_rows,
+            alpha_cv_rows=alpha_cv_rows,
+            alpha_selection_rows=alpha_selection_rows,
+            all_proteins=all_proteins,
+            loaded_records=records,
+            skipped=skipped,
+            elapsed_seconds=float(time.time() - t0),
+        )
         print(
             "  "
             f"test mean per-protein R2={result['summary_row']['test_mean_per_protein_r2']:.4f}, "
@@ -1288,30 +1364,24 @@ def main():
             ),
         }
     )
+    flush_outputs(
+        csv_dir=csv_dir,
+        summary_rows=summary_rows,
+        per_protein_rows=per_protein_rows,
+        split_rows=split_rows,
+        coefficient_rows=coefficient_rows,
+        alpha_cv_rows=alpha_cv_rows,
+        alpha_selection_rows=alpha_selection_rows,
+        all_proteins=all_proteins,
+        loaded_records=records,
+        skipped=skipped,
+        elapsed_seconds=float(time.time() - t0),
+    )
     print(
         "  "
         f"chosen alpha={ridge_variant['alpha']:.4g}, "
         f"test mean per-protein R2={ridge_result['summary_row']['test_mean_per_protein_r2']:.4f}, "
         f"test pair-weighted R2={ridge_result['summary_row']['test_pair_weighted_r2']:.4f}"
-    )
-
-    leaderboard_rows = build_leaderboard_rows(summary_rows)
-
-    write_csv(csv_dir / SUMMARY_CSV_NAME, SUMMARY_FIELDNAMES, summary_rows)
-    write_csv(csv_dir / LEADERBOARD_CSV_NAME, LEADERBOARD_FIELDNAMES, leaderboard_rows)
-    write_csv(csv_dir / PER_PROTEIN_CSV_NAME, PER_PROTEIN_FIELDNAMES, per_protein_rows)
-    write_csv(csv_dir / SPLIT_CSV_NAME, SPLIT_FIELDNAMES, split_rows)
-    write_csv(csv_dir / COEFFICIENT_CSV_NAME, COEFFICIENT_FIELDNAMES, coefficient_rows)
-    write_csv(csv_dir / ALPHA_CV_CSV_NAME, ALPHA_CV_FIELDNAMES, alpha_cv_rows)
-    write_csv(csv_dir / ALPHA_SELECTION_CSV_NAME, ALPHA_SELECTION_FIELDNAMES, alpha_selection_rows)
-    build_summary_text(
-        csv_dir / SUMMARY_TXT_NAME,
-        elapsed_seconds=float(time.time() - t0),
-        all_proteins=all_proteins,
-        loaded_records=records,
-        skipped=skipped,
-        leaderboard_rows=leaderboard_rows,
-        alpha_selection_rows=alpha_selection_rows,
     )
 
     print(f"\nSaved summary CSV -> {csv_dir / SUMMARY_CSV_NAME}")

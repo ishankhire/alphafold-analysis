@@ -36,6 +36,16 @@ evaluation protocol and coefficient export for every final fitted model.
 - Made pair-block and PDB path resolution work for both:
   - Delta cluster layout via the documented environment variables
   - the local sibling `../protein_data/` layout used for smoke testing
+- After the first all-row implementation hit a Delta OOM before writing CSVs,
+  replaced full `n_rows x d` matrix materialization with streamed weighted
+  normal-equation fitting:
+  - process one protein block at a time
+  - keep only the current standardized block plus a `d x d` system in memory
+  - preserve the same linear / ridge objectives and coefficient outputs
+- Added incremental output flushing after each finished variant so partial CSVs
+  still appear on disk even if a later variant or cluster job fails.
+- Increased the sbatch memory request from `128g` to `192g` to add headroom for
+  the largest per-protein feature blocks during the streamed run.
 
 ## Session: 2026-03-23 — Add repo-wide float64 reminder for dense regression diagnostics
 
