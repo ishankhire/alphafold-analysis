@@ -1,5 +1,91 @@
 # Branch Analysis
 
+## Session: 2026-03-24 — Add small Delta experiment for 256d center plus lower+upper axial context
+
+### What changed
+Added one new small-experiment Delta regression script:
+- `scripts/cluster_scripts/small_experiments/context_feature_sweep_256_plus_axial_both_triangles_regression.py`
+
+Added one matching Delta sbatch launcher:
+- `scripts/cluster_scripts/small_experiments/context_feature_sweep_256_plus_axial_both_triangles_regression.sbatch`
+
+Updated:
+- `branch-analysis.md`
+
+### Why
+You wanted a focused follow-up to the `baseline256_plus_axial` context-sweep
+variant that keeps the same 256d center pair features but augments them with
+axial neighbors from both triangles instead of only the lower triangle.
+
+### Key design decisions
+- Kept the experiment in `small_experiments/` as a single-purpose script rather
+  than expanding the larger diagnostic sweep again.
+- Reused the existing context-sweep diagnostic for:
+  - protein discovery
+  - PDB loading
+  - deterministic train/test splitting
+  - streamed float64 fitting
+  - metric / coefficient export
+- Overrode only the feature-construction path so each lower-triangle training
+  row now concatenates:
+  - `pair(i, j)`
+  - `pair(j, i)`
+  - 4 axial lower-triangle neighbors around `(i, j)`
+  - 4 axial upper-triangle neighbors around the mirrored `(j, i)`
+- Used explicit `lower_context_*` and `upper_context_*` coefficient names so
+  the exported weights make it obvious which triangle each axial block came
+  from.
+- Left the Delta memory request at `192g` because this small experiment only
+  fits one streamed variant, and the larger parent diagnostic already ran with
+  that allocation after its OOM-driven increase.
+
+## Session: 2026-03-24 — Add main cluster scripts for strict 5-fold context-feature runs
+
+### What changed
+Added one shared main-module helper:
+- `scripts/cluster_scripts/context_feature_kfold_common.py`
+
+Added four standalone main cluster scripts:
+- `scripts/cluster_scripts/context_feature_kfold_baseline256.py`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_axial.py`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_diagonal.py`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_diagonal_plus_axial.py`
+
+Added four matching Delta sbatch launchers:
+- `scripts/cluster_scripts/context_feature_kfold_baseline256.sbatch`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_axial.sbatch`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_diagonal.sbatch`
+- `scripts/cluster_scripts/context_feature_kfold_baseline256_plus_diagonal_plus_axial.sbatch`
+
+### Why
+You wanted the previously planned context-feature ablations promoted out of the
+diagnostic folder into main cluster scripts, with one fixed variant per file,
+strict size-stratified outer 5-fold CV, all 48 layers, and detailed last-fold
+geometry exports for both train and test proteins.
+
+### Key design decisions
+- Kept the new jobs in `scripts/cluster_scripts/` instead of `diagnostics/` so
+  they read like production cluster entrypoints rather than one-off probes.
+- Split the work into four thin entrypoints over one shared helper module so:
+  - the fold logic, feature construction, and CSV schemas stay identical
+  - each sbatch file points at exactly one fixed feature variant
+- Matched the requested feature definitions to the reference context sweep:
+  - `baseline256` uses `[pb[i,j,:], pb[j,i,:]]`
+  - `+axial` appends four zero-padded lower-triangle axial context blocks
+  - `+diagonal` appends the self-diagonal blocks `pb[i,i,:]` and `pb[j,j,:]`
+- Used a `layer -> fold` execution order with a per-layer protein cache so each
+  protein's feature block is loaded once per layer and then reused across all
+  five folds.
+- Preserved the protein-equal weighted linear objective from the reference sweep
+  while switching from one held-out split to strict outer 5-fold CV.
+- Made fold construction fail fast when strict 5-fold size stratification is
+  infeasible, reporting the observed size-bin counts directly in the error.
+- Restricted geometry reconstruction to the final outer fold while still
+  evaluating all 48 layers and both train/test splits, keeping the requested
+  detail without the much larger all-fold geometry cost.
+- Wrote each variant's outputs under `CSV_ROOT/<variant_name>/` so the four jobs
+  can share one root output directory without filename collisions.
+
 ## Session: 2026-03-23 — Add unified context-feature sweep diagnostic for held-out R² comparisons
 
 ### What changed
