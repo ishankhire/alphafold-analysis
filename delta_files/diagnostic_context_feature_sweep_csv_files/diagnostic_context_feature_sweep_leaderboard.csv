@@ -1,0 +1,14 @@
+leaderboard_rank,variant,model_family,dtype_mode,feature_dim,alpha,test_mean_per_protein_r2,test_pair_weighted_r2,test_pair_weighted_mae,test_pair_weighted_rmse,test_mean_bias,coef_l2_raw,n_nonzero_coefficients
+1,baseline256_plus_axial_plus_aa_onehot_sorted,linear,materialize_float32_fit_float64,808,nan,0.930449,0.956782,2.140602,3.054266,-0.140217,11028.882574,808
+2,baseline256_plus_axial,linear,materialize_float32_fit_float64,768,nan,0.930428,0.956628,2.143654,3.059707,-0.129414,0.678359,768
+3,baseline256_plus_axial_plus_aa_onehot_sorted_plus_seqsep_raw,linear,materialize_float32_fit_float64,809,nan,0.930263,0.956355,2.150982,3.069298,-0.142610,18074.312774,809
+4,baseline128_plus_axial_diag,linear,materialize_float32_fit_float64,1152,nan,0.923480,0.949144,2.273962,3.313192,-0.149361,0.532662,1152
+5,baseline128_plus_axial,linear,materialize_float32_fit_float64,640,nan,0.917668,0.946101,2.347539,3.410878,-0.143048,0.635711,640
+6,baseline256_plus_diagonal,linear,materialize_float32_fit_float64,512,nan,0.912077,0.946888,2.420797,3.385885,-0.109511,0.761118,512
+7,baseline256_ridge_cv,ridge_cv,materialize_float32_fit_float64,256,100.000000,0.905151,0.943485,2.484135,3.492669,-0.100398,0.780027,256
+8,baseline256,linear,materialize_float32_fit_float64,256,nan,0.905149,0.943484,2.484168,3.492690,-0.100400,0.780078,256
+9,baseline256_materialized_float64,linear,materialize_float64_fit_float64,256,nan,0.905149,0.943484,2.484168,3.492690,-0.100400,0.780078,256
+10,baseline256_plus_n_residues,linear,materialize_float32_fit_float64,257,nan,0.905147,0.943284,2.487028,3.498858,-0.110102,0.777274,257
+11,baseline128_plus_diagonal,linear,materialize_float32_fit_float64,384,nan,0.886341,0.929030,2.771039,3.913918,-0.153648,0.885647,384
+12,baseline128_plus_aa_onehot_sorted,linear,materialize_float32_fit_float64,168,nan,0.874807,0.923061,2.868844,4.075183,-0.102360,13500.001329,168
+13,baseline128,linear,materialize_float32_fit_float64,128,nan,0.874779,0.922931,2.869548,4.078633,-0.092507,0.934716,128
