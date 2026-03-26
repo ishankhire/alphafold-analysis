@@ -1,0 +1,24 @@
+Context Feature K-Fold Regression - baseline256 (layers 15-19)
+==============================================================
+
+Variant:             baseline256
+Feature dimension:   256
+Layers:              15-19 (5 total)
+Outer folds:         5 (strict size-stratified)
+Proteins discovered: 184
+Proteins loaded:     184
+Size bin counts:     {0: 37, 1: 37, 2: 37, 3: 37, 4: 36}
+Elapsed seconds:     4470.87
+
+Best layer by mean held-out per-protein R2:
+  Layer 19 -> 0.7185
+
+Best last-fold test geometry layer by mean TM-score:
+  Layer 18 -> 0.5107
+
+Layer means (held-out per-protein R2):
+  Layer 15: 0.6185
+  Layer 16: 0.6670
+  Layer 17: 0.6945
+  Layer 18: 0.7184
+  Layer 19: 0.7185

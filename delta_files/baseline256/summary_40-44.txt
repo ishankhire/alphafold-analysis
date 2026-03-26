@@ -1,0 +1,24 @@
+Context Feature K-Fold Regression - baseline256 (layers 40-44)
+==============================================================
+
+Variant:             baseline256
+Feature dimension:   256
+Layers:              40-44 (5 total)
+Outer folds:         5 (strict size-stratified)
+Proteins discovered: 184
+Proteins loaded:     184
+Size bin counts:     {0: 37, 1: 37, 2: 37, 3: 37, 4: 36}
+Elapsed seconds:     3409.53
+
+Best layer by mean held-out per-protein R2:
+  Layer 44 -> 0.9062
+
+Best last-fold test geometry layer by mean TM-score:
+  Layer 44 -> 0.7346
+
+Layer means (held-out per-protein R2):
+  Layer 40: 0.8308
+  Layer 41: 0.8434
+  Layer 42: 0.8451
+  Layer 43: 0.8742
+  Layer 44: 0.9062

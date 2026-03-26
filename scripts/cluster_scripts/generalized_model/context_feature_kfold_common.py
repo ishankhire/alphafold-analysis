@@ -14,11 +14,15 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import StratifiedKFold
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
+PARENT_SCRIPT_DIR = SCRIPT_DIR.parent
+if str(PARENT_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(PARENT_SCRIPT_DIR))
 
 from cluster_regression_helpers import (  # noqa: E402
     analyze_protein_geometry,
@@ -155,6 +159,67 @@ for _metric_key in GEOMETRY_METRIC_KEYS:
 def now_timestamp():
     """Return a readable local timestamp for progress logs."""
     return datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def log_progress(message):
+    """Emit one timestamped progress message."""
+    print(f"[{now_timestamp()}] {message}", flush=True)
+
+
+def resolve_output_filename(base_name, output_filename_suffix=""):
+    """Optionally append one stable suffix before the filename extension."""
+    if not output_filename_suffix:
+        return base_name
+
+    path = Path(base_name)
+    return f"{path.stem}_{output_filename_suffix}{path.suffix}"
+
+
+def normalize_layer_indices(layer_indices):
+    """Validate one requested layer list and preserve its stable order."""
+    if layer_indices is None:
+        return list(range(N_LAYERS))
+
+    normalized = []
+    seen = set()
+    for raw_layer in layer_indices:
+        layer = int(raw_layer)
+        if layer < 0 or layer >= N_LAYERS:
+            raise ValueError(f"Layer index out of bounds: {layer}")
+        if layer in seen:
+            raise ValueError(f"Duplicate layer index requested: {layer}")
+        normalized.append(layer)
+        seen.add(layer)
+
+    if not normalized:
+        raise ValueError("At least one layer index must be requested.")
+
+    return normalized
+
+
+def format_layer_indices(layer_indices):
+    """Render one compact human-readable layer label."""
+    normalized = normalize_layer_indices(layer_indices)
+    runs = []
+    run_start = normalized[0]
+    run_end = normalized[0]
+
+    for layer in normalized[1:]:
+        if layer == run_end + 1:
+            run_end = layer
+            continue
+        runs.append((run_start, run_end))
+        run_start = layer
+        run_end = layer
+    runs.append((run_start, run_end))
+
+    labels = []
+    for start, end in runs:
+        if start == end:
+            labels.append(str(start))
+        else:
+            labels.append(f"{start}-{end}")
+    return ",".join(labels)
 
 
 def format_value(value):
@@ -440,7 +505,7 @@ def load_layer_feature_cache(records, layer, variant):
 
     for record_index, record in enumerate(records, start=1):
         pb_path = resolve_pair_block_path(record["protein_dir"], record["protein_id"], layer)
-        pb = np.load(str(pb_path), mmap_mode="r")
+        pb = np.load(str(pb_path))
         chunk = build_feature_chunk_from_pb(record, pb, variant)
         del pb
 
@@ -454,10 +519,9 @@ def load_layer_feature_cache(records, layer, variant):
         total_rows += int(chunk.shape[0])
 
         if record_index % 25 == 0 or record_index == len(records):
-            print(
-                f"[{now_timestamp()}] Layer {layer:02d}: cached {record_index}/{len(records)} proteins "
-                f"({total_rows:,} rows)",
-                flush=True,
+            log_progress(
+                f"Layer {layer:02d}: cached {record_index}/{len(records)} proteins "
+                f"({total_rows:,} rows)"
             )
 
     return cache
@@ -480,6 +544,60 @@ def compute_scaler_from_cache(train_records, cache, variant):
     scale = np.sqrt(var)
     scale[scale < FLOAT_EPS] = 1.0
     return mean, scale
+
+
+def build_split_offsets(records):
+    """Return stable row slices for one split in protein order."""
+    offsets = []
+    start = 0
+    for record in records:
+        n_rows = int(record["n_pairs"])
+        end = start + n_rows
+        offsets.append((record, start, end))
+        start = end
+    return offsets
+
+
+def build_standardized_split(records, cache, scaler_mean, scaler_scale, variant):
+    """Materialize one split matrix in float64 using cached float32 chunks."""
+    feature_dim = feature_dim_for_variant(variant)
+    split_offsets = build_split_offsets(records)
+    total_rows = split_offsets[-1][2] if split_offsets else 0
+    x_split = np.empty((total_rows, feature_dim), dtype=np.float64)
+    y_split = np.empty((total_rows,), dtype=np.float64)
+    mean_cast = np.asarray(scaler_mean, dtype=np.float64)
+    scale_cast = np.asarray(scaler_scale, dtype=np.float64)
+
+    for record, start, end in split_offsets:
+        x_view = x_split[start:end, :]
+        x_view[:] = cache[record["protein_id"]]
+        x_view -= mean_cast
+        x_view /= scale_cast
+        y_split[start:end] = np.asarray(record["y_abs"], dtype=np.float64)
+
+    return {
+        "x": x_split,
+        "y": y_split,
+        "offsets": split_offsets,
+        "n_rows": int(total_rows),
+    }
+
+
+def compute_protein_equal_weights(records):
+    """Return per-row sample weights with equal total mass per protein."""
+    pieces = []
+    for record in records:
+        n_rows = int(record["n_pairs"])
+        if n_rows <= 0:
+            continue
+        pieces.append(np.full((n_rows,), 1.0 / float(n_rows), dtype=np.float64))
+
+    if not pieces:
+        return np.empty((0,), dtype=np.float64)
+
+    weights = np.concatenate(pieces)
+    weights *= weights.size / np.sum(weights)
+    return weights
 
 
 def compute_r2(y_true, y_pred):
@@ -514,65 +632,19 @@ def compute_rmse(y_true, y_pred):
     return float(math.sqrt(np.mean((y_true - y_pred) ** 2)))
 
 
-def standardized_feature_block(raw_chunk, scaler_mean, scaler_scale):
-    """Return one protein's standardized feature matrix in float64."""
-    x_block = np.asarray(raw_chunk, dtype=np.float64).copy()
-    x_block -= scaler_mean
-    x_block /= scaler_scale
-    return x_block
-
-
-def normalized_block_weight(record, split_records):
-    """Return the per-row training weight for one protein block."""
-    if not split_records:
-        return 0.0
-    total_rows = float(sum(item["n_pairs"] for item in split_records))
-    if total_rows <= 0.0:
-        return 0.0
-    return total_rows / (float(len(split_records)) * float(record["n_pairs"]))
-
-
-def fit_model_from_cache(train_records, cache, scaler_mean, scaler_scale, variant):
-    """Fit one standardized-space regression model via streamed normal equations."""
-    feature_dim = feature_dim_for_variant(variant)
-    system_dim = feature_dim + 1
-    xtwx = np.zeros((system_dim, system_dim), dtype=np.float64)
-    xtwy = np.zeros((system_dim,), dtype=np.float64)
-
-    for record in train_records:
-        raw_chunk = cache[record["protein_id"]]
-        x_block = standardized_feature_block(raw_chunk, scaler_mean, scaler_scale)
-        y_block = np.asarray(record["y_abs"], dtype=np.float64)
-        row_weight = normalized_block_weight(record, train_records)
-        weights = np.full((int(record["n_pairs"]),), row_weight, dtype=np.float64)
-
-        weighted_x = x_block * weights[:, None]
-        xtwx[0, 0] += float(np.sum(weights, dtype=np.float64))
-        intercept_feature = np.sum(weighted_x, axis=0, dtype=np.float64)
-        xtwx[0, 1:] += intercept_feature
-        xtwx[1:, 0] += intercept_feature
-        xtwx[1:, 1:] += x_block.T @ weighted_x
-        xtwy[0] += float(np.sum(weights * y_block, dtype=np.float64))
-        xtwy[1:] += x_block.T @ (weights * y_block)
-
-    try:
-        solution = np.linalg.solve(xtwx, xtwy)
-    except np.linalg.LinAlgError:
-        solution = np.linalg.lstsq(xtwx, xtwy, rcond=None)[0]
-
+def fit_model_from_matrix(x_train, y_train, sample_weight):
+    """Fit one standardized-space regression model with sklearn."""
+    model = LinearRegression(copy_X=False)
+    model.fit(x_train, y_train, sample_weight=sample_weight)
     return {
-        "coef_std": np.asarray(solution[1:], dtype=np.float64),
-        "intercept_std": float(solution[0]),
+        "model": model,
+        "coef_std": np.asarray(model.coef_, dtype=np.float64),
+        "intercept_std": float(model.intercept_),
     }
 
 
-def predict_from_fitted(x_block, fitted):
-    """Predict from one standardized feature block."""
-    return float(fitted["intercept_std"]) + (x_block @ np.asarray(fitted["coef_std"], dtype=np.float64))
-
-
-def summarize_split_from_cache(records, cache, scaler_mean, scaler_scale, fitted):
-    """Compute pooled and per-protein metrics for one split without stacking all rows."""
+def summarize_split_from_predictions(split_offsets, y_true, y_pred):
+    """Compute pooled and per-protein metrics from stacked split predictions."""
     per_rows = []
     per_r2_values = []
     negative_r2 = 0
@@ -582,11 +654,9 @@ def summarize_split_from_cache(records, cache, scaler_mean, scaler_scale, fitted
     pair_sum_sqerr = 0.0
     pair_total_n = 0
 
-    for record in records:
-        raw_chunk = cache[record["protein_id"]]
-        x_block = standardized_feature_block(raw_chunk, scaler_mean, scaler_scale)
-        y_true_p = np.asarray(record["y_abs"], dtype=np.float64)
-        y_pred_p = np.asarray(predict_from_fitted(x_block, fitted), dtype=np.float64)
+    for record, start, end in split_offsets:
+        y_true_p = np.asarray(y_true[start:end], dtype=np.float64)
+        y_pred_p = np.asarray(y_pred[start:end], dtype=np.float64)
         mse_value = float(np.mean((y_pred_p - y_true_p) ** 2))
         r2_value = compute_r2(y_true_p, y_pred_p)
         if not math.isnan(r2_value):
@@ -787,27 +857,22 @@ def collect_geometry_rows_for_split(
     layer,
     fold_index,
     split_name,
-    split_records,
-    cache,
-    scaler_mean,
-    scaler_scale,
-    fitted,
+    split_offsets,
+    y_pred,
 ):
     """Run per-protein geometry analysis for one split."""
     rows = []
-    for record in split_records:
-        raw_chunk = cache[record["protein_id"]]
-        x_block = standardized_feature_block(raw_chunk, scaler_mean, scaler_scale)
+    for record, start, end in split_offsets:
         y_true = np.asarray(record["y_abs"], dtype=np.float64)
-        y_pred = np.asarray(predict_from_fitted(x_block, fitted), dtype=np.float64)
-        per_r2 = compute_r2(y_true, y_pred)
+        y_pred_p = np.asarray(y_pred[start:end], dtype=np.float64)
+        per_r2 = compute_r2(y_true, y_pred_p)
         try:
             metrics = analyze_protein_geometry(
                 int(record["n_residues"]),
                 np.asarray(record["coordinates"], dtype=np.float64),
                 record["lt_i"],
                 record["lt_j"],
-                y_pred,
+                y_pred_p,
             )
             rows.append(
                 {
@@ -879,6 +944,7 @@ def build_summary_text(
     path,
     title,
     variant,
+    layer_indices,
     elapsed_seconds,
     all_proteins,
     loaded_records,
@@ -934,7 +1000,10 @@ def build_summary_text(
         handle.write(f"{'=' * len(title)}\n\n")
         handle.write(f"Variant:             {variant['name']}\n")
         handle.write(f"Feature dimension:   {feature_dim_for_variant(variant)}\n")
-        handle.write(f"Layers:              {N_LAYERS}\n")
+        handle.write(
+            f"Layers:              {format_layer_indices(layer_indices)} "
+            f"({len(normalize_layer_indices(layer_indices))} total)\n"
+        )
         handle.write(f"Outer folds:         {N_FOLDS} (strict size-stratified)\n")
         handle.write(f"Proteins discovered: {len(all_proteins)}\n")
         handle.write(f"Proteins loaded:     {len(loaded_records)}\n")
@@ -968,6 +1037,8 @@ def flush_outputs(
     output_dir,
     title,
     variant,
+    layer_indices,
+    output_filename_suffix,
     all_proteins,
     loaded_records,
     skipped,
@@ -981,16 +1052,41 @@ def flush_outputs(
 ):
     """Persist the current partial or final outputs to disk."""
     geometry_summary_rows = summarize_geometry_rows(geometry_rows)
-    write_csv(output_dir / FOLD_SUMMARY_CSV_NAME, FOLD_SUMMARY_FIELDNAMES, fold_summary_rows)
-    write_csv(output_dir / PER_PROTEIN_CSV_NAME, PER_PROTEIN_FIELDNAMES, per_protein_rows)
-    write_csv(output_dir / COEFFICIENTS_CSV_NAME, COEFFICIENT_FIELDNAMES, coefficient_rows)
-    write_csv(output_dir / FOLD_ASSIGNMENTS_CSV_NAME, FOLD_ASSIGNMENT_FIELDNAMES, fold_assignment_rows)
-    write_csv(output_dir / GEOMETRY_METRICS_CSV_NAME, GEOMETRY_METRICS_FIELDNAMES, geometry_rows)
-    write_csv(output_dir / GEOMETRY_SUMMARY_CSV_NAME, GEOMETRY_SUMMARY_FIELDNAMES, geometry_summary_rows)
+    write_csv(
+        output_dir / resolve_output_filename(FOLD_SUMMARY_CSV_NAME, output_filename_suffix),
+        FOLD_SUMMARY_FIELDNAMES,
+        fold_summary_rows,
+    )
+    write_csv(
+        output_dir / resolve_output_filename(PER_PROTEIN_CSV_NAME, output_filename_suffix),
+        PER_PROTEIN_FIELDNAMES,
+        per_protein_rows,
+    )
+    write_csv(
+        output_dir / resolve_output_filename(COEFFICIENTS_CSV_NAME, output_filename_suffix),
+        COEFFICIENT_FIELDNAMES,
+        coefficient_rows,
+    )
+    write_csv(
+        output_dir / resolve_output_filename(FOLD_ASSIGNMENTS_CSV_NAME, output_filename_suffix),
+        FOLD_ASSIGNMENT_FIELDNAMES,
+        fold_assignment_rows,
+    )
+    write_csv(
+        output_dir / resolve_output_filename(GEOMETRY_METRICS_CSV_NAME, output_filename_suffix),
+        GEOMETRY_METRICS_FIELDNAMES,
+        geometry_rows,
+    )
+    write_csv(
+        output_dir / resolve_output_filename(GEOMETRY_SUMMARY_CSV_NAME, output_filename_suffix),
+        GEOMETRY_SUMMARY_FIELDNAMES,
+        geometry_summary_rows,
+    )
     build_summary_text(
-        output_dir / SUMMARY_TXT_NAME,
+        output_dir / resolve_output_filename(SUMMARY_TXT_NAME, output_filename_suffix),
         title=title,
         variant=variant,
+        layer_indices=layer_indices,
         elapsed_seconds=elapsed_seconds,
         all_proteins=all_proteins,
         loaded_records=loaded_records,
@@ -1001,12 +1097,13 @@ def flush_outputs(
     )
 
 
-def run_variant_job(variant, title):
-    """Run one full 48-layer strict k-fold regression job for a fixed variant."""
+def run_variant_job(variant, title, layer_indices=None, output_filename_suffix=""):
+    """Run one strict k-fold regression job for a fixed variant and layer subset."""
     t0 = time.time()
     pair_blocks_root_env = os.environ.get("PAIR_BLOCKS_ROOT")
     pdb_root_env = os.environ.get("PDB_ROOT")
     csv_root_env = os.environ.get("CSV_ROOT")
+    layer_indices = normalize_layer_indices(layer_indices)
 
     if not pair_blocks_root_env or not pdb_root_env or not csv_root_env:
         raise ValueError("PAIR_BLOCKS_ROOT, PDB_ROOT, and CSV_ROOT must all be set.")
@@ -1018,25 +1115,28 @@ def run_variant_job(variant, title):
 
     print(title)
     print("=" * len(title))
-    print(f"Pair blocks root: {pair_blocks_root}")
-    print(f"PDB root:         {pdb_root}")
-    print(f"Output dir:       {output_dir}")
+    log_progress(f"Pair blocks root: {pair_blocks_root}")
+    log_progress(f"PDB root:         {pdb_root}")
+    log_progress(f"Output dir:       {output_dir}")
+    log_progress(
+        f"Layer subset:     {format_layer_indices(layer_indices)} "
+        f"({len(layer_indices)} total)"
+    )
 
     all_proteins, records, skipped = load_protein_records(pair_blocks_root, pdb_root)
     if not records:
-        print("ERROR: No proteins loaded successfully.")
+        log_progress("ERROR: No proteins loaded successfully.")
         raise SystemExit(1)
 
     assign_size_bins(records, N_SIZE_BINS)
     folds, fold_assignment_rows, size_bin_counts = build_strict_stratified_folds(records)
 
-    print(f"Loaded proteins:  {len(records)}")
-    print(f"Size bin counts:  {size_bin_counts}")
+    log_progress(f"Loaded proteins:  {len(records)}")
+    log_progress(f"Size bin counts:  {size_bin_counts}")
     for fold in folds:
-        print(
-            f"  Fold {fold['fold_index']}: "
-            f"{len(fold['train_records'])} train / {len(fold['test_records'])} test proteins",
-            flush=True,
+        log_progress(
+            f"Fold {fold['fold_index']}: "
+            f"{len(fold['train_records'])} train / {len(fold['test_records'])} test proteins"
         )
 
     fold_summary_rows = []
@@ -1048,6 +1148,8 @@ def run_variant_job(variant, title):
         output_dir=output_dir,
         title=title,
         variant=variant,
+        layer_indices=layer_indices,
+        output_filename_suffix=output_filename_suffix,
         all_proteins=all_proteins,
         loaded_records=records,
         skipped=skipped,
@@ -1060,30 +1162,69 @@ def run_variant_job(variant, title):
         elapsed_seconds=float(time.time() - t0),
     )
 
-    for layer in range(N_LAYERS):
+    for layer in layer_indices:
         layer_t0 = time.time()
+        log_progress(f"Layer {layer:02d}: starting cache build")
         layer_cache = load_layer_feature_cache(records, layer, variant)
+        layer_rows = int(sum(chunk.shape[0] for chunk in layer_cache.values()))
+        log_progress(
+            f"Layer {layer:02d}: finished cache build with {len(layer_cache)} proteins "
+            f"({layer_rows:,} rows) in {time.time() - layer_t0:.1f}s"
+        )
         try:
             for fold in folds:
                 fold_t0 = time.time()
                 train_records = fold["train_records"]
                 test_records = fold["test_records"]
+                n_train_rows = int(sum(record["n_pairs"] for record in train_records))
+                n_test_rows = int(sum(record["n_pairs"] for record in test_records))
+                log_progress(
+                    f"Layer {layer:02d} Fold {fold['fold_index']}: starting fit/eval "
+                    f"({n_train_rows:,} train rows, {n_test_rows:,} test rows)"
+                )
                 scaler_mean, scaler_scale = compute_scaler_from_cache(train_records, layer_cache, variant)
-                fitted = fit_model_from_cache(train_records, layer_cache, scaler_mean, scaler_scale, variant)
-                train_metrics = summarize_split_from_cache(
+                train_split = build_standardized_split(
                     train_records,
                     layer_cache,
                     scaler_mean,
                     scaler_scale,
-                    fitted,
+                    variant,
                 )
-                test_metrics = summarize_split_from_cache(
+                sample_weight = compute_protein_equal_weights(train_records)
+                fitted = fit_model_from_matrix(
+                    train_split["x"],
+                    train_split["y"],
+                    sample_weight,
+                )
+                y_pred_train = np.asarray(
+                    fitted["model"].predict(train_split["x"]),
+                    dtype=np.float64,
+                )
+                train_metrics = summarize_split_from_predictions(
+                    train_split["offsets"],
+                    train_split["y"],
+                    y_pred_train,
+                )
+                del train_split["x"]
+                del sample_weight
+
+                test_split = build_standardized_split(
                     test_records,
                     layer_cache,
                     scaler_mean,
                     scaler_scale,
-                    fitted,
+                    variant,
                 )
+                y_pred_test = np.asarray(
+                    fitted["model"].predict(test_split["x"]),
+                    dtype=np.float64,
+                )
+                test_metrics = summarize_split_from_predictions(
+                    test_split["offsets"],
+                    test_split["y"],
+                    y_pred_test,
+                )
+                del test_split["x"]
 
                 fold_summary_rows.append(
                     build_fold_summary_row(
@@ -1133,11 +1274,8 @@ def run_variant_job(variant, title):
                             layer,
                             fold["fold_index"],
                             "train",
-                            train_records,
-                            layer_cache,
-                            scaler_mean,
-                            scaler_scale,
-                            fitted,
+                            train_split["offsets"],
+                            y_pred_train,
                         )
                     )
                     geometry_rows.extend(
@@ -1146,26 +1284,33 @@ def run_variant_job(variant, title):
                             layer,
                             fold["fold_index"],
                             "test",
-                            test_records,
-                            layer_cache,
-                            scaler_mean,
-                            scaler_scale,
-                            fitted,
+                            test_split["offsets"],
+                            y_pred_test,
                         )
                     )
 
-                print(
-                    f"[{now_timestamp()}] Layer {layer:02d} Fold {fold['fold_index']}: "
+                log_progress(
+                    f"Layer {layer:02d} Fold {fold['fold_index']}: "
                     f"test_R2={test_metrics['mean_per_protein_r2']:.4f}, "
                     f"test_pair_R2={test_metrics['pair_weighted_r2']:.4f}, "
-                    f"elapsed={time.time() - fold_t0:.1f}s",
-                    flush=True,
+                    f"elapsed={time.time() - fold_t0:.1f}s"
                 )
+                del train_split["y"]
+                del train_split["offsets"]
+                del test_split["y"]
+                del test_split["offsets"]
+                del y_pred_train
+                del y_pred_test
+                del fitted["model"]
+                del fitted
 
+            log_progress(f"Layer {layer:02d}: writing checkpoint outputs")
             flush_outputs(
                 output_dir=output_dir,
                 title=title,
                 variant=variant,
+                layer_indices=layer_indices,
+                output_filename_suffix=output_filename_suffix,
                 all_proteins=all_proteins,
                 loaded_records=records,
                 skipped=skipped,
@@ -1177,10 +1322,9 @@ def run_variant_job(variant, title):
                 geometry_rows=geometry_rows,
                 elapsed_seconds=float(time.time() - t0),
             )
-            print(
-                f"[{now_timestamp()}] Finished layer {layer:02d} "
-                f"(elapsed {time.time() - layer_t0:.1f}s)",
-                flush=True,
+            log_progress(
+                f"Finished layer {layer:02d} "
+                f"(elapsed {time.time() - layer_t0:.1f}s, total {time.time() - t0:.1f}s)"
             )
         finally:
             layer_cache.clear()
@@ -1191,6 +1335,8 @@ def run_variant_job(variant, title):
         output_dir=output_dir,
         title=title,
         variant=variant,
+        layer_indices=layer_indices,
+        output_filename_suffix=output_filename_suffix,
         all_proteins=all_proteins,
         loaded_records=records,
         skipped=skipped,
@@ -1202,7 +1348,4 @@ def run_variant_job(variant, title):
         geometry_rows=geometry_rows,
         elapsed_seconds=float(time.time() - t0),
     )
-    print(
-        f"[{now_timestamp()}] Completed {variant['name']} in {time.time() - t0:.1f}s",
-        flush=True,
-    )
+    log_progress(f"Completed {variant['name']} in {time.time() - t0:.1f}s")
