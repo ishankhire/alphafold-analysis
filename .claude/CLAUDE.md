@@ -104,6 +104,7 @@ from lib.structure import extract_residue_coordinates, compute_distance_matrix, 
   - geometry helpers such as `classical_mds`, `compute_tm_score`, and `analyze_protein_geometry`
 - Do not feel obligated to retrofit older scripts just to use this helper; it is intended mainly to reduce duplication in new cluster work.
 - For scripts under `scripts/cluster_scripts/diagnostics/`, add the parent `scripts/cluster_scripts` directory to `sys.path` before importing `cluster_regression_helpers`.
+- For hot per-layer pair-block extraction, prefer plain `np.load(...)` plus direct preallocated writes over `mmap_mode="r"` and repeated `np.concatenate(...)`; large fancy-index slices have been materially faster this way on cluster runs.
 
 ## Script Configuration Policy
 
