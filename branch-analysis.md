@@ -767,3 +767,31 @@ leaf regions derived from the selected layer-47 thresholds.
   both train and test.
 - Added explicit start/end timestamps and elapsed-time prints after every layer
   so cluster logs make layer runtimes easy to monitor during long runs.
+
+## Session: 2026-03-26 — Add explicit resume-from-layer support for avg-symmetric train/test
+
+### What changed
+Updated:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_train_test.py`
+- `branch-analysis.md`
+
+### Why
+The original avg-symmetric train/test job saved layers incrementally before timing
+out. You already have canonical outputs through layer 33 and needed the rerun to
+continue from layer 34 while preserving and extending the existing CSV and
+summary files.
+
+### Key design decisions
+- Implemented the resume logic in the shared train/test helper rather than in
+  the wrapper so the existing checkpoint/write flow stays in one place.
+- Kept the resume path narrow and explicit:
+  - wrapper now requests `resume_from_layer=34`
+  - helper validates that canonical outputs exist and cover exactly layers `0-33`
+  - helper refuses to resume if saved files already contain layer `34+` or if the
+    saved deterministic split assignments no longer match the rebuilt split
+- Reused the canonical output filenames rather than writing temp suffix files,
+  and skipped the initial empty-output flush when resuming so earlier results are
+  not touched before validation passes.
+- Preserved cumulative elapsed time by parsing the prior `summary.txt` elapsed
+  value and adding the new resumed-run time during later checkpoints.
