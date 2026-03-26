@@ -795,3 +795,28 @@ summary files.
   not touched before validation passes.
 - Preserved cumulative elapsed time by parsing the prior `summary.txt` elapsed
   value and adding the new resumed-run time during later checkpoints.
+
+## Session: 2026-03-26 — Resume diagonal train/test from layer 16
+
+### What changed
+Updated:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_plus_diagonal_train_test.py`
+- `branch-analysis.md`
+
+### Why
+The diagonal train/test run completed through layer 15 before timing out. You
+needed the rerun to preserve the canonical outputs already written for layers
+`0-15` and continue from layer 16 through layer 47.
+
+### Key design decisions
+- Reused the existing shared helper resume path instead of adding diagonal-
+  specific merge logic.
+- Kept the wrapper change narrow and temporary:
+  - requests all 48 layers
+  - hard-codes `resume_from_layer=16`
+- Left the Delta sbatch resource request unchanged at 12 hours, 8 CPUs, and
+  128 GB because that already matches the requested runtime envelope.
+- The prior hot-path speed fix already applies to this diagonal run because it
+  uses the same shared helper:
+  - plain `np.load(...)` in the layer cache path
+  - direct preallocated feature writes instead of repeated concatenation
