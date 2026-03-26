@@ -45,6 +45,14 @@ K-fold helper into a dual-mode script.
   - diagonal variant: `8` CPUs, `128g`, `12:00:00`
   - avg-symmetric variant: `4` CPUs, `64g`, `10:00:00`
   - shared output root: `$HOME/general_train_test_split_csv_files`
+- Follow-up performance tuning for the train/test helper:
+  - switched the hot layer-cache path from `np.load(..., mmap_mode="r")` back
+    to plain `np.load(...)` to match the older fast cluster scripts and avoid
+    repeated random-access page faults during advanced indexing
+  - rewrote diagonal/symmetric feature assembly to fill one preallocated output
+    array directly instead of building intermediate concatenation pieces
+  - added layer-level timing breakdowns for regression, geometry, and
+    checkpoint writing so slow future runs are easier to diagnose from logs
 
 ## Session: 2026-03-25 — Add local aggregate analysis for baseline256 generalized-model outputs
 

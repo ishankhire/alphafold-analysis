@@ -472,30 +472,28 @@ def build_feature_chunk_from_pb(record, pb, variant):
     pair_i = record["lt_i"]
     pair_j = record["lt_j"]
     pair_mode = variant["pair_mode"]
+    n_pairs = int(record["n_pairs"])
+    feature_dim = feature_dim_for_variant(variant)
+    chunk = np.empty((n_pairs, feature_dim), dtype=np.float32)
 
     if pair_mode == "concat_directional":
-        base_ij = np.asarray(pb[pair_i, pair_j, :], dtype=np.float32)
-        base_ji = np.asarray(pb[pair_j, pair_i, :], dtype=np.float32)
-        pieces = [np.concatenate([base_ij, base_ji], axis=1).astype(np.float32, copy=False)]
-        del base_ij
-        del base_ji
+        chunk[:, :N_CHANNELS] = pb[pair_i, pair_j, :]
+        chunk[:, N_CHANNELS:2 * N_CHANNELS] = pb[pair_j, pair_i, :]
+        write_col = 2 * N_CHANNELS
     elif pair_mode == "avg_symmetric":
-        avg_chunk = np.asarray(pb[pair_i, pair_j, :], dtype=np.float32)
-        avg_chunk += np.asarray(pb[pair_j, pair_i, :], dtype=np.float32)
-        avg_chunk *= 0.5
-        pieces = [avg_chunk]
+        chunk[:, :N_CHANNELS] = pb[pair_i, pair_j, :]
+        chunk[:, :N_CHANNELS] += pb[pair_j, pair_i, :]
+        chunk[:, :N_CHANNELS] *= 0.5
+        write_col = N_CHANNELS
     else:  # pragma: no cover - guarded by make_variant
         raise ValueError(f"Unsupported pair_mode={pair_mode!r}")
 
     if variant["use_self_diag"]:
-        diag_chunk = np.empty((int(record["n_pairs"]), 2 * N_CHANNELS), dtype=np.float32)
-        diag_chunk[:, :N_CHANNELS] = pb[pair_i, pair_i, :]
-        diag_chunk[:, N_CHANNELS:] = pb[pair_j, pair_j, :]
-        pieces.append(diag_chunk)
+        chunk[:, write_col:write_col + N_CHANNELS] = pb[pair_i, pair_i, :]
+        write_col += N_CHANNELS
+        chunk[:, write_col:write_col + N_CHANNELS] = pb[pair_j, pair_j, :]
 
-    if len(pieces) == 1:
-        return pieces[0]
-    return np.concatenate(pieces, axis=1).astype(np.float32, copy=False)
+    return chunk
 
 
 def load_layer_feature_cache(records, layer, variant):
@@ -505,7 +503,10 @@ def load_layer_feature_cache(records, layer, variant):
 
     for record_index, record in enumerate(records, start=1):
         pb_path = resolve_pair_block_path(record["protein_dir"], record["protein_id"], layer)
-        pb = np.load(str(pb_path), mmap_mode="r")
+        # Load the full pair block into memory before advanced indexing.
+        # This matches the older fast cluster scripts and avoids repeated
+        # page-fault-driven random access against a memmap.
+        pb = np.load(str(pb_path))
         chunk = build_feature_chunk_from_pb(record, pb, variant)
         del pb
 
@@ -1162,6 +1163,7 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
                 f"({n_train_rows:,} train rows, {n_test_rows:,} test rows)"
             )
 
+            regression_t0 = time.time()
             scaler_mean, scaler_scale = compute_scaler_from_cache(
                 train_records,
                 layer_cache,
@@ -1209,6 +1211,7 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
                 y_pred_test,
             )
             del test_split["x"]
+            regression_elapsed = time.time() - regression_t0
 
             split_summary_rows.append(
                 build_split_summary_row(
@@ -1246,6 +1249,7 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
                     scaler_scale,
                 )
             )
+            geometry_t0 = time.time()
             geometry_rows.extend(
                 collect_geometry_rows_for_split(
                     variant,
@@ -1264,11 +1268,14 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
                     y_pred_test,
                 )
             )
+            geometry_elapsed = time.time() - geometry_t0
 
             log_progress(
                 f"Layer {layer:02d}: "
                 f"test_R2={test_metrics['mean_per_protein_r2']:.4f}, "
                 f"test_pair_R2={test_metrics['pair_weighted_r2']:.4f}, "
+                f"regression={regression_elapsed:.1f}s, "
+                f"geometry={geometry_elapsed:.1f}s, "
                 f"elapsed={time.time() - layer_t0:.1f}s"
             )
             del train_split["y"]
@@ -1281,6 +1288,7 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
             del fitted
 
             log_progress(f"Layer {layer:02d}: writing checkpoint outputs")
+            checkpoint_t0 = time.time()
             flush_outputs(
                 output_dir=output_dir,
                 title=title,
@@ -1300,9 +1308,11 @@ def run_variant_job(variant, title, layer_indices=None, output_filename_suffix="
                 geometry_rows=geometry_rows,
                 elapsed_seconds=float(time.time() - t0),
             )
+            checkpoint_elapsed = time.time() - checkpoint_t0
             log_progress(
                 f"Finished layer {layer:02d} "
-                f"(elapsed {time.time() - layer_t0:.1f}s, total {time.time() - t0:.1f}s)"
+                f"(checkpoint={checkpoint_elapsed:.1f}s, "
+                f"elapsed {time.time() - layer_t0:.1f}s, total {time.time() - t0:.1f}s)"
             )
         finally:
             layer_cache.clear()
