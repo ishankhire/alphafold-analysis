@@ -1,5 +1,51 @@
 # Branch Analysis
 
+## Session: 2026-03-26 — Add dedicated generalized-model train/test regressions for diagonal and average-symmetric variants
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added one shared helper:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+
+Added two train/test Python launchers:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_plus_diagonal_train_test.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_train_test.py`
+
+Added two matching Delta sbatch files:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_plus_diagonal_train_test.sbatch`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_train_test.sbatch`
+
+### Why
+You wanted a permanent generalized-model train/test workflow that stays separate
+from the strict K-fold suite, preserves the same regression/geometry outputs,
+and supports new feature variants without having to retrofit the existing
+K-fold helper into a dual-mode script.
+
+### Key design decisions
+- Copied the generalized-model K-fold helper structure into a standalone
+  train/test helper instead of importing the K-fold runner, so future split
+  changes cannot accidentally alter the K-fold behavior.
+- Switched the outer split policy to one deterministic protein-level
+  `StratifiedShuffleSplit` with:
+  - `test_size=0.2`
+  - `random_state=42`
+  - strict failure when all five size bins cannot be represented in both train
+    and test
+- Renamed fold-oriented outputs to split-oriented outputs and replaced `fold`
+  metadata with `split_id=0` while keeping the same coefficient, per-protein,
+  and geometry statistics.
+- Kept checkpoint flushing after every completed layer and timestamped progress
+  messages throughout, so partial outputs survive timeouts or cluster failures.
+- Added exactly the two requested feature variants:
+  - directional `(i,j)+(j,i)` plus long diagonals `(i,i)+(j,j)` -> 512 features
+  - memory-conscious symmetric average of `(i,j)` and `(j,i)` -> 128 features
+- Used Delta sbatch settings tailored to the expected memory/runtime footprint:
+  - diagonal variant: `8` CPUs, `128g`, `12:00:00`
+  - avg-symmetric variant: `4` CPUs, `64g`, `10:00:00`
+  - shared output root: `$HOME/general_train_test_split_csv_files`
+
 ## Session: 2026-03-25 — Add local aggregate analysis for baseline256 generalized-model outputs
 
 ### What changed
