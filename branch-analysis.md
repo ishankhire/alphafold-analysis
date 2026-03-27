@@ -1,5 +1,18 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Narrow generalized geometry resume coercion
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
+- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
+
+### Why
+Shrinks the earlier resume fix to one geometry-only coercion path instead of
+typing every resumed CSV table.
+
 ## Session: 2026-03-27 — Backfill general avg-symmetric geometry summary
 
 ### What changed

@@ -43,11 +43,7 @@ def row_has_missing_aggregates(row: dict[str, object]) -> bool:
 def main() -> None:
     summary_rows = common.read_csv_rows(SUMMARY_PATH, common.GEOMETRY_SUMMARY_FIELDNAMES)
     metrics_rows = common.read_csv_rows(METRICS_PATH, common.GEOMETRY_METRICS_FIELDNAMES)
-    metrics_rows = common.coerce_csv_rows(
-        metrics_rows,
-        int_fields=common.GEOMETRY_METRICS_INT_FIELDS,
-        float_fields=common.GEOMETRY_METRICS_FLOAT_FIELDS,
-    )
+    metrics_rows = common.coerce_geometry_metric_rows(metrics_rows)
     rebuilt_rows = common.summarize_geometry_rows(metrics_rows)
     rebuilt_by_key = {summary_key(row): row for row in rebuilt_rows}
 
