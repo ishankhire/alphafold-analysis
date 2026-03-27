@@ -1,0 +1,71 @@
+General Train/Test Regression - base256_avg_symmetric_plus_axial
+================================================================
+
+Variant:             general_base256_avg_symmetric_plus_axial
+Feature dimension:   640
+Layers:              0-47 (48 total)
+Train/test split:    deterministic 80/20 protein-level, size-stratified
+Random state:        42
+Proteins discovered: 184
+Proteins loaded:     184
+Train proteins:      147
+Test proteins:       37
+Skipped proteins:    0
+Size bin counts:     {0: 37, 1: 37, 2: 37, 3: 37, 4: 36}
+Elapsed seconds:     29928.84
+
+Best layer by held-out per-protein R2:
+  Layer 47 -> 0.9366
+
+Best layer by held-out mean TM-score:
+  Layer 45 -> 0.8132
+
+Layer means (held-out per-protein R2):
+  Layer 00: 0.3454
+  Layer 01: 0.3524
+  Layer 02: 0.3600
+  Layer 03: 0.3384
+  Layer 04: 0.3548
+  Layer 05: 0.3541
+  Layer 06: 0.3503
+  Layer 07: 0.3527
+  Layer 08: 0.3680
+  Layer 09: 0.4061
+  Layer 10: 0.4556
+  Layer 11: 0.4801
+  Layer 12: 0.5186
+  Layer 13: 0.5906
+  Layer 14: 0.6106
+  Layer 15: 0.6690
+  Layer 16: 0.7336
+  Layer 17: 0.7535
+  Layer 18: 0.7679
+  Layer 19: 0.7764
+  Layer 20: 0.7881
+  Layer 21: 0.7814
+  Layer 22: 0.7890
+  Layer 23: 0.7942
+  Layer 24: 0.7968
+  Layer 25: 0.7966
+  Layer 26: 0.7879
+  Layer 27: 0.7856
+  Layer 28: 0.7813
+  Layer 29: 0.7836
+  Layer 30: 0.7828
+  Layer 31: 0.7911
+  Layer 32: 0.8076
+  Layer 33: 0.8013
+  Layer 34: 0.8167
+  Layer 35: 0.8133
+  Layer 36: 0.8340
+  Layer 37: 0.8462
+  Layer 38: 0.8479
+  Layer 39: 0.8619
+  Layer 40: 0.8625
+  Layer 41: 0.8676
+  Layer 42: 0.8735
+  Layer 43: 0.8972
+  Layer 44: 0.9261
+  Layer 45: 0.9247
+  Layer 46: 0.9347
+  Layer 47: 0.9366

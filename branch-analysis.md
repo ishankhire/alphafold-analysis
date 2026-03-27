@@ -1,5 +1,28 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/aggregate_general_avg_symmetric_plus_axial_shards.py`
+
+Generated:
+- `delta_files/general_base256_avg_symmetric_plus_axial/coefficients.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_metrics.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_summary.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/per_protein.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/split_assignments.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/split_summary.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/summary.txt`
+
+### Why
+Adds a checked local merge step so the three layer shards produce the same
+single-file aggregate statistics layout as the other generalized train/test
+variants.
+
 ## Session: 2026-03-26 — Add remaining generalized avg-symmetric axial train/test shards
 
 ### What changed
