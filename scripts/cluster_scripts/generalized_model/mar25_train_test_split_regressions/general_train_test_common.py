@@ -74,6 +74,28 @@ SPLIT_SUMMARY_FIELDNAMES = [
     "test_mean_bias",
     "elapsed_seconds",
 ]
+SPLIT_SUMMARY_INT_FIELDS = {
+    "feature_dim",
+    "split_id",
+    "layer",
+    "n_train_proteins",
+    "n_test_proteins",
+    "n_train_rows",
+    "n_test_rows",
+}
+SPLIT_SUMMARY_FLOAT_FIELDS = {
+    "train_mean_per_protein_r2",
+    "test_mean_per_protein_r2",
+    "train_pair_weighted_r2",
+    "test_pair_weighted_r2",
+    "train_pair_weighted_mae",
+    "test_pair_weighted_mae",
+    "train_pair_weighted_rmse",
+    "test_pair_weighted_rmse",
+    "train_mean_bias",
+    "test_mean_bias",
+    "elapsed_seconds",
+}
 
 PER_PROTEIN_FIELDNAMES = [
     "variant",
@@ -94,6 +116,24 @@ PER_PROTEIN_FIELDNAMES = [
     "mean_predicted_distance",
     "mean_error_pred_minus_true",
 ]
+PER_PROTEIN_INT_FIELDS = {
+    "feature_dim",
+    "split_id",
+    "layer",
+    "n_residues",
+    "size_bin",
+    "n_pairs",
+}
+PER_PROTEIN_FLOAT_FIELDS = {
+    "target_variance",
+    "per_protein_r2",
+    "per_protein_mse",
+    "per_protein_mae",
+    "per_protein_rmse",
+    "mean_true_distance",
+    "mean_predicted_distance",
+    "mean_error_pred_minus_true",
+}
 
 COEFFICIENT_FIELDNAMES = [
     "variant",
@@ -105,6 +145,16 @@ COEFFICIENT_FIELDNAMES = [
     "coefficient_standardized",
     "coefficient_raw_scale",
 ]
+COEFFICIENT_INT_FIELDS = {
+    "feature_dim",
+    "split_id",
+    "layer",
+    "feature_index",
+}
+COEFFICIENT_FLOAT_FIELDS = {
+    "coefficient_standardized",
+    "coefficient_raw_scale",
+}
 
 SPLIT_ASSIGNMENT_FIELDNAMES = [
     "split_id",
@@ -115,6 +165,13 @@ SPLIT_ASSIGNMENT_FIELDNAMES = [
     "n_pairs",
     "target_variance",
 ]
+SPLIT_ASSIGNMENT_INT_FIELDS = {
+    "split_id",
+    "n_residues",
+    "size_bin",
+    "n_pairs",
+}
+SPLIT_ASSIGNMENT_FLOAT_FIELDS = {"target_variance"}
 
 GEOMETRY_METRIC_KEYS = [
     "per_protein_r2",
@@ -152,6 +209,27 @@ GEOMETRY_METRICS_FIELDNAMES = [
     "triangle_mean_violation",
     "triangle_max_violation",
 ]
+GEOMETRY_METRICS_INT_FIELDS = {
+    "feature_dim",
+    "split_id",
+    "layer",
+    "n_residues",
+    "size_bin",
+    "n_pairs",
+    "n_negative_eigenvalues",
+    "n_negative_predictions",
+}
+GEOMETRY_METRICS_FLOAT_FIELDS = {
+    "per_protein_r2",
+    "rmsd",
+    "tm_score",
+    "frac_top3_eigenvalues",
+    "neg_eigenvalue_fraction",
+    "stress",
+    "triangle_violation_fraction",
+    "triangle_mean_violation",
+    "triangle_max_violation",
+}
 
 GEOMETRY_SUMMARY_FIELDNAMES = [
     "variant",
@@ -163,6 +241,17 @@ GEOMETRY_SUMMARY_FIELDNAMES = [
 ]
 for _metric_key in GEOMETRY_METRIC_KEYS:
     GEOMETRY_SUMMARY_FIELDNAMES.extend([f"{_metric_key}_mean", f"{_metric_key}_std"])
+GEOMETRY_SUMMARY_INT_FIELDS = {
+    "feature_dim",
+    "split_id",
+    "layer",
+    "n_proteins",
+}
+GEOMETRY_SUMMARY_FLOAT_FIELDS = set(GEOMETRY_SUMMARY_FIELDNAMES) - {
+    "variant",
+    "split",
+    *GEOMETRY_SUMMARY_INT_FIELDS,
+}
 
 
 def now_timestamp():
@@ -276,6 +365,25 @@ def read_csv_rows(path, expected_fieldnames):
         return [dict(row) for row in reader]
 
 
+def coerce_csv_rows(rows, *, int_fields=(), float_fields=()):
+    """Convert persisted CSV string rows back to numeric Python types."""
+    coerced = []
+    for row in rows:
+        out = dict(row)
+        for field_name in int_fields:
+            raw_value = out.get(field_name, "")
+            if raw_value in ("", None):
+                continue
+            out[field_name] = int(raw_value)
+        for field_name in float_fields:
+            raw_value = out.get(field_name, "")
+            if raw_value in ("", None):
+                continue
+            out[field_name] = float(raw_value)
+        coerced.append(out)
+    return coerced
+
+
 def parse_elapsed_seconds_from_summary(path):
     """Read the prior elapsed-seconds value from one summary file."""
     if not path.exists():
@@ -382,13 +490,38 @@ def load_resume_state(
     )
 
     split_summary_rows = read_csv_rows(split_summary_path, SPLIT_SUMMARY_FIELDNAMES)
+    split_summary_rows = coerce_csv_rows(
+        split_summary_rows,
+        int_fields=SPLIT_SUMMARY_INT_FIELDS,
+        float_fields=SPLIT_SUMMARY_FLOAT_FIELDS,
+    )
     per_protein_rows = read_csv_rows(per_protein_path, PER_PROTEIN_FIELDNAMES)
+    per_protein_rows = coerce_csv_rows(
+        per_protein_rows,
+        int_fields=PER_PROTEIN_INT_FIELDS,
+        float_fields=PER_PROTEIN_FLOAT_FIELDS,
+    )
     coefficient_rows = read_csv_rows(coefficients_path, COEFFICIENT_FIELDNAMES)
+    coefficient_rows = coerce_csv_rows(
+        coefficient_rows,
+        int_fields=COEFFICIENT_INT_FIELDS,
+        float_fields=COEFFICIENT_FLOAT_FIELDS,
+    )
     saved_split_assignment_rows = read_csv_rows(
         split_assignments_path,
         SPLIT_ASSIGNMENT_FIELDNAMES,
     )
+    saved_split_assignment_rows = coerce_csv_rows(
+        saved_split_assignment_rows,
+        int_fields=SPLIT_ASSIGNMENT_INT_FIELDS,
+        float_fields=SPLIT_ASSIGNMENT_FLOAT_FIELDS,
+    )
     geometry_rows = read_csv_rows(geometry_metrics_path, GEOMETRY_METRICS_FIELDNAMES)
+    geometry_rows = coerce_csv_rows(
+        geometry_rows,
+        int_fields=GEOMETRY_METRICS_INT_FIELDS,
+        float_fields=GEOMETRY_METRICS_FLOAT_FIELDS,
+    )
     prior_elapsed_seconds = parse_elapsed_seconds_from_summary(summary_path)
 
     validate_resume_table_rows(

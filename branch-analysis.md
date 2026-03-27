@@ -1,5 +1,24 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Fix resumed generalized geometry summary backfill
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+
+Added:
+- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
+
+Generated:
+- `delta_files/general_base256_plus_diagonal/geometry_summary.csv`
+
+### Why
+Retypes resumed CSV rows before aggregation so resumed train/test jobs no longer
+emit `NaN` geometry summaries, and backfills the already-broken
+`general_base256_plus_diagonal/geometry_summary.csv` from the saved per-protein
+geometry metrics.
+
 ## Session: 2026-03-27 — Add one combined base256 variant analysis workflow
 
 ### What changed
