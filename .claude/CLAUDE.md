@@ -104,7 +104,7 @@ When writing new cluster regression scripts for Delta, use these env vars rather
 
 ## Change Log
 
-When making important changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes. Keep it focused: skip minor edits. It is very important to keep your descriptions super brief. I only want things that meaningfully alter the codebase, and even then, descriptions should be super brief. No need to be thorough with descriptions.
+When making important changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes. Keep it focused: skip minor edits. It is very important to keep your descriptions super brief. I only want things that meaningfully alter the codebase, and even then, no need to be thorough with descriptions.
 
 ## Git Workflow
 
