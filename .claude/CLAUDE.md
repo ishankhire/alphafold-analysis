@@ -25,7 +25,6 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 ## Key Directories
 
-- `lib/` — shared library: alignment utilities (`build_alignment`, `validate_alignment`) and structure utilities (`extract_residue_coordinates`, `compute_distance_matrix`, etc.)
 - `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
 - `proteins/multi_protein_results/` — aggregated multi-protein outputs created inside the repo at runtime
 - `proteins/llm_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
@@ -76,14 +75,6 @@ When writing new cluster regression scripts for Delta, use these env vars rather
 
 ## Architecture Patterns
 
-**lib/ imports:** Scripts that use `lib/` must add the project root to `sys.path`:
-```python
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from lib.alignment import build_alignment, validate_alignment
-from lib.structure import extract_residue_coordinates, compute_distance_matrix, detect_chain
-```
-
 **Pair representation shape:** Always `(R, R, C)` where R = entity sequence length and C = 128 channels.
 
 **PDB-based regression scripts** use inline PDB parsing (no lib/ imports for coordinate extraction). They extract CA coordinates directly from predicted PDB files.
@@ -110,11 +101,10 @@ from lib.structure import extract_residue_coordinates, compute_distance_matrix, 
 
 - Default to fixed script configuration (repo-relative paths/constants in code).
 - Do not add CLI arguments unless they are necessary for multi-environment use, reproducibility control, or unavoidable input/output variability.
-- If CLI arguments are necessary, keep them minimal and justify them in the script docstring or code comments.
 
 ## Change Log
 
-When making important or substantive changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes — what was changed, why, and any key decisions. Keep it focused: skip minor or trivial edits, but document anything that affects analysis logic, data flow, or architecture.
+When making important changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes. Keep it focused: skip minor edits. It is very important to keep your descriptions super brief. I only want things that meaningfully alter the codebase, and even then, descriptions should be super brief. No need to be thorough with descriptions.
 
 ## Git Workflow
 
