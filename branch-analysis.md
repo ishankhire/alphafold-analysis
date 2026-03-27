@@ -1,5 +1,22 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Backfill general avg-symmetric geometry summary
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
+
+Generated:
+- `delta_files/general_base256_avg_symmetric/geometry_summary.csv`
+
+### Why
+Repairs the already-saved `general_base256_avg_symmetric/geometry_summary.csv`
+after confirming the same resume-string aggregation bug left the early layers as
+`NaN`.
+
 ## Session: 2026-03-27 — Add fold-4 layer segmentation analysis for baseline256_kfold
 
 ### What changed
