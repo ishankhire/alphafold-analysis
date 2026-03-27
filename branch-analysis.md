@@ -1,5 +1,19 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Add fold-4 layer segmentation analysis for baseline256_kfold
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/analyze_delta_baseline256_kfold_segmentation.py`
+
+### Why
+Adds a fixed local post-processing script that finds contiguous layer
+segments from the fold-4 coefficient vectors, writes boundary/evidence CSVs,
+and overlays the K=3 boundaries on the fold-4 cosine heatmap.
+
 ## Session: 2026-03-27 — Fix resumed generalized geometry summary backfill
 
 ### What changed
