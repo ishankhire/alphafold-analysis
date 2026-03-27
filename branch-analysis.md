@@ -1,5 +1,16 @@
 # Branch Analysis
 
+## Session: 2026-03-26 — Simplify cluster guidance to Delta only
+
+### What changed
+Updated:
+- `AGENTS.md`
+- `.claude/CLAUDE.md`
+- `branch-analysis.md`
+
+### Why
+Removed obsolete ICE guidance and added cluster-script rules for per-layer output checkpointing and detailed stdout time logging.
+
 ## Session: 2026-03-26 — Add dedicated generalized-model train/test regressions for diagonal and average-symmetric variants
 
 ### What changed

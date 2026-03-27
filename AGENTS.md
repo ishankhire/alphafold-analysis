@@ -40,31 +40,30 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 ## Cluster Setup
 
-Scripts run on two SLURM clusters: **Delta** and **ICE**. Each has its own sbatch files in `scripts/cluster_scripts/`:
-
-| Cluster | Sbatch files | Notes |
-|---------|-------------|-------|
-| ICE | `regression_job.sbatch`, `per_protein_regression_job.sbatch`, `protein_split_regression_job.sbatch` | Uses `module load anaconda3`, `$SCRATCH` for data root |
-| Delta | `delta_regression_job.sbatch`, `delta_per_protein_regression_job.sbatch` | Uses `module load python`, `srun`, `--account=bekh-delta-cpu` |
+Cluster scripts are currently written for the **Delta** SLURM cluster. The main Delta sbatch files in `scripts/cluster_scripts/` are `delta_regression_job.sbatch` and `delta_per_protein_regression_job.sbatch`. They use `module load python`, `srun`, and `--account=bekh-delta-cpu`.
 
 **Reference documentation** lives in `proteins/llm_reference/`:
 - `delta_slurm_guide.pdf` — Delta cluster SLURM specifics
 - `slurm_guidelines.pdf` — general SLURM guidelines
-- `storage_on_ice.pdf` — ICE storage and `$SCRATCH` layout
 
 Always consult these PDFs when writing or modifying sbatch files or cluster scripts.
 
 **IMPORTANT:** When moving, renaming, or creating cluster Python scripts, always verify that every sbatch file in `scripts/cluster_scripts/` references the correct Python script filename. A mismatch will cause silent job failures on the cluster.
 
+### Cluster script guidelines
+
+- Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
+- Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
+
 ### Cluster data paths (environment variables)
 
 Cluster Python scripts read data paths from three environment variables exported by their sbatch files:
 
-| Env var | Delta value | ICE value |
-|---------|------------|-----------|
-| `PAIR_BLOCKS_ROOT` | `/work/hdd/bekh/thayes/openfold_reps` | `$SCRATCH` |
-| `PDB_ROOT` | `/work/hdd/bekh/thayes/openfold_reps_outputs_sm` | `$SCRATCH/Structures` |
-| `CSV_ROOT` | `/work/hdd/bekh/thayes/linear_regression_csv_files` | `$SCRATCH/csv_files` |
+| Env var | Delta value |
+|---------|-------------|
+| `PAIR_BLOCKS_ROOT` | `/work/hdd/bekh/thayes/openfold_reps` |
+| `PDB_ROOT` | `/work/hdd/bekh/thayes/openfold_reps_outputs_sm` |
+| `CSV_ROOT` | `/work/hdd/bekh/thayes/linear_regression_csv_files` |
 
 **Delta file layout:**
 - Pair block: `PAIR_BLOCKS_ROOT/{protein_id}/{protein_id}_pair_block_{layer}.npy`
