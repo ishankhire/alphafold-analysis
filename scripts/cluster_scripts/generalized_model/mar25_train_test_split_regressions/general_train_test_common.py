@@ -41,6 +41,7 @@ TEST_SIZE = 0.2
 SPLIT_ID = 0
 RANDOM_STATE = 42
 FLOAT_EPS = 1e-12
+AXIAL_NEIGHBOR_OFFSETS = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 SPLIT_SUMMARY_CSV_NAME = "split_summary.csv"
 PER_PROTEIN_CSV_NAME = "per_protein.csv"
@@ -244,6 +245,12 @@ def format_value(value):
     return value
 
 
+def format_offset_label(offset):
+    """Create stable feature labels for context offsets."""
+    di, dj = offset
+    return f"di_{di:+d}_dj_{dj:+d}".replace("+", "p").replace("-", "m")
+
+
 def write_csv(path, fieldnames, rows):
     """Write rows with stable formatting."""
     with path.open("w", newline="") as handle:
@@ -427,14 +434,20 @@ def load_resume_state(
     }
 
 
-def make_variant(name, pair_mode="concat_directional", use_self_diag=False):
+def make_variant(name, pair_mode="concat_directional", use_self_diag=False, use_axial=False):
     """Construct one fixed train/test feature specification."""
     if pair_mode not in VALID_PAIR_MODES:
         raise ValueError(f"Unsupported pair_mode={pair_mode!r}; expected one of {sorted(VALID_PAIR_MODES)}")
+    if use_axial and pair_mode != "avg_symmetric":
+        raise ValueError(
+            "Axial features are only supported for pair_mode='avg_symmetric' "
+            f"in this train/test helper; got {pair_mode!r}"
+        )
     return {
         "name": name,
         "pair_mode": pair_mode,
         "use_self_diag": bool(use_self_diag),
+        "use_axial": bool(use_axial),
     }
 
 
@@ -448,6 +461,11 @@ def feature_names_for_variant(variant):
         names = [f"pair_avg_ch_{idx}" for idx in range(N_CHANNELS)]
     else:  # pragma: no cover - guarded by make_variant
         raise ValueError(f"Unsupported pair_mode={pair_mode!r}")
+
+    if variant["use_axial"]:
+        for offset in AXIAL_NEIGHBOR_OFFSETS:
+            label = format_offset_label(offset)
+            names.extend([f"context_avg_{label}_ch_{idx}" for idx in range(N_CHANNELS)])
 
     if variant["use_self_diag"]:
         names.extend([f"diag_ii_ch_{idx}" for idx in range(N_CHANNELS)])
@@ -661,6 +679,37 @@ def build_feature_chunk_from_pb(record, pb, variant):
         write_col = N_CHANNELS
     else:  # pragma: no cover - guarded by make_variant
         raise ValueError(f"Unsupported pair_mode={pair_mode!r}")
+
+    if variant["use_axial"]:
+        if pair_mode != "avg_symmetric":
+            raise ValueError(
+                "Axial features are only supported for pair_mode='avg_symmetric'; "
+                f"got {pair_mode!r}"
+            )
+
+        n_residues = int(pb.shape[0])
+        for di, dj in AXIAL_NEIGHBOR_OFFSETS:
+            slot = chunk[:, write_col:write_col + N_CHANNELS]
+            slot[:] = 0.0
+
+            src_i = pair_i + di
+            src_j = pair_j + dj
+            valid = (
+                (src_i >= 0)
+                & (src_i < n_residues)
+                & (src_j >= 0)
+                & (src_j < n_residues)
+                & (src_i > src_j)
+            )
+            if np.any(valid):
+                valid_src_i = src_i[valid]
+                valid_src_j = src_j[valid]
+                slot_valid = np.asarray(pb[valid_src_i, valid_src_j, :], dtype=np.float32)
+                slot_valid += pb[valid_src_j, valid_src_i, :]
+                slot_valid *= 0.5
+                slot[valid, :] = slot_valid
+
+            write_col += N_CHANNELS
 
     if variant["use_self_diag"]:
         chunk[:, write_col:write_col + N_CHANNELS] = pb[pair_i, pair_i, :]

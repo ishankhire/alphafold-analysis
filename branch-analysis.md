@@ -1,5 +1,21 @@
 # Branch Analysis
 
+## Session: 2026-03-26 — Add generalized avg-symmetric axial train/test shard for layers 00-04
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+
+Added:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_00_04.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_00_04.sbatch`
+
+### Why
+Adds a memory-conscious generalized train/test variant that uses the symmetric
+average center pair plus four symmetric-average axial neighbors, restricted to
+layers 0-4 with the usual per-layer checkpointing and logging.
+
 ## Session: 2026-03-26 — Simplify cluster guidance to Delta only
 
 ### What changed
