@@ -15,6 +15,10 @@ plus the three `general_base256*` train/test variants, writes per-variant
 analysis outputs, and produces shared comparison plots under
 `delta_files/comparing_variants/`.
 
+Follow-up:
+- switched the comparison outputs to held-out/test-only aggregates so the
+  train/test variant curves line up with each variant `summary.txt`
+
 ## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
 
 ### What changed

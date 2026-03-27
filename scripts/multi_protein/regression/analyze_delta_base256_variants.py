@@ -88,6 +88,8 @@ class VariantSpec:
 @dataclass
 class ProcessedVariant:
     spec: VariantSpec
+    raw_per_protein: pd.DataFrame
+    raw_geometry_metrics: pd.DataFrame
     r2_protein_layer: pd.DataFrame
     r2_replicate_mean: pd.DataFrame
     r2_split_mean: pd.DataFrame
@@ -95,6 +97,10 @@ class ProcessedVariant:
     geometry_protein_layer: pd.DataFrame
     geometry_split_mean: pd.DataFrame
     geometry_layer_mean: pd.DataFrame
+    comparison_r2_protein_layer: pd.DataFrame
+    comparison_r2_layer_mean: pd.Series
+    comparison_geometry_protein_layer: pd.DataFrame
+    comparison_geometry_layer_mean: pd.DataFrame
     layer_cosine_matrix: np.ndarray
     same_layer_fold_cosine: pd.DataFrame | None
     summary_stats: pd.DataFrame
@@ -407,6 +413,38 @@ def build_geometry_tables(geometry_metrics: pd.DataFrame) -> tuple[pd.DataFrame,
     return geometry_protein_layer, geometry_split_mean, geometry_layer_mean
 
 
+def build_comparison_r2_tables(spec: VariantSpec, per_protein: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    heldout = per_protein[per_protein["split"] == "test"].copy()
+    if heldout.empty:
+        raise ValueError(f"{spec.folder} has no test rows for comparison R^2")
+    counts = heldout.groupby(["protein_id", "layer"], sort=True).size()
+    if not (counts == 1).all():
+        raise ValueError(f"{spec.folder} test-only R^2 rows are not unique per (protein_id, layer)")
+    protein_layer = heldout[["protein_id", "layer", "n_residues", "per_protein_r2"]].copy()
+    layer_mean = protein_layer.groupby("layer", sort=True)["per_protein_r2"].mean()
+    return protein_layer, layer_mean
+
+
+def build_comparison_geometry_tables(spec: VariantSpec, geometry_metrics: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    heldout = geometry_metrics[geometry_metrics["split"] == "test"].copy()
+    if heldout.empty:
+        raise ValueError(f"{spec.folder} has no test rows for comparison geometry")
+    counts = heldout.groupby(["protein_id", "layer"], sort=True).size()
+    if not (counts == 1).all():
+        raise ValueError(f"{spec.folder} test-only geometry rows are not unique per (protein_id, layer)")
+    protein_layer = heldout[
+        ["protein_id", "layer", "n_residues", "tm_score", "triangle_violation_fraction", "triangle_mean_violation"]
+    ].copy()
+    layer_mean = (
+        protein_layer.groupby("layer", sort=True)[
+            ["tm_score", "triangle_violation_fraction", "triangle_mean_violation"]
+        ]
+        .mean()
+        .reset_index()
+    )
+    return protein_layer, layer_mean
+
+
 def build_layer_cosine_matrix(spec: VariantSpec, coefficients: pd.DataFrame) -> np.ndarray:
     replicate_value = spec.geometry_replicates[0]
     filtered = coefficients[
@@ -542,22 +580,30 @@ def plot_variant_r2_tm(processed: ProcessedVariant) -> None:
                 label=f"Fold {fold} mean",
             )
     else:
-        for split in ("train", "test"):
-            split_group = processed.r2_split_mean[processed.r2_split_mean["split"] == split]
-            r2_ax.plot(
-                split_group["layer"],
-                split_group["per_protein_r2"],
-                color=SPLIT_COLORS[split],
-                linewidth=2.0,
-                label=f"{split.title()} mean",
-            )
-    r2_ax.plot(
-        processed.r2_layer_mean.index,
-        processed.r2_layer_mean.values,
-        color="black",
-        linewidth=2.6,
-        label="All-proteins mean",
-    )
+        train_group = processed.r2_split_mean[processed.r2_split_mean["split"] == "train"]
+        test_group = processed.r2_split_mean[processed.r2_split_mean["split"] == "test"]
+        r2_ax.plot(
+            train_group["layer"],
+            train_group["per_protein_r2"],
+            color=SPLIT_COLORS["train"],
+            linewidth=2.0,
+            label="Train mean",
+        )
+        r2_ax.plot(
+            test_group["layer"],
+            test_group["per_protein_r2"],
+            color="black",
+            linewidth=2.6,
+            label="Held-out mean",
+        )
+    if spec.baseline:
+        r2_ax.plot(
+            processed.r2_layer_mean.index,
+            processed.r2_layer_mean.values,
+            color="black",
+            linewidth=2.6,
+            label="All-proteins mean",
+        )
     r2_ax.set_title(f"{spec.label} R^2 across layers")
     r2_ax.set_ylabel("Per-protein R^2")
     r2_ax.grid(True, alpha=0.25)
@@ -566,22 +612,40 @@ def plot_variant_r2_tm(processed: ProcessedVariant) -> None:
     tm_ax = axes[1]
     for _, group in processed.geometry_protein_layer.groupby("protein_id", sort=True):
         tm_ax.plot(group["layer"], group["tm_score"], color="#d0d0d0", linewidth=0.6, alpha=0.7)
-    for split in ("train", "test"):
-        split_group = processed.geometry_split_mean[processed.geometry_split_mean["split"] == split]
+    if spec.baseline:
+        for split in ("train", "test"):
+            split_group = processed.geometry_split_mean[processed.geometry_split_mean["split"] == split]
+            tm_ax.plot(
+                split_group["layer"],
+                split_group["tm_score"],
+                color=SPLIT_COLORS[split],
+                linewidth=1.8,
+                label=f"{split.title()} mean",
+            )
         tm_ax.plot(
-            split_group["layer"],
-            split_group["tm_score"],
-            color=SPLIT_COLORS[split],
-            linewidth=1.8,
-            label=f"{split.title()} mean",
+            processed.geometry_layer_mean["layer"],
+            processed.geometry_layer_mean["tm_score"],
+            color="black",
+            linewidth=2.6,
+            label="All-proteins mean",
         )
-    tm_ax.plot(
-        processed.geometry_layer_mean["layer"],
-        processed.geometry_layer_mean["tm_score"],
-        color="black",
-        linewidth=2.6,
-        label="All-proteins mean",
-    )
+    else:
+        train_group = processed.geometry_split_mean[processed.geometry_split_mean["split"] == "train"]
+        test_group = processed.geometry_split_mean[processed.geometry_split_mean["split"] == "test"]
+        tm_ax.plot(
+            train_group["layer"],
+            train_group["tm_score"],
+            color=SPLIT_COLORS["train"],
+            linewidth=1.8,
+            label="Train mean",
+        )
+        tm_ax.plot(
+            test_group["layer"],
+            test_group["tm_score"],
+            color="black",
+            linewidth=2.6,
+            label="Held-out mean",
+        )
     title_suffix = " (fold 4 geometry)" if spec.baseline else ""
     tm_ax.set_title(f"{spec.label} TM-score across layers{title_suffix}")
     tm_ax.set_xlabel("Layer")
@@ -667,11 +731,28 @@ def plot_trajectory_grid(
 ) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(14, 10), sharex=True, sharey=True, constrained_layout=True)
     axes_flat = axes.ravel()
-    limits = padded_limits([variant.r2_protein_layer[metric_column].to_numpy() if metric_column == "per_protein_r2" else variant.geometry_protein_layer[metric_column].to_numpy() for variant in processed_variants])
+    limits = padded_limits(
+        [
+            (
+                variant.comparison_r2_protein_layer[metric_column].to_numpy()
+                if metric_column == "per_protein_r2"
+                else variant.comparison_geometry_protein_layer[metric_column].to_numpy()
+            )
+            for variant in processed_variants
+        ]
+    )
 
     for ax, processed in zip(axes_flat, processed_variants):
-        source_df = processed.r2_protein_layer if metric_column == "per_protein_r2" else processed.geometry_protein_layer
-        mean_series = processed.r2_layer_mean if metric_column == "per_protein_r2" else processed.geometry_layer_mean.set_index("layer")[metric_column]
+        source_df = (
+            processed.comparison_r2_protein_layer
+            if metric_column == "per_protein_r2"
+            else processed.comparison_geometry_protein_layer
+        )
+        mean_series = (
+            processed.comparison_r2_layer_mean
+            if metric_column == "per_protein_r2"
+            else processed.comparison_geometry_layer_mean.set_index("layer")[metric_column]
+        )
         for _, group in source_df.groupby("protein_id", sort=True):
             ax.plot(group["layer"], group[metric_column], color="#d0d0d0", linewidth=0.55, alpha=0.55)
         ax.plot(
@@ -703,26 +784,26 @@ def plot_mean_curves(processed_variants: list[ProcessedVariant], out_path: Path)
     for processed in processed_variants:
         color = VARIANT_COLORS[processed.spec.folder]
         axes[0].plot(
-            processed.r2_layer_mean.index,
-            processed.r2_layer_mean.values,
+            processed.comparison_r2_layer_mean.index,
+            processed.comparison_r2_layer_mean.values,
             color=color,
             linewidth=2.2,
             label=processed.spec.label,
         )
         axes[1].plot(
-            processed.geometry_layer_mean["layer"],
-            processed.geometry_layer_mean["tm_score"],
+            processed.comparison_geometry_layer_mean["layer"],
+            processed.comparison_geometry_layer_mean["tm_score"],
             color=color,
             linewidth=2.2,
             label=processed.spec.label,
         )
 
-    axes[0].set_title("Average R^2 across layers by variant")
+    axes[0].set_title("Held-out average R^2 across layers by variant")
     axes[0].set_ylabel("Mean per-protein R^2")
     axes[0].grid(True, alpha=0.25)
     axes[0].legend(fontsize=9)
 
-    axes[1].set_title("Average TM-score across layers by variant")
+    axes[1].set_title("Held-out average TM-score across layers by variant")
     axes[1].set_xlabel("Layer")
     axes[1].set_ylabel("Mean TM-score")
     axes[1].grid(True, alpha=0.25)
@@ -739,26 +820,26 @@ def plot_triangle_curves(processed_variants: list[ProcessedVariant], out_path: P
     for processed in processed_variants:
         color = VARIANT_COLORS[processed.spec.folder]
         axes[0].plot(
-            processed.geometry_layer_mean["layer"],
-            processed.geometry_layer_mean["triangle_violation_fraction"],
+            processed.comparison_geometry_layer_mean["layer"],
+            processed.comparison_geometry_layer_mean["triangle_violation_fraction"],
             color=color,
             linewidth=2.2,
             label=processed.spec.label,
         )
         axes[1].plot(
-            processed.geometry_layer_mean["layer"],
-            processed.geometry_layer_mean["triangle_mean_violation"],
+            processed.comparison_geometry_layer_mean["layer"],
+            processed.comparison_geometry_layer_mean["triangle_mean_violation"],
             color=color,
             linewidth=2.2,
             label=processed.spec.label,
         )
 
-    axes[0].set_title("Triangle inequality violation fraction across layers")
+    axes[0].set_title("Held-out triangle inequality violation fraction across layers")
     axes[0].set_ylabel("Mean violation fraction")
     axes[0].grid(True, alpha=0.25)
     axes[0].legend(fontsize=9)
 
-    axes[1].set_title("Triangle inequality mean violation magnitude across layers")
+    axes[1].set_title("Held-out triangle inequality mean violation magnitude across layers")
     axes[1].set_xlabel("Layer")
     axes[1].set_ylabel("Mean violation magnitude")
     axes[1].grid(True, alpha=0.25)
@@ -794,23 +875,23 @@ def save_comparison_outputs(processed_variants: list[ProcessedVariant]) -> None:
         metric_column="per_protein_r2",
         ylabel="Per-protein R^2",
         out_path=COMPARE_DIR / "protein_trajectory_grid_r2.png",
-        title="Per-protein R^2 trajectories by variant",
-        footer="Baseline R^2 is averaged across its five folds.",
+        title="Held-out per-protein R^2 trajectories by variant",
+        footer="Train/test variants use test proteins only. Baseline pools test rows across all five folds.",
     )
     plot_trajectory_grid(
         processed_variants,
         metric_column="tm_score",
         ylabel="TM-score",
         out_path=COMPARE_DIR / "protein_trajectory_grid_tm_score.png",
-        title="Per-protein TM-score trajectories by variant",
-        footer="Baseline TM-score uses fold 4 geometry; train/test variants use split 0 geometry.",
+        title="Held-out per-protein TM-score trajectories by variant",
+        footer="Train/test variants use test proteins only. Baseline TM-score uses fold-4 test geometry only.",
     )
     plot_mean_curves(processed_variants, COMPARE_DIR / "variant_mean_r2_tm_across_layers.png")
     plot_triangle_curves(processed_variants, COMPARE_DIR / "variant_triangle_violation_across_layers.png")
 
     rows = []
     for processed in processed_variants:
-        geometry_means = processed.geometry_layer_mean.set_index("layer")
+        geometry_means = processed.comparison_geometry_layer_mean.set_index("layer")
         for layer in EXPECTED_LAYERS:
             rows.append(
                 {
@@ -818,7 +899,7 @@ def save_comparison_outputs(processed_variants: list[ProcessedVariant]) -> None:
                     "label": processed.spec.label,
                     "feature_dim": processed.spec.feature_dim,
                     "layer": layer,
-                    "mean_r2": float(processed.r2_layer_mean.loc[layer]),
+                    "mean_r2": float(processed.comparison_r2_layer_mean.loc[layer]),
                     "mean_tm_score": float(geometry_means.loc[layer, "tm_score"]),
                     "mean_triangle_violation_fraction": float(
                         geometry_means.loc[layer, "triangle_violation_fraction"]
@@ -826,8 +907,8 @@ def save_comparison_outputs(processed_variants: list[ProcessedVariant]) -> None:
                     "mean_triangle_mean_violation": float(
                         geometry_means.loc[layer, "triangle_mean_violation"]
                     ),
-                    "r2_source": "fold_averaged_all_proteins" if processed.spec.baseline else "split0_all_proteins",
-                    "geometry_source": "fold4_all_proteins" if processed.spec.baseline else "split0_all_proteins",
+                    "r2_source": "heldout_test_rows_pooled_across_folds" if processed.spec.baseline else "split0_test_only",
+                    "geometry_source": "fold4_test_only" if processed.spec.baseline else "split0_test_only",
                 }
             )
     pd.DataFrame(rows).to_csv(COMPARE_DIR / "variant_layer_means.csv", index=False, float_format="%.6f")
@@ -839,12 +920,19 @@ def process_variant(spec: VariantSpec) -> ProcessedVariant:
 
     r2_protein_layer, r2_replicate_mean, r2_split_mean, r2_layer_mean = build_r2_tables(spec, per_protein)
     geometry_protein_layer, geometry_split_mean, geometry_layer_mean = build_geometry_tables(geometry_metrics)
+    comparison_r2_protein_layer, comparison_r2_layer_mean = build_comparison_r2_tables(spec, per_protein)
+    comparison_geometry_protein_layer, comparison_geometry_layer_mean = build_comparison_geometry_tables(
+        spec,
+        geometry_metrics,
+    )
     layer_cosine_matrix = build_layer_cosine_matrix(spec, coefficients)
     same_layer_fold_cosine = build_same_layer_fold_cosines(coefficients) if spec.baseline else None
     summary_stats = build_summary_stats(spec, r2_protein_layer, geometry_protein_layer)
 
     return ProcessedVariant(
         spec=spec,
+        raw_per_protein=per_protein,
+        raw_geometry_metrics=geometry_metrics,
         r2_protein_layer=r2_protein_layer,
         r2_replicate_mean=r2_replicate_mean,
         r2_split_mean=r2_split_mean,
@@ -852,6 +940,10 @@ def process_variant(spec: VariantSpec) -> ProcessedVariant:
         geometry_protein_layer=geometry_protein_layer,
         geometry_split_mean=geometry_split_mean,
         geometry_layer_mean=geometry_layer_mean,
+        comparison_r2_protein_layer=comparison_r2_protein_layer,
+        comparison_r2_layer_mean=comparison_r2_layer_mean,
+        comparison_geometry_protein_layer=comparison_geometry_protein_layer,
+        comparison_geometry_layer_mean=comparison_geometry_layer_mean,
         layer_cosine_matrix=layer_cosine_matrix,
         same_layer_fold_cosine=same_layer_fold_cosine,
         summary_stats=summary_stats,
