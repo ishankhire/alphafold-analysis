@@ -1,5 +1,20 @@
 # Branch Analysis
 
+## Session: 2026-03-27 — Add one combined base256 variant analysis workflow
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/analyze_delta_base256_variants.py`
+
+### Why
+Adds one fixed local post-processing script that analyzes `baseline256_kfold`
+plus the three `general_base256*` train/test variants, writes per-variant
+analysis outputs, and produces shared comparison plots under
+`delta_files/comparing_variants/`.
+
 ## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
 
 ### What changed
