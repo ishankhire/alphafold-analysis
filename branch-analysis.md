@@ -1,5 +1,22 @@
 # Branch Analysis
 
+## Session: 2026-03-26 — Add remaining generalized avg-symmetric axial train/test shards
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.sbatch`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.sbatch`
+
+### Why
+Splits the remaining layer ranges into separate generalized train/test jobs so
+the 00-04, 05-25, and 26-47 shards together cover all 48 layers while writing
+to separate output files.
+
 ## Session: 2026-03-26 — Add generalized avg-symmetric axial train/test shard for layers 00-04
 
 ### What changed
