@@ -969,3 +969,41 @@ needed the rerun to preserve the canonical outputs already written for layers
   uses the same shared helper:
   - plain `np.load(...)` in the layer cache path
   - direct preallocated feature writes instead of repeated concatenation
+
+## Session: 2026-04-01 — Verify resume neutrality and remove resume-from-layer support
+
+### What changed
+Updated:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_train_test.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_plus_diagonal_train_test.py`
+- `branch-analysis.md`
+
+### Why
+The helper already supported arbitrary layer subsets through `layer_indices`, so
+the separate `resume_from_layer` path was unnecessary extra orchestration. Before
+removing it, we needed to verify that prior resumed runs were numerically
+consistent with direct subset runs for the same resumed layers.
+
+### Key design decisions
+- Verified resume neutrality before removal using a controlled synthetic setup
+  for both full-run variants:
+  - `general_base256_avg_symmetric`
+  - `general_base256_plus_diagonal`
+- Compared resumed layers against direct subset runs for:
+  - `split_summary.csv` ignoring only `elapsed_seconds`
+  - `per_protein.csv`
+  - `coefficients.csv`
+  - `geometry_metrics.csv`
+  - `geometry_summary.csv`
+- The resumed-layer CSV rows matched exactly in the synthetic comparison, which
+  supports treating previous resumed outputs as valid.
+- Removed the resume-specific helper orchestration entirely:
+  - no CSV reload/validation helpers
+  - no prior-summary elapsed parsing
+  - no `resume_from_layer` argument on `run_variant_job(...)`
+- Kept `layer_indices` and `output_filename_suffix` as the long-term mechanism
+  for partial-layer train/test runs, including the existing axial layer-split
+  wrappers.
+- Simplified the two full-run wrappers back to plain all-layer calls without
+  explicit resume constants.

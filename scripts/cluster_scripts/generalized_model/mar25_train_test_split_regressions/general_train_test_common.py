@@ -260,196 +260,6 @@ def write_csv(path, fieldnames, rows):
             writer.writerow({key: format_value(row.get(key, "")) for key in fieldnames})
 
 
-def read_csv_rows(path, expected_fieldnames):
-    """Load one CSV and validate its header."""
-    if not path.exists():
-        raise FileNotFoundError(f"Required resume file is missing: {path}")
-
-    with path.open("r", newline="") as handle:
-        reader = csv.DictReader(handle)
-        actual_fieldnames = list(reader.fieldnames or [])
-        if actual_fieldnames != list(expected_fieldnames):
-            raise ValueError(
-                f"Unexpected columns in {path.name}: "
-                f"expected {list(expected_fieldnames)}, observed {actual_fieldnames}"
-            )
-        return [dict(row) for row in reader]
-
-
-def coerce_geometry_metric_rows(rows):
-    """Convert resumed geometry metric fields back to numeric types."""
-    int_keys = {"n_negative_eigenvalues", "n_negative_predictions"}
-    coerced = []
-    for row in rows:
-        out = dict(row)
-        for field_name in GEOMETRY_METRIC_KEYS:
-            raw_value = out.get(field_name, "")
-            if raw_value in ("", None):
-                continue
-            out[field_name] = int(raw_value) if field_name in int_keys else float(raw_value)
-        coerced.append(out)
-    return coerced
-
-
-def parse_elapsed_seconds_from_summary(path):
-    """Read the prior elapsed-seconds value from one summary file."""
-    if not path.exists():
-        raise FileNotFoundError(f"Required resume file is missing: {path}")
-
-    for line in path.read_text().splitlines():
-        if not line.startswith("Elapsed seconds:"):
-            continue
-        value_text = line.split(":", 1)[1].strip()
-        try:
-            return float(value_text)
-        except ValueError as exc:
-            raise ValueError(
-                f"Could not parse elapsed seconds from {path}: {value_text!r}"
-            ) from exc
-
-    raise ValueError(f"Could not find 'Elapsed seconds:' in {path}")
-
-
-def row_signature(row, fieldnames):
-    """Render one stable comparable row signature."""
-    return tuple(str(format_value(row.get(field_name, ""))) for field_name in fieldnames)
-
-
-def sorted_unique_layers(rows):
-    """Return one sorted unique layer list from rows that carry a layer column."""
-    return sorted({int(row["layer"]) for row in rows})
-
-
-def validate_resume_table_rows(rows, *, path, fieldnames, variant, require_layers):
-    """Validate one saved canonical table before resuming."""
-    expected_feature_dim = int(feature_dim_for_variant(variant))
-    for row in rows:
-        if "variant" in fieldnames and row.get("variant") != variant["name"]:
-            raise ValueError(
-                f"Resume file {path.name} has variant {row.get('variant')!r}, "
-                f"expected {variant['name']!r}"
-            )
-        if "feature_dim" in fieldnames and int(row["feature_dim"]) != expected_feature_dim:
-            raise ValueError(
-                f"Resume file {path.name} has feature_dim {row['feature_dim']!r}, "
-                f"expected {expected_feature_dim}"
-            )
-        if "split_id" in fieldnames and int(row["split_id"]) != SPLIT_ID:
-            raise ValueError(
-                f"Resume file {path.name} has split_id {row['split_id']!r}, expected {SPLIT_ID}"
-            )
-
-    observed_layers = sorted_unique_layers(rows) if "layer" in fieldnames else []
-    if require_layers and observed_layers != list(require_layers):
-        raise ValueError(
-            f"Resume file {path.name} has layers {observed_layers}, "
-            f"expected {list(require_layers)}"
-        )
-    return observed_layers
-
-
-def validate_saved_split_assignments(path, saved_rows, expected_rows):
-    """Ensure the saved split assignment file matches the rebuilt deterministic split."""
-    saved_signatures = sorted(
-        row_signature(row, SPLIT_ASSIGNMENT_FIELDNAMES) for row in saved_rows
-    )
-    expected_signatures = sorted(
-        row_signature(row, SPLIT_ASSIGNMENT_FIELDNAMES) for row in expected_rows
-    )
-    if saved_signatures != expected_signatures:
-        raise ValueError(
-            f"Saved split assignments in {path.name} do not match the rebuilt deterministic split."
-        )
-
-
-def load_resume_state(
-    *,
-    output_dir,
-    variant,
-    output_filename_suffix,
-    expected_completed_layers,
-    split_assignment_rows,
-):
-    """Load and validate the prior canonical outputs for one explicit resume."""
-    split_summary_path = output_dir / resolve_output_filename(
-        SPLIT_SUMMARY_CSV_NAME,
-        output_filename_suffix,
-    )
-    per_protein_path = output_dir / resolve_output_filename(
-        PER_PROTEIN_CSV_NAME,
-        output_filename_suffix,
-    )
-    coefficients_path = output_dir / resolve_output_filename(
-        COEFFICIENTS_CSV_NAME,
-        output_filename_suffix,
-    )
-    split_assignments_path = output_dir / resolve_output_filename(
-        SPLIT_ASSIGNMENTS_CSV_NAME,
-        output_filename_suffix,
-    )
-    geometry_metrics_path = output_dir / resolve_output_filename(
-        GEOMETRY_METRICS_CSV_NAME,
-        output_filename_suffix,
-    )
-    summary_path = output_dir / resolve_output_filename(
-        SUMMARY_TXT_NAME,
-        output_filename_suffix,
-    )
-
-    split_summary_rows = read_csv_rows(split_summary_path, SPLIT_SUMMARY_FIELDNAMES)
-    per_protein_rows = read_csv_rows(per_protein_path, PER_PROTEIN_FIELDNAMES)
-    coefficient_rows = read_csv_rows(coefficients_path, COEFFICIENT_FIELDNAMES)
-    saved_split_assignment_rows = read_csv_rows(
-        split_assignments_path,
-        SPLIT_ASSIGNMENT_FIELDNAMES,
-    )
-    geometry_rows = read_csv_rows(geometry_metrics_path, GEOMETRY_METRICS_FIELDNAMES)
-    geometry_rows = coerce_geometry_metric_rows(geometry_rows)
-    prior_elapsed_seconds = parse_elapsed_seconds_from_summary(summary_path)
-
-    validate_resume_table_rows(
-        split_summary_rows,
-        path=split_summary_path,
-        fieldnames=SPLIT_SUMMARY_FIELDNAMES,
-        variant=variant,
-        require_layers=expected_completed_layers,
-    )
-    validate_resume_table_rows(
-        per_protein_rows,
-        path=per_protein_path,
-        fieldnames=PER_PROTEIN_FIELDNAMES,
-        variant=variant,
-        require_layers=expected_completed_layers,
-    )
-    validate_resume_table_rows(
-        coefficient_rows,
-        path=coefficients_path,
-        fieldnames=COEFFICIENT_FIELDNAMES,
-        variant=variant,
-        require_layers=expected_completed_layers,
-    )
-    validate_resume_table_rows(
-        geometry_rows,
-        path=geometry_metrics_path,
-        fieldnames=GEOMETRY_METRICS_FIELDNAMES,
-        variant=variant,
-        require_layers=expected_completed_layers,
-    )
-    validate_saved_split_assignments(
-        split_assignments_path,
-        saved_split_assignment_rows,
-        split_assignment_rows,
-    )
-
-    return {
-        "split_summary_rows": split_summary_rows,
-        "per_protein_rows": per_protein_rows,
-        "coefficient_rows": coefficient_rows,
-        "geometry_rows": geometry_rows,
-        "prior_elapsed_seconds": float(prior_elapsed_seconds),
-    }
-
-
 def make_variant(name, pair_mode="concat_directional", use_self_diag=False, use_axial=False):
     """Construct one fixed train/test feature specification."""
     if pair_mode not in VALID_PAIR_MODES:
@@ -1324,7 +1134,6 @@ def run_variant_job(
     title,
     layer_indices=None,
     output_filename_suffix="",
-    resume_from_layer=None,
 ):
     """Run one strict train/test regression job for a fixed variant and layer subset."""
     t0 = time.time()
@@ -1332,13 +1141,6 @@ def run_variant_job(
     pdb_root_env = os.environ.get("PDB_ROOT")
     csv_root_env = os.environ.get("CSV_ROOT")
     layer_indices = normalize_layer_indices(layer_indices)
-    if resume_from_layer is not None:
-        resume_from_layer = int(resume_from_layer)
-        if resume_from_layer not in layer_indices:
-            raise ValueError(
-                f"resume_from_layer={resume_from_layer} is not in the requested layer set "
-                f"{layer_indices}"
-            )
 
     if not pair_blocks_root_env or not pdb_root_env or not csv_root_env:
         raise ValueError("PAIR_BLOCKS_ROOT, PDB_ROOT, and CSV_ROOT must all be set.")
@@ -1373,75 +1175,32 @@ def run_variant_job(
     log_progress(f"Test proteins:    {len(test_records)}")
     log_progress(f"Size bin counts:  {size_bin_counts}")
 
-    prior_elapsed_seconds = 0.0
-    if resume_from_layer is None:
-        split_summary_rows = []
-        per_protein_rows = []
-        coefficient_rows = []
-        geometry_rows = []
-        pending_layers = list(layer_indices)
+    split_summary_rows = []
+    per_protein_rows = []
+    coefficient_rows = []
+    geometry_rows = []
 
-        flush_outputs(
-            output_dir=output_dir,
-            title=title,
-            variant=variant,
-            layer_indices=layer_indices,
-            output_filename_suffix=output_filename_suffix,
-            all_proteins=all_proteins,
-            loaded_records=records,
-            skipped=skipped,
-            size_bin_counts=size_bin_counts,
-            train_records=train_records,
-            test_records=test_records,
-            split_summary_rows=split_summary_rows,
-            per_protein_rows=per_protein_rows,
-            coefficient_rows=coefficient_rows,
-            split_assignment_rows=split_assignment_rows,
-            geometry_rows=geometry_rows,
-            elapsed_seconds=float(time.time() - t0),
-        )
-    else:
-        expected_completed_layers = [layer for layer in layer_indices if layer < resume_from_layer]
-        pending_layers = [layer for layer in layer_indices if layer >= resume_from_layer]
-        if not expected_completed_layers:
-            raise ValueError(
-                f"resume_from_layer={resume_from_layer} leaves no prior completed layers to validate."
-            )
-        if not pending_layers:
-            raise ValueError(
-                f"resume_from_layer={resume_from_layer} leaves no layers to run."
-            )
+    flush_outputs(
+        output_dir=output_dir,
+        title=title,
+        variant=variant,
+        layer_indices=layer_indices,
+        output_filename_suffix=output_filename_suffix,
+        all_proteins=all_proteins,
+        loaded_records=records,
+        skipped=skipped,
+        size_bin_counts=size_bin_counts,
+        train_records=train_records,
+        test_records=test_records,
+        split_summary_rows=split_summary_rows,
+        per_protein_rows=per_protein_rows,
+        coefficient_rows=coefficient_rows,
+        split_assignment_rows=split_assignment_rows,
+        geometry_rows=geometry_rows,
+        elapsed_seconds=float(time.time() - t0),
+    )
 
-        resume_state = load_resume_state(
-            output_dir=output_dir,
-            variant=variant,
-            output_filename_suffix=output_filename_suffix,
-            expected_completed_layers=expected_completed_layers,
-            split_assignment_rows=split_assignment_rows,
-        )
-        split_summary_rows = resume_state["split_summary_rows"]
-        per_protein_rows = resume_state["per_protein_rows"]
-        coefficient_rows = resume_state["coefficient_rows"]
-        geometry_rows = resume_state["geometry_rows"]
-        prior_elapsed_seconds = float(resume_state["prior_elapsed_seconds"])
-
-        log_progress(
-            f"Resuming variant {variant['name']} from layer {resume_from_layer:02d}; "
-            f"validated saved layers {format_layer_indices(expected_completed_layers)}"
-        )
-        log_progress(
-            f"Pending layers:    {format_layer_indices(pending_layers)} "
-            f"({len(pending_layers)} total)"
-        )
-        log_progress(
-            f"Loaded resume state: "
-            f"{len(split_summary_rows)} split rows, "
-            f"{len(per_protein_rows)} per-protein rows, "
-            f"{len(coefficient_rows)} coefficient rows, "
-            f"{len(geometry_rows)} geometry rows"
-        )
-
-    for layer in pending_layers:
+    for layer in layer_indices:
         layer_t0 = time.time()
         log_progress(f"Layer {layer:02d}: starting cache build")
         layer_cache = load_layer_feature_cache(records, layer, variant)
@@ -1601,7 +1360,7 @@ def run_variant_job(
                 coefficient_rows=coefficient_rows,
                 split_assignment_rows=split_assignment_rows,
                 geometry_rows=geometry_rows,
-                elapsed_seconds=float(prior_elapsed_seconds + (time.time() - t0)),
+                elapsed_seconds=float(time.time() - t0),
             )
             checkpoint_elapsed = time.time() - checkpoint_t0
             log_progress(
@@ -1631,6 +1390,6 @@ def run_variant_job(
         coefficient_rows=coefficient_rows,
         split_assignment_rows=split_assignment_rows,
         geometry_rows=geometry_rows,
-        elapsed_seconds=float(prior_elapsed_seconds + (time.time() - t0)),
+        elapsed_seconds=float(time.time() - t0),
     )
     log_progress(f"Completed {variant['name']} train/test run in {time.time() - t0:.1f}s")
