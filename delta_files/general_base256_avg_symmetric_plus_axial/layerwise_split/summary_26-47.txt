@@ -1,0 +1,45 @@
+General Train/Test Regression - base256_avg_symmetric_plus_axial (layers 26-47)
+===============================================================================
+
+Variant:             general_base256_avg_symmetric_plus_axial
+Feature dimension:   640
+Layers:              26-47 (22 total)
+Train/test split:    deterministic 80/20 protein-level, size-stratified
+Random state:        42
+Proteins discovered: 184
+Proteins loaded:     184
+Train proteins:      147
+Test proteins:       37
+Skipped proteins:    0
+Size bin counts:     {0: 37, 1: 37, 2: 37, 3: 37, 4: 36}
+Elapsed seconds:     16138.11
+
+Best layer by held-out per-protein R2:
+  Layer 47 -> 0.9366
+
+Best layer by held-out mean TM-score:
+  Layer 45 -> 0.8132
+
+Layer means (held-out per-protein R2):
+  Layer 26: 0.7879
+  Layer 27: 0.7856
+  Layer 28: 0.7813
+  Layer 29: 0.7836
+  Layer 30: 0.7828
+  Layer 31: 0.7911
+  Layer 32: 0.8076
+  Layer 33: 0.8013
+  Layer 34: 0.8167
+  Layer 35: 0.8133
+  Layer 36: 0.8340
+  Layer 37: 0.8462
+  Layer 38: 0.8479
+  Layer 39: 0.8619
+  Layer 40: 0.8625
+  Layer 41: 0.8676
+  Layer 42: 0.8735
+  Layer 43: 0.8972
+  Layer 44: 0.9261
+  Layer 45: 0.9247
+  Layer 46: 0.9347
+  Layer 47: 0.9366
