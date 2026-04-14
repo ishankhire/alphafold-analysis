@@ -1,126 +1,18 @@
 # Branch Analysis
 
-## Session: 2026-03-27 — Narrow generalized geometry resume coercion
-
-### What changed
-Updated:
-- `branch-analysis.md`
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
-- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
-- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
-
-### Why
-Shrinks the earlier resume fix to one geometry-only coercion path instead of
-typing every resumed CSV table.
-
-## Session: 2026-03-27 — Backfill general avg-symmetric geometry summary
+## Session: 2026-04-14 — Add baseline256 segment coefficient evolution analysis
 
 ### What changed
 Updated:
 - `branch-analysis.md`
 
 Added:
-- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
-
-Generated:
-- `delta_files/general_base256_avg_symmetric/geometry_summary.csv`
+- `scripts/multi_protein/regression/analyze_delta_baseline256_kfold_segment_coefficients.py`
 
 ### Why
-Repairs the already-saved `general_base256_avg_symmetric/geometry_summary.csv`
-after confirming the same resume-string aggregation bug left the early layers as
-`NaN`.
-
-## Session: 2026-03-27 — Add fold-4 layer segmentation analysis for baseline256_kfold
-
-### What changed
-Updated:
-- `branch-analysis.md`
-
-Added:
-- `scripts/multi_protein/regression/analyze_delta_baseline256_kfold_segmentation.py`
-
-### Why
-Adds a fixed local post-processing script that finds contiguous layer
-segments from the fold-4 coefficient vectors, writes boundary/evidence CSVs,
-and overlays the K=3 boundaries on the fold-4 cosine heatmap.
-
-## Session: 2026-03-27 — Fix resumed generalized geometry summary backfill
-
-### What changed
-Updated:
-- `branch-analysis.md`
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
-
-Added:
-- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
-
-Generated:
-- `delta_files/general_base256_plus_diagonal/geometry_summary.csv`
-
-### Why
-Retypes resumed CSV rows before aggregation so resumed train/test jobs no longer
-emit `NaN` geometry summaries, and backfills the already-broken
-`general_base256_plus_diagonal/geometry_summary.csv` from the saved per-protein
-geometry metrics.
-
-## Session: 2026-03-27 — Add one combined base256 variant analysis workflow
-
-### What changed
-Updated:
-- `branch-analysis.md`
-
-Added:
-- `scripts/multi_protein/regression/analyze_delta_base256_variants.py`
-
-### Why
-Adds one fixed local post-processing script that analyzes `baseline256_kfold`
-plus the three `general_base256*` train/test variants, writes per-variant
-analysis outputs, and produces shared comparison plots under
-`delta_files/comparing_variants/`.
-
-Follow-up:
-- switched the comparison outputs to held-out/test-only aggregates so the
-  train/test variant curves line up with each variant `summary.txt`
-
-## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
-
-### What changed
-Updated:
-- `branch-analysis.md`
-
-Added:
-- `scripts/multi_protein/regression/aggregate_general_avg_symmetric_plus_axial_shards.py`
-
-Generated:
-- `delta_files/general_base256_avg_symmetric_plus_axial/coefficients.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_metrics.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_summary.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/per_protein.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/split_assignments.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/split_summary.csv`
-- `delta_files/general_base256_avg_symmetric_plus_axial/summary.txt`
-
-### Why
-Adds a checked local merge step so the three layer shards produce the same
-single-file aggregate statistics layout as the other generalized train/test
-variants.
-
-## Session: 2026-03-26 — Add remaining generalized avg-symmetric axial train/test shards
-
-### What changed
-Updated:
-- `branch-analysis.md`
-
-Added:
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.py`
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.sbatch`
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.py`
-- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.sbatch`
-
-### Why
-Splits the remaining layer ranges into separate generalized train/test jobs so
-the 00-04, 05-25, and 26-47 shards together cover all 48 layers while writing
-to separate output files.
+Adds a fold-4 post-processing script that reuses the saved K=3 layer
+segmentation to summarize coefficient channels by segment and write
+interpretation-focused CSVs plus plots.
 
 ## Session: 2026-03-26 — Add generalized avg-symmetric axial train/test shard for layers 00-04
 
@@ -368,6 +260,8 @@ the axial variant while keeping the new files isolated inside
   - write to `CSV_ROOT/baseline256_plus_axial/`
   - keep `variant=baseline256_plus_axial`
   - encode layer windows only in filenames such as `fold_summary_0-4.csv`
+  - `coefficients_25-29.csv`, and `summary_45-47.txt`, which keeps later CSV
+    merging simple while avoiding extra output-directory branching.
 - Placed the new files in `generalized_model/splitting_layers/`, so each shard
   wrapper adds the parent `generalized_model` directory to `sys.path` before
   importing `context_feature_kfold_common`.
@@ -1007,3 +901,125 @@ consistent with direct subset runs for the same resumed layers.
   wrappers.
 - Simplified the two full-run wrappers back to plain all-layer calls without
   explicit resume constants.
+Adds a fold-4 post-processing script that reuses the saved K=3 layer
+segmentation to summarize 256 coefficient channels by segment and write
+interpretation-focused CSVs plus plots.
+
+## Session: 2026-03-27 — Narrow generalized geometry resume coercion
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
+- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
+
+### Why
+Shrinks the earlier resume fix to one geometry-only coercion path instead of
+typing every resumed CSV table.
+
+## Session: 2026-03-27 — Backfill general avg-symmetric geometry summary
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/backfill_general_base256_avg_symmetric_geometry_summary.py`
+
+Generated:
+- `delta_files/general_base256_avg_symmetric/geometry_summary.csv`
+
+### Why
+Repairs the already-saved `general_base256_avg_symmetric/geometry_summary.csv`
+after confirming the same resume-string aggregation bug left the early layers as
+`NaN`.
+
+## Session: 2026-03-27 — Add fold-4 layer segmentation analysis for baseline256_kfold
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/analyze_delta_baseline256_kfold_segmentation.py`
+
+### Why
+Adds a fixed local post-processing script that finds contiguous layer
+segments from the fold-4 coefficient vectors, writes boundary/evidence CSVs,
+and overlays the K=3 boundaries on the fold-4 cosine heatmap.
+
+## Session: 2026-03-27 — Fix resumed generalized geometry summary backfill
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_train_test_common.py`
+
+Added:
+- `scripts/multi_protein/regression/backfill_general_base256_plus_diagonal_geometry_summary.py`
+
+Generated:
+- `delta_files/general_base256_plus_diagonal/geometry_summary.csv`
+
+### Why
+Retypes resumed CSV rows before aggregation so resumed train/test jobs no longer
+emit `NaN` geometry summaries, and backfills the already-broken
+`general_base256_plus_diagonal/geometry_summary.csv` from the saved per-protein
+geometry metrics.
+
+## Session: 2026-03-27 — Add one combined base256 variant analysis workflow
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/analyze_delta_base256_variants.py`
+
+### Why
+Adds one fixed local post-processing script that analyzes `baseline256_kfold`
+plus the three `general_base256*` train/test variants, writes per-variant
+analysis outputs, and produces shared comparison plots under
+`delta_files/comparing_variants/`.
+
+Follow-up:
+- switched the comparison outputs to held-out/test-only aggregates so the
+  train/test variant curves line up with each variant `summary.txt`
+
+## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/regression/aggregate_general_avg_symmetric_plus_axial_shards.py`
+
+Generated:
+- `delta_files/general_base256_avg_symmetric_plus_axial/coefficients.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_metrics.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/geometry_summary.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/per_protein.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/split_assignments.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/split_summary.csv`
+- `delta_files/general_base256_avg_symmetric_plus_axial/summary.txt`
+
+### Why
+Adds a checked local merge step so the three layer shards produce the same
+single-file aggregate statistics layout as the other generalized train/test
+variants.
+
+## Session: 2026-03-26 — Add remaining generalized avg-symmetric axial train/test shards
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_05_25.sbatch`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.py`
+- `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.sbatch`
+
+### Why
