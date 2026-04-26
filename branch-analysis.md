@@ -1,5 +1,18 @@
 # Branch Analysis
 
+## Session: 2026-04-26 — Add MDS coordinate PDB exporter
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/multi_protein/export_mds_coords_to_pdb.py`
+
+### Why
+Adds a small local utility that converts reconstructed MDS coordinate CSVs into
+CA-trace PDBs for PyMOL overlays.
+
 ## Session: 2026-04-14 — Add baseline256 segment coefficient evolution analysis
 
 ### What changed
