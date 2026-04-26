@@ -1,5 +1,20 @@
 # Branch Analysis
 
+## Session: 2026-04-26 — Add fold-4 coefficient replay MDS export for first five proteins
+
+### What changed
+Updated:
+- `branch-analysis.md`
+
+Added:
+- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.sbatch`
+
+### Why
+Adds a Delta-ready replay job that reuses saved baseline256 fold-4
+coefficients to reconstruct all-layer MDS coordinates and ChimeraX-friendly
+PDB exports for the first five proteins without rerunning regression.
+
 ## Session: 2026-04-26 — Add MDS coordinate PDB exporter
 
 ### What changed
