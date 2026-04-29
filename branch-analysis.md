@@ -1026,8 +1026,8 @@ analysis outputs, and produces shared comparison plots under
 
 ## Session: 2026-04-29 — Add Chimera image strip builder
 
-Added `scripts/multi_protein/make_chimera_image_strip.py` for composing
-Chimera PNG exports into a labeled horizontal strip.
+Added `chimera_files/make_chimera_image_strip.py` for composing Chimera PNG
+exports into a labeled horizontal strip.
 
 Follow-up:
 - switched the comparison outputs to held-out/test-only aggregates so the

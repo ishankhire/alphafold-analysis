@@ -5,10 +5,10 @@ make_chimera_image_strip.py
 Compose Chimera-rendered PNGs into a labeled horizontal strip.
 
 Default input:
-    chimera_files/*.png
+    PNG files next to this script
 
 Default output:
-    chimera_files/chimera_image_strip.png
+    chimera_image_strip.png next to this script
 """
 
 from __future__ import annotations
@@ -22,14 +22,16 @@ from pathlib import Path
 import numpy as np
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_INPUT_DIR = PROJECT_ROOT / "chimera_files"
-DEFAULT_OUTPUT = DEFAULT_INPUT_DIR / "chimera_image_strip.png"
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent
+DEFAULT_INPUT_DIR = SCRIPT_DIR
+DEFAULT_OUTPUT = SCRIPT_DIR / "chimera_image_strip.png"
 
 os.environ.setdefault("MPLCONFIGDIR", str(PROJECT_ROOT / ".mplconfig"))
 os.environ.setdefault("XDG_CACHE_HOME", str(PROJECT_ROOT / ".cache"))
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
@@ -144,6 +146,19 @@ def infer_side_label(images: list[StripImage]) -> str | None:
     return None
 
 
+def resolve_file_path(path: Path) -> Path:
+    if path.is_absolute():
+        return path
+    if path.exists():
+        return path
+
+    script_relative = SCRIPT_DIR / path
+    if script_relative.exists():
+        return script_relative
+
+    return PROJECT_ROOT / path
+
+
 def collect_images(input_dir: Path, files: list[Path] | None, labels: list[str] | None) -> list[StripImage]:
     if files is None:
         paths = [
@@ -152,7 +167,7 @@ def collect_images(input_dir: Path, files: list[Path] | None, labels: list[str] 
             if "strip" not in path.stem.lower()
         ]
     else:
-        paths = [path if path.is_absolute() else PROJECT_ROOT / path for path in files]
+        paths = [resolve_file_path(path) for path in files]
 
     if not paths:
         raise FileNotFoundError(f"No PNG files found for strip plot in {input_dir}")
