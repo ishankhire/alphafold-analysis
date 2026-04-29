@@ -7,8 +7,8 @@ Updated:
 - `branch-analysis.md`
 
 Added:
-- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.py`
-- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.sbatch`
+- `scripts/cluster_scripts/diagnostics/diagnostic_general_base256_avg_symmetric_montage10_mds_replay.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_general_base256_avg_symmetric_montage10_mds_replay.sbatch`
 
 ### Why
 Adds a Delta-ready replay job that reuses saved baseline256 fold-4
@@ -20,8 +20,8 @@ PDB exports for the first five proteins without rerunning regression.
 ### What changed
 Updated:
 - `branch-analysis.md`
-- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.py`
-- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.sbatch`
+- `scripts/cluster_scripts/diagnostics/diagnostic_general_base256_avg_symmetric_montage10_mds_replay.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_general_base256_avg_symmetric_montage10_mds_replay.sbatch`
 
 ### Why
 Repoints the replay job to `general_base256_avg_symmetric` coefficients and a
