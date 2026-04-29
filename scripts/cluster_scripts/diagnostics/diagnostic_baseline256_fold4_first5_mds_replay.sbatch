@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Fold4MdsReplay
+#SBATCH --job-name=AvgSymMds10
 #SBATCH --account=bekh-delta-cpu
 #SBATCH --partition=cpu
 #SBATCH --nodes=1
@@ -23,6 +23,6 @@ echo "job is starting on $(hostname)"
 
 export PAIR_BLOCKS_ROOT=/work/hdd/bekh/thayes/openfold_reps
 export PDB_ROOT=/work/hdd/bekh/thayes/openfold_reps_outputs_sm
-export CSV_ROOT=$HOME/diagnostic_csv_files
+export CSV_ROOT=$HOME/general_base256_avg_symmetric_replay_outputs
 
 srun python3 -u diagnostic_baseline256_fold4_first5_mds_replay.py

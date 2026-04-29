@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Replay saved baseline256 fold-4 coefficients onto the first five proteins and
-export per-layer MDS reconstructions as ChimeraX-friendly PDB files.
+Replay saved general_base256_avg_symmetric coefficients onto one fixed montage
+protein set and export per-layer MDS reconstructions as ChimeraX-friendly PDB
+files.
 
 This script does not refit regression. It reuses saved raw-scale coefficients
-and intercepts, predicts residue-pair distances for the first five proteins
-across all 48 AlphaFold layers, reconstructs aligned CA coordinates with
-classical MDS, and writes both CSV diagnostics and PDB outputs.
+and intercepts from the avg-symmetric train/test model, predicts residue-pair
+distances for the montage proteins across all 48 AlphaFold layers, reconstructs
+aligned CA coordinates with classical MDS, and writes both CSV diagnostics and
+PDB outputs.
 """
 
 from __future__ import annotations
@@ -43,29 +45,32 @@ from cluster_regression_helpers import (  # noqa: E402
 PROJECT_ROOT = SCRIPT_DIR.parent.parent.parent
 
 TARGET_PROTEIN_IDS = [
-    "6tf4_A",
-    "6wmk_A",
-    "6wqc_A",
-    "6xqj_A",
-    "6z01_A",
+    "7tkv_A",
+    "7tbs_A",
+    "7pbk_A",
+    "7mro_A",
+    "7kdx_B",
+    "7f6e_B",
+    "7ebt_B",
+    "7dq9_A",
+    "7dkk_A",
+    "7b3a_A",
 ]
 
-VARIANT_NAME = "baseline256"
-FEATURE_DIM = 256
+VARIANT_NAME = "general_base256_avg_symmetric"
+FEATURE_DIM = 128
 N_CHANNELS = 128
 N_LAYERS = 48
-FOLD_INDEX = 4
+SPLIT_ID = 0
 FLOAT_EPS = 1e-12
-OUTPUT_BASENAME = "baseline256_fold4_first5_mds_replay"
+OUTPUT_BASENAME = "general_base256_avg_symmetric_montage10_mds_replay"
 
-EXPECTED_FEATURE_NAMES = [f"pair_ij_ch_{idx}" for idx in range(N_CHANNELS)] + [
-    f"pair_ji_ch_{idx}" for idx in range(N_CHANNELS)
-]
+EXPECTED_FEATURE_NAMES = [f"pair_avg_ch_{idx}" for idx in range(N_CHANNELS)]
 
 COEFFICIENT_DIR_CANDIDATES = [
-    Path("/u/ikhire/context_feature_kfold_csv_files/baseline256"),
-    Path.home() / "context_feature_kfold_csv_files" / "baseline256",
-    PROJECT_ROOT / "delta_files" / "baseline256_kfold",
+    Path("/u/ikhire/general_train_test_split_csv_files/general_base256_avg_symmetric"),
+    Path.home() / "general_train_test_split_csv_files" / "general_base256_avg_symmetric",
+    PROJECT_ROOT / "delta_files" / "general_base256_avg_symmetric",
 ]
 
 LOCAL_PAIR_BLOCKS_ROOT = PROJECT_ROOT.parent / "protein_data"
@@ -100,7 +105,7 @@ MANIFEST_FIELDNAMES = [
 COEFFICIENT_FIELDNAMES = [
     "variant",
     "feature_dim",
-    "fold",
+    "split_id",
     "layer",
     "feature_index",
     "feature_name",
@@ -111,7 +116,7 @@ COEFFICIENT_FIELDNAMES = [
 DISTANCE_METRIC_FIELDNAMES = [
     "variant",
     "feature_dim",
-    "fold",
+    "split_id",
     "layer",
     "split",
     "protein_id",
@@ -147,7 +152,7 @@ GEOMETRY_METRIC_KEYS = [
 GEOMETRY_METRIC_FIELDNAMES = [
     "variant",
     "feature_dim",
-    "fold",
+    "split_id",
     "layer",
     "split",
     "protein_id",
@@ -172,7 +177,7 @@ GEOMETRY_METRIC_FIELDNAMES = [
 GEOMETRY_SUMMARY_FIELDNAMES = [
     "variant",
     "feature_dim",
-    "fold",
+    "split_id",
     "layer",
     "split",
     "n_proteins",
@@ -183,7 +188,7 @@ for _metric_key in GEOMETRY_METRIC_KEYS:
 MDS_COORD_FIELDNAMES = [
     "variant",
     "feature_dim",
-    "fold",
+    "split_id",
     "layer",
     "split",
     "protein_id",
@@ -336,7 +341,7 @@ def resolve_coefficient_dir():
         if (candidate / "coefficients.csv").exists():
             return candidate.resolve()
     raise FileNotFoundError(
-        "Could not find baseline256 coefficient directory. Checked: "
+        "Could not find general_base256_avg_symmetric coefficient directory. Checked: "
         + ", ".join(str(path) for path in COEFFICIENT_DIR_CANDIDATES)
     )
 
@@ -418,7 +423,7 @@ def build_geometry_summary_rows(geometry_rows):
         out = {
             "variant": VARIANT_NAME,
             "feature_dim": FEATURE_DIM,
-            "fold": FOLD_INDEX,
+            "split_id": SPLIT_ID,
             "layer": layer,
             "split": split,
             "n_proteins": len(rows),
@@ -470,11 +475,11 @@ def write_summary_text(
             best_r2 = (layer, score, mean_r2)
 
     with output_path.open("w") as handle:
-        handle.write("Baseline256 fold-4 first-five MDS replay\n")
-        handle.write("=======================================\n\n")
+        handle.write("general_base256_avg_symmetric montage10 MDS replay\n")
+        handle.write("==================================================\n\n")
         handle.write(f"Variant:          {VARIANT_NAME}\n")
         handle.write(f"Feature dim:      {FEATURE_DIM}\n")
-        handle.write(f"Fold:             {FOLD_INDEX}\n")
+        handle.write(f"Split id:         {SPLIT_ID}\n")
         handle.write(f"Layers complete:  {len(completed_layers)}/{N_LAYERS}\n")
         handle.write(f"Coefficient dir:  {coefficient_dir}\n")
         handle.write(f"Pair blocks root: {pair_blocks_root}\n")
@@ -542,7 +547,7 @@ def load_coefficients(coefficient_dir):
     with coeff_path.open(newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            if int(row["fold"]) != FOLD_INDEX:
+            if int(row["split_id"]) != SPLIT_ID:
                 continue
             if row["variant"] != VARIANT_NAME:
                 continue
@@ -553,7 +558,7 @@ def load_coefficients(coefficient_dir):
                 {
                     "variant": row["variant"],
                     "feature_dim": int(row["feature_dim"]),
-                    "fold": int(row["fold"]),
+                    "split_id": int(row["split_id"]),
                     "layer": layer,
                     "feature_index": feature_index,
                     "feature_name": row["feature_name"],
@@ -583,7 +588,7 @@ def load_coefficients(coefficient_dir):
 
     if len(coefficients_by_layer) != N_LAYERS:
         raise ValueError(
-            f"Expected {N_LAYERS} layers in fold-{FOLD_INDEX} coefficients, "
+            f"Expected {N_LAYERS} layers in split-{SPLIT_ID} coefficients, "
             f"found {len(coefficients_by_layer)}"
         )
 
@@ -603,9 +608,10 @@ def load_coefficients(coefficient_dir):
         if bundle["intercept"] is None:
             raise ValueError(f"Layer {layer} is missing a raw-scale intercept")
         if bundle["feature_names"] != EXPECTED_FEATURE_NAMES:
-            raise ValueError(f"Layer {layer} feature ordering does not match baseline256")
-        bundle["coef_ij"] = np.asarray(bundle["coef"][:N_CHANNELS], dtype=np.float64)
-        bundle["coef_ji"] = np.asarray(bundle["coef"][N_CHANNELS:], dtype=np.float64)
+            raise ValueError(
+                f"Layer {layer} feature ordering does not match general_base256_avg_symmetric"
+            )
+        bundle["coef_avg"] = np.asarray(bundle["coef"], dtype=np.float64)
 
     coefficient_rows.sort(key=lambda row: (int(row["layer"]), int(row["feature_index"])))
     return coefficients_by_layer, coefficient_rows
@@ -617,21 +623,21 @@ def load_assignment_metadata(coefficient_dir):
         path.resolve() for path in COEFFICIENT_DIR_CANDIDATES if path.resolve() != coefficient_dir.resolve()
     ]
     for candidate_dir in candidate_dirs:
-        candidate_path = candidate_dir / "fold_assignments.csv"
+        candidate_path = candidate_dir / "split_assignments.csv"
         if candidate_path.exists():
             assignment_path = candidate_path
             break
     if assignment_path is None:
         raise FileNotFoundError(
-            "Missing fold_assignments.csv. Checked: "
-            + ", ".join(str(path / "fold_assignments.csv") for path in candidate_dirs)
+            "Missing split_assignments.csv. Checked: "
+            + ", ".join(str(path / "split_assignments.csv") for path in candidate_dirs)
         )
 
     metadata = {}
     with assignment_path.open(newline="") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
-            if int(row["fold"]) != FOLD_INDEX:
+            if int(row["split_id"]) != SPLIT_ID:
                 continue
             protein_id = row["protein_id"]
             if protein_id not in TARGET_PROTEIN_IDS:
@@ -646,20 +652,15 @@ def load_assignment_metadata(coefficient_dir):
 
     missing = sorted(set(TARGET_PROTEIN_IDS) - set(metadata))
     if missing:
-        raise ValueError(f"Missing fold-4 metadata for proteins: {', '.join(missing)}")
+        raise ValueError(f"Missing split-0 metadata for proteins: {', '.join(missing)}")
     return metadata
 
 
-def predict_distances(pair_block, lt_i, lt_j, intercept, coef_ij, coef_ji):
-    features_ij = np.asarray(pair_block[lt_i, lt_j, :], dtype=np.float64)
-    part_ij = features_ij @ coef_ij
-    del features_ij
-
-    features_ji = np.asarray(pair_block[lt_j, lt_i, :], dtype=np.float64)
-    part_ji = features_ji @ coef_ji
-    del features_ji
-
-    y_pred = part_ij + part_ji
+def predict_distances(pair_block, lt_i, lt_j, intercept, coef_avg):
+    pair_avg = np.asarray(pair_block[lt_i, lt_j, :], dtype=np.float64)
+    pair_avg += np.asarray(pair_block[lt_j, lt_i, :], dtype=np.float64)
+    pair_avg *= 0.5
+    y_pred = pair_avg @ coef_avg
     y_pred += float(intercept)
     return np.asarray(y_pred, dtype=np.float64)
 
@@ -774,13 +775,13 @@ def load_proteins(pair_blocks_root, pdb_root, assignment_metadata):
         meta = assignment_metadata[protein_id]
         if meta["n_residues"] != n_residues:
             raise ValueError(
-                f"{protein_id} fold assignment residues {meta['n_residues']} != loaded {n_residues}"
+                f"{protein_id} split assignment residues {meta['n_residues']} != loaded {n_residues}"
             )
         if meta["n_pairs"] != n_pairs:
-            raise ValueError(f"{protein_id} fold assignment pairs {meta['n_pairs']} != loaded {n_pairs}")
+            raise ValueError(f"{protein_id} split assignment pairs {meta['n_pairs']} != loaded {n_pairs}")
         if not math.isclose(meta["target_variance"], target_variance, rel_tol=1e-6, abs_tol=1e-6):
             raise ValueError(
-                f"{protein_id} fold assignment variance {meta['target_variance']} != loaded {target_variance}"
+                f"{protein_id} split assignment variance {meta['target_variance']} != loaded {target_variance}"
             )
 
         manifest_rows.append(
@@ -850,7 +851,7 @@ def write_reconstructed_pdb(output_root, record, layer, transformed_coords, devi
         residues=record["residues"],
         coordinates=transformed_coords,
         b_factors=deviations,
-        remark_line=f"Fold-4 baseline256 MDS reconstruction for layer {layer:02d}",
+        remark_line=f"Split-0 general_base256_avg_symmetric MDS reconstruction for layer {layer:02d}",
     )
 
 
@@ -918,8 +919,7 @@ def main():
                 lt_i=record["lt_i"],
                 lt_j=record["lt_j"],
                 intercept=layer_bundle["intercept"],
-                coef_ij=layer_bundle["coef_ij"],
-                coef_ji=layer_bundle["coef_ji"],
+                coef_avg=layer_bundle["coef_avg"],
             )
             del pair_block
 
@@ -929,7 +929,7 @@ def main():
                 {
                     "variant": VARIANT_NAME,
                     "feature_dim": FEATURE_DIM,
-                    "fold": FOLD_INDEX,
+                    "split_id": SPLIT_ID,
                     "layer": layer,
                     "split": record["split"],
                     "protein_id": protein_id,
@@ -957,7 +957,7 @@ def main():
                 {
                     "variant": VARIANT_NAME,
                     "feature_dim": FEATURE_DIM,
-                    "fold": FOLD_INDEX,
+                    "split_id": SPLIT_ID,
                     "layer": layer,
                     "split": record["split"],
                     "protein_id": protein_id,
@@ -992,7 +992,7 @@ def main():
                     {
                         "variant": VARIANT_NAME,
                         "feature_dim": FEATURE_DIM,
-                        "fold": FOLD_INDEX,
+                        "split_id": SPLIT_ID,
                         "layer": layer,
                         "split": record["split"],
                         "protein_id": protein_id,

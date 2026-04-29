@@ -15,6 +15,19 @@ Adds a Delta-ready replay job that reuses saved baseline256 fold-4
 coefficients to reconstruct all-layer MDS coordinates and ChimeraX-friendly
 PDB exports for the first five proteins without rerunning regression.
 
+## Session: 2026-04-29 — Retarget replay exporter to avg-symmetric montage proteins
+
+### What changed
+Updated:
+- `branch-analysis.md`
+- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.py`
+- `scripts/cluster_scripts/diagnostics/diagnostic_baseline256_fold4_first5_mds_replay.sbatch`
+
+### Why
+Repoints the replay job to `general_base256_avg_symmetric` coefficients and a
+fixed 10-protein montage set, with avg-symmetric feature replay and renamed
+output paths that reflect the new model source.
+
 ## Session: 2026-04-26 — Add MDS coordinate PDB exporter
 
 ### What changed
