@@ -28,6 +28,11 @@ Repoints the replay job to `general_base256_avg_symmetric` coefficients and a
 fixed 10-protein montage set, with avg-symmetric feature replay and renamed
 output paths that reflect the new model source.
 
+## Session: 2026-04-29 — Add constrained MDS replay variants
+
+Updated the avg-symmetric montage replay script to also export seq1-clipped and
+global-floor-plus-seq1-clipped MDS PDBs, metrics, and coordinate rows.
+
 ## Session: 2026-04-26 — Add MDS coordinate PDB exporter
 
 ### What changed

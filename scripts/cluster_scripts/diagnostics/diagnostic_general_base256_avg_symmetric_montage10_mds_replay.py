@@ -67,6 +67,33 @@ OUTPUT_BASENAME = "general_base256_avg_symmetric_montage10_mds_replay"
 
 EXPECTED_FEATURE_NAMES = [f"pair_avg_ch_{idx}" for idx in range(N_CHANNELS)]
 
+SEQ1_MIN_DISTANCE = 3.65
+SEQ1_MAX_DISTANCE = 4.00
+GLOBAL_MIN_DISTANCE = 3.65
+
+RAW_RECONSTRUCTION_MODE = "raw"
+SEQ1_RECONSTRUCTION_MODE = "seq1_clip_3p65_4p00"
+GLOBAL_SEQ1_RECONSTRUCTION_MODE = "global_min_3p65_seq1_clip_3p65_4p00"
+
+RECONSTRUCTION_MODES = [
+    {
+        "name": RAW_RECONSTRUCTION_MODE,
+        "pdb_dir": "reconstructed_ca_layers",
+        "remark": "raw predicted distances",
+    },
+    {
+        "name": SEQ1_RECONSTRUCTION_MODE,
+        "pdb_dir": "reconstructed_ca_layers_seq1_clip_3p65_4p00",
+        "remark": "same-chain seq1 distances clipped to 3.65-4.00 A",
+    },
+    {
+        "name": GLOBAL_SEQ1_RECONSTRUCTION_MODE,
+        "pdb_dir": "reconstructed_ca_layers_global_min_3p65_seq1_clip_3p65_4p00",
+        "remark": "global 3.65 A floor plus same-chain seq1 3.65-4.00 A clip",
+    },
+]
+RECONSTRUCTION_MODE_BY_NAME = {mode["name"]: mode for mode in RECONSTRUCTION_MODES}
+
 COEFFICIENT_DIR_CANDIDATES = [
     Path("/u/ikhire/general_train_test_split_csv_files/general_base256_avg_symmetric"),
     Path.home() / "general_train_test_split_csv_files" / "general_base256_avg_symmetric",
@@ -144,6 +171,10 @@ GEOMETRY_METRIC_KEYS = [
     "n_positive_eigenvalues",
     "positive_eigenvalue_fraction",
     "n_negative_predictions",
+    "n_distances_modified",
+    "modified_distance_fraction",
+    "mean_abs_constraint_delta",
+    "max_abs_constraint_delta",
     "triangle_violation_fraction",
     "triangle_mean_violation",
     "triangle_max_violation",
@@ -155,6 +186,7 @@ GEOMETRY_METRIC_FIELDNAMES = [
     "split_id",
     "layer",
     "split",
+    "reconstruction_mode",
     "protein_id",
     "n_residues",
     "size_bin",
@@ -168,6 +200,10 @@ GEOMETRY_METRIC_FIELDNAMES = [
     "n_positive_eigenvalues",
     "positive_eigenvalue_fraction",
     "n_negative_predictions",
+    "n_distances_modified",
+    "modified_distance_fraction",
+    "mean_abs_constraint_delta",
+    "max_abs_constraint_delta",
     "stress",
     "triangle_violation_fraction",
     "triangle_mean_violation",
@@ -180,6 +216,7 @@ GEOMETRY_SUMMARY_FIELDNAMES = [
     "split_id",
     "layer",
     "split",
+    "reconstruction_mode",
     "n_proteins",
 ]
 for _metric_key in GEOMETRY_METRIC_KEYS:
@@ -191,6 +228,7 @@ MDS_COORD_FIELDNAMES = [
     "split_id",
     "layer",
     "split",
+    "reconstruction_mode",
     "protein_id",
     "residue_idx",
     "chain_id",
@@ -416,16 +454,17 @@ def compute_rmse(y_true, y_pred):
 def build_geometry_summary_rows(geometry_rows):
     grouped = defaultdict(list)
     for row in geometry_rows:
-        grouped[(int(row["layer"]), row["split"])].append(row)
+        grouped[(int(row["layer"]), row["split"], row["reconstruction_mode"])].append(row)
 
     summary_rows = []
-    for (layer, split), rows in sorted(grouped.items()):
+    for (layer, split, reconstruction_mode), rows in sorted(grouped.items()):
         out = {
             "variant": VARIANT_NAME,
             "feature_dim": FEATURE_DIM,
             "split_id": SPLIT_ID,
             "layer": layer,
             "split": split,
+            "reconstruction_mode": reconstruction_mode,
             "n_proteins": len(rows),
         }
         for metric_key in GEOMETRY_METRIC_KEYS:
@@ -451,28 +490,39 @@ def write_summary_text(
     geometry_rows,
     completed_layers,
 ):
-    geometry_by_layer = defaultdict(list)
+    geometry_tm_by_mode_layer = defaultdict(list)
+    geometry_r2_by_mode_layer = defaultdict(list)
     distance_by_layer = defaultdict(list)
     for row in geometry_rows:
-        geometry_by_layer[int(row["layer"])].append(float(row["tm_score"]))
+        key = (row["reconstruction_mode"], int(row["layer"]))
+        geometry_tm_by_mode_layer[key].append(float(row["tm_score"]))
+        geometry_r2_by_mode_layer[key].append(float(row["per_protein_r2"]))
     for row in distance_rows:
         distance_by_layer[int(row["layer"])].append(float(row["per_protein_r2"]))
 
-    best_tm = None
-    for layer, values in geometry_by_layer.items():
-        clean = [value for value in values if not math.isnan(value)]
-        mean_tm = float(np.mean(clean)) if clean else float("nan")
-        score = -1e18 if math.isnan(mean_tm) else mean_tm
-        if best_tm is None or score > best_tm[1]:
-            best_tm = (layer, score, mean_tm)
+    def best_layer_mean(grouped_values, reconstruction_mode=None):
+        best = None
+        for key, values in grouped_values.items():
+            if reconstruction_mode is None:
+                layer = key
+            else:
+                mode, layer = key
+                if mode != reconstruction_mode:
+                    continue
+            clean = [value for value in values if not math.isnan(value)]
+            mean_value = float(np.mean(clean)) if clean else float("nan")
+            score = -1e18 if math.isnan(mean_value) else mean_value
+            if best is None or score > best[1]:
+                best = (layer, score, mean_value)
+        return best
 
-    best_r2 = None
+    best_raw_probe_r2 = None
     for layer, values in distance_by_layer.items():
         clean = [value for value in values if not math.isnan(value)]
         mean_r2 = float(np.mean(clean)) if clean else float("nan")
         score = -1e18 if math.isnan(mean_r2) else mean_r2
-        if best_r2 is None or score > best_r2[1]:
-            best_r2 = (layer, score, mean_r2)
+        if best_raw_probe_r2 is None or score > best_raw_probe_r2[1]:
+            best_raw_probe_r2 = (layer, score, mean_r2)
 
     with output_path.open("w") as handle:
         handle.write("general_base256_avg_symmetric montage10 MDS replay\n")
@@ -495,10 +545,26 @@ def write_summary_text(
             )
         handle.write("\n")
 
-        if best_r2 is not None:
-            handle.write(f"Best mean per-protein R2 layer: {best_r2[0]:02d} ({best_r2[2]:.4f})\n")
-        if best_tm is not None:
-            handle.write(f"Best mean TM-score layer:       {best_tm[0]:02d} ({best_tm[2]:.4f})\n")
+        if best_raw_probe_r2 is not None:
+            handle.write(
+                f"Best mean raw probe R2 layer: {best_raw_probe_r2[0]:02d} "
+                f"({best_raw_probe_r2[2]:.4f})\n"
+            )
+
+        if geometry_rows:
+            handle.write("\nBest geometry by reconstruction mode\n")
+            handle.write("------------------------------------\n")
+        for mode in RECONSTRUCTION_MODES:
+            reconstruction_mode = mode["name"]
+            best_r2 = best_layer_mean(geometry_r2_by_mode_layer, reconstruction_mode)
+            best_tm = best_layer_mean(geometry_tm_by_mode_layer, reconstruction_mode)
+            if best_r2 is None or best_tm is None:
+                continue
+            handle.write(
+                f"{reconstruction_mode}: best input-distance R2 layer "
+                f"{best_r2[0]:02d} ({best_r2[2]:.4f}); best TM-score layer "
+                f"{best_tm[0]:02d} ({best_tm[2]:.4f})\n"
+            )
 
 
 def flush_outputs(
@@ -665,14 +731,101 @@ def predict_distances(pair_block, lt_i, lt_j, intercept, coef_avg):
     return np.asarray(y_pred, dtype=np.float64)
 
 
-def reconstruct_geometry(true_coords, lt_i, lt_j, y_pred):
-    n_residues = int(true_coords.shape[0])
+def build_seq1_pair_mask(residues, lt_i, lt_j):
+    mask = np.zeros((len(lt_i),), dtype=bool)
+    for idx, (residue_i, residue_j) in enumerate(zip(lt_i, lt_j)):
+        chain_i, _, number_i = residues[int(residue_i)]
+        chain_j, _, number_j = residues[int(residue_j)]
+        if chain_i == chain_j and abs(int(number_i) - int(number_j)) == 1:
+            mask[idx] = True
+    return mask
+
+
+def build_raw_predicted_distance_matrix(n_residues, lt_i, lt_j, y_pred):
     pred_dist = np.zeros((n_residues, n_residues), dtype=np.float64)
     pred_dist[lt_i, lt_j] = y_pred
     pred_dist[lt_j, lt_i] = y_pred
 
     n_negative_predictions = int(np.sum(y_pred < 0.0))
     np.maximum(pred_dist, 0.0, out=pred_dist)
+    np.fill_diagonal(pred_dist, 0.0)
+    return pred_dist, n_negative_predictions
+
+
+def summarize_constraint_delta(raw_pred_dist, constrained_pred_dist, lt_i, lt_j):
+    raw_values = raw_pred_dist[lt_i, lt_j]
+    constrained_values = constrained_pred_dist[lt_i, lt_j]
+    deltas = constrained_values - raw_values
+    abs_deltas = np.abs(deltas)
+    modified_mask = abs_deltas > 1e-9
+    n_modified = int(np.sum(modified_mask))
+    n_pairs = int(len(raw_values))
+    if n_modified == 0:
+        mean_abs_delta = 0.0
+        max_abs_delta = 0.0
+    else:
+        mean_abs_delta = float(np.mean(abs_deltas[modified_mask]))
+        max_abs_delta = float(np.max(abs_deltas[modified_mask]))
+
+    return {
+        "n_distances_modified": n_modified,
+        "modified_distance_fraction": float(n_modified / max(n_pairs, 1)),
+        "mean_abs_constraint_delta": mean_abs_delta,
+        "max_abs_constraint_delta": max_abs_delta,
+    }
+
+
+def build_constrained_distance_matrices(raw_pred_dist, lt_i, lt_j, seq1_pair_mask):
+    matrices = {}
+    raw_matrix = np.array(raw_pred_dist, dtype=np.float64, copy=True)
+    np.fill_diagonal(raw_matrix, 0.0)
+    matrices[RAW_RECONSTRUCTION_MODE] = raw_matrix
+
+    seq1_matrix = np.array(raw_pred_dist, dtype=np.float64, copy=True)
+    if np.any(seq1_pair_mask):
+        seq1_i = lt_i[seq1_pair_mask]
+        seq1_j = lt_j[seq1_pair_mask]
+        seq1_values = np.clip(
+            seq1_matrix[seq1_i, seq1_j],
+            SEQ1_MIN_DISTANCE,
+            SEQ1_MAX_DISTANCE,
+        )
+        seq1_matrix[seq1_i, seq1_j] = seq1_values
+        seq1_matrix[seq1_j, seq1_i] = seq1_values
+    np.fill_diagonal(seq1_matrix, 0.0)
+    matrices[SEQ1_RECONSTRUCTION_MODE] = seq1_matrix
+
+    global_matrix = np.array(raw_pred_dist, dtype=np.float64, copy=True)
+    global_values = np.maximum(global_matrix[lt_i, lt_j], GLOBAL_MIN_DISTANCE)
+    global_matrix[lt_i, lt_j] = global_values
+    global_matrix[lt_j, lt_i] = global_values
+    if np.any(seq1_pair_mask):
+        seq1_i = lt_i[seq1_pair_mask]
+        seq1_j = lt_j[seq1_pair_mask]
+        seq1_values = np.clip(
+            global_matrix[seq1_i, seq1_j],
+            SEQ1_MIN_DISTANCE,
+            SEQ1_MAX_DISTANCE,
+        )
+        global_matrix[seq1_i, seq1_j] = seq1_values
+        global_matrix[seq1_j, seq1_i] = seq1_values
+    np.fill_diagonal(global_matrix, 0.0)
+    matrices[GLOBAL_SEQ1_RECONSTRUCTION_MODE] = global_matrix
+
+    constraint_summaries = {
+        mode["name"]: summarize_constraint_delta(
+            raw_pred_dist,
+            matrices[mode["name"]],
+            lt_i,
+            lt_j,
+        )
+        for mode in RECONSTRUCTION_MODES
+    }
+    return matrices, constraint_summaries
+
+
+def reconstruct_geometry(true_coords, pred_dist, n_negative_predictions):
+    n_residues = int(true_coords.shape[0])
 
     mds_coords, eigenvalues = classical_mds(pred_dist, n_dims=3)
 
@@ -766,6 +919,7 @@ def load_proteins(pair_blocks_root, pdb_root, assignment_metadata):
             )
 
         lt_i, lt_j = np.tril_indices(n_residues, k=-1)
+        seq1_pair_mask = build_seq1_pair_mask(residues, lt_i, lt_j)
         y_true = np.asarray(compute_distance_matrix(coords)[lt_i, lt_j], dtype=np.float64)
         n_pairs = int(y_true.size)
         target_variance = float(np.var(y_true, dtype=np.float64))
@@ -807,6 +961,7 @@ def load_proteins(pair_blocks_root, pdb_root, assignment_metadata):
                 "target_variance": target_variance,
                 "lt_i": lt_i,
                 "lt_j": lt_j,
+                "seq1_pair_mask": seq1_pair_mask,
                 "y_true": y_true,
                 "coordinates": coords,
                 "residues": residues,
@@ -839,11 +994,19 @@ def write_reference_ca_pdbs(output_root, protein_records):
         )
 
 
-def write_reconstructed_pdb(output_root, record, layer, transformed_coords, deviations):
+def write_reconstructed_pdb(
+    output_root,
+    record,
+    layer,
+    reconstruction_mode,
+    transformed_coords,
+    deviations,
+):
     protein_root = output_root / "pdb_files" / record["protein_id"]
+    mode_config = RECONSTRUCTION_MODE_BY_NAME[reconstruction_mode]
     reconstructed_path = (
         protein_root
-        / "reconstructed_ca_layers"
+        / mode_config["pdb_dir"]
         / f"{record['protein_id']}_mds_reconstructed_ca_layer{layer:02d}.pdb"
     )
     write_ca_trace_pdb(
@@ -851,7 +1014,10 @@ def write_reconstructed_pdb(output_root, record, layer, transformed_coords, devi
         residues=record["residues"],
         coordinates=transformed_coords,
         b_factors=deviations,
-        remark_line=f"Split-0 general_base256_avg_symmetric MDS reconstruction for layer {layer:02d}",
+        remark_line=(
+            f"Split-0 general_base256_avg_symmetric MDS reconstruction "
+            f"for layer {layer:02d}; mode={reconstruction_mode}; {mode_config['remark']}"
+        ),
     )
 
 
@@ -947,81 +1113,121 @@ def main():
                 }
             )
 
-            geometry = reconstruct_geometry(
-                true_coords=record["coordinates"],
+            raw_pred_dist, n_negative_predictions = build_raw_predicted_distance_matrix(
+                n_residues=record["n_residues"],
                 lt_i=record["lt_i"],
                 lt_j=record["lt_j"],
                 y_pred=y_pred,
             )
-            geometry_rows.append(
-                {
-                    "variant": VARIANT_NAME,
-                    "feature_dim": FEATURE_DIM,
-                    "split_id": SPLIT_ID,
-                    "layer": layer,
-                    "split": record["split"],
-                    "protein_id": protein_id,
-                    "n_residues": record["n_residues"],
-                    "size_bin": record["size_bin"],
-                    "n_pairs": record["n_pairs"],
-                    "per_protein_r2": per_protein_r2,
-                    "rmsd": geometry["rmsd"],
-                    "tm_score": geometry["tm_score"],
-                    "frac_top3_eigenvalues": geometry["frac_top3_eigenvalues"],
-                    "n_negative_eigenvalues": geometry["n_negative_eigenvalues"],
-                    "neg_eigenvalue_fraction": geometry["neg_eigenvalue_fraction"],
-                    "n_positive_eigenvalues": geometry["n_positive_eigenvalues"],
-                    "positive_eigenvalue_fraction": geometry["positive_eigenvalue_fraction"],
-                    "n_negative_predictions": geometry["n_negative_predictions"],
-                    "stress": geometry["stress"],
-                    "triangle_violation_fraction": geometry["triangle_violation_fraction"],
-                    "triangle_mean_violation": geometry["triangle_mean_violation"],
-                    "triangle_max_violation": geometry["triangle_max_violation"],
-                }
+            distance_matrices, constraint_summaries = build_constrained_distance_matrices(
+                raw_pred_dist=raw_pred_dist,
+                lt_i=record["lt_i"],
+                lt_j=record["lt_j"],
+                seq1_pair_mask=record["seq1_pair_mask"],
             )
 
-            for residue_idx, ((chain_id, residue_name, residue_number), true_coord, recon_coord, deviation) in enumerate(
-                zip(
-                    record["residues"],
-                    record["coordinates"],
-                    geometry["transformed_coords"],
-                    geometry["deviations"],
+            mode_log_parts = []
+            for mode in RECONSTRUCTION_MODES:
+                reconstruction_mode = mode["name"]
+                pred_dist_for_mds = distance_matrices[reconstruction_mode]
+                constrained_y_pred = pred_dist_for_mds[record["lt_i"], record["lt_j"]]
+                reconstruction_r2 = compute_r2(record["y_true"], constrained_y_pred)
+                constraint_summary = constraint_summaries[reconstruction_mode]
+
+                geometry = reconstruct_geometry(
+                    true_coords=record["coordinates"],
+                    pred_dist=pred_dist_for_mds,
+                    n_negative_predictions=n_negative_predictions,
                 )
-            ):
-                coord_rows.append(
+                geometry_rows.append(
                     {
                         "variant": VARIANT_NAME,
                         "feature_dim": FEATURE_DIM,
                         "split_id": SPLIT_ID,
                         "layer": layer,
                         "split": record["split"],
+                        "reconstruction_mode": reconstruction_mode,
                         "protein_id": protein_id,
-                        "residue_idx": residue_idx,
-                        "chain_id": chain_id,
-                        "residue_name": residue_name,
-                        "residue_number": residue_number,
-                        "mds_x": float(recon_coord[0]),
-                        "mds_y": float(recon_coord[1]),
-                        "mds_z": float(recon_coord[2]),
-                        "pdb_x": float(true_coord[0]),
-                        "pdb_y": float(true_coord[1]),
-                        "pdb_z": float(true_coord[2]),
-                        "deviation_angstrom": float(deviation),
+                        "n_residues": record["n_residues"],
+                        "size_bin": record["size_bin"],
+                        "n_pairs": record["n_pairs"],
+                        "per_protein_r2": reconstruction_r2,
+                        "rmsd": geometry["rmsd"],
+                        "tm_score": geometry["tm_score"],
+                        "frac_top3_eigenvalues": geometry["frac_top3_eigenvalues"],
+                        "n_negative_eigenvalues": geometry["n_negative_eigenvalues"],
+                        "neg_eigenvalue_fraction": geometry["neg_eigenvalue_fraction"],
+                        "n_positive_eigenvalues": geometry["n_positive_eigenvalues"],
+                        "positive_eigenvalue_fraction": geometry["positive_eigenvalue_fraction"],
+                        "n_negative_predictions": geometry["n_negative_predictions"],
+                        "n_distances_modified": constraint_summary["n_distances_modified"],
+                        "modified_distance_fraction": constraint_summary["modified_distance_fraction"],
+                        "mean_abs_constraint_delta": constraint_summary[
+                            "mean_abs_constraint_delta"
+                        ],
+                        "max_abs_constraint_delta": constraint_summary[
+                            "max_abs_constraint_delta"
+                        ],
+                        "stress": geometry["stress"],
+                        "triangle_violation_fraction": geometry["triangle_violation_fraction"],
+                        "triangle_mean_violation": geometry["triangle_mean_violation"],
+                        "triangle_max_violation": geometry["triangle_max_violation"],
                     }
                 )
 
-            write_reconstructed_pdb(
-                output_root=output_root,
-                record=record,
-                layer=layer,
-                transformed_coords=geometry["transformed_coords"],
-                deviations=geometry["deviations"],
-            )
+                for residue_idx, (
+                    (chain_id, residue_name, residue_number),
+                    true_coord,
+                    recon_coord,
+                    deviation,
+                ) in enumerate(
+                    zip(
+                        record["residues"],
+                        record["coordinates"],
+                        geometry["transformed_coords"],
+                        geometry["deviations"],
+                    )
+                ):
+                    coord_rows.append(
+                        {
+                            "variant": VARIANT_NAME,
+                            "feature_dim": FEATURE_DIM,
+                            "split_id": SPLIT_ID,
+                            "layer": layer,
+                            "split": record["split"],
+                            "reconstruction_mode": reconstruction_mode,
+                            "protein_id": protein_id,
+                            "residue_idx": residue_idx,
+                            "chain_id": chain_id,
+                            "residue_name": residue_name,
+                            "residue_number": residue_number,
+                            "mds_x": float(recon_coord[0]),
+                            "mds_y": float(recon_coord[1]),
+                            "mds_z": float(recon_coord[2]),
+                            "pdb_x": float(true_coord[0]),
+                            "pdb_y": float(true_coord[1]),
+                            "pdb_z": float(true_coord[2]),
+                            "deviation_angstrom": float(deviation),
+                        }
+                    )
+
+                write_reconstructed_pdb(
+                    output_root=output_root,
+                    record=record,
+                    layer=layer,
+                    reconstruction_mode=reconstruction_mode,
+                    transformed_coords=geometry["transformed_coords"],
+                    deviations=geometry["deviations"],
+                )
+
+                mode_log_parts.append(
+                    f"{reconstruction_mode}: R2={reconstruction_r2:.4f}, "
+                    f"TM={geometry['tm_score']:.4f}, RMSD={geometry['rmsd']:.4f}"
+                )
 
             log_progress(
-                f"Layer {layer:02d} {protein_id}: "
-                f"R2={per_protein_r2:.4f}, TM={geometry['tm_score']:.4f}, "
-                f"RMSD={geometry['rmsd']:.4f}"
+                f"Layer {layer:02d} {protein_id}: probe_R2={per_protein_r2:.4f}; "
+                + "; ".join(mode_log_parts)
             )
 
         completed_layers.append(layer)
