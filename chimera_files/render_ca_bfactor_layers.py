@@ -6,6 +6,11 @@ Usage from an active PyMOL session with named views already stored:
 
     PyMOL> run chimera_files/render_ca_bfactor_layers.py
 
+For larger batches, prefer PyMOL's command-line mode with a session that
+already contains the named views, for example:
+
+    pymol -cq saved_views.pse chimera_files/render_ca_bfactor_layers.py
+
 Each protein should have a saved view named "{protein_id}_view" before this
 script runs. The current test mode expects the active PyMOL session to contain
 a saved view named "7b3a_A_view".
@@ -77,17 +82,12 @@ RECONSTRUCTED_PDB_PATH_TEMPLATE = (
 )
 
 # Render subset.
-# Testing mode: render only 7b3a_A reference plus layer 47.
-#
-# For the broader batch later, restore:
-#     MAX_PROTEINS_TO_RENDER = 10
-#     PROTEIN_IDS = None
-#     LAYERS = (0, 10, 15, 22, 30, 40, 47)
-#     USE_SAVED_VIEWS = True
-#     RAY_TRACE = False
+# Current test mode: render 7b3a_A reference plus selected reconstructed layers.
+# For the broader batch later, set PROTEIN_IDS = None after saving each
+# protein's "{protein_id}_view" in the active PyMOL session.
 MAX_PROTEINS_TO_RENDER = 10
 PROTEIN_IDS: tuple[str, ...] | None = ("7b3a_A",)
-LAYERS = (47,)
+LAYERS = (0, 10, 15, 22, 30, 40, 47)
 USE_SAVED_VIEWS = True
 
 # Set to False only when debugging camera/framing without a stored PyMOL view.
@@ -96,7 +96,8 @@ USE_SAVED_VIEWS = True
 # Image settings.
 IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
-RAY_TRACE = False
+RAY_TRACE = True
+DISABLE_RAY_SHADOWS = True
 BACKGROUND_COLOR = "white"
 
 # Distance-to-final B-factor thresholds.
@@ -239,12 +240,29 @@ def prepare_view(cmd, protein_id: str, view_name: str) -> None:
         create_view_from_reference(cmd, protein_id, view_name)
 
 
+def set_if_available(cmd, name: str, value) -> None:
+    try:
+        cmd.set(name, value)
+    except Exception:
+        print(f"Warning: PyMOL setting '{name}' is not available in this build.")
+
+
 def apply_scene_settings(cmd) -> None:
     cmd.bg_color(BACKGROUND_COLOR)
     cmd.set("opaque_background", 1)
     cmd.set("ray_opaque_background", 1)
     cmd.set("cartoon_trace_atoms", 1)
     cmd.set("cartoon_tube_radius", CARTOON_TUBE_RADIUS)
+
+    if RAY_TRACE and DISABLE_RAY_SHADOWS:
+        # Ray rendering is more reliable for batch PNGs than saving the live GUI
+        # viewport, but the default shadows are too heavy for these CA traces.
+        set_if_available(cmd, "ray_shadow", 0)
+        set_if_available(cmd, "ray_shadows", 0)
+        set_if_available(cmd, "ambient", 0.65)
+        set_if_available(cmd, "direct", 0.35)
+        set_if_available(cmd, "specular", 0.15)
+        set_if_available(cmd, "depth_cue", 0)
 
 
 def apply_ca_trace_style(cmd, object_name: str) -> None:
