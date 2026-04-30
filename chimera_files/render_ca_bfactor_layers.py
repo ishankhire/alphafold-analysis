@@ -96,7 +96,7 @@ USE_SAVED_VIEWS = True
 # Image settings.
 IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
-RAY_TRACE = True
+RAY_TRACE = False
 BACKGROUND_COLOR = "white"
 
 # Distance-to-final B-factor thresholds.
@@ -112,7 +112,6 @@ FAR_COLOR = "tv_yellow"
 
 # CA-trace cartoon settings.
 CARTOON_TUBE_RADIUS = 0.45
-STICK_TRACE_RADIUS = 0.30
 REFERENCE_VIEW_BUFFER = 10.0
 REFERENCE_VIEW_SLAB = 250.0
 RENDER_OBJECT_PREFIX = "ca_bfactor_render"
@@ -246,17 +245,14 @@ def apply_scene_settings(cmd) -> None:
     cmd.set("ray_opaque_background", 1)
     cmd.set("cartoon_trace_atoms", 1)
     cmd.set("cartoon_tube_radius", CARTOON_TUBE_RADIUS)
-    cmd.set("stick_radius", STICK_TRACE_RADIUS)
 
 
 def apply_ca_trace_style(cmd, object_name: str) -> None:
     cmd.hide("everything", object_name)
     cmd.set("cartoon_trace_atoms", 1, object_name)
     cmd.set("cartoon_tube_radius", CARTOON_TUBE_RADIUS, object_name)
-    cmd.set("stick_radius", STICK_TRACE_RADIUS, object_name)
     cmd.cartoon("tube", object_name)
     cmd.show("cartoon", object_name)
-    cmd.show("sticks", object_name)
     cmd.rebuild(object_name)
 
 

@@ -10,6 +10,7 @@ debugging.
 Changed test rendering to create the 7b3a view from the reference and ray-trace
 CA tube/stick output to debug blank PyMOL PNGs.
 Switched the 7b3a test renderer back to recalling the saved `7b3a_A_view`.
+Removed stick overlay artifacts and disabled ray tracing for cleaner PyMOL PNGs.
 
 ## Session: 2026-04-26 — Add fold-4 coefficient replay MDS export for first five proteins
 
