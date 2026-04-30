@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Iterable
 
-EARLY_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+EARLY_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 os.makedirs(EARLY_PROJECT_ROOT / ".mplconfig", exist_ok=True)
 os.makedirs(EARLY_PROJECT_ROOT / ".cache", exist_ok=True)
 os.environ.setdefault("MPLCONFIGDIR", str(EARLY_PROJECT_ROOT / ".mplconfig"))
@@ -23,7 +23,7 @@ from matplotlib.lines import Line2D
 
 PROJECT_ROOT = EARLY_PROJECT_ROOT
 DELTA_DIR = PROJECT_ROOT / "delta_files"
-OUT_DIR = DELTA_DIR / "publication_plots"
+OUT_DIR = Path(__file__).resolve().parent
 EXPECTED_LAYERS = tuple(range(48))
 
 ORANGE = "#f58518"
@@ -33,16 +33,12 @@ GRID_GREY = "#dddddd"
 
 VARIANT_A = {
     "folder": "general_base256_avg_symmetric",
-    "label": "Variant A: Averaged (i, j) pair representations",
     "legend_label": "Variant A: Averaged (i, j) pair\nrepresentations",
-    "short_label": "Variant A",
     "color": ORANGE,
 }
 VARIANT_B = {
     "folder": "general_base256_avg_symmetric_plus_axial",
-    "label": "Variant B: Averaged (i, j) pair representations + neighboring pair representations",
     "legend_label": "Variant B: Averaged (i, j) pair representations\n+ neighboring pair representations",
-    "short_label": "Variant B",
     "color": RED,
 }
 
@@ -61,29 +57,16 @@ def configure_style() -> None:
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.linewidth": 1.1,
-            "pdf.fonttype": 42,
-            "ps.fonttype": 42,
             "savefig.dpi": 300,
             "savefig.bbox": "tight",
         }
     )
 
 
-def geometry_path(folder: str) -> Path:
-    return DELTA_DIR / folder / "geometry_metrics.csv"
-
-
-def load_test_geometry(folder: str) -> pd.DataFrame:
-    path = geometry_path(folder)
+def load_test_rows(folder: str, filename: str, value_column: str) -> pd.DataFrame:
+    path = DELTA_DIR / folder / filename
     df = pd.read_csv(path)
-    required = {
-        "layer",
-        "split",
-        "protein_id",
-        "tm_score",
-        "triangle_violation_fraction",
-        "triangle_mean_violation",
-    }
+    required = {"layer", "split", "protein_id", value_column}
     missing = sorted(required - set(df.columns))
     if missing:
         raise ValueError(f"{path} is missing required columns: {missing}")
@@ -114,16 +97,18 @@ def add_common_axis_style(ax: plt.Axes) -> None:
     ax.tick_params(axis="both", width=1.0, length=5)
 
 
-def plot_variant_tm_score(
+def plot_variant_comparison(
     ax: plt.Axes,
     variant_a: pd.DataFrame,
     variant_b: pd.DataFrame,
     *,
-    title: str = "Held-out TM-score by representation variant",
+    column: str,
+    title: str,
+    ylabel: str,
     legend_fontsize: int = 12,
 ) -> None:
     for spec, df in [(VARIANT_A, variant_a), (VARIANT_B, variant_b)]:
-        mean = layer_mean(df, "tm_score")
+        mean = layer_mean(df, column)
         ax.plot(
             mean.index,
             mean.values,
@@ -134,61 +119,19 @@ def plot_variant_tm_score(
 
     ax.set_title(title, pad=10)
     ax.set_xlabel("Layer")
-    ax.set_ylabel("Mean held-out TM-score")
-    ax.set_ylim(0.28, 0.84)
+    ax.set_ylabel(ylabel)
+    ax.set_ylim(0.0, 1.0)
     add_common_axis_style(ax)
     ax.legend(loc="upper left", frameon=False, fontsize=legend_fontsize)
 
 
-def plot_tm_trajectories(
+def plot_orange_trajectories(
     ax: plt.Axes,
     variant_a: pd.DataFrame,
     *,
-    title: str = "Held-out protein TM-score trajectories",
-    legend_fontsize: int = 12,
-) -> None:
-    for _, group in variant_a.groupby("protein_id", sort=True):
-        ax.plot(
-            group["layer"],
-            group["tm_score"],
-            color=TRAJECTORY_GREY,
-            linewidth=0.8,
-            alpha=0.45,
-            zorder=1,
-        )
-
-    mean = layer_mean(variant_a, "tm_score")
-    ax.plot(
-        mean.index,
-        mean.values,
-        color=ORANGE,
-        linewidth=3.2,
-        label="Held-out mean",
-        zorder=3,
-    )
-
-    ax.set_title(title, pad=10)
-    ax.set_xlabel("Layer")
-    ax.set_ylabel("TM-score")
-    ax.set_ylim(0.0, 0.98)
-    add_common_axis_style(ax)
-    handles = [
-        Line2D([0], [0], color=TRAJECTORY_GREY, linewidth=1.2, alpha=0.6, label="Held-out proteins"),
-        Line2D([0], [0], color=ORANGE, linewidth=3.2, label="Held-out mean"),
-    ]
-    ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=legend_fontsize)
-
-
-def plot_triangle_metric(
-    ax: plt.Axes,
-    variant_a: pd.DataFrame,
     column: str,
-    *,
     title: str,
     ylabel: str,
-    ylim: tuple[float, float],
-    xlabel: bool,
-    show_legend: bool,
     legend_fontsize: int = 12,
 ) -> None:
     for _, group in variant_a.groupby("protein_id", sort=True):
@@ -212,95 +155,112 @@ def plot_triangle_metric(
     )
 
     ax.set_title(title, pad=10)
+    ax.set_xlabel("Layer")
     ax.set_ylabel(ylabel)
-    if xlabel:
-        ax.set_xlabel("Layer")
-    ax.set_ylim(*ylim)
+    ax.set_ylim(0.0, 1.0)
     add_common_axis_style(ax)
-    if show_legend:
-        handles = [
-            Line2D([0], [0], color=TRAJECTORY_GREY, linewidth=1.2, alpha=0.6, label="Held-out proteins"),
-            Line2D([0], [0], color=ORANGE, linewidth=3.2, label="Held-out mean"),
-        ]
-        ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=legend_fontsize)
+    handles = [
+        Line2D([0], [0], color=TRAJECTORY_GREY, linewidth=1.2, alpha=0.6, label="Held-out proteins"),
+        Line2D([0], [0], color=ORANGE, linewidth=3.2, label="Held-out mean"),
+    ]
+    ax.legend(handles=handles, loc="lower right", frameon=False, fontsize=legend_fontsize)
 
 
 def save_figure(fig: plt.Figure, stem: str) -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for suffix in ("png", "pdf"):
-        fig.savefig(OUT_DIR / f"{stem}.{suffix}")
+    fig.savefig(OUT_DIR / f"{stem}.png")
     plt.close(fig)
 
 
-def create_standalone_figures(variant_a: pd.DataFrame, variant_b: pd.DataFrame) -> None:
+def create_standalone_figures(
+    r2_variant_a: pd.DataFrame,
+    r2_variant_b: pd.DataFrame,
+    tm_variant_a: pd.DataFrame,
+    tm_variant_b: pd.DataFrame,
+) -> None:
     fig, ax = plt.subplots(figsize=(9.2, 5.6), constrained_layout=True)
-    plot_variant_tm_score(ax, variant_a, variant_b)
+    plot_variant_comparison(
+        ax,
+        r2_variant_a,
+        r2_variant_b,
+        column="per_protein_r2",
+        title="Held-out R$^2$ by representation variant",
+        ylabel="Mean held-out R$^2$",
+    )
+    save_figure(fig, "variant_r2_comparison")
+
+    fig, ax = plt.subplots(figsize=(9.2, 5.6), constrained_layout=True)
+    plot_orange_trajectories(
+        ax,
+        r2_variant_a,
+        column="per_protein_r2",
+        title="Held-out protein R$^2$ trajectories",
+        ylabel="R$^2$",
+    )
+    save_figure(fig, "avg_symmetric_r2_trajectories")
+
+    fig, ax = plt.subplots(figsize=(9.2, 5.6), constrained_layout=True)
+    plot_variant_comparison(
+        ax,
+        tm_variant_a,
+        tm_variant_b,
+        column="tm_score",
+        title="Held-out TM-score by representation variant",
+        ylabel="Mean held-out TM-score",
+    )
     save_figure(fig, "01_variant_tm_score_comparison")
 
     fig, ax = plt.subplots(figsize=(9.2, 5.6), constrained_layout=True)
-    plot_tm_trajectories(ax, variant_a)
+    plot_orange_trajectories(
+        ax,
+        tm_variant_a,
+        column="tm_score",
+        title="Held-out protein TM-score trajectories",
+        ylabel="TM-score",
+    )
     save_figure(fig, "02_avg_symmetric_tm_score_trajectories")
 
-    fig, axes = plt.subplots(2, 1, figsize=(9.2, 8.8), sharex=True, constrained_layout=True)
-    plot_triangle_metric(
-        axes[0],
-        variant_a,
-        "triangle_violation_fraction",
-        title="Held-out triangle inequality violation fraction",
-        ylabel="Violation fraction",
-        ylim=(0.2, 1.0),
-        xlabel=False,
-        show_legend=True,
-    )
-    plot_triangle_metric(
-        axes[1],
-        variant_a,
-        "triangle_mean_violation",
-        title="Held-out triangle inequality violation magnitude",
-        ylabel="Mean violation magnitude",
-        ylim=(2.0, 11.2),
-        xlabel=True,
-        show_legend=False,
-    )
-    save_figure(fig, "03_avg_symmetric_triangle_violations")
 
-
-def create_combined_figure(variant_a: pd.DataFrame, variant_b: pd.DataFrame) -> None:
+def create_combined_figure(
+    r2_variant_a: pd.DataFrame,
+    r2_variant_b: pd.DataFrame,
+    tm_variant_a: pd.DataFrame,
+    tm_variant_b: pd.DataFrame,
+) -> None:
     fig, axes = plt.subplots(2, 2, figsize=(17.5, 12.5), constrained_layout=True)
 
-    plot_variant_tm_score(
+    plot_variant_comparison(
         axes[0, 0],
-        variant_a,
-        variant_b,
-        title="Mean held-out TM-score",
+        r2_variant_a,
+        r2_variant_b,
+        column="per_protein_r2",
+        title="Mean held-out R$^2$",
+        ylabel="Mean held-out R$^2$",
         legend_fontsize=10,
     )
-    plot_tm_trajectories(
+    plot_orange_trajectories(
         axes[0, 1],
-        variant_a,
-        title="Held-out TM-score trajectories",
+        r2_variant_a,
+        column="per_protein_r2",
+        title="Held-out R$^2$ trajectories",
+        ylabel="R$^2$",
         legend_fontsize=10,
     )
-    plot_triangle_metric(
+    plot_variant_comparison(
         axes[1, 0],
-        variant_a,
-        "triangle_violation_fraction",
-        title="Triangle inequality violation fraction",
-        ylabel="Violation fraction",
-        ylim=(0.2, 1.0),
-        xlabel=True,
-        show_legend=True,
+        tm_variant_a,
+        tm_variant_b,
+        column="tm_score",
+        title="Mean held-out TM-score",
+        ylabel="Mean held-out TM-score",
         legend_fontsize=10,
     )
-    plot_triangle_metric(
+    plot_orange_trajectories(
         axes[1, 1],
-        variant_a,
-        "triangle_mean_violation",
-        title="Triangle inequality violation magnitude",
-        ylabel="Mean violation magnitude",
-        ylim=(2.0, 11.2),
-        xlabel=True,
-        show_legend=False,
+        tm_variant_a,
+        column="tm_score",
+        title="Held-out TM-score trajectories",
+        ylabel="TM-score",
         legend_fontsize=10,
     )
 
@@ -308,23 +268,26 @@ def create_combined_figure(variant_a: pd.DataFrame, variant_b: pd.DataFrame) -> 
 
 
 def write_manifest(output_stems: Iterable[str]) -> None:
-    rows = []
-    for stem in output_stems:
-        rows.append({"figure": stem, "png": f"{stem}.png", "pdf": f"{stem}.pdf"})
+    rows = [{"figure": stem, "png": f"{stem}.png"} for stem in output_stems]
     pd.DataFrame(rows).to_csv(OUT_DIR / "publication_plot_manifest.csv", index=False)
 
 
 def main() -> None:
     configure_style()
-    variant_a = load_test_geometry(VARIANT_A["folder"])
-    variant_b = load_test_geometry(VARIANT_B["folder"])
-    create_standalone_figures(variant_a, variant_b)
-    create_combined_figure(variant_a, variant_b)
+
+    r2_variant_a = load_test_rows(VARIANT_A["folder"], "per_protein.csv", "per_protein_r2")
+    r2_variant_b = load_test_rows(VARIANT_B["folder"], "per_protein.csv", "per_protein_r2")
+    tm_variant_a = load_test_rows(VARIANT_A["folder"], "geometry_metrics.csv", "tm_score")
+    tm_variant_b = load_test_rows(VARIANT_B["folder"], "geometry_metrics.csv", "tm_score")
+
+    create_standalone_figures(r2_variant_a, r2_variant_b, tm_variant_a, tm_variant_b)
+    create_combined_figure(r2_variant_a, r2_variant_b, tm_variant_a, tm_variant_b)
     write_manifest(
         [
+            "variant_r2_comparison",
+            "avg_symmetric_r2_trajectories",
             "01_variant_tm_score_comparison",
             "02_avg_symmetric_tm_score_trajectories",
-            "03_avg_symmetric_triangle_violations",
             "04_combined_publication_panel",
         ]
     )

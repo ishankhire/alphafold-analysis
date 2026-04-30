@@ -1042,8 +1042,8 @@ exports into a labeled horizontal strip.
 Follow-up:
 - switched the comparison outputs to held-out/test-only aggregates so the
   train/test variant curves line up with each variant `summary.txt`
-- added `scripts/multi_protein/regression/create_publication_plots.py` to
-  render paper-oriented TM-score and triangle-violation panels in
+- added `delta_files/publication_plots/create_publication_plots.py` to
+  render paper-oriented held-out R2/TM-score panels in
   `delta_files/publication_plots/`.
 
 ## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
