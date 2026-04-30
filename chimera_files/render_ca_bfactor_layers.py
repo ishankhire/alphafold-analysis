@@ -77,9 +77,15 @@ RECONSTRUCTED_PDB_PATH_TEMPLATE = (
 )
 
 # Render subset.
-MAX_PROTEINS_TO_RENDER = 3
-PROTEIN_IDS: tuple[str, ...] | None = None
-LAYERS = (0, 10, 15, 22, 30, 40, 47)
+# Testing mode: render only 7b3a_A reference plus layer 47.
+#
+# For the broader batch later, restore:
+#     MAX_PROTEINS_TO_RENDER = 10
+#     PROTEIN_IDS = None
+#     LAYERS = (0, 10, 15, 22, 30, 40, 47)
+MAX_PROTEINS_TO_RENDER = 10
+PROTEIN_IDS: tuple[str, ...] | None = ("7b3a_A",)
+LAYERS = (47,)
 
 # Image settings.
 IMAGE_WIDTH = 1600
