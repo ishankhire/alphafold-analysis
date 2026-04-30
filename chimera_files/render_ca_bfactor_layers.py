@@ -6,10 +6,9 @@ Usage from an active PyMOL session with named views already stored:
 
     PyMOL> run chimera_files/render_ca_bfactor_layers.py
 
-In full-batch mode, each protein should have a saved view named
-"{protein_id}_view" before this script runs. In the current test mode, the
-script creates that view once from the reference structure so camera/framing
-problems can be isolated from rendering problems.
+Each protein should have a saved view named "{protein_id}_view" before this
+script runs. The current test mode expects the active PyMOL session to contain
+a saved view named "7b3a_A_view".
 """
 
 from __future__ import annotations
@@ -89,7 +88,10 @@ RECONSTRUCTED_PDB_PATH_TEMPLATE = (
 MAX_PROTEINS_TO_RENDER = 10
 PROTEIN_IDS: tuple[str, ...] | None = ("7b3a_A",)
 LAYERS = (47,)
-USE_SAVED_VIEWS = False
+USE_SAVED_VIEWS = True
+
+# Set to False only when debugging camera/framing without a stored PyMOL view.
+# In normal use, this script recalls "{protein_id}_view" from the active session.
 
 # Image settings.
 IMAGE_WIDTH = 1600
