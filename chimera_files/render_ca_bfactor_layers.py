@@ -6,9 +6,10 @@ Usage from an active PyMOL session with named views already stored:
 
     PyMOL> run chimera_files/render_ca_bfactor_layers.py
 
-Each protein must have a saved view named "{protein_id}_view" before this script
-runs. The script restores that view before every PNG save and never refits the
-camera per layer.
+In full-batch mode, each protein should have a saved view named
+"{protein_id}_view" before this script runs. In the current test mode, the
+script creates that view once from the reference structure so camera/framing
+problems can be isolated from rendering problems.
 """
 
 from __future__ import annotations
@@ -83,14 +84,17 @@ RECONSTRUCTED_PDB_PATH_TEMPLATE = (
 #     MAX_PROTEINS_TO_RENDER = 10
 #     PROTEIN_IDS = None
 #     LAYERS = (0, 10, 15, 22, 30, 40, 47)
+#     USE_SAVED_VIEWS = True
+#     RAY_TRACE = False
 MAX_PROTEINS_TO_RENDER = 10
 PROTEIN_IDS: tuple[str, ...] | None = ("7b3a_A",)
 LAYERS = (47,)
+USE_SAVED_VIEWS = False
 
 # Image settings.
 IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
-RAY_TRACE = False
+RAY_TRACE = True
 BACKGROUND_COLOR = "white"
 
 # Distance-to-final B-factor thresholds.
@@ -106,6 +110,9 @@ FAR_COLOR = "tv_yellow"
 
 # CA-trace cartoon settings.
 CARTOON_TUBE_RADIUS = 0.45
+STICK_TRACE_RADIUS = 0.30
+REFERENCE_VIEW_BUFFER = 10.0
+REFERENCE_VIEW_SLAB = 250.0
 RENDER_OBJECT_PREFIX = "ca_bfactor_render"
 
 # Make `run render_ca_bfactor_layers.py` render immediately in PyMOL.
@@ -206,19 +213,49 @@ def recall_required_view(cmd, view_name: str) -> None:
         ) from exc
 
 
+def create_view_from_reference(cmd, protein_id: str, view_name: str) -> None:
+    object_name = f"{RENDER_OBJECT_PREFIX}_{protein_id}_view_reference"
+    pdb_path = reference_pdb_path(protein_id)
+
+    print(f"Creating {view_name} from reference: {pdb_path}")
+    cmd.delete(object_name)
+    cmd.load(str(pdb_path), object_name)
+    cmd.disable("all")
+    cmd.enable(object_name)
+    apply_ca_trace_style(cmd, object_name)
+    cmd.color(REFERENCE_COLOR, object_name)
+    cmd.orient(object_name)
+    cmd.zoom(object_name, buffer=REFERENCE_VIEW_BUFFER, complete=1)
+    cmd.clip("slab", REFERENCE_VIEW_SLAB)
+    cmd.view(view_name, "store")
+    cmd.delete(object_name)
+
+
+def prepare_view(cmd, protein_id: str, view_name: str) -> None:
+    if USE_SAVED_VIEWS:
+        recall_required_view(cmd, view_name)
+    else:
+        create_view_from_reference(cmd, protein_id, view_name)
+
+
 def apply_scene_settings(cmd) -> None:
     cmd.bg_color(BACKGROUND_COLOR)
     cmd.set("opaque_background", 1)
+    cmd.set("ray_opaque_background", 1)
     cmd.set("cartoon_trace_atoms", 1)
     cmd.set("cartoon_tube_radius", CARTOON_TUBE_RADIUS)
+    cmd.set("stick_radius", STICK_TRACE_RADIUS)
 
 
 def apply_ca_trace_style(cmd, object_name: str) -> None:
     cmd.hide("everything", object_name)
     cmd.set("cartoon_trace_atoms", 1, object_name)
     cmd.set("cartoon_tube_radius", CARTOON_TUBE_RADIUS, object_name)
+    cmd.set("stick_radius", STICK_TRACE_RADIUS, object_name)
     cmd.cartoon("tube", object_name)
     cmd.show("cartoon", object_name)
+    cmd.show("sticks", object_name)
+    cmd.rebuild(object_name)
 
 
 def color_reconstructed_by_bfactor(cmd, object_name: str) -> None:
@@ -267,6 +304,8 @@ def render_item(cmd, item: RenderItem, view_name: str) -> None:
         color_reconstructed_by_bfactor(cmd, object_name)
 
     recall_required_view(cmd, view_name)
+    cmd.rebuild(object_name)
+    cmd.refresh()
     item.output_path.parent.mkdir(parents=True, exist_ok=True)
     cmd.png(
         str(item.output_path),
@@ -296,7 +335,7 @@ def render_ca_bfactor_layers() -> None:
         cleanup_render_objects(cmd)
         for protein_id, items in items_by_protein.items():
             view_name = required_view_name(protein_id)
-            recall_required_view(cmd, view_name)
+            prepare_view(cmd, protein_id, view_name)
             for item in items:
                 render_item(cmd, item, view_name)
         print(f"Finished rendering {sum(len(items) for items in items_by_protein.values())} PNGs.")

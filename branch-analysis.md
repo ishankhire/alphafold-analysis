@@ -7,6 +7,8 @@ CA traces colored by B-factor bins for the first three reconstructed proteins.
 Updated it to find the repo root reliably from PyMOL sessions.
 Temporarily narrowed rendering to `7b3a_A` reference plus layer 47 for PyMOL
 debugging.
+Changed test rendering to create the 7b3a view from the reference and ray-trace
+CA tube/stick output to debug blank PyMOL PNGs.
 
 ## Session: 2026-04-26 — Add fold-4 coefficient replay MDS export for first five proteins
 
