@@ -13,12 +13,58 @@ camera per layer.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
+PROJECT_ROOT_ENV_VAR = "ALPHAFOLD_PROTEIN_ROOT"
+FALLBACK_PROJECT_ROOT = (
+    Path.home() / "Desktop" / "ai_safety" / "AlphaFoldResearch" / "protein"
+)
+
+
+def candidate_roots_from(start: Path) -> list[Path]:
+    resolved = start.expanduser().resolve()
+    if resolved.is_file():
+        resolved = resolved.parent
+    return [resolved, *resolved.parents]
+
+
+def looks_like_project_root(path: Path) -> bool:
+    return (path / "reconstructed_pdb_files").is_dir() and (path / "chimera_files").is_dir()
+
+
+def find_project_root() -> Path:
+    starts: list[Path] = []
+    env_root = os.environ.get(PROJECT_ROOT_ENV_VAR)
+    if env_root:
+        starts.append(Path(env_root))
+
+    starts.append(Path.cwd())
+    try:
+        starts.append(Path(__file__).resolve().parent)
+    except NameError:
+        pass
+    starts.append(FALLBACK_PROJECT_ROOT)
+
+    checked: set[Path] = set()
+    for start in starts:
+        for candidate in candidate_roots_from(start):
+            if candidate in checked:
+                continue
+            checked.add(candidate)
+            if looks_like_project_root(candidate):
+                return candidate
+
+    raise FileNotFoundError(
+        "Could not find the protein project root. Start PyMOL from the repo, "
+        f"cd into the repo/chimera_files directory, or set {PROJECT_ROOT_ENV_VAR}."
+    )
+
+
+PROJECT_ROOT = find_project_root()
+SCRIPT_DIR = PROJECT_ROOT / "chimera_files"
 
 # Input/output configuration.
 INPUT_DIR = PROJECT_ROOT / "reconstructed_pdb_files"
@@ -238,6 +284,8 @@ def render_ca_bfactor_layers() -> None:
     enabled_objects = cmd.get_names("objects", enabled_only=1)
 
     try:
+        print(f"Using project root: {PROJECT_ROOT}")
+        print(f"Writing PNGs under: {OUTPUT_DIR}")
         apply_scene_settings(cmd)
         cleanup_render_objects(cmd)
         for protein_id, items in items_by_protein.items():

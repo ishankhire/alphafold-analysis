@@ -4,6 +4,7 @@
 
 Added `chimera_files/render_ca_bfactor_layers.py` to batch-render saved-view
 CA traces colored by B-factor bins for the first three reconstructed proteins.
+Updated it to find the repo root reliably from PyMOL sessions.
 
 ## Session: 2026-04-26 — Add fold-4 coefficient replay MDS export for first five proteins
 
