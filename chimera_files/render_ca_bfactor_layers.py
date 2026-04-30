@@ -56,6 +56,9 @@ FAR_COLOR = "tv_yellow"
 CARTOON_TUBE_RADIUS = 0.45
 RENDER_OBJECT_PREFIX = "ca_bfactor_render"
 
+# Make `run render_ca_bfactor_layers.py` render immediately in PyMOL.
+AUTO_RUN_IN_PYMOL = True
+
 
 @dataclass(frozen=True)
 class RenderItem:
@@ -199,6 +202,7 @@ def restore_enabled_objects(cmd, enabled_objects: list[str]) -> None:
 def render_item(cmd, item: RenderItem, view_name: str) -> None:
     object_name = object_name_for(item)
 
+    print(f"Rendering {item.protein_id} {item.label} -> {item.output_path}")
     cmd.delete(object_name)
     cmd.load(str(item.pdb_path), object_name)
     cmd.disable("all")
@@ -241,6 +245,7 @@ def render_ca_bfactor_layers() -> None:
             recall_required_view(cmd, view_name)
             for item in items:
                 render_item(cmd, item, view_name)
+        print(f"Finished rendering {sum(len(items) for items in items_by_protein.values())} PNGs.")
     finally:
         cleanup_render_objects(cmd)
         restore_enabled_objects(cmd, enabled_objects)
@@ -254,5 +259,5 @@ else:
     _pymol_cmd.extend("render_ca_bfactor_layers", render_ca_bfactor_layers)
 
 
-if __name__ == "__main__":
+if (_pymol_cmd is not None and AUTO_RUN_IN_PYMOL) or __name__ == "__main__":
     render_ca_bfactor_layers()
