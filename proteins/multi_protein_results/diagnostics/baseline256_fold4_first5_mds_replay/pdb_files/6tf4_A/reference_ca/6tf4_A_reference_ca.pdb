@@ -1,0 +1,137 @@
+REMARK CA trace exported for ChimeraX/PyMOL overlay
+REMARK Reference CA coordinates from original predicted PDB
+ATOM      1  CA  GLY A   1      29.084   2.620 -24.916  1.00  0.00           C
+ATOM      2  CA  ALA A   2      26.080   0.911 -24.391  1.00  0.00           C
+ATOM      3  CA  MET A   3      22.762   1.312 -23.808  1.00  0.00           C
+ATOM      4  CA  GLY A   4      21.496  -2.190 -23.062  1.00  0.00           C
+ATOM      5  CA  GLU A   5      18.473  -2.536 -21.077  1.00  0.00           C
+ATOM      6  CA  GLN A   6      15.620  -0.259 -21.359  1.00  0.00           C
+ATOM      7  CA  LEU A   7      13.002  -2.616 -20.329  1.00  0.00           C
+ATOM      8  CA  LYS A   8      10.653  -2.192 -17.783  1.00  0.00           C
+ATOM      9  CA  HIS A   9      10.199  -3.426 -14.391  1.00  0.00           C
+ATOM     10  CA  ALA A  10       9.923  -0.450 -12.168  1.00  0.00           C
+ATOM     11  CA  THR A  11       9.780  -3.409  -9.678  1.00  0.00           C
+ATOM     12  CA  LYS A  12       8.461  -0.782  -7.299  1.00  0.00           C
+ATOM     13  CA  GLN A  13       9.750  -2.969  -4.371  1.00  0.00           C
+ATOM     14  CA  LEU A  14       6.471  -3.732  -2.619  1.00  0.00           C
+ATOM     15  CA  PRO A  15       6.381  -2.191   0.884  1.00  0.00           C
+ATOM     16  CA  GLU A  16       6.897  -4.379   3.871  1.00  0.00           C
+ATOM     17  CA  LYS A  17       3.833  -5.836   5.504  1.00  0.00           C
+ATOM     18  CA  GLY A  18       2.688  -3.254   8.052  1.00  0.00           C
+ATOM     19  CA  GLN A  19       4.293  -0.370   6.254  1.00  0.00           C
+ATOM     20  CA  THR A  20       2.179   2.757   5.822  1.00  0.00           C
+ATOM     21  CA  VAL A  21       1.422   3.785   2.261  1.00  0.00           C
+ATOM     22  CA  ARG A  22      -0.505   6.650   0.759  1.00  0.00           C
+ATOM     23  CA  VAL A  23      -2.856   6.232  -2.101  1.00  0.00           C
+ATOM     24  CA  ALA A  24      -1.524   8.562  -4.841  1.00  0.00           C
+ATOM     25  CA  ARG A  25      -4.265   7.969  -7.450  1.00  0.00           C
+ATOM     26  CA  GLY A  26      -7.875   6.500  -7.893  1.00  0.00           C
+ATOM     27  CA  GLN A  27     -11.075   6.649  -5.899  1.00  0.00           C
+ATOM     28  CA  PHE A  28      -9.079   6.463  -2.661  1.00  0.00           C
+ATOM     29  CA  ALA A  29      -6.382   9.038  -3.507  1.00  0.00           C
+ATOM     30  CA  GLY A  30      -5.140  10.820  -0.357  1.00  0.00           C
+ATOM     31  CA  ILE A  31      -5.978   7.978   1.999  1.00  0.00           C
+ATOM     32  CA  GLU A  32      -3.452   6.377   4.273  1.00  0.00           C
+ATOM     33  CA  ALA A  33      -3.218   2.625   4.241  1.00  0.00           C
+ATOM     34  CA  ILE A  34      -1.185  -0.118   5.742  1.00  0.00           C
+ATOM     35  CA  TYR A  35       0.426  -2.533   3.380  1.00  0.00           C
+ATOM     36  CA  LEU A  36      -0.716  -6.112   4.104  1.00  0.00           C
+ATOM     37  CA  GLU A  37       0.147  -8.324   1.185  1.00  0.00           C
+ATOM     38  CA  PRO A  38       0.235  -8.480  -2.536  1.00  0.00           C
+ATOM     39  CA  ASP A  39      -3.090  -9.630  -4.086  1.00  0.00           C
+ATOM     40  CA  GLY A  40      -1.272 -10.809  -7.268  1.00  0.00           C
+ATOM     41  CA  ASP A  41       1.266  -9.169  -9.554  1.00  0.00           C
+ATOM     42  CA  THR A  42      -0.476  -5.851 -10.019  1.00  0.00           C
+ATOM     43  CA  ARG A  43      -2.501  -5.247  -6.923  1.00  0.00           C
+ATOM     44  CA  SER A  44      -1.822  -5.030  -3.192  1.00  0.00           C
+ATOM     45  CA  ILE A  45      -4.057  -5.477  -0.245  1.00  0.00           C
+ATOM     46  CA  MET A  46      -4.034  -2.520   2.076  1.00  0.00           C
+ATOM     47  CA  LEU A  47      -5.590  -1.678   5.388  1.00  0.00           C
+ATOM     48  CA  VAL A  48      -7.427   1.586   5.219  1.00  0.00           C
+ATOM     49  CA  LYS A  49      -8.400   3.283   8.388  1.00  0.00           C
+ATOM     50  CA  MET A  50     -12.052   4.273   8.155  1.00  0.00           C
+ATOM     51  CA  ILE A  51     -14.002   6.308  10.803  1.00  0.00           C
+ATOM     52  CA  SER A  52     -14.480   3.212  13.010  1.00  0.00           C
+ATOM     53  CA  GLN A  53     -12.693   0.384  11.393  1.00  0.00           C
+ATOM     54  CA  GLN A  54      -9.776  -0.869   9.276  1.00  0.00           C
+ATOM     55  CA  VAL A  55     -11.029  -2.178   6.035  1.00  0.00           C
+ATOM     56  CA  PRO A  56      -8.845  -4.330   3.610  1.00  0.00           C
+ATOM     57  CA  MET A  57      -8.762  -2.771   0.205  1.00  0.00           C
+ATOM     58  CA  SER A  58      -7.152  -3.790  -3.083  1.00  0.00           C
+ATOM     59  CA  ILE A  59      -5.013  -1.050  -4.582  1.00  0.00           C
+ATOM     60  CA  GLU A  60      -3.074  -1.073  -7.812  1.00  0.00           C
+ATOM     61  CA  ASN A  61       0.626  -1.170  -7.151  1.00  0.00           C
+ATOM     62  CA  THR A  62       0.772   1.895  -9.394  1.00  0.00           C
+ATOM     63  CA  ASP A  63      -1.767   3.914  -7.384  1.00  0.00           C
+ATOM     64  CA  TRP A  64       0.191   4.120  -3.963  1.00  0.00           C
+ATOM     65  CA  GLU A  65       3.371   5.727  -2.651  1.00  0.00           C
+ATOM     66  CA  VAL A  66       5.461   4.794   0.330  1.00  0.00           C
+ATOM     67  CA  THR A  67       5.241   7.672   2.897  1.00  0.00           C
+TER      68      THR A  67
+CONECT    1    2
+CONECT    2    3
+CONECT    3    4
+CONECT    4    5
+CONECT    5    6
+CONECT    6    7
+CONECT    7    8
+CONECT    8    9
+CONECT    9   10
+CONECT   10   11
+CONECT   11   12
+CONECT   12   13
+CONECT   13   14
+CONECT   14   15
+CONECT   15   16
+CONECT   16   17
+CONECT   17   18
+CONECT   18   19
+CONECT   19   20
+CONECT   20   21
+CONECT   21   22
+CONECT   22   23
+CONECT   23   24
+CONECT   24   25
+CONECT   25   26
+CONECT   26   27
+CONECT   27   28
+CONECT   28   29
+CONECT   29   30
+CONECT   30   31
+CONECT   31   32
+CONECT   32   33
+CONECT   33   34
+CONECT   34   35
+CONECT   35   36
+CONECT   36   37
+CONECT   37   38
+CONECT   38   39
+CONECT   39   40
+CONECT   40   41
+CONECT   41   42
+CONECT   42   43
+CONECT   43   44
+CONECT   44   45
+CONECT   45   46
+CONECT   46   47
+CONECT   47   48
+CONECT   48   49
+CONECT   49   50
+CONECT   50   51
+CONECT   51   52
+CONECT   52   53
+CONECT   53   54
+CONECT   54   55
+CONECT   55   56
+CONECT   56   57
+CONECT   57   58
+CONECT   58   59
+CONECT   59   60
+CONECT   60   61
+CONECT   61   62
+CONECT   62   63
+CONECT   63   64
+CONECT   64   65
+CONECT   65   66
+CONECT   66   67
+END

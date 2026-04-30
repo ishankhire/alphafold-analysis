@@ -1,0 +1,32 @@
+general_base256_avg_symmetric montage10 MDS replay
+==================================================
+
+Variant:          general_base256_avg_symmetric
+Feature dim:      128
+Split id:         0
+Layers complete:  48/48
+Coefficient dir:  /u/ikhire/general_train_test_split_csv_files/general_base256_avg_symmetric
+Pair blocks root: /work/hdd/bekh/thayes/openfold_reps
+PDB root:         /work/hdd/bekh/thayes/openfold_reps_outputs_sm
+Output root:      /u/ikhire/general_base256_avg_symmetric_replay_outputs/general_base256_avg_symmetric_montage10_mds_replay
+
+Proteins
+--------
+7tkv_A: split=train, residues=668, pairs=222778, size_bin=4
+7tbs_A: split=train, residues=238, pairs=28203, size_bin=2
+7pbk_A: split=train, residues=646, pairs=208335, size_bin=4
+7mro_A: split=train, residues=309, pairs=47586, size_bin=3
+7kdx_B: split=train, residues=681, pairs=231540, size_bin=4
+7f6e_B: split=train, residues=342, pairs=58311, size_bin=3
+7ebt_B: split=train, residues=227, pairs=25651, size_bin=2
+7dq9_A: split=train, residues=266, pairs=35245, size_bin=2
+7dkk_A: split=test, residues=89, pairs=3916, size_bin=0
+7b3a_A: split=train, residues=280, pairs=39060, size_bin=3
+
+Best mean raw probe R2 layer: 44 (0.9255)
+
+Best geometry by reconstruction mode
+------------------------------------
+raw: best input-distance R2 layer 44 (0.9283); best TM-score layer 45 (0.8334)
+seq1_clip_3p65_4p00: best input-distance R2 layer 44 (0.9303); best TM-score layer 45 (0.8340)
+global_min_3p65_seq1_clip_3p65_4p00: best input-distance R2 layer 44 (0.9321); best TM-score layer 45 (0.8339)

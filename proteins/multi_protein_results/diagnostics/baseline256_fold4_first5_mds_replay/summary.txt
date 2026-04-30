@@ -1,0 +1,22 @@
+Baseline256 fold-4 first-five MDS replay
+=======================================
+
+Variant:          baseline256
+Feature dim:      256
+Fold:             4
+Layers complete:  48/48
+Coefficient dir:  /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/delta_files/baseline256_kfold
+Pair blocks root: /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data
+PDB root:         /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data
+Output root:      /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/proteins/multi_protein_results/diagnostics/baseline256_fold4_first5_mds_replay
+
+Proteins
+--------
+6tf4_A: split=train, residues=67, pairs=2211, size_bin=0
+6wmk_A: split=train, residues=69, pairs=2346, size_bin=0
+6wqc_A: split=train, residues=294, pairs=43071, size_bin=3
+6xqj_A: split=train, residues=234, pairs=27261, size_bin=2
+6z01_A: split=train, residues=539, pairs=144991, size_bin=4
+
+Best mean per-protein R2 layer: 47 (0.8598)
+Best mean TM-score layer:       47 (0.6623)
