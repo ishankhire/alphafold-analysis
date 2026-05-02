@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-05-02 — Add original/full 7b3a PyMOL renderer
+
+Added a fixed-view 7b3a renderer for the green original full model and selected
+red reconstructed CA layers without B-factor coloring.
+
 ## Session: 2026-04-30 — Add PyMOL CA B-factor renderer
 
 Added `chimera_files/render_ca_bfactor_layers.py` to batch-render saved-view
