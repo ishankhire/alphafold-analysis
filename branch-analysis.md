@@ -4,6 +4,7 @@
 
 Extended publication summary stats with avg-symmetric stress, negative
 prediction, and MDS eigenvalue diagnostics.
+Moved the generated MDS geometry writeup into a separate publication markdown.
 
 ## Session: 2026-05-02 — Add Chimera publication grid
 

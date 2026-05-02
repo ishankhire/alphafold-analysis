@@ -919,11 +919,11 @@ def make_markdown(
     lines.append("")
     lines.append("Sources: `delta_files/general_base256_avg_symmetric/` and `delta_files/general_base256_avg_symmetric_plus_axial/`.")
     lines.append("All statistics are unweighted across proteins unless otherwise noted. `all` combines train and test proteins.")
-    lines.append("Variant A MDS diagnostics come from `delta_files/general_base256_avg_symmetric/geometry_metrics.csv`.")
+    lines.append("MDS geometry diagnostics are in `publication_geometry_diagnostics.md`.")
     lines.append("")
 
     lines.append("## Layer 47")
-    layer47_display = layer47.copy()
+    layer47_display = layer47[layer47["metric"].isin(["r2", "tm_score"])].copy()
     layer47_display["mean"] = layer47_display["mean"].map(fmt)
     layer47_display["median"] = layer47_display["median"].map(fmt)
     layer47_display["std"] = layer47_display["std"].map(fmt)
@@ -1008,6 +1008,21 @@ def make_markdown(
     lines.append("Per-layer negative R^2 counts are in `publication_negative_r2_summary.csv`.")
     lines.append("")
 
+    lines.append("## Additional Useful Numbers")
+    lines.extend(additional_numbers_lines(extras))
+    lines.append("")
+    return "\n".join(lines)
+
+
+def make_geometry_markdown(layer47: pd.DataFrame, extras: pd.DataFrame) -> str:
+    lines: list[str] = []
+    lines.append("# Publication Geometry Diagnostics")
+    lines.append("")
+    lines.append("Source: `delta_files/general_base256_avg_symmetric/geometry_metrics.csv`.")
+    lines.append("These diagnostics are for Variant A: averaged pair representations.")
+    lines.append("All statistics are unweighted across proteins unless otherwise noted. `all` combines train and test proteins.")
+    lines.append("")
+
     lines.append("## Variant A MDS Geometry")
     lines.append(
         "`Kruskal stress-1` is `sqrt(sum((predicted_distance - MDS_distance)^2) / "
@@ -1051,8 +1066,8 @@ def make_markdown(
     )
     lines.append("")
 
-    lines.append("## Additional Useful Numbers")
-    lines.extend(additional_numbers_lines(extras))
+    lines.append("## Additional Geometry Numbers")
+    lines.extend(variant_a_geometry_additional_lines(extras))
     lines.append("")
     return "\n".join(lines)
 
@@ -1100,7 +1115,6 @@ def additional_numbers_lines(extras: pd.DataFrame) -> list[str]:
             f"- {row['short_label']} layer-47 held-out R^2/TM-score Pearson correlation: "
             f"{fmt(row['value'])} across {int(row['n'])} proteins."
         )
-    lines.extend(variant_a_geometry_additional_lines(extras))
     return lines
 
 
@@ -1199,6 +1213,11 @@ def main() -> None:
 
     report = make_markdown(layer47, thresholds, negative, extras)
     (OUT_DIR / "publication_summary_statistics.md").write_text(report, encoding="utf-8")
+    geometry_report = make_geometry_markdown(layer47, extras)
+    (OUT_DIR / "publication_geometry_diagnostics.md").write_text(
+        geometry_report,
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":
