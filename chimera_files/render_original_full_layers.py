@@ -87,7 +87,7 @@ USE_SAVED_VIEWS = True
 IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
 RAY_TRACE = True
-DISABLE_RAY_SHADOWS = True
+ENABLE_RAY_SHADOWS = True
 BACKGROUND_COLOR = "white"
 
 # Colors.
@@ -196,22 +196,21 @@ def apply_scene_settings(cmd) -> None:
     cmd.bg_color(BACKGROUND_COLOR)
     cmd.set("opaque_background", 1)
     cmd.set("ray_opaque_background", 1)
-    cmd.set("cartoon_trace_atoms", 1)
-    cmd.set("cartoon_tube_radius", CA_TUBE_RADIUS)
 
-    if RAY_TRACE and DISABLE_RAY_SHADOWS:
-        # Ray rendering is reliable for batch PNGs; shadows obscure thin traces.
-        set_if_available(cmd, "ray_shadow", 0)
-        set_if_available(cmd, "ray_shadows", 0)
-        set_if_available(cmd, "ambient", 0.65)
-        set_if_available(cmd, "direct", 0.35)
+    if RAY_TRACE:
+        set_if_available(cmd, "ray_shadow", 1 if ENABLE_RAY_SHADOWS else 0)
+        set_if_available(cmd, "ray_shadows", 1 if ENABLE_RAY_SHADOWS else 0)
+        set_if_available(cmd, "ambient", 0.50)
+        set_if_available(cmd, "direct", 0.50)
         set_if_available(cmd, "specular", 0.15)
         set_if_available(cmd, "depth_cue", 0)
 
 
 def apply_original_full_style(cmd, object_name: str) -> None:
     cmd.hide("everything", object_name)
+    cmd.set("cartoon_trace_atoms", 0, object_name)
     cmd.dss(object_name)
+    cmd.cartoon("automatic", object_name)
     cmd.show("cartoon", object_name)
     cmd.color(ORIGINAL_FULL_COLOR, object_name)
     cmd.rebuild(object_name)
