@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-05-02 — Add Chimera publication grid
+
+Added a fixed-config Chimera montage composer for the 10 rendered proteins,
+writing SM/L10/L15/L22/L47 PNG and PDF grids.
+
 ## Session: 2026-05-02 — Add publication summary stats
 
 Added `delta_files/publication_plots/summarize_publication_statistics.py` and
