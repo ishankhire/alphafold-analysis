@@ -1,0 +1,7 @@
+paper_label,short_label,variant,split_category,threshold,crossed_threshold,first_layer_mean_tm_ge_threshold,mean_tm_score_at_first_layer
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,test,0.600000,yes,24,0.605719
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,train,0.600000,yes,35,0.603567
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,all,0.600000,yes,35,0.612519
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,test,0.600000,yes,18,0.618025
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,train,0.600000,yes,22,0.601020
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,all,0.600000,yes,20,0.603537

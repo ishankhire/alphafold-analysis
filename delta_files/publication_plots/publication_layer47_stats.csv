@@ -1,0 +1,13 @@
+paper_label,short_label,variant,metric,metric_display,split_category,layer,n_proteins,mean,median,std,min,max
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,r2,R^2,test,47,37,0.904203,0.922881,0.053986,0.697661,0.960291
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,r2,R^2,train,47,147,0.906054,0.919485,0.062897,0.357084,0.969684
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,r2,R^2,all,47,184,0.905682,0.920949,0.061075,0.357084,0.969684
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,test,47,37,0.749245,0.813567,0.189695,0.202081,0.930521
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,train,47,147,0.726780,0.781942,0.181250,0.135490,0.929199
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,all,47,184,0.731297,0.787420,0.182674,0.135490,0.930521
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,test,47,37,0.936552,0.950054,0.048764,0.689088,0.971697
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,train,47,147,0.939124,0.947748,0.037647,0.649597,0.977015
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,all,47,184,0.938607,0.948954,0.039995,0.649597,0.977015
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,tm_score,TM-score,test,47,37,0.794423,0.870100,0.187014,0.228453,0.956098
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,tm_score,TM-score,train,47,147,0.776411,0.841785,0.174229,0.168403,0.952322
+Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,tm_score,TM-score,all,47,184,0.780033,0.844977,0.176496,0.168403,0.956098

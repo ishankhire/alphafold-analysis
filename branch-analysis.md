@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-05-02 — Add publication summary stats
+
+Added `delta_files/publication_plots/summarize_publication_statistics.py` and
+generated compact R2/TM-score summary tables/report for the two figure variants.
+
 ## Session: 2026-05-02 — Add original/full 7b3a PyMOL renderer
 
 Added a fixed-view 7b3a renderer for the green original full model and selected
