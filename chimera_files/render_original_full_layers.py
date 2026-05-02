@@ -71,7 +71,7 @@ SCRIPT_DIR = PROJECT_ROOT / "chimera_files"
 # Input/output configuration.
 INPUT_DIR = PROJECT_ROOT / "reconstructed_pdb_files"
 OUTPUT_DIR = SCRIPT_DIR
-PROTEIN_ID = "7ebt_B"
+PROTEIN_ID = "7tkv_A"
 ORIGINAL_FULL_PDB_PATH_TEMPLATE = (
     "{protein_id}/original_full/{protein_id}_model_1_ptm_unrelaxed.pdb"
 )
