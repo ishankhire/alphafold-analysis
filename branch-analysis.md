@@ -6,6 +6,8 @@ Added a fixed-view 7b3a renderer for the green original full model and selected
 red reconstructed CA layers without B-factor coloring.
 Scoped CA-trace settings to reconstructed layers and restored moderate ray
 shadows so the full original uses normal secondary-structure cartoon.
+Slightly darkened the fixed green/red PyMOL colors and disabled auto-zoom during
+the renderer.
 
 ## Session: 2026-04-30 — Add PyMOL CA B-factor renderer
 

@@ -91,8 +91,10 @@ ENABLE_RAY_SHADOWS = True
 BACKGROUND_COLOR = "white"
 
 # Colors.
-ORIGINAL_FULL_COLOR = "green"
-RECONSTRUCTED_COLOR = "red"
+ORIGINAL_FULL_COLOR = "original_full_green"
+ORIGINAL_FULL_RGB = (0.00, 0.55, 0.05)
+RECONSTRUCTED_COLOR = "reconstructed_red"
+RECONSTRUCTED_RGB = (0.82, 0.00, 0.00)
 
 # Cartoon settings.
 CA_TUBE_RADIUS = 0.45
@@ -196,6 +198,9 @@ def apply_scene_settings(cmd) -> None:
     cmd.bg_color(BACKGROUND_COLOR)
     cmd.set("opaque_background", 1)
     cmd.set("ray_opaque_background", 1)
+    set_if_available(cmd, "auto_zoom", 0)
+    cmd.set_color(ORIGINAL_FULL_COLOR, ORIGINAL_FULL_RGB)
+    cmd.set_color(RECONSTRUCTED_COLOR, RECONSTRUCTED_RGB)
 
     if RAY_TRACE:
         set_if_available(cmd, "ray_shadow", 1 if ENABLE_RAY_SHADOWS else 0)
