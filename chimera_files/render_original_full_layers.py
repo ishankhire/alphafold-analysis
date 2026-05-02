@@ -71,7 +71,7 @@ SCRIPT_DIR = PROJECT_ROOT / "chimera_files"
 # Input/output configuration.
 INPUT_DIR = PROJECT_ROOT / "reconstructed_pdb_files"
 OUTPUT_DIR = SCRIPT_DIR
-PROTEIN_ID = "7f6e_B"
+PROTEIN_ID = "7ebt_B"
 ORIGINAL_FULL_PDB_PATH_TEMPLATE = (
     "{protein_id}/original_full/{protein_id}_model_1_ptm_unrelaxed.pdb"
 )
@@ -91,8 +91,8 @@ ENABLE_RAY_SHADOWS = True
 ENABLE_DEPTH_FADING = True
 DEPTH_FADING_START = 0.4
 FORCE_ORTHOSCOPIC = True
-RENDER_CLIP_BUFFER = 100.0
-RENDER_CLIP_SLAB = 1000.0
+RENDER_CLIP_BUFFER = 45.0
+FALLBACK_RENDER_CLIP_SLAB = 250.0
 BACKGROUND_COLOR = "white"
 
 # Colors.
@@ -223,8 +223,7 @@ def reset_render_clipping(cmd, object_name: str) -> None:
     try:
         cmd.clip("atoms", RENDER_CLIP_BUFFER, object_name)
     except Exception:
-        cmd.clip("slab", RENDER_CLIP_SLAB)
-    cmd.clip("slab", RENDER_CLIP_SLAB)
+        cmd.clip("slab", FALLBACK_RENDER_CLIP_SLAB)
 
 
 def apply_original_full_style(cmd, object_name: str) -> None:
