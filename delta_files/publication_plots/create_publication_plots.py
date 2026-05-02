@@ -97,6 +97,19 @@ def add_common_axis_style(ax: plt.Axes) -> None:
     ax.tick_params(axis="both", width=1.0, length=5)
 
 
+def add_panel_label(ax: plt.Axes, label: str) -> None:
+    ax.text(
+        -0.08,
+        1.04,
+        label,
+        transform=ax.transAxes,
+        ha="left",
+        va="bottom",
+        fontsize=16,
+        fontweight="bold",
+    )
+
+
 def plot_variant_comparison(
     ax: plt.Axes,
     variant_a: pd.DataFrame,
@@ -263,6 +276,9 @@ def create_combined_figure(
         ylabel="TM-score",
         legend_fontsize=10,
     )
+
+    for ax, label in zip(axes.flat, ["(a)", "(b)", "(c)", "(d)"]):
+        add_panel_label(ax, label)
 
     save_figure(fig, "04_combined_publication_panel")
 
