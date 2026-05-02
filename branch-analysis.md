@@ -8,6 +8,10 @@ Scoped CA-trace settings to reconstructed layers and restored moderate ray
 shadows so the full original uses normal secondary-structure cartoon.
 Slightly darkened the fixed green/red PyMOL colors and disabled auto-zoom during
 the renderer.
+Enabled mild depth fading for ray renders so rear cartoon/trace elements fade
+toward the white background.
+Added per-render clipping reset and forced orthoscopic view to prevent accidental
+PyMOL scroll/slab settings from cutting structures out of PNGs.
 
 ## Session: 2026-04-30 — Add PyMOL CA B-factor renderer
 

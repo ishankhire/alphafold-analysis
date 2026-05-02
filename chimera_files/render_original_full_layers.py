@@ -71,7 +71,7 @@ SCRIPT_DIR = PROJECT_ROOT / "chimera_files"
 # Input/output configuration.
 INPUT_DIR = PROJECT_ROOT / "reconstructed_pdb_files"
 OUTPUT_DIR = SCRIPT_DIR
-PROTEIN_ID = "7b3a_A"
+PROTEIN_ID = "7f6e_B"
 ORIGINAL_FULL_PDB_PATH_TEMPLATE = (
     "{protein_id}/original_full/{protein_id}_model_1_ptm_unrelaxed.pdb"
 )
@@ -88,6 +88,11 @@ IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
 RAY_TRACE = True
 ENABLE_RAY_SHADOWS = True
+ENABLE_DEPTH_FADING = True
+DEPTH_FADING_START = 0.4
+FORCE_ORTHOSCOPIC = True
+RENDER_CLIP_BUFFER = 100.0
+RENDER_CLIP_SLAB = 1000.0
 BACKGROUND_COLOR = "white"
 
 # Colors.
@@ -199,6 +204,7 @@ def apply_scene_settings(cmd) -> None:
     cmd.set("opaque_background", 1)
     cmd.set("ray_opaque_background", 1)
     set_if_available(cmd, "auto_zoom", 0)
+    set_if_available(cmd, "orthoscopic", 1 if FORCE_ORTHOSCOPIC else 0)
     cmd.set_color(ORIGINAL_FULL_COLOR, ORIGINAL_FULL_RGB)
     cmd.set_color(RECONSTRUCTED_COLOR, RECONSTRUCTED_RGB)
 
@@ -208,7 +214,17 @@ def apply_scene_settings(cmd) -> None:
         set_if_available(cmd, "ambient", 0.50)
         set_if_available(cmd, "direct", 0.50)
         set_if_available(cmd, "specular", 0.15)
-        set_if_available(cmd, "depth_cue", 0)
+        set_if_available(cmd, "depth_cue", 1 if ENABLE_DEPTH_FADING else 0)
+        set_if_available(cmd, "ray_trace_fog", 1 if ENABLE_DEPTH_FADING else 0)
+        set_if_available(cmd, "fog_start", DEPTH_FADING_START)
+
+
+def reset_render_clipping(cmd, object_name: str) -> None:
+    try:
+        cmd.clip("atoms", RENDER_CLIP_BUFFER, object_name)
+    except Exception:
+        cmd.clip("slab", RENDER_CLIP_SLAB)
+    cmd.clip("slab", RENDER_CLIP_SLAB)
 
 
 def apply_original_full_style(cmd, object_name: str) -> None:
@@ -260,6 +276,7 @@ def render_item(cmd, item: RenderItem, view_name: str) -> None:
         apply_ca_trace_style(cmd, object_name)
 
     recall_required_view(cmd, view_name)
+    reset_render_clipping(cmd, object_name)
     cmd.rebuild(object_name)
     cmd.refresh()
     item.output_path.parent.mkdir(parents=True, exist_ok=True)
