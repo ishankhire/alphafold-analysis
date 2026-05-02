@@ -14,6 +14,8 @@ Added per-render clipping reset and forced orthoscopic view to prevent accidenta
 PyMOL scroll/slab settings from cutting structures out of PNGs.
 Reduced the clipping buffer to preserve visible depth fading while still
 resetting bad scroll/slab state.
+Switched fading from PyMOL fog to deterministic camera-depth residue colors so
+the fade survives clipping resets.
 
 ## Session: 2026-04-30 — Add PyMOL CA B-factor renderer
 

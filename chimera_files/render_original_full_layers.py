@@ -88,10 +88,13 @@ IMAGE_WIDTH = 1600
 IMAGE_HEIGHT = 1200
 RAY_TRACE = True
 ENABLE_RAY_SHADOWS = True
-ENABLE_DEPTH_FADING = True
-DEPTH_FADING_START = 0.4
+ENABLE_CAMERA_DEPTH_FADE = True
+DEPTH_FADE_BINS = 8
+DEPTH_FADE_FRONT_FRACTION = 0.12
+DEPTH_FADE_MAX_WHITE = 0.62
+DEPTH_FADE_GAMMA = 1.15
 FORCE_ORTHOSCOPIC = True
-RENDER_CLIP_BUFFER = 45.0
+RENDER_CLIP_BUFFER = 80.0
 FALLBACK_RENDER_CLIP_SLAB = 250.0
 BACKGROUND_COLOR = "white"
 
@@ -214,9 +217,10 @@ def apply_scene_settings(cmd) -> None:
         set_if_available(cmd, "ambient", 0.50)
         set_if_available(cmd, "direct", 0.50)
         set_if_available(cmd, "specular", 0.15)
-        set_if_available(cmd, "depth_cue", 1 if ENABLE_DEPTH_FADING else 0)
-        set_if_available(cmd, "ray_trace_fog", 1 if ENABLE_DEPTH_FADING else 0)
-        set_if_available(cmd, "fog_start", DEPTH_FADING_START)
+        # PyMOL fog depends on clip/slab depth, so use explicit camera-depth
+        # color fading below instead.
+        set_if_available(cmd, "depth_cue", 0)
+        set_if_available(cmd, "ray_trace_fog", 0)
 
 
 def reset_render_clipping(cmd, object_name: str) -> None:
@@ -224,6 +228,82 @@ def reset_render_clipping(cmd, object_name: str) -> None:
         cmd.clip("atoms", RENDER_CLIP_BUFFER, object_name)
     except Exception:
         cmd.clip("slab", FALLBACK_RENDER_CLIP_SLAB)
+
+
+def mix_with_white(rgb: tuple[float, float, float], amount: float) -> tuple[float, float, float]:
+    return tuple(channel * (1.0 - amount) + amount for channel in rgb)
+
+
+def selection_for_atom_residue(object_name: str, atom) -> str:
+    parts = [object_name, f"resi {atom.resi}"]
+    if atom.chain:
+        parts.append(f"chain {atom.chain}")
+    if atom.segi:
+        parts.append(f"segi {atom.segi}")
+    return " and ".join(parts)
+
+
+def chunked(items: list[str], size: int) -> list[list[str]]:
+    return [items[start : start + size] for start in range(0, len(items), size)]
+
+
+def camera_depth_for_coord(view: tuple[float, ...], coord) -> float:
+    # get_view stores the model-to-camera rotation in column-major order.
+    # Since the camera looks down -Z, larger -camera_z values are farther back.
+    camera_z = coord[0] * view[2] + coord[1] * view[5] + coord[2] * view[8]
+    return -camera_z
+
+
+def apply_camera_depth_color_fade(
+    cmd,
+    object_name: str,
+    base_rgb: tuple[float, float, float],
+) -> None:
+    if not ENABLE_CAMERA_DEPTH_FADE:
+        return
+
+    ca_model = cmd.get_model(f"{object_name} and name CA")
+    if not ca_model.atom:
+        print(f"Warning: no CA atoms found for depth fading: {object_name}")
+        return
+
+    view = cmd.get_view()
+    atom_depths = [
+        (camera_depth_for_coord(view, atom.coord), atom)
+        for atom in ca_model.atom
+    ]
+    min_depth = min(depth for depth, _atom in atom_depths)
+    max_depth = max(depth for depth, _atom in atom_depths)
+    depth_span = max_depth - min_depth
+    if depth_span <= 1e-6:
+        return
+
+    residue_bins: list[set[str]] = [set() for _index in range(DEPTH_FADE_BINS)]
+    for depth, atom in atom_depths:
+        normalized = (depth - min_depth) / depth_span
+        bin_index = min(
+            DEPTH_FADE_BINS - 1,
+            max(0, int(normalized * DEPTH_FADE_BINS)),
+        )
+        residue_bins[bin_index].add(selection_for_atom_residue(object_name, atom))
+
+    for bin_index, residue_selections in enumerate(residue_bins):
+        if not residue_selections:
+            continue
+
+        bin_depth = bin_index / max(1, DEPTH_FADE_BINS - 1)
+        fade_fraction = max(
+            0.0,
+            (bin_depth - DEPTH_FADE_FRONT_FRACTION)
+            / (1.0 - DEPTH_FADE_FRONT_FRACTION),
+        )
+        fade_amount = DEPTH_FADE_MAX_WHITE * (fade_fraction ** DEPTH_FADE_GAMMA)
+        color_name = f"{object_name}_depth_fade_{bin_index:02d}"
+        cmd.set_color(color_name, mix_with_white(base_rgb, fade_amount))
+
+        for selection_chunk in chunked(sorted(residue_selections), 30):
+            selection = " or ".join(f"({part})" for part in selection_chunk)
+            cmd.color(color_name, selection)
 
 
 def apply_original_full_style(cmd, object_name: str) -> None:
@@ -276,6 +356,10 @@ def render_item(cmd, item: RenderItem, view_name: str) -> None:
 
     recall_required_view(cmd, view_name)
     reset_render_clipping(cmd, object_name)
+    if item.is_original_full:
+        apply_camera_depth_color_fade(cmd, object_name, ORIGINAL_FULL_RGB)
+    else:
+        apply_camera_depth_color_fade(cmd, object_name, RECONSTRUCTED_RGB)
     cmd.rebuild(object_name)
     cmd.refresh()
     item.output_path.parent.mkdir(parents=True, exist_ok=True)
