@@ -5,6 +5,24 @@ Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric
 Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,test,47,37,0.749245,0.813567,0.189695,0.202081,0.930521
 Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,train,47,147,0.726780,0.781942,0.181250,0.135490,0.929199
 Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,tm_score,TM-score,all,47,184,0.731297,0.787420,0.182674,0.135490,0.930521
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,stress,Kruskal stress-1,test,47,37,0.120007,0.110069,0.033633,0.080115,0.265107
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,stress,Kruskal stress-1,train,47,147,0.119154,0.111068,0.025132,0.081306,0.254276
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,stress,Kruskal stress-1,all,47,184,0.119325,0.111049,0.026955,0.080115,0.265107
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_count,Negative predicted distances,test,47,37,157.567568,150.000000,106.358811,8.000000,405.000000
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_count,Negative predicted distances,train,47,147,169.945578,144.000000,114.244018,7.000000,516.000000
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_count,Negative predicted distances,all,47,184,167.456522,144.500000,112.529672,7.000000,516.000000
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_fraction,Negative predicted distance fraction,test,47,37,0.005185,0.004678,0.002551,0.001465,0.013580
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_fraction,Negative predicted distance fraction,train,47,147,0.006146,0.005348,0.003654,0.001783,0.021313
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_predicted_distance_fraction,Negative predicted distance fraction,all,47,184,0.005953,0.005242,0.003476,0.001465,0.021313
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,top3_eigenvalue_fraction,Top-3 eigenvalue fraction,test,47,37,0.593169,0.584212,0.051278,0.479416,0.769869
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,top3_eigenvalue_fraction,Top-3 eigenvalue fraction,train,47,147,0.598714,0.588620,0.051237,0.517028,0.808730
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,top3_eigenvalue_fraction,Top-3 eigenvalue fraction,all,47,184,0.597599,0.588315,0.051153,0.479416,0.808730
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_count_fraction,Negative eigenvalue count fraction,test,47,37,0.480362,0.481203,0.010867,0.449438,0.495536
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_count_fraction,Negative eigenvalue count fraction,train,47,147,0.484627,0.487179,0.010551,0.441176,0.501767
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_count_fraction,Negative eigenvalue count fraction,all,47,184,0.483769,0.486446,0.010723,0.441176,0.501767
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_mass_fraction,Negative eigenvalue mass fraction,test,47,37,0.402206,0.415078,0.061737,0.207793,0.487417
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_mass_fraction,Negative eigenvalue mass fraction,train,47,147,0.400033,0.404231,0.052614,0.231906,0.509807
+Variant A: averaged pair representations,Variant A,general_base256_avg_symmetric,negative_eigenvalue_mass_fraction,Negative eigenvalue mass fraction,all,47,184,0.400470,0.407184,0.054397,0.207793,0.509807
 Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,test,47,37,0.936552,0.950054,0.048764,0.689088,0.971697
 Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,train,47,147,0.939124,0.947748,0.037647,0.649597,0.977015
 Variant B: averaged pair + neighboring pair representations,Variant B,general_base256_avg_symmetric_plus_axial,r2,R^2,all,47,184,0.938607,0.948954,0.039995,0.649597,0.977015

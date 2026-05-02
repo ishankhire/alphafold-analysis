@@ -15,7 +15,18 @@ OUT_DIR = Path(__file__).resolve().parent
 EXPECTED_LAYERS = tuple(range(48))
 TM_THRESHOLD = 0.6
 VARIANT_ORDER = {"Variant A": 0, "Variant B": 1, "B minus A": 2}
-METRIC_ORDER = {"r2": 0, "tm_score": 1, "r2_vs_tm_score": 2}
+METRIC_ORDER = {
+    "r2": 0,
+    "tm_score": 1,
+    "stress": 2,
+    "negative_predicted_distance_count": 3,
+    "negative_predicted_distance_fraction": 4,
+    "proteins_with_negative_predictions": 5,
+    "top3_eigenvalue_fraction": 6,
+    "negative_eigenvalue_count_fraction": 7,
+    "negative_eigenvalue_mass_fraction": 8,
+    "r2_vs_tm_score": 20,
+}
 SPLIT_ORDER = {"test": 0, "train": 1, "all": 2}
 ROW_TYPE_ORDER = {"ever_negative_summary": 0, "layer_negative_count": 1}
 STATISTIC_ORDER = {
@@ -29,6 +40,11 @@ STATISTIC_ORDER = {
     "layer47_n_improved": 7,
     "layer47_fraction_improved": 8,
     "layer47_pearson_correlation": 9,
+    "layer_mean": 20,
+    "layer_mean_per_protein_count": 21,
+    "layer_mean_per_protein_fraction": 22,
+    "layer_pair_weighted_fraction": 23,
+    "layer_fraction_proteins_any": 24,
 }
 INTEGER_COLUMNS = {
     "layer",
@@ -69,6 +85,66 @@ METRICS = [
     },
 ]
 
+VARIANT_A_GEOMETRY_LAYER47_METRICS = [
+    {
+        "metric": "stress",
+        "display": "Kruskal stress-1",
+        "column": "stress",
+    },
+    {
+        "metric": "negative_predicted_distance_count",
+        "display": "Negative predicted distances",
+        "column": "n_negative_predictions",
+    },
+    {
+        "metric": "negative_predicted_distance_fraction",
+        "display": "Negative predicted distance fraction",
+        "column": "negative_predicted_distance_fraction",
+    },
+    {
+        "metric": "top3_eigenvalue_fraction",
+        "display": "Top-3 eigenvalue fraction",
+        "column": "frac_top3_eigenvalues",
+    },
+    {
+        "metric": "negative_eigenvalue_count_fraction",
+        "display": "Negative eigenvalue count fraction",
+        "column": "negative_eigenvalue_count_fraction",
+    },
+    {
+        "metric": "negative_eigenvalue_mass_fraction",
+        "display": "Negative eigenvalue mass fraction",
+        "column": "neg_eigenvalue_fraction",
+    },
+]
+
+VARIANT_A_GEOMETRY_LAYER_METRICS = [
+    {
+        "metric": "stress",
+        "display": "Kruskal stress-1",
+        "column": "stress",
+        "notes": "Mean Kruskal stress-1 over proteins; lower is better.",
+    },
+    {
+        "metric": "top3_eigenvalue_fraction",
+        "display": "Top-3 eigenvalue fraction",
+        "column": "frac_top3_eigenvalues",
+        "notes": "Mean fraction of positive eigenspectrum captured by the top 3 dimensions.",
+    },
+    {
+        "metric": "negative_eigenvalue_count_fraction",
+        "display": "Negative eigenvalue count fraction",
+        "column": "negative_eigenvalue_count_fraction",
+        "notes": "Mean fraction of centered-distance eigenvalues that are negative.",
+    },
+    {
+        "metric": "negative_eigenvalue_mass_fraction",
+        "display": "Negative eigenvalue mass fraction",
+        "column": "neg_eigenvalue_fraction",
+        "notes": "Mean absolute negative eigenvalue mass divided by positive eigenvalue mass.",
+    },
+]
+
 
 def load_variant_metric(variant: dict[str, str], metric: dict[str, str]) -> pd.DataFrame:
     filename = "per_protein.csv" if metric["source"] == "per_protein" else "geometry_metrics.csv"
@@ -91,6 +167,66 @@ def load_variant_metric(variant: dict[str, str], metric: dict[str, str]) -> pd.D
     return df
 
 
+def load_variant_a_geometry_diagnostics() -> pd.DataFrame:
+    variant = VARIANTS[0]
+    path = DELTA_DIR / variant["folder"] / "geometry_metrics.csv"
+    df = pd.read_csv(path)
+    required = {
+        "variant",
+        "layer",
+        "split",
+        "protein_id",
+        "n_residues",
+        "n_pairs",
+        "n_negative_predictions",
+        "stress",
+        "frac_top3_eigenvalues",
+        "n_negative_eigenvalues",
+        "neg_eigenvalue_fraction",
+    }
+    missing = sorted(required - set(df.columns))
+    if missing:
+        raise ValueError(f"{path} is missing required columns: {missing}")
+
+    columns = [
+        "variant",
+        "layer",
+        "split",
+        "protein_id",
+        "n_residues",
+        "n_pairs",
+        "n_negative_predictions",
+        "stress",
+        "frac_top3_eigenvalues",
+        "n_negative_eigenvalues",
+        "neg_eigenvalue_fraction",
+    ]
+    df = df[columns].copy()
+    for column in [
+        "layer",
+        "n_residues",
+        "n_pairs",
+        "n_negative_predictions",
+        "stress",
+        "frac_top3_eigenvalues",
+        "n_negative_eigenvalues",
+        "neg_eigenvalue_fraction",
+    ]:
+        df[column] = pd.to_numeric(df[column], errors="coerce")
+
+    df["negative_predicted_distance_fraction"] = (
+        df["n_negative_predictions"] / df["n_pairs"].replace(0, np.nan)
+    )
+    df["negative_eigenvalue_count_fraction"] = (
+        df["n_negative_eigenvalues"] / df["n_residues"].replace(0, np.nan)
+    )
+    df["short_label"] = variant["short_label"]
+    df["paper_label"] = variant["paper_label"]
+    df["source_file"] = str(path.relative_to(PROJECT_ROOT))
+    validate_variant_a_geometry_frame(df, path)
+    return df
+
+
 def validate_metric_frame(df: pd.DataFrame, path: Path) -> None:
     layers = tuple(sorted(int(value) for value in df["layer"].dropna().unique()))
     if layers != EXPECTED_LAYERS:
@@ -107,6 +243,36 @@ def validate_metric_frame(df: pd.DataFrame, path: Path) -> None:
     if df["value"].isna().any():
         n_missing = int(df["value"].isna().sum())
         raise ValueError(f"{path} contains {n_missing} missing metric values")
+
+
+def validate_variant_a_geometry_frame(df: pd.DataFrame, path: Path) -> None:
+    layers = tuple(sorted(int(value) for value in df["layer"].dropna().unique()))
+    if layers != EXPECTED_LAYERS:
+        raise ValueError(f"{path} expected layers 0-47, found {layers}")
+
+    splits = tuple(sorted(str(value) for value in df["split"].dropna().unique()))
+    if splits != ("test", "train"):
+        raise ValueError(f"{path} expected train/test splits, found {splits}")
+
+    counts = df.groupby(["split", "protein_id", "layer"], sort=True).size()
+    if not (counts == 1).all():
+        raise ValueError(f"{path} rows are not unique per (split, protein_id, layer)")
+
+    numeric_columns = [
+        "n_residues",
+        "n_pairs",
+        "n_negative_predictions",
+        "stress",
+        "frac_top3_eigenvalues",
+        "n_negative_eigenvalues",
+        "neg_eigenvalue_fraction",
+        "negative_predicted_distance_fraction",
+        "negative_eigenvalue_count_fraction",
+    ]
+    missing_counts = df[numeric_columns].isna().sum()
+    missing_counts = missing_counts[missing_counts > 0]
+    if not missing_counts.empty:
+        raise ValueError(f"{path} contains missing diagnostic values: {missing_counts.to_dict()}")
 
 
 def with_all_split(df: pd.DataFrame) -> pd.DataFrame:
@@ -146,6 +312,37 @@ def layer47_statistics(all_metrics: pd.DataFrame) -> pd.DataFrame:
                 "max": float(values.max()),
             }
         )
+    return pd.DataFrame(rows)
+
+
+def variant_a_geometry_layer47_statistics(geometry_all: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    layer47 = geometry_all[geometry_all["layer"] == 47].copy()
+    grouped = layer47.groupby(
+        ["paper_label", "short_label", "variant", "split"],
+        sort=False,
+    )
+    for keys, group in grouped:
+        paper_label, short_label, variant, split = keys
+        for metric in VARIANT_A_GEOMETRY_LAYER47_METRICS:
+            values = pd.to_numeric(group[metric["column"]], errors="coerce")
+            rows.append(
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": metric["metric"],
+                    "metric_display": metric["display"],
+                    "split_category": split,
+                    "layer": 47,
+                    "n_proteins": int(values.size),
+                    "mean": float(values.mean()),
+                    "median": float(values.median()),
+                    "std": sample_std(values),
+                    "min": float(values.min()),
+                    "max": float(values.max()),
+                }
+            )
     return pd.DataFrame(rows)
 
 
@@ -258,6 +455,99 @@ def extra_paper_stats(all_metrics: pd.DataFrame) -> pd.DataFrame:
     rows.extend(best_layer_rows(all_metrics))
     rows.extend(variant_delta_rows(all_metrics))
     rows.extend(layer47_r2_tm_correlation_rows(all_metrics))
+    return pd.DataFrame(rows)
+
+
+def variant_a_geometry_extra_rows(geometry_all: pd.DataFrame) -> pd.DataFrame:
+    rows: list[dict[str, object]] = []
+    grouped = geometry_all.groupby(
+        ["paper_label", "short_label", "variant", "split", "layer"],
+        sort=False,
+    )
+    for keys, group in grouped:
+        paper_label, short_label, variant, split, layer = keys
+        n_proteins = int(group.shape[0])
+        for metric in VARIANT_A_GEOMETRY_LAYER_METRICS:
+            values = pd.to_numeric(group[metric["column"]], errors="coerce")
+            rows.append(
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": metric["metric"],
+                    "metric_display": metric["display"],
+                    "split_category": split,
+                    "statistic": "layer_mean",
+                    "layer": int(layer),
+                    "value": float(values.mean()),
+                    "n": n_proteins,
+                    "notes": metric["notes"],
+                }
+            )
+
+        negative_counts = pd.to_numeric(group["n_negative_predictions"], errors="coerce")
+        negative_fractions = pd.to_numeric(
+            group["negative_predicted_distance_fraction"],
+            errors="coerce",
+        )
+        total_negative = float(negative_counts.sum())
+        total_pairs = float(pd.to_numeric(group["n_pairs"], errors="coerce").sum())
+        rows.extend(
+            [
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": "negative_predicted_distance_count",
+                    "metric_display": "Negative predicted distances",
+                    "split_category": split,
+                    "statistic": "layer_mean_per_protein_count",
+                    "layer": int(layer),
+                    "value": float(negative_counts.mean()),
+                    "n": n_proteins,
+                    "notes": "Mean number of below-zero distance predictions per protein before clipping.",
+                },
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": "negative_predicted_distance_fraction",
+                    "metric_display": "Negative predicted distance fraction",
+                    "split_category": split,
+                    "statistic": "layer_mean_per_protein_fraction",
+                    "layer": int(layer),
+                    "value": float(negative_fractions.mean()),
+                    "n": n_proteins,
+                    "notes": "Mean per-protein fraction of below-zero distance predictions before clipping.",
+                },
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": "negative_predicted_distance_fraction",
+                    "metric_display": "Negative predicted distance fraction",
+                    "split_category": split,
+                    "statistic": "layer_pair_weighted_fraction",
+                    "layer": int(layer),
+                    "value": float(total_negative / total_pairs) if total_pairs > 0 else np.nan,
+                    "n": n_proteins,
+                    "notes": "Total below-zero predictions divided by total evaluated residue pairs.",
+                },
+                {
+                    "paper_label": paper_label,
+                    "short_label": short_label,
+                    "variant": variant,
+                    "metric": "proteins_with_negative_predictions",
+                    "metric_display": "Proteins with negative predictions",
+                    "split_category": split,
+                    "statistic": "layer_fraction_proteins_any",
+                    "layer": int(layer),
+                    "value": float((negative_counts > 0).mean()),
+                    "n": n_proteins,
+                    "notes": "Fraction of proteins with at least one below-zero distance prediction.",
+                },
+            ]
+        )
     return pd.DataFrame(rows)
 
 
@@ -531,6 +821,93 @@ def markdown_table(df: pd.DataFrame, columns: list[str], headers: list[str]) -> 
     return "\n".join(lines)
 
 
+def lookup_layer47_mean(layer47: pd.DataFrame, metric: str, split: str) -> float:
+    subset = layer47[
+        (layer47["short_label"] == "Variant A")
+        & (layer47["metric"] == metric)
+        & (layer47["split_category"] == split)
+        & (layer47["layer"] == 47)
+    ]
+    if subset.empty:
+        return np.nan
+    return float(subset.iloc[0]["mean"])
+
+
+def lookup_extra_value(extras: pd.DataFrame, metric: str, split: str, statistic: str, layer: int) -> float:
+    subset = extras[
+        (extras["short_label"] == "Variant A")
+        & (extras["metric"] == metric)
+        & (extras["split_category"] == split)
+        & (extras["statistic"] == statistic)
+        & (extras["layer"] == layer)
+    ]
+    if subset.empty:
+        return np.nan
+    return float(subset.iloc[0]["value"])
+
+
+def variant_a_geometry_layer47_display(layer47: pd.DataFrame, extras: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    for split in ["test", "train", "all"]:
+        rows.append(
+            {
+                "split": split,
+                "stress_mean": fmt(lookup_layer47_mean(layer47, "stress", split)),
+                "top3_eigen_fraction_mean": fmt(
+                    lookup_layer47_mean(layer47, "top3_eigenvalue_fraction", split)
+                ),
+                "neg_eigen_count_fraction_mean": fmt(
+                    lookup_layer47_mean(layer47, "negative_eigenvalue_count_fraction", split)
+                ),
+                "neg_eigen_mass_fraction_mean": fmt(
+                    lookup_layer47_mean(layer47, "negative_eigenvalue_mass_fraction", split)
+                ),
+                "neg_prediction_pair_fraction": fmt(
+                    lookup_extra_value(
+                        extras,
+                        "negative_predicted_distance_fraction",
+                        split,
+                        "layer_pair_weighted_fraction",
+                        47,
+                    ),
+                    digits=4,
+                ),
+                "proteins_with_any_neg_prediction": fmt(
+                    lookup_extra_value(
+                        extras,
+                        "proteins_with_negative_predictions",
+                        split,
+                        "layer_fraction_proteins_any",
+                        47,
+                    )
+                ),
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def variant_a_stress_by_layer_display(extras: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    stress = extras[
+        (extras["short_label"] == "Variant A")
+        & (extras["metric"] == "stress")
+        & (extras["statistic"] == "layer_mean")
+    ].copy()
+    for layer in EXPECTED_LAYERS:
+        row = {"layer": int(layer)}
+        for split in ["test", "train", "all"]:
+            subset = stress[
+                (stress["split_category"] == split)
+                & (stress["layer"] == layer)
+            ]
+            row[f"{split}_stress_mean"] = fmt(
+                subset.iloc[0]["value"] if not subset.empty else np.nan,
+                digits=3,
+            )
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def make_markdown(
     layer47: pd.DataFrame,
     thresholds: pd.DataFrame,
@@ -542,6 +919,7 @@ def make_markdown(
     lines.append("")
     lines.append("Sources: `delta_files/general_base256_avg_symmetric/` and `delta_files/general_base256_avg_symmetric_plus_axial/`.")
     lines.append("All statistics are unweighted across proteins unless otherwise noted. `all` combines train and test proteins.")
+    lines.append("Variant A MDS diagnostics come from `delta_files/general_base256_avg_symmetric/geometry_metrics.csv`.")
     lines.append("")
 
     lines.append("## Layer 47")
@@ -630,6 +1008,49 @@ def make_markdown(
     lines.append("Per-layer negative R^2 counts are in `publication_negative_r2_summary.csv`.")
     lines.append("")
 
+    lines.append("## Variant A MDS Geometry")
+    lines.append(
+        "`Kruskal stress-1` is `sqrt(sum((predicted_distance - MDS_distance)^2) / "
+        "sum(predicted_distance^2))`, so lower values mean the 3D MDS embedding better preserves "
+        "the regressed distance matrix. `Top-3 eigenvalue fraction` is the share of positive "
+        "classical-MDS eigenvalue mass captured by the three retained dimensions. The negative "
+        "eigenvalue count fraction is the share of centered-distance eigenvalues below zero; the "
+        "negative eigenvalue mass fraction is the saved `neg_eigenvalue_fraction` field."
+    )
+    lines.append("")
+    layer47_geometry_display = variant_a_geometry_layer47_display(layer47, extras)
+    lines.append(
+        markdown_table(
+            layer47_geometry_display,
+            list(layer47_geometry_display.columns),
+            [
+                "Split",
+                "Stress Mean",
+                "Top-3 Eig Frac Mean",
+                "Neg Eig Count Frac Mean",
+                "Neg Eig Mass Frac Mean",
+                "Neg Pred Pair Frac",
+                "Proteins With Any Neg Pred",
+            ],
+        )
+    )
+    lines.append("")
+    lines.append(
+        "Full per-layer rows for these diagnostics are in `publication_extra_paper_stats.csv`."
+    )
+    lines.append("")
+
+    lines.append("## Variant A Kruskal Stress By Layer")
+    stress_display = variant_a_stress_by_layer_display(extras)
+    lines.append(
+        markdown_table(
+            stress_display,
+            list(stress_display.columns),
+            ["Layer", "Test Mean", "Train Mean", "All Mean"],
+        )
+    )
+    lines.append("")
+
     lines.append("## Additional Useful Numbers")
     lines.extend(additional_numbers_lines(extras))
     lines.append("")
@@ -679,6 +1100,62 @@ def additional_numbers_lines(extras: pd.DataFrame) -> list[str]:
             f"- {row['short_label']} layer-47 held-out R^2/TM-score Pearson correlation: "
             f"{fmt(row['value'])} across {int(row['n'])} proteins."
         )
+    lines.extend(variant_a_geometry_additional_lines(extras))
+    return lines
+
+
+def variant_a_geometry_additional_lines(extras: pd.DataFrame) -> list[str]:
+    lines: list[str] = []
+    stress = extras[
+        (extras["short_label"] == "Variant A")
+        & (extras["metric"] == "stress")
+        & (extras["split_category"] == "test")
+        & (extras["statistic"] == "layer_mean")
+    ].copy()
+    if not stress.empty:
+        best = stress.sort_values(["value", "layer"], ascending=[True, True]).iloc[0]
+        layer47 = stress[stress["layer"] == 47].iloc[0]
+        lines.append(
+            f"- Variant A held-out Kruskal stress-1 is lowest at layer "
+            f"{fmt_layer(best['layer'])} with mean {fmt(best['value'])}; "
+            f"layer 47 mean is {fmt(layer47['value'])}."
+        )
+
+    top3_layer47 = lookup_extra_value(
+        extras,
+        "top3_eigenvalue_fraction",
+        "test",
+        "layer_mean",
+        47,
+    )
+    neg_eig_layer47 = lookup_extra_value(
+        extras,
+        "negative_eigenvalue_count_fraction",
+        "test",
+        "layer_mean",
+        47,
+    )
+    neg_pred_pair_layer47 = lookup_extra_value(
+        extras,
+        "negative_predicted_distance_fraction",
+        "test",
+        "layer_pair_weighted_fraction",
+        47,
+    )
+    any_neg_layer47 = lookup_extra_value(
+        extras,
+        "proteins_with_negative_predictions",
+        "test",
+        "layer_fraction_proteins_any",
+        47,
+    )
+    lines.append(
+        "- Variant A layer-47 held-out MDS diagnostics: "
+        f"top-3 eigenvalue fraction mean {fmt(top3_layer47)}, "
+        f"negative eigenvalue count fraction mean {fmt(neg_eig_layer47)}, "
+        f"negative predicted pair fraction {fmt(neg_pred_pair_layer47, digits=4)}, "
+        f"and proteins with any negative prediction {fmt(any_neg_layer47)}."
+    )
     return lines
 
 
@@ -690,11 +1167,25 @@ def main() -> None:
 
     raw_metrics = pd.concat(metric_frames, ignore_index=True)
     all_metrics = with_all_split(raw_metrics)
+    variant_a_geometry = load_variant_a_geometry_diagnostics()
+    variant_a_geometry_all = with_all_split(variant_a_geometry)
 
-    layer47 = layer47_statistics(all_metrics)
+    layer47 = pd.concat(
+        [
+            layer47_statistics(all_metrics),
+            variant_a_geometry_layer47_statistics(variant_a_geometry_all),
+        ],
+        ignore_index=True,
+    )
     thresholds = tm_thresholds(all_metrics)
     negative = negative_r2_summary(all_metrics)
-    extras = extra_paper_stats(all_metrics)
+    extras = pd.concat(
+        [
+            extra_paper_stats(all_metrics),
+            variant_a_geometry_extra_rows(variant_a_geometry_all),
+        ],
+        ignore_index=True,
+    )
 
     layer47 = sort_for_output(layer47)
     thresholds = sort_for_output(thresholds)

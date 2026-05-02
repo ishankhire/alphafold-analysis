@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-05-02 — Add Variant A MDS publication diagnostics
+
+Extended publication summary stats with avg-symmetric stress, negative
+prediction, and MDS eigenvalue diagnostics.
+
 ## Session: 2026-05-02 — Add Chimera publication grid
 
 Added a fixed-config Chimera montage composer for the 10 rendered proteins,
