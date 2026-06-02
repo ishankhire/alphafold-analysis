@@ -1,5 +1,12 @@
 # Branch Analysis
 
+## Session: 2026-06-02 — Add next-layer distance-delta diagnostic
+
+Added a Delta-ready 7b3a_A ridge probe for layer-to-layer decoded distance
+changes with k=5/10/20 final-PDB context features.
+Fixed two stale miscellaneous ICE sbatch Python targets found during sbatch
+reference verification.
+
 ## Session: 2026-05-02 — Add Variant A MDS publication diagnostics
 
 Extended publication summary stats with avg-symmetric stress, negative

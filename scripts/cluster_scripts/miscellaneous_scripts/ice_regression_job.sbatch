@@ -8,6 +8,7 @@
 #SBATCH --mail-user=<YOUR_EMAIL>          # <-- UPDATE THIS
 
 cd $SLURM_SUBMIT_DIR                     # Change to directory where sbatch was run
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 module load anaconda3                     # Load Python environment
 
@@ -22,4 +23,4 @@ export CSV_ROOT=$SCRATCH/csv_files
 # NOTE: Using 'python' (not 'srun python') because srun with ntasks=4
 # would launch 4 copies of the script. We request 4 cores so numpy BLAS
 # can use them for multithreaded linear algebra.
-python final_cluster_multi_protein_regression.py
+python "$SCRIPT_DIR/../cluster_multi_protein_regression.py"
