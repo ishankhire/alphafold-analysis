@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-03 — Add next-layer delta analysis plots
+
+Added a local analyzer for the 7b3a_A next-layer distance-delta outputs that
+plots held-out R2, train/test gaps, and context gain over the center-pair probe.
+
 ## Session: 2026-06-03 — Add baseline256 layer-47 copy_X k-fold diagnostic
 
 Added a Delta-ready baseline256 layer-47 diagnostic that compares
