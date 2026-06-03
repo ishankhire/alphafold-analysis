@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-06-03 — Add baseline256 layer-47 copy_X k-fold diagnostic
+
+Added a Delta-ready baseline256 layer-47 diagnostic that compares
+`LinearRegression(copy_X=False)` against `copy_X=True` under the shared strict
+size-stratified 5-fold pipeline.
+
 ## Session: 2026-06-02 — Add next-layer distance-delta diagnostic
 
 Added a Delta-ready 7b3a_A ridge probe for layer-to-layer decoded distance
