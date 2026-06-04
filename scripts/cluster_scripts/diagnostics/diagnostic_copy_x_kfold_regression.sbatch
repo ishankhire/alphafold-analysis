@@ -22,15 +22,6 @@ source ~/protein_venv/bin/activate
 module list
 echo "job is starting on $(hostname)"
 
-if [[ -f "$SLURM_SUBMIT_DIR/diagnostic_copy_x_kfold_regression.py" ]]; then
-    cd "$SLURM_SUBMIT_DIR"
-elif [[ -f "$SLURM_SUBMIT_DIR/scripts/cluster_scripts/diagnostics/diagnostic_copy_x_kfold_regression.py" ]]; then
-    cd "$SLURM_SUBMIT_DIR/scripts/cluster_scripts/diagnostics"
-else
-    echo "Could not find diagnostic_copy_x_kfold_regression.py from SLURM_SUBMIT_DIR=$SLURM_SUBMIT_DIR" >&2
-    exit 1
-fi
-
 # Data directories on Delta
 export PAIR_BLOCKS_ROOT=/work/hdd/bekh/thayes/openfold_reps
 export PDB_ROOT=/work/hdd/bekh/thayes/openfold_reps_outputs_sm

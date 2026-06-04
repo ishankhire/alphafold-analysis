@@ -10,8 +10,8 @@ plots held-out R2, train/test gaps, and context gain over the center-pair probe.
 Added a Delta-ready baseline256 layer-47 diagnostic that compares
 `LinearRegression(copy_X=False)` against `copy_X=True` under the shared strict
 size-stratified 5-fold pipeline.
-Fixed the diagnostic sbatch launcher to resolve the Python script from
-`SLURM_SUBMIT_DIR` instead of Slurm's spool copy.
+Kept the diagnostic sbatch launcher aligned with the existing diagnostics
+convention: submit from the script directory.
 
 ## Session: 2026-06-02 — Add next-layer distance-delta diagnostic
 
