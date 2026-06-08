@@ -1107,6 +1107,10 @@ Follow-up:
   render paper-oriented held-out R2/TM-score panels in
   `delta_files/publication_plots/`.
 
+## Session: 2026-06-08 — Ignore oversized local CSV outputs
+
+- Added exact `.gitignore` entries for tracked CSV outputs >=25 MB and removed them from the git index.
+
 ## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
 
 ### What changed

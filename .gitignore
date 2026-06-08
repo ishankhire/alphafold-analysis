@@ -16,5 +16,12 @@ feature_magnitudes/
 linear_regression_csv_files/kfold_predicted_distances.csv
 delta_files/**/*predicted*
 
+# Local large CSV outputs (>=25 MB)
+delta_files/diagnostic-files/diagnostic_linear_tree_csv_files/diagnostic_linear_tree_test_scatter_sample.csv
+delta_files/general_base256_avg_symmetric_montage10_mds_replay/csv_files/mds_reconstructed_coords.csv
+delta_files/next_layer_distance_delta_7b3a_A/next_layer_distance_delta_coefficients.csv
+delta_files/next_layer_distance_delta_7b3a_A/next_layer_distance_delta_test_predictions.csv
+delta_files/per_protein_files/per_protein_coefficients.csv
+
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy
