@@ -1,6 +1,0 @@
-variant,round_index,objective_mode,mean_train_objective,std_train_objective,median_train_objective,max_train_objective,min_multiplier,max_multiplier,max_log_multiplier_change,converged_after_round
-baseline_protein_equal_mse_linear,0,protein_equal_mse,23.477900,71.061004,12.283561,814.833287,1.000000,1.000000,0.000000,1
-protein_equal_nmse_linear,0,protein_equal_nmse,0.097992,0.073985,0.081059,0.631232,1.000000,1.000000,0.000000,1
-protein_fairness_reweighted_nmse_linear,0,protein_equal_nmse,0.097992,0.073985,0.081059,0.631232,1.000000,1.000000,0.973841,0
-protein_fairness_reweighted_nmse_linear,1,protein_equal_nmse,0.099010,0.066794,0.082873,0.578852,0.627919,2.648095,0.075059,0
-protein_fairness_reweighted_nmse_linear,2,protein_equal_nmse,0.098675,0.068011,0.083530,0.589303,0.646556,2.504472,0.018470,1
