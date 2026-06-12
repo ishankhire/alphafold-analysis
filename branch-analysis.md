@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-12 — Document combined CAMEO and ECOD dataset
+
+Added `datasets.md` with TM-score > 0.7 CAMEO/ECOD counts, Delta input paths,
+and protein IDs; updated AGENTS.md to treat them as one combined analysis pool.
+
 ## Session: 2026-06-03 — Add next-layer delta analysis plots
 
 Added a local analyzer for the 7b3a_A next-layer distance-delta outputs that

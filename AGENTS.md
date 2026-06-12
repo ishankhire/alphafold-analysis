@@ -26,6 +26,7 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 ## Key Directories
 
 - `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
+- `datasets.md` — combined CAMEO+ECOD dataset paths, counts, and TM-score filtered protein IDs
 - `proteins/multi_protein_results/` — aggregated multi-protein outputs created inside the repo at runtime
 - `proteins/llm_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
@@ -33,9 +34,10 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 ## Data Essentials
 
-- **Local data root:** when working from the `protein` workspace, the moved per-protein inputs live in the sibling directory `../protein_data/`
-- **Pair blocks:** `../protein_data/<id>/pair_blocks/<id>_pair_block_{0..47}.npy` — shape `(R, R, 128)` where R = entity sequence length, 128 channels
-- **PDB structures:** `../protein_data/<id>/predicted_pdb/` — AlphaFold predicted structures; CA coordinates extracted inline by regression scripts
+- The default analysis set is the combined TM-score > 0.7 CAMEO + ECOD protein pool documented in `datasets.md`.
+- Treat CAMEO and ECOD proteins as one analysis dataset. The source label is only for resolving different Delta input file layouts.
+- Current filtered set size: 154 CAMEO proteins + 400 ECOD proteins = 554 unique proteins.
+- **Local data root:** when working from the `protein` workspace, local per-protein inputs, when present, live in the sibling directory `../protein_data/`
 - **Outputs:** per-protein CSVs and plots still live beside each protein under `../protein_data/<id>/`, while aggregated multi-protein outputs stay under `proteins/multi_protein_results/`
 
 ## Cluster Setup
@@ -55,9 +57,11 @@ Always consult these PDFs when writing or modifying sbatch files or cluster scri
 - Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
 - Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
 
-### Cluster data paths (environment variables)
+### Cluster data paths
 
-Cluster Python scripts read data paths from three environment variables exported by their sbatch files:
+Use `datasets.md` as the source of truth for dataset membership, TM-score filtering, and exact Delta pair-block/PDB input layouts.
+
+Many older CAMEO-only cluster scripts still read these environment variables from their sbatch files:
 
 | Env var | Delta value |
 |---------|-------------|
@@ -65,12 +69,7 @@ Cluster Python scripts read data paths from three environment variables exported
 | `PDB_ROOT` | `/work/hdd/bekh/thayes/openfold_reps_outputs_sm` |
 | `CSV_ROOT` | `/work/hdd/bekh/thayes/linear_regression_csv_files` |
 
-**Delta file layout:**
-- Pair block: `PAIR_BLOCKS_ROOT/{protein_id}/{protein_id}_pair_block_{layer}.npy`
-- PDB file: `PDB_ROOT/my_outputs_align_{protein_id}_representations_load_from_saved_layer_47/predictions/{protein_id}_model_1_ptm_unrelaxed.pdb`
-- CSV output: `CSV_ROOT/`
-
-When writing new cluster regression scripts for Delta, use these env vars rather than hardcoding paths.
+Those roots cover the CAMEO layout only. New or modified combined-dataset analyses must resolve CAMEO and ECOD input paths separately, then merge the proteins before sampling, splitting, fitting, and reporting. Do not treat CAMEO and ECOD as separate analysis groups unless an experiment explicitly asks for that comparison.
 
 ## Architecture Patterns
 
