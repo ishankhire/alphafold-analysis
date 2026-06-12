@@ -4,6 +4,8 @@
 
 Added a Delta layer-47 per-protein base256 regression workflow for the combined
 CAMEO+ECOD manifest, including per-model coefficients and geometry metrics.
+Fixed its sbatch launcher to resolve the Python entrypoint from
+`SLURM_SUBMIT_DIR` instead of Slurm's spool copy.
 
 ## Session: 2026-06-12 — Document combined CAMEO and ECOD dataset
 
