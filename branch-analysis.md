@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-12 — Add per-protein combined base256 regression
+
+Added a Delta layer-47 per-protein base256 regression workflow for the combined
+CAMEO+ECOD manifest, including per-model coefficients and geometry metrics.
+
 ## Session: 2026-06-12 — Document combined CAMEO and ECOD dataset
 
 Added `datasets.md` with TM-score > 0.7 CAMEO/ECOD counts, Delta input paths,
