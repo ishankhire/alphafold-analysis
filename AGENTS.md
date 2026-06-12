@@ -67,7 +67,7 @@ Many older CAMEO-only cluster scripts still read these environment variables fro
 |---------|-------------|
 | `PAIR_BLOCKS_ROOT` | `/work/hdd/bekh/thayes/openfold_reps` |
 | `PDB_ROOT` | `/work/hdd/bekh/thayes/openfold_reps_outputs_sm` |
-| `CSV_ROOT` | `/work/hdd/bekh/thayes/linear_regression_csv_files` |
+| `CSV_ROOT` | `$HOME/csv_files` |
 
 Those roots cover the CAMEO layout only. New or modified combined-dataset analyses must resolve CAMEO and ECOD input paths separately, then merge the proteins before sampling, splitting, fitting, and reporting. Do not treat CAMEO and ECOD as separate analysis groups unless an experiment explicitly asks for that comparison.
 

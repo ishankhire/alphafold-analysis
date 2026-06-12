@@ -19,6 +19,8 @@ pool.
 
 ## Delta Input Paths
 
+Default Delta CSV output directory: `$HOME/csv_files`.
+
 ### CAMEO
 
 - Pair block: `/work/hdd/bekh/thayes/openfold_reps/{PROT}/{PROT}_pair_block_{LAYER}.npy`
