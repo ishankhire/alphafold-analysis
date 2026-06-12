@@ -5,6 +5,7 @@
 Added `datasets.md` with TM-score > 0.7 CAMEO/ECOD counts, Delta input paths,
 and protein IDs; updated AGENTS.md to treat them as one combined analysis pool.
 Set the default Delta CSV output directory to `$HOME/csv_files`.
+Added a combined CAMEO+ECOD generalized train/test layer-47 base256 cluster job.
 
 ## Session: 2026-06-03 — Add next-layer delta analysis plots
 
