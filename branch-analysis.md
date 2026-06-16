@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-06-16 — Sample held-out triangle violations
+
+- Added a Delta replay job that samples 2,000 held-out/test triangles per
+  protein for layers 0,10,20,30,40,47 using saved `general_base256_combined`
+  raw coefficients.
+
 ## Session: 2026-06-16 — Analyze per-protein combined base256 outputs
 
 - Added per-protein combined base256 plots and comparison against
