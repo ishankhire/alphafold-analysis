@@ -1,0 +1,7 @@
+layer,sample_inequality_violation_fraction,aggregate_triangle_violation_fraction,sample_mean_positive_violation,aggregate_triangle_mean_violation
+0,0.019524,0.834234,3.008542,5.229475
+10,0.03114,0.833064,3.191058,5.144923
+20,0.0308,0.82128,2.488424,4.073725
+30,0.026559,0.877606,2.643551,4.624657
+40,0.025099,0.888785,2.458724,4.388332
+47,0.033132,0.843488,2.324295,3.583989

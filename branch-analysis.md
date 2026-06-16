@@ -1188,3 +1188,8 @@ Added:
 - `scripts/cluster_scripts/generalized_model/mar25_train_test_split_regressions/general_base256_avg_symmetric_plus_axial_tt_layer_26_47.sbatch`
 
 ### Why
+## Session: 2026-06-16 — Plot sampled triangle violation diagnostics
+
+Added a reproducible plotting script for `general_base256_combined` sampled
+triangle violations, including thresholded summaries and sample-vs-aggregate
+comparison artifacts under the variant analysis directory.
