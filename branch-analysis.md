@@ -1131,6 +1131,11 @@ Follow-up:
 
 - Added exact `.gitignore` entries for tracked CSV outputs >=25 MB and removed them from the git index.
 
+## Session: 2026-06-16 — Aggregate per-protein base256 combined shards
+
+- Added a streaming merge script for `delta_files/per_protein_base256_combined`
+  layer shards and generated canonical combined CSVs plus `summary.txt`.
+
 ## Session: 2026-03-27 — Aggregate generalized avg-symmetric axial train/test shards
 
 ### What changed
