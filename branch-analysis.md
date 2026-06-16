@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-16 — Analyze per-protein combined base256 outputs
+
+- Added per-protein combined base256 plots and comparison against
+  `general_base256_combined`.
+
 ## Session: 2026-06-16 — Analyze generalized combined base256 outputs
 
 - Added a local analyzer for `general_base256_combined` plots, coefficient
