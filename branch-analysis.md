@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-16 — Analyze generalized combined base256 outputs
+
+- Added a local analyzer for `general_base256_combined` plots, coefficient
+  cosine heatmap, geometry trends, and baseline comparison.
+
 ## Session: 2026-06-16 — Split per-protein base256 layers
 
 Added Delta per-protein base256 shards for layers 0-9, 10-19, 20-29, 30-39,
