@@ -31,4 +31,4 @@ export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
 SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
-srun python3 -u "$SCRIPT_DIR/per_protein_base256_sample_triangle_violations.py"
+srun python3 -u "$SCRIPT_DIR/per_protein_base256_exact_triangle_violations.py"

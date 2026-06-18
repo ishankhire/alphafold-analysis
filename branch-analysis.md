@@ -2,7 +2,7 @@
 
 ## Session: 2026-06-19 — Per-protein exact triangle replay
 
-Added `per_protein_base256_sample_triangle_violations.py` (+ sbatch) under
+Added `per_protein_base256_exact_triangle_violations.py` (+ sbatch) under
 `per_protein_scripts/`: per-protein port of the generalized exact-triangle replay.
 Reads each protein's own coefficients from the per-protein layer-window shards
 (48-task layer array, one shard per layer), reconstructs pred_dist, writes
