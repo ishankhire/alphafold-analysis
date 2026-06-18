@@ -172,7 +172,7 @@ for ax in axes[1, :]:
     ax.set_xlabel("Evoformer layer")
 
 fig.suptitle(
-    "Linearly decodable C$\\alpha$ distance structure across AlphaFold Evoformer layers",
+    "Linear model for predicting structures from pair representation across layers using MDS",
     fontsize=14, fontweight="bold",
 )
 

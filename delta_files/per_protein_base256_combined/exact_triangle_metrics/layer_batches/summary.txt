@@ -1,0 +1,15 @@
+per_protein_base256_combined exact triangle violation metrics
+============================================================
+
+CSV root:          /u/ikhire/csv_files
+Output dir:        /u/ikhire/csv_files/per_protein_base256_combined/exact_triangle_metrics
+Variant:           per_protein_base256_combined
+Feature dimension: 256
+Coefficients:      per-protein (one model per protein/layer)
+Proteins:          552
+Proteins by source:{'ecod': 398, 'cameo': 154}
+Completed layers:  42
+Elapsed seconds:   335.26
+
+Each layer shard has one triangle-only metrics row per protein.
+Distances are clipped at zero before exact unordered-triangle metrics.

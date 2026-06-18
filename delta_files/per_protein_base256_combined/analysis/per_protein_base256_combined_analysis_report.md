@@ -11,13 +11,19 @@ ECOD proteins: 398
 Layer highlights:
 - Best mean R^2: layer 45 (0.9876)
 - Best mean TM-score: layer 46 (0.9423)
-- Lowest mean triangle violation proportion: layer 44 (0.6754)
+- Lowest mean triangle violation fraction: layer 44 (0.0415)
+- Highest mean severe (>=10 A) violation fraction: layer 6 (0.0031)
 - Highest mean top-3 eigenvalue fraction: layer 45 (0.7655)
 
-Individual triangle violation data:
-The current saved artifacts do not contain one row per triangle/triple. They only contain aggregate per-protein fields: `triangle_violation_fraction`, `triangle_mean_violation`, and `triangle_max_violation`.
+Triangle inequality metrics (exact):
+The triangle columns in `geometry_metrics.csv` / `geometry_summary.csv` are the exact per-triangle metrics sourced from `exact_triangle_metrics/exact_triangle_metrics.csv`, replacing the earlier min-indirect-path triangle fields. For every protein and layer, all C(n_residues, 3) unordered residue triples are enumerated from the reconstructed predicted distance matrix. A triple is a violation when `(longest side) - (sum of the two shorter sides)` exceeds 1e-12 A; that difference is the violation magnitude. Fields:
+- `triangle_violation_fraction`: fraction of triples that violate the inequality.
+- `triangle_no_violation_fraction`: 1 - `triangle_violation_fraction`.
+- `triangle_violation_0_5_fraction` / `_5_10_fraction` / `_10_plus_fraction`: violating triples binned by magnitude in Angstrom; the three bins sum to `triangle_violation_fraction`.
+- `triangle_mean_violation`: sum of violation magnitudes divided by all triples (not just violating ones).
+- `triangle_max_violation`: largest single violation magnitude.
 
-The geometry helper computes a min-indirect-path summary for each directed residue pair, then saves only the fraction, mean violation magnitude, and max violation magnitude. It does not save each `(i, j, k)` triple, the intermediate residue, or each individual violation amount. Recovering those details would require a replay/export job from predicted distance matrices.
+These are per-protein aggregates; individual `(i, j, k)` triples are not stored.
 
 Comparison caveat:
 The comparison plot uses `per_protein_base256_combined` all-protein means and `general_base256_combined` held-out/test means. The per-protein run fits one model per protein using all unordered residue pairs, while the generalized run fits a shared train/test model.

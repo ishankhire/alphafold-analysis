@@ -1,5 +1,17 @@
 # Branch Analysis
 
+## Session: 2026-06-19 — Reconcile per-protein geometry CSVs to exact triangle metrics
+
+Added `combine_per_protein_exact_triangle_metrics.py` (merges the 48 per-protein
+exact-triangle shards into `exact_triangle_metrics.csv` + `layer_batches/`) and
+`reconcile_per_protein_base256_combined_triangle_metrics.py` (per-protein analogue
+of the general reconcile; no split, summary grouped by layer). Rewrote
+`per_protein_base256_combined/{geometry_metrics,geometry_summary}.csv` to the 7
+exact triangle fields. Updated `analyze_delta_per_protein_base256_combined.py`
+(new schema + severity-bin triangle plot + corrected report). Verified
+`per_protein_base256_common.py` already emits the 7-field schema for future runs
+and the shard aggregator is header-agnostic.
+
 ## Session: 2026-06-19 — Reconcile combined geometry CSVs to exact triangle metrics
 
 Added `reconcile_general_base256_combined_triangle_metrics.py`: rewrites
@@ -1244,3 +1256,10 @@ violation fractions plus severity-bin proportions.
 Added `delta_files/publication_plots/june19_plots/make_r2_tm_layer_grid.py`
 (2x3 grid: general vs per-protein base256 R²/TM-score across layers, mean +
 individual-protein background, y∈[0,1]). Outputs `r2_tm_layer_grid.{png,pdf}`.
+
+## Session: 2026-06-19 — Triangle-violation 2x4 grid
+
+Added `delta_files/publication_plots/june19_plots/make_triangle_violation_grid.py`
+(2x4: left 2x2 general held-out, right 2x2 per-protein; exact triangle violation
+total + 0–5/5–10/10+ Å bins across layers, mean + individual background,
+per-metric shared y-scales). Outputs `triangle_violation_grid.{png,pdf}`.
