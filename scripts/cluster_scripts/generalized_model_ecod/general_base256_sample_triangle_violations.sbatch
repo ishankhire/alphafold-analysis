@@ -8,7 +8,7 @@
 #SBATCH --mem=64g
 #SBATCH --time=06:00:00
 #SBATCH --constraint="work"
-#SBATCH --array=0-47%4
+#SBATCH --array=0-47%12
 #SBATCH -o slurm-%A_%a.out
 #SBATCH -e slurm-%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL

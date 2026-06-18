@@ -1,0 +1,37 @@
+Combined CAMEO+ECOD Per-Protein Regression - base256 (layers 40-47)
+===================================================================
+
+Variant:             per_protein_base256_combined
+Feature dimension:   256
+Feature convention:  unordered base256 [pair_i_j, pair_j_i]
+Dataset:             combined CAMEO+ECOD, TM-score > 0.7
+Layers:              40-47 (8 total)
+Splits:              none; each model uses all unordered residue pairs
+Proteins discovered: 554
+Proteins loaded:     552
+Loaded by source:    {'cameo': 154, 'ecod': 398}
+Completed rows:      4416
+Completed by layer:  {40: 552, 41: 552, 42: 552, 43: 552, 44: 552, 45: 552, 46: 552, 47: 552}
+Skipped events:      2
+Elapsed seconds:     4708.81
+
+Layer 40 R2: min=0.867656, median=0.981087, mean=0.976544, max=0.997191
+Layer 40 TM-score: min=0.330474, median=0.939586, mean=0.899739, max=0.979218
+Layer 41 R2: min=0.871081, median=0.982866, mean=0.978634, max=0.998070
+Layer 41 TM-score: min=0.339816, median=0.944117, mean=0.907449, max=0.981687
+Layer 42 R2: min=0.888401, median=0.985341, mean=0.980795, max=0.997845
+Layer 42 TM-score: min=0.333455, median=0.950129, mean=0.913988, max=0.985102
+Layer 43 R2: min=0.930591, median=0.987670, mean=0.984354, max=0.998313
+Layer 43 TM-score: min=0.371492, median=0.958720, mean=0.927666, max=0.988087
+Layer 44 R2: min=0.947770, median=0.989626, mean=0.987506, max=0.998288
+Layer 44 TM-score: min=0.414030, median=0.966998, mean=0.940293, max=0.990217
+Layer 45 R2: min=0.950256, median=0.990127, mean=0.987566, max=0.998179
+Layer 45 TM-score: min=0.400686, median=0.969348, mean=0.941813, max=0.989992
+Layer 46 R2: min=0.948866, median=0.989643, mean=0.986890, max=0.997703
+Layer 46 TM-score: min=0.422516, median=0.968221, mean=0.942279, max=0.988929
+Layer 47 R2: min=0.944303, median=0.987609, mean=0.984946, max=0.997421
+Layer 47 TM-score: min=0.419421, median=0.961931, mean=0.934709, max=0.986924
+
+Skipped proteins/events:
+  000196893: CA count 425 != pair block dim 426
+  001681437: CA count 194 != pair block dim 195

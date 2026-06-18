@@ -8,7 +8,11 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(python:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Read(//Library/Frameworks/Python.framework/Versions/3.13/bin/**)",
+      "Bash(.venv/bin/python -c \"import numpy, pandas, sklearn; print\\('numpy', numpy.__version__, '| pandas', pandas.__version__\\)\")",
+      "Bash(.venv/bin/python /tmp/verify_triangle.py)",
+      "Bash(.venv/bin/python /tmp/verify_analysis.py)"
     ]
   }
 }

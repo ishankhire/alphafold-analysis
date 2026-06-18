@@ -1,5 +1,12 @@
 # Branch Analysis
 
+## Session: 2026-06-19 — Add project orientation summary
+
+- Added `analysis_summaries/project_orientation_summary.md`: high-level map of
+  the project, the two focus directories (`general_base256_combined`,
+  `per_protein_base256_combined`), the exact-triangle thread, and repo
+  conventions.
+
 ## Session: 2026-06-18 — Add exact triangle local analysis
 
 - Added a local exact-triangle helper to merge layer shards, validate the new

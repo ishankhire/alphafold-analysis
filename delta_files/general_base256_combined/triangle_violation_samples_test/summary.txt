@@ -1,0 +1,17 @@
+general_base256_combined held-out sampled triangle violations
+============================================================
+
+CSV root:              /u/ikhire/csv_files
+Output dir:            /u/ikhire/csv_files/general_base256_combined/triangle_violation_samples_test
+Variant:               general_base256_combined
+Feature dimension:     256
+Split:                 test
+Split id:              0
+Layers:                0,10,20,30,40,47
+Held-out proteins:     111
+Triangles per protein: 2000
+Completed layers:      0,10,20,30,40,47
+Elapsed seconds:       220.15
+
+Triangle distances are clipped at zero before inequality margins, matching
+the existing aggregate geometry analysis. Raw predictions are also saved.
