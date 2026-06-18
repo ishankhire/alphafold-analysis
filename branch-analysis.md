@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-06-19 — Per-protein exact triangle replay
+
+Added `per_protein_base256_sample_triangle_violations.py` (+ sbatch) under
+`per_protein_scripts/`: per-protein port of the generalized exact-triangle replay.
+Reads each protein's own coefficients from the per-protein layer-window shards
+(48-task layer array, one shard per layer), reconstructs pred_dist, writes
+triangle-only metrics per protein to `exact_triangle_metrics/`.
+
 ## Session: 2026-06-19 — Add project orientation summary
 
 - Added `analysis_summaries/project_orientation_summary.md`: high-level map of
