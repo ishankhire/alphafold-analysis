@@ -41,6 +41,23 @@ PURPLE = "#7f6edb"
 GREY = "#b8b8b8"
 GRID_GREY = "#dddddd"
 
+# Exact per-triangle metric columns (authoritative; sourced from
+# exact_triangle_metrics.csv, replacing the old min-indirect-path triangle fields).
+TRIANGLE_COLUMNS = [
+    "triangle_violation_fraction",
+    "triangle_mean_violation",
+    "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
+]
+TRIANGLE_BIN_PANELS = [
+    ("triangle_violation_0_5_fraction", "0–5 Å", GREEN),
+    ("triangle_violation_5_10_fraction", "5–10 Å", ORANGE),
+    ("triangle_violation_10_plus_fraction", "≥10 Å", RED),
+]
+
 
 def configure_style() -> None:
     plt.rcParams.update(
@@ -118,9 +135,7 @@ def load_combined_inputs() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
             "frac_top3_eigenvalues",
             "n_negative_eigenvalues",
             "neg_eigenvalue_fraction",
-            "triangle_violation_fraction",
-            "triangle_mean_violation",
-            "triangle_max_violation",
+            *TRIANGLE_COLUMNS,
         },
     )
     require_columns(
@@ -413,9 +428,7 @@ def save_geometry_layer_means(geometry: pd.DataFrame) -> Path:
         "n_negative_eigenvalues",
         "negative_eigenvalue_count_fraction",
         "neg_eigenvalue_fraction",
-        "triangle_violation_fraction",
-        "triangle_mean_violation",
-        "triangle_max_violation",
+        *TRIANGLE_COLUMNS,
     ]
     mean_df = split_layer_mean(df, value_columns)
     out_path = OUT_DIR / f"{PREFIX}_geometry_layer_means.csv"
@@ -425,23 +438,42 @@ def save_geometry_layer_means(geometry: pd.DataFrame) -> Path:
 
 def plot_triangle_violations(geometry: pd.DataFrame) -> Path:
     out_path = OUT_DIR / f"{PREFIX}_triangle_violations_vs_layer.png"
-    mean_df = split_layer_mean(geometry, ["triangle_violation_fraction", "triangle_mean_violation"])
-    fig, axes = plt.subplots(2, 1, figsize=(9.5, 8.5), sharex=True, constrained_layout=True)
+    bin_cols = [column for column, _, _ in TRIANGLE_BIN_PANELS]
+    mean_df = split_layer_mean(
+        geometry,
+        ["triangle_violation_fraction", "triangle_mean_violation", *bin_cols],
+    )
+    fig, axes = plt.subplots(2, 2, figsize=(12.5, 9.0), sharex=True, constrained_layout=True)
 
-    add_train_test_lines(axes[0], mean_df, "triangle_violation_fraction")
-    axes[0].set_title("Triangle inequality violation proportion across layers")
-    axes[0].set_ylabel("Mean violation proportion")
-    axes[0].set_ylim(0.0, 1.0)
-    add_common_axis_style(axes[0])
-    axes[0].legend(loc="best", frameon=False)
+    add_train_test_lines(axes[0, 0], mean_df, "triangle_violation_fraction")
+    axes[0, 0].set_title("Any triangle inequality violation")
+    axes[0, 0].set_ylabel("Mean violating-triangle fraction")
+    axes[0, 0].set_ylim(padded_limits([mean_df["triangle_violation_fraction"].to_numpy()], include_zero=True))
+    add_common_axis_style(axes[0, 0])
+    axes[0, 0].legend(loc="best", frameon=False)
 
-    add_train_test_lines(axes[1], mean_df, "triangle_mean_violation")
-    axes[1].set_title("Triangle inequality violation magnitude across layers")
-    axes[1].set_xlabel("Layer")
-    axes[1].set_ylabel("Mean violation magnitude")
-    add_common_axis_style(axes[1])
-    axes[1].legend(loc="best", frameon=False)
+    add_train_test_lines(axes[0, 1], mean_df, "triangle_mean_violation")
+    axes[0, 1].set_title("Mean violation magnitude (over all triangles)")
+    axes[0, 1].set_ylabel("Mean magnitude (Å)")
+    axes[0, 1].set_ylim(padded_limits([mean_df["triangle_mean_violation"].to_numpy()], include_zero=True))
+    add_common_axis_style(axes[0, 1])
+    axes[0, 1].legend(loc="best", frameon=False)
 
+    for ax, split, label in [(axes[1, 0], "test", "held-out"), (axes[1, 1], "train", "train")]:
+        sub = mean_df[mean_df["split"] == split]
+        for column, bin_label, color in TRIANGLE_BIN_PANELS:
+            ax.plot(
+                sub["layer"], sub[column],
+                color=color, linewidth=2.2, marker="o", markersize=3.2, label=bin_label,
+            )
+        ax.set_title(f"Violation severity bins ({label})")
+        ax.set_xlabel("Layer")
+        ax.set_ylabel("Mean fraction of triangles")
+        ax.set_ylim(padded_limits([sub[column].to_numpy() for column in bin_cols], include_zero=True))
+        add_common_axis_style(ax)
+        ax.legend(loc="best", frameon=False, title="Violation size")
+
+    fig.suptitle("general_base256_combined exact triangle inequality violations across layers")
     fig.savefig(out_path)
     plt.close(fig)
     return out_path
@@ -606,7 +638,7 @@ def write_report(
     tm_test_mean = test_layer_mean(geometry, ["tm_score"])
     triangle_test_mean = test_layer_mean(
         geometry,
-        ["triangle_violation_fraction", "triangle_mean_violation"],
+        ["triangle_violation_fraction", "triangle_mean_violation", "triangle_violation_10_plus_fraction"],
     )
     top3_test_mean = test_layer_mean(geometry, ["frac_top3_eigenvalues"])
 
@@ -616,6 +648,11 @@ def write_report(
         triangle_test_mean,
         "triangle_violation_fraction",
         False,
+    )
+    worst_triangle_10plus_layer, worst_triangle_10plus_value = best_layer(
+        triangle_test_mean,
+        "triangle_violation_10_plus_fraction",
+        True,
     )
     best_top3_layer, best_top3_value = best_layer(top3_test_mean, "frac_top3_eigenvalues", True)
 
@@ -642,13 +679,19 @@ Held-out proteins: {int(split_counts.get("test", 0))}
 Held-out layer highlights:
 - Best mean R^2: layer {best_r2_layer} ({best_r2_value:.4f})
 - Best mean TM-score: layer {best_tm_layer} ({best_tm_value:.4f})
-- Lowest mean triangle violation proportion: layer {best_triangle_frac_layer} ({best_triangle_frac_value:.4f})
+- Lowest mean triangle violation fraction: layer {best_triangle_frac_layer} ({best_triangle_frac_value:.4f})
+- Highest mean severe (>=10 A) violation fraction: layer {worst_triangle_10plus_layer} ({worst_triangle_10plus_value:.4f})
 - Highest mean top-3 eigenvalue fraction: layer {best_top3_layer} ({best_top3_value:.4f})
 
-Individual triangle violation data:
-The current saved artifacts do not contain one row per triangle/triple. They only contain aggregate per-protein fields: `triangle_violation_fraction`, `triangle_mean_violation`, and `triangle_max_violation`.
+Triangle inequality metrics (exact):
+The triangle columns in `geometry_metrics.csv` / `geometry_summary.csv` are the exact per-triangle metrics sourced from `exact_triangle_metrics/exact_triangle_metrics.csv`, replacing the earlier min-indirect-path triangle fields. For every protein and layer, all C(n_residues, 3) unordered residue triples are enumerated from the reconstructed predicted distance matrix. A triple is a violation when `(longest side) - (sum of the two shorter sides)` exceeds 1e-12 A; that difference is the violation magnitude. Fields:
+- `triangle_violation_fraction`: fraction of triples that violate the inequality.
+- `triangle_no_violation_fraction`: 1 - `triangle_violation_fraction`.
+- `triangle_violation_0_5_fraction` / `_5_10_fraction` / `_10_plus_fraction`: violating triples binned by magnitude in Angstrom; the three bins sum to `triangle_violation_fraction`.
+- `triangle_mean_violation`: sum of violation magnitudes divided by all triples (not just violating ones).
+- `triangle_max_violation`: largest single violation magnitude.
 
-The geometry helper computes a min-indirect-path summary for each directed residue pair, then saves only the fraction, mean violation magnitude, and max violation magnitude. It does not save each `(i, j, k)` triple, the intermediate residue, or each individual violation amount. Recovering those details would require a replay/export job from predicted distance matrices.
+These are per-protein aggregates; individual `(i, j, k)` triples are not stored.
 
 Baseline comparison caveat:
 The baseline plot uses saved held-out summaries. `general_base256_combined` has 552 loaded proteins with 111 held-out proteins; `baseline256_kfold` has 184 proteins, R^2 pooled across five test folds, and TM-score from the saved fold-4 geometry file.

@@ -1,5 +1,15 @@
 # Branch Analysis
 
+## Session: 2026-06-19 — Reconcile combined geometry CSVs to exact triangle metrics
+
+Added `reconcile_general_base256_combined_triangle_metrics.py`: rewrites
+`general_base256_combined/geometry_metrics.csv` and `geometry_summary.csv`,
+dropping the old min-indirect-path triangle columns and substituting the 7 exact
+per-triangle fields from `exact_triangle_metrics.csv` (summary mean/std, ddof=0).
+Non-triangle columns preserved exactly. Updated
+`analyze_delta_general_base256_combined.py` for the new schema: enriched triangle
+plot with severity bins (0-5/5-10/10+ A) and corrected report description.
+
 ## Session: 2026-06-19 — Per-protein exact triangle replay
 
 Added `per_protein_base256_exact_triangle_violations.py` (+ sbatch) under
