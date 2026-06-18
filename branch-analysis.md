@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-18 — Exact triangle metric replay
+
+- Reworked the generalized base256 triangle replay into a 48-task layer array
+  that writes exact per-protein triangle metric shards for all 552 proteins.
+
 ## Session: 2026-06-16 — Sample held-out triangle violations
 
 - Added a Delta replay job that samples 2,000 held-out/test triangles per
