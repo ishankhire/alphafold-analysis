@@ -450,6 +450,10 @@ def summarize_geometry_rows(geometry_rows):
         "triangle_violation_fraction",
         "triangle_mean_violation",
         "triangle_max_violation",
+        "triangle_no_violation_fraction",
+        "triangle_violation_0_5_fraction",
+        "triangle_violation_5_10_fraction",
+        "triangle_violation_10_plus_fraction",
     ]
 
     grouped = {}
@@ -502,6 +506,10 @@ def make_failed_geometry_row(variant_name, feature_mode, layer, split_name, reco
         "triangle_violation_fraction": float("nan"),
         "triangle_mean_violation": float("nan"),
         "triangle_max_violation": float("nan"),
+        "triangle_no_violation_fraction": float("nan"),
+        "triangle_violation_0_5_fraction": float("nan"),
+        "triangle_violation_5_10_fraction": float("nan"),
+        "triangle_violation_10_plus_fraction": float("nan"),
     }
 
 
@@ -1304,6 +1312,10 @@ def main():
         "triangle_violation_fraction",
         "triangle_mean_violation",
         "triangle_max_violation",
+        "triangle_no_violation_fraction",
+        "triangle_violation_0_5_fraction",
+        "triangle_violation_5_10_fraction",
+        "triangle_violation_10_plus_fraction",
     ]
     write_csv(csv_dir / GEOMETRY_METRICS_CSV_NAME, geometry_fields, geometry_rows)
     print(f"Saved geometry metrics CSV -> {csv_dir / GEOMETRY_METRICS_CSV_NAME}")
@@ -1321,6 +1333,10 @@ def main():
         "triangle_violation_fraction",
         "triangle_mean_violation",
         "triangle_max_violation",
+        "triangle_no_violation_fraction",
+        "triangle_violation_0_5_fraction",
+        "triangle_violation_5_10_fraction",
+        "triangle_violation_10_plus_fraction",
     ]
     for metric_key in geometry_metrics:
         geometry_summary_fields.extend([f"{metric_key}_mean", f"{metric_key}_std"])

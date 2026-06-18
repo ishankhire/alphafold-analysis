@@ -1193,3 +1193,8 @@ Added:
 Added a reproducible plotting script for `general_base256_combined` sampled
 triangle violations, including thresholded summaries and sample-vs-aggregate
 comparison artifacts under the variant analysis directory.
+
+## Session: 2026-06-18 — Use exact triangle violation metrics
+
+Updated geometry helpers and CSV schemas to report exact unordered-triangle
+violation fractions plus severity-bin proportions.

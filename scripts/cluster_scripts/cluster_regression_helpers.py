@@ -37,6 +37,17 @@ STANDARD_AAS = [
 ]
 AA_TO_INDEX = {aa: idx for idx, aa in enumerate(STANDARD_AAS)}
 
+TRIANGLE_VIOLATION_TOLERANCE = 1e-12
+TRIANGLE_VIOLATION_KEYS = [
+    "triangle_violation_fraction",
+    "triangle_mean_violation",
+    "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
+]
+
 
 def _get_pdb_root():
     """Resolve the cluster PDB root lazily so imports work outside sbatch."""
@@ -181,31 +192,64 @@ def compute_tm_score(fixed_coords, transformed_coords, length_target):
     return float(np.sum(scores) / length_target)
 
 
+def make_triangle_violation_metrics(fill_value=0.0):
+    """Return a complete triangle-violation metric dictionary."""
+    return {key: float(fill_value) for key in TRIANGLE_VIOLATION_KEYS}
+
+
 def compute_triangle_violations(pred_dist):
-    """Compute triangle inequality violations using min-indirect-path approach."""
+    """Compute exact unordered-triangle inequality violation metrics."""
     n_residues = pred_dist.shape[0]
-    min_indirect = np.full((n_residues, n_residues), np.inf)
-    for j in range(n_residues):
-        candidate = pred_dist[:, j:j + 1] + pred_dist[j:j + 1, :]
-        min_indirect = np.minimum(min_indirect, candidate)
-    np.fill_diagonal(min_indirect, 0.0)
+    total_triangles = n_residues * (n_residues - 1) * (n_residues - 2) // 6
+    if total_triangles <= 0:
+        return make_triangle_violation_metrics(0.0)
 
-    mask = pred_dist > min_indirect
-    np.fill_diagonal(mask, False)
-    n_violations = mask.sum()
-    total_pairs = n_residues * (n_residues - 1)
+    n_violations = 0
+    n_0_5 = 0
+    n_5_10 = 0
+    n_10_plus = 0
+    violation_sum = 0.0
+    max_violation = 0.0
 
-    violation_fraction = float(n_violations / total_pairs) if total_pairs > 0 else 0.0
+    for i in range(n_residues - 2):
+        local_j, local_k = np.triu_indices(n_residues - i - 1, k=1)
+        j = local_j + i + 1
+        k = local_k + i + 1
 
-    if n_violations > 0:
-        violations = pred_dist[mask] - min_indirect[mask]
-        mean_violation = float(violations.mean())
-        max_violation = float(violations.max())
-    else:
-        mean_violation = 0.0
-        max_violation = 0.0
+        side_ij = pred_dist[i, j]
+        side_ik = pred_dist[i, k]
+        side_jk = pred_dist[j, k]
+        longest = np.maximum(np.maximum(side_ij, side_ik), side_jk)
+        violations = longest - (side_ij + side_ik + side_jk - longest)
 
-    return violation_fraction, mean_violation, max_violation
+        positive = violations > TRIANGLE_VIOLATION_TOLERANCE
+        if not np.any(positive):
+            continue
+
+        positive_violations = violations[positive]
+        n_positive = int(positive_violations.size)
+        n_violations += n_positive
+        violation_sum += float(np.sum(positive_violations, dtype=np.float64))
+        max_violation = max(max_violation, float(np.max(positive_violations)))
+
+        n_0_5 += int(np.count_nonzero(positive_violations < 5.0))
+        n_5_10 += int(
+            np.count_nonzero(
+                (positive_violations >= 5.0) & (positive_violations < 10.0)
+            )
+        )
+        n_10_plus += int(np.count_nonzero(positive_violations >= 10.0))
+
+    n_no_violation = total_triangles - n_violations
+    return {
+        "triangle_violation_fraction": float(n_violations / total_triangles),
+        "triangle_mean_violation": float(violation_sum / total_triangles),
+        "triangle_max_violation": float(max_violation),
+        "triangle_no_violation_fraction": float(n_no_violation / total_triangles),
+        "triangle_violation_0_5_fraction": float(n_0_5 / total_triangles),
+        "triangle_violation_5_10_fraction": float(n_5_10 / total_triangles),
+        "triangle_violation_10_plus_fraction": float(n_10_plus / total_triangles),
+    }
 
 
 def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
@@ -247,7 +291,7 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
     d_mds = mds_dist[triu_i, triu_j]
     stress = float(np.sqrt(np.sum((d_pred - d_mds) ** 2) / np.sum(d_pred ** 2)))
 
-    viol_frac, viol_mean, viol_max = compute_triangle_violations(pred_dist)
+    triangle_metrics = compute_triangle_violations(pred_dist)
 
     return {
         "rmsd": rmsd,
@@ -257,9 +301,7 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
         "neg_eigenvalue_fraction": neg_frac,
         "n_negative_predictions": n_negative_preds,
         "stress": stress,
-        "triangle_violation_fraction": viol_frac,
-        "triangle_mean_violation": viol_mean,
-        "triangle_max_violation": viol_max,
+        **triangle_metrics,
     }
 
 
@@ -279,9 +321,7 @@ def make_failed_geometry_row(fold_idx, layer, protein_id, split, n_residues, per
         "neg_eigenvalue_fraction": float("nan"),
         "n_negative_predictions": -1,
         "stress": float("nan"),
-        "triangle_violation_fraction": float("nan"),
-        "triangle_mean_violation": float("nan"),
-        "triangle_max_violation": float("nan"),
+        **make_triangle_violation_metrics(float("nan")),
     }
 
 
@@ -299,5 +339,8 @@ __all__ = [
     "find_pdb_file",
     "get_pair_block_path",
     "make_failed_geometry_row",
+    "make_triangle_violation_metrics",
     "superimpose_structures",
+    "TRIANGLE_VIOLATION_KEYS",
+    "TRIANGLE_VIOLATION_TOLERANCE",
 ]

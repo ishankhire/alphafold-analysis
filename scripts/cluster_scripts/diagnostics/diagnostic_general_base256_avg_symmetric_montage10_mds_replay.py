@@ -178,6 +178,10 @@ GEOMETRY_METRIC_KEYS = [
     "triangle_violation_fraction",
     "triangle_mean_violation",
     "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
 ]
 
 GEOMETRY_METRIC_FIELDNAMES = [
@@ -208,6 +212,10 @@ GEOMETRY_METRIC_FIELDNAMES = [
     "triangle_violation_fraction",
     "triangle_mean_violation",
     "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
 ]
 
 GEOMETRY_SUMMARY_FIELDNAMES = [
@@ -868,7 +876,7 @@ def reconstruct_geometry(true_coords, pred_dist, n_negative_predictions):
     else:
         stress = float(np.sqrt(np.sum((d_pred - d_mds) ** 2) / denom))
 
-    triangle_fraction, triangle_mean, triangle_max = compute_triangle_violations(pred_dist)
+    triangle_metrics = compute_triangle_violations(pred_dist)
     deviations = np.sqrt(np.sum((true_coords - transformed_coords) ** 2, axis=1))
 
     return {
@@ -883,9 +891,7 @@ def reconstruct_geometry(true_coords, pred_dist, n_negative_predictions):
         "positive_eigenvalue_fraction": positive_fraction,
         "n_negative_predictions": n_negative_predictions,
         "stress": stress,
-        "triangle_violation_fraction": float(triangle_fraction),
-        "triangle_mean_violation": float(triangle_mean),
-        "triangle_max_violation": float(triangle_max),
+        **triangle_metrics,
     }
 
 
@@ -1172,6 +1178,18 @@ def main():
                         "triangle_violation_fraction": geometry["triangle_violation_fraction"],
                         "triangle_mean_violation": geometry["triangle_mean_violation"],
                         "triangle_max_violation": geometry["triangle_max_violation"],
+                        "triangle_no_violation_fraction": geometry[
+                            "triangle_no_violation_fraction"
+                        ],
+                        "triangle_violation_0_5_fraction": geometry[
+                            "triangle_violation_0_5_fraction"
+                        ],
+                        "triangle_violation_5_10_fraction": geometry[
+                            "triangle_violation_5_10_fraction"
+                        ],
+                        "triangle_violation_10_plus_fraction": geometry[
+                            "triangle_violation_10_plus_fraction"
+                        ],
                     }
                 )
 

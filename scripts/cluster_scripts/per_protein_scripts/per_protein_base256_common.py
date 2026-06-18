@@ -69,6 +69,10 @@ GEOMETRY_METRIC_KEYS = [
     "triangle_violation_fraction",
     "triangle_mean_violation",
     "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
 ]
 
 PER_PROTEIN_FIELDNAMES = [
@@ -130,6 +134,10 @@ GEOMETRY_METRICS_FIELDNAMES = [
     "triangle_violation_fraction",
     "triangle_mean_violation",
     "triangle_max_violation",
+    "triangle_no_violation_fraction",
+    "triangle_violation_0_5_fraction",
+    "triangle_violation_5_10_fraction",
+    "triangle_violation_10_plus_fraction",
 ]
 
 GEOMETRY_SUMMARY_FIELDNAMES = [
@@ -380,6 +388,10 @@ def make_failed_geometry_row(variant, record, layer, per_r2):
         "triangle_violation_fraction": float("nan"),
         "triangle_mean_violation": float("nan"),
         "triangle_max_violation": float("nan"),
+        "triangle_no_violation_fraction": float("nan"),
+        "triangle_violation_0_5_fraction": float("nan"),
+        "triangle_violation_5_10_fraction": float("nan"),
+        "triangle_violation_10_plus_fraction": float("nan"),
     }
 
 
