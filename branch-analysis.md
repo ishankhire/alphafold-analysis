@@ -1238,3 +1238,9 @@ comparison artifacts under the variant analysis directory.
 
 Updated geometry helpers and CSV schemas to report exact unordered-triangle
 violation fractions plus severity-bin proportions.
+
+## Session: 2026-06-19 — Publication R²/TM layer grid
+
+Added `delta_files/publication_plots/june19_plots/make_r2_tm_layer_grid.py`
+(2x3 grid: general vs per-protein base256 R²/TM-score across layers, mean +
+individual-protein background, y∈[0,1]). Outputs `r2_tm_layer_grid.{png,pdf}`.
