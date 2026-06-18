@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-18 — Add exact triangle local analysis
+
+- Added a local exact-triangle helper to merge layer shards, validate the new
+  triangle bins, and plot layer-wise violation proportions/magnitudes.
+
 ## Session: 2026-06-18 — Add Slurm array reference note
 
 - Added a concise local note for when to use Delta refs vs upstream Slurm docs
