@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-06-18 — Add Slurm array reference note
+
+- Added a concise local note for when to use Delta refs vs upstream Slurm docs
+  and how Slurm array task IDs/concurrency behave.
+
 ## Session: 2026-06-18 — Exact triangle metric replay
 
 - Reworked the generalized base256 triangle replay into a 48-task layer array
