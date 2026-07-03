@@ -1268,3 +1268,8 @@ Added `delta_files/publication_plots/june19_plots/make_triangle_violation_grid.p
 (2x4: left 2x2 general held-out, right 2x2 per-protein; exact triangle violation
 total + 0–5/5–10/10+ Å bins across layers, mean + individual background,
 per-metric shared y-scales). Outputs `triangle_violation_grid.{png,pdf}`.
+
+## Session: 2026-07-03 — June 19 combined geometry CSV
+
+Added one CSV combining generalized held-out and per-protein layer summaries used
+by the June 19 publication plots.
