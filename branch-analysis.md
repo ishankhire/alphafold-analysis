@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-07-03 — Rename generalized exact triangle replay
+
+Renamed the generalized base256 exact-triangle replay script/sbatch from
+`sample_triangle_violations` to `exact_triangle_violations`.
+
 ## Session: 2026-06-19 — Reconcile per-protein geometry CSVs to exact triangle metrics
 
 Added `combine_per_protein_exact_triangle_metrics.py` (merges the 48 per-protein
