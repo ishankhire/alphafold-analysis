@@ -3,13 +3,14 @@ Publication figure: R^2 and TM-score across Evoformer layers.
 
 2 rows x 3 columns:
   Col 1: general_base256_combined (shared/generalizing probe, held-out split)
-  Col 2: per_protein_base256_combined (per-protein upper bound)
+  Col 2: per_protein_base256_combined (per-protein model, held-out pair split)
   Col 3: general vs per-protein mean trajectories on shared axes
-  Row 1: per-protein R^2     Row 2: TM-score
+  Row 1: held-out per-protein R^2     Row 2: TM-score
 
 For the single-variant panels (cols 1 & 2) the bold line is the mean across
 proteins at each layer; faint background lines are individual protein
-trajectories. The general column uses the held-out (test) proteins.
+trajectories. The general column uses the held-out (test) proteins. The
+per-protein column uses held-out residue-pair rows within each protein.
 
 Y-axis is fixed to [0, 1] in every panel; individual trajectories dipping
 below 0 (early-layer R^2) are simply clipped by the axis limits.
@@ -67,6 +68,8 @@ def load_trajectories(geometry_csv, metric, split=None):
     drawn in the background, so the bold line is exactly their mean.
     """
     df = pd.read_csv(geometry_csv)
+    if metric not in df.columns:
+        raise ValueError(f"{geometry_csv} is missing required metric column {metric!r}")
     if split is not None:
         df = df[df["split"] == split]
     pivot = df.pivot_table(index="protein_id", columns="layer", values=metric)
@@ -84,8 +87,8 @@ pp_geom = os.path.join(PER_PROTEIN_DIR, "geometry_metrics.csv")
 g_layers, g_r2_mean, g_r2_traj = load_trajectories(gen_geom, "per_protein_r2", split="test")
 _, g_tm_mean, g_tm_traj = load_trajectories(gen_geom, "tm_score", split="test")
 
-# Per-protein -> all proteins
-p_layers, p_r2_mean, p_r2_traj = load_trajectories(pp_geom, "per_protein_r2")
+# Per-protein -> all proteins; R^2 is held-out residue-pair score.
+p_layers, p_r2_mean, p_r2_traj = load_trajectories(pp_geom, "test_r2")
 _, p_tm_mean, p_tm_traj = load_trajectories(pp_geom, "tm_score")
 
 g_n = g_r2_traj.shape[0]
@@ -154,11 +157,11 @@ fig, axes = plt.subplots(2, 3, figsize=(16, 9), constrained_layout=True)
 
 # Row 1: R^2
 plot_single(axes[0, 0], g_layers, g_r2_mean, g_r2_traj, GENERAL_COLOR, g_n,
-            r"per-protein $R^2$", r"General base256 — $R^2$ (held-out)")
+            r"held-out $R^2$", r"General base256 — $R^2$ (held-out proteins)")
 plot_single(axes[0, 1], p_layers, p_r2_mean, p_r2_traj, PER_PROTEIN_COLOR, p_n,
-            r"per-protein $R^2$", r"Per-protein base256 — $R^2$")
+            r"held-out $R^2$", r"Per-protein base256 — $R^2$ (held-out pairs)")
 plot_compare(axes[0, 2], g_layers, g_r2_mean, p_r2_mean,
-             r"per-protein $R^2$", r"$R^2$ — general vs per-protein")
+             r"held-out $R^2$", r"$R^2$ — general vs per-protein")
 
 # Row 2: TM-score
 plot_single(axes[1, 0], g_layers, g_tm_mean, g_tm_traj, GENERAL_COLOR, g_n,
@@ -182,7 +185,7 @@ print(f"general held-out proteins: {g_n}")
 print(f"per-protein proteins:      {p_n}")
 print(f"general  R^2 peak: L{int(peak(g_layers, g_r2_mean)[0])} = {peak(g_layers, g_r2_mean)[1]:.4f}")
 print(f"general  TM  peak: L{int(peak(g_layers, g_tm_mean)[0])} = {peak(g_layers, g_tm_mean)[1]:.4f}")
-print(f"perprot  R^2 peak: L{int(peak(p_layers, p_r2_mean)[0])} = {peak(p_layers, p_r2_mean)[1]:.4f}")
+print(f"perprot  test R^2 peak: L{int(peak(p_layers, p_r2_mean)[0])} = {peak(p_layers, p_r2_mean)[1]:.4f}")
 print(f"perprot  TM  peak: L{int(peak(p_layers, p_tm_mean)[0])} = {peak(p_layers, p_tm_mean)[1]:.4f}")
 print(f"saved: {OUT_PNG}")
 print(f"saved: {OUT_PDF}")

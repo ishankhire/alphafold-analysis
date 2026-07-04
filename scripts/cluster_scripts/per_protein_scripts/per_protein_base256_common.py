@@ -9,6 +9,7 @@ one unordered residue-pair row with both pair-block directions concatenated:
 
 import csv
 import gc
+import hashlib
 import math
 import os
 import sys
@@ -47,7 +48,9 @@ from general_train_test_common import (  # noqa: E402
     load_protein_records,
     make_variant,
     normalize_layer_indices,
+    RANDOM_STATE,
     resolve_pair_block_path,
+    TEST_SIZE,
 )
 
 
@@ -59,6 +62,8 @@ SUMMARY_TXT_NAME = "summary.txt"
 
 GEOMETRY_METRIC_KEYS = [
     "per_protein_r2",
+    "train_r2",
+    "test_r2",
     "tm_score",
     "rmsd",
     "stress",
@@ -90,6 +95,8 @@ PER_PROTEIN_FIELDNAMES = [
     "model_singular_max",
     "model_condition_number",
     "per_protein_r2",
+    "train_r2",
+    "test_r2",
     "per_protein_mse",
     "per_protein_mae",
     "per_protein_rmse",
@@ -124,6 +131,8 @@ GEOMETRY_METRICS_FIELDNAMES = [
     "size_bin",
     "n_pairs",
     "per_protein_r2",
+    "train_r2",
+    "test_r2",
     "rmsd",
     "tm_score",
     "frac_top3_eigenvalues",
@@ -240,10 +249,51 @@ def build_base256_feature_matrix(record, layer):
     return x
 
 
+def split_seed_for_protein(protein_id):
+    """Return a stable per-protein seed for row-level train/test splits."""
+    digest = hashlib.blake2b(str(protein_id).encode("utf-8"), digest_size=8).digest()
+    protein_seed = int.from_bytes(digest, byteorder="little", signed=False)
+    return (protein_seed + int(RANDOM_STATE)) % (2 ** 63 - 1)
+
+
+def build_pair_train_test_indices(record):
+    """Build one deterministic 80/20 unordered-pair split for a protein."""
+    n_pairs = int(record["n_pairs"])
+    if n_pairs < 2:
+        raise ValueError(f"{record['protein_id']} has too few pairs to split: {n_pairs}")
+
+    n_test = int(math.ceil(TEST_SIZE * n_pairs))
+    n_test = min(max(n_test, 1), n_pairs - 1)
+    rng = np.random.default_rng(split_seed_for_protein(record["protein_id"]))
+    permutation = rng.permutation(n_pairs)
+    test_idx = np.sort(permutation[:n_test].astype(np.int64, copy=False))
+    train_idx = np.sort(permutation[n_test:].astype(np.int64, copy=False))
+    return train_idx, test_idx
+
+
+def assign_pair_splits(records):
+    """Attach stable train/test row indices to each loaded protein record."""
+    for record in records:
+        train_idx, test_idx = build_pair_train_test_indices(record)
+        record["train_pair_idx"] = train_idx
+        record["test_pair_idx"] = test_idx
+
+
 def standardize_features_in_place(x):
     """Standardize features in place and return the raw-space scaler."""
     mean = np.mean(x, axis=0, dtype=np.float64)
     scale = np.std(x, axis=0, dtype=np.float64)
+    scale[scale < FLOAT_EPS] = 1.0
+    x -= mean
+    x /= scale
+    return mean, scale
+
+
+def standardize_features_from_train_in_place(x, train_idx):
+    """Standardize all rows in place using only training rows for the scaler."""
+    train_view = x[train_idx]
+    mean = np.mean(train_view, axis=0, dtype=np.float64)
+    scale = np.std(train_view, axis=0, dtype=np.float64)
     scale[scale < FLOAT_EPS] = 1.0
     x -= mean
     x /= scale
@@ -333,12 +383,25 @@ def model_rank_metadata(model):
     return rank, singular_min, singular_max, condition_number
 
 
-def build_per_protein_row(variant, record, layer, model, y_true, y_pred, elapsed_seconds):
+def build_per_protein_row(
+    variant,
+    record,
+    layer,
+    model,
+    y_true,
+    y_pred,
+    train_idx,
+    test_idx,
+    elapsed_seconds,
+):
     """Build the per-protein regression metrics row."""
     y_true = np.asarray(y_true, dtype=np.float64)
     y_pred = np.asarray(y_pred, dtype=np.float64)
     rank, singular_min, singular_max, condition_number = model_rank_metadata(model)
     mse_value = float(np.mean((y_pred - y_true) ** 2)) if y_true.size else float("nan")
+    per_protein_r2 = compute_r2(y_true, y_pred)
+    train_r2 = compute_r2(y_true[train_idx], y_pred[train_idx])
+    test_r2 = compute_r2(y_true[test_idx], y_pred[test_idx])
     return {
         "variant": variant["name"],
         "feature_dim": int(feature_dim_for_variant(variant)),
@@ -353,7 +416,9 @@ def build_per_protein_row(variant, record, layer, model, y_true, y_pred, elapsed
         "model_singular_min": singular_min,
         "model_singular_max": singular_max,
         "model_condition_number": condition_number,
-        "per_protein_r2": compute_r2(y_true, y_pred),
+        "per_protein_r2": per_protein_r2,
+        "train_r2": train_r2,
+        "test_r2": test_r2,
         "per_protein_mse": mse_value,
         "per_protein_mae": compute_mae(y_true, y_pred),
         "per_protein_rmse": compute_rmse(y_true, y_pred),
@@ -366,7 +431,7 @@ def build_per_protein_row(variant, record, layer, model, y_true, y_pred, elapsed
     }
 
 
-def make_failed_geometry_row(variant, record, layer, per_r2):
+def make_failed_geometry_row(variant, record, layer, per_r2, train_r2, test_r2):
     """Return a placeholder geometry row when reconstruction fails."""
     return {
         "variant": variant["name"],
@@ -378,6 +443,8 @@ def make_failed_geometry_row(variant, record, layer, per_r2):
         "size_bin": int(record["size_bin"]),
         "n_pairs": int(record["n_pairs"]),
         "per_protein_r2": float(per_r2),
+        "train_r2": float(train_r2),
+        "test_r2": float(test_r2),
         "rmsd": float("nan"),
         "tm_score": float("nan"),
         "frac_top3_eigenvalues": float("nan"),
@@ -395,7 +462,7 @@ def make_failed_geometry_row(variant, record, layer, per_r2):
     }
 
 
-def build_geometry_row(variant, record, layer, y_pred, per_r2):
+def build_geometry_row(variant, record, layer, y_pred, per_r2, train_r2, test_r2):
     """Run MDS/TM-score geometry analysis for one protein/layer."""
     try:
         metrics = analyze_protein_geometry(
@@ -407,7 +474,7 @@ def build_geometry_row(variant, record, layer, y_pred, per_r2):
         )
     except Exception:
         traceback.print_exc()
-        return make_failed_geometry_row(variant, record, layer, per_r2)
+        return make_failed_geometry_row(variant, record, layer, per_r2, train_r2, test_r2)
 
     return {
         "variant": variant["name"],
@@ -419,6 +486,8 @@ def build_geometry_row(variant, record, layer, y_pred, per_r2):
         "size_bin": int(record["size_bin"]),
         "n_pairs": int(record["n_pairs"]),
         "per_protein_r2": float(per_r2),
+        "train_r2": float(train_r2),
+        "test_r2": float(test_r2),
         **metrics,
     }
 
@@ -428,14 +497,18 @@ def fit_single_protein_layer(variant, record, layer):
     fit_t0 = time.time()
     x = build_base256_feature_matrix(record, layer)
     y = np.asarray(record["y_abs"], dtype=np.float64)
-    scaler_mean, scaler_scale = standardize_features_in_place(x)
+    train_idx = np.asarray(record["train_pair_idx"], dtype=np.int64)
+    test_idx = np.asarray(record["test_pair_idx"], dtype=np.int64)
+    scaler_mean, scaler_scale = standardize_features_from_train_in_place(x, train_idx)
 
-    # X is already standardized, so fitting centered y without an intercept is
-    # equivalent to an intercept model and avoids sklearn mutating X for centering.
-    intercept_std = float(np.mean(y)) if y.size else 0.0
-    y_centered = y - intercept_std
+    # X is standardized from train rows, so fitting centered y without an
+    # intercept is equivalent to an intercept model on the training split.
+    y_train = y[train_idx]
+    intercept_std = float(np.mean(y_train)) if y_train.size else 0.0
+    y_train_centered = y_train - intercept_std
     model = LinearRegression(copy_X=False, fit_intercept=False)
-    model.fit(x, y_centered)
+    x_train = x[train_idx]
+    model.fit(x_train, y_train_centered)
     coef_std = np.asarray(model.coef_, dtype=np.float64).copy()
     y_pred = np.asarray((x @ coef_std) + intercept_std, dtype=np.float64)
 
@@ -450,6 +523,8 @@ def fit_single_protein_layer(variant, record, layer):
         model,
         y,
         y_pred,
+        train_idx,
+        test_idx,
         elapsed_seconds=float(time.time() - fit_t0),
     )
     coefficient_rows = build_coefficient_rows(
@@ -466,12 +541,15 @@ def fit_single_protein_layer(variant, record, layer):
         layer,
         y_pred,
         per_row["per_protein_r2"],
+        per_row["train_r2"],
+        per_row["test_r2"],
     )
 
     del x
+    del x_train
     del model
     del y_pred
-    del y_centered
+    del y_train_centered
     del fitted
     return per_row, coefficient_rows, geometry_row
 
@@ -553,7 +631,12 @@ def write_summary_text(
             f"Layers:              {format_layer_indices(layer_indices)} "
             f"({len(layer_indices)} total)\n"
         )
-        handle.write("Splits:              none; each model uses all unordered residue pairs\n")
+        handle.write(
+            f"Splits:              deterministic within-protein pair split "
+            f"({100.0 * (1.0 - TEST_SIZE):.0f}/{100.0 * TEST_SIZE:.0f} train/test, "
+            f"seed={RANDOM_STATE})\n"
+        )
+        handle.write("Fit target:          train pairs only; geometry predicts all pairs\n")
         handle.write(f"Proteins discovered: {len(all_proteins)}\n")
         handle.write(f"Proteins loaded:     {len(loaded_records)}\n")
         handle.write(f"Loaded by source:    {source_counts(loaded_records)}\n")
@@ -566,6 +649,8 @@ def write_summary_text(
             layer_rows = [row for row in per_protein_rows if int(row["layer"]) == layer]
             geom_rows = [row for row in geometry_rows if int(row["layer"]) == layer]
             r2_stats = numeric_summary(layer_rows, "per_protein_r2")
+            train_r2_stats = numeric_summary(layer_rows, "train_r2")
+            test_r2_stats = numeric_summary(layer_rows, "test_r2")
             tm_stats = numeric_summary(geom_rows, "tm_score")
             if r2_stats is not None:
                 handle.write(
@@ -574,6 +659,22 @@ def write_summary_text(
                     f"median={r2_stats['median']:.6f}, "
                     f"mean={r2_stats['mean']:.6f}, "
                     f"max={r2_stats['max']:.6f}\n"
+                )
+            if train_r2_stats is not None:
+                handle.write(
+                    f"Layer {layer:02d} train R2: "
+                    f"min={train_r2_stats['min']:.6f}, "
+                    f"median={train_r2_stats['median']:.6f}, "
+                    f"mean={train_r2_stats['mean']:.6f}, "
+                    f"max={train_r2_stats['max']:.6f}\n"
+                )
+            if test_r2_stats is not None:
+                handle.write(
+                    f"Layer {layer:02d} test R2: "
+                    f"min={test_r2_stats['min']:.6f}, "
+                    f"median={test_r2_stats['median']:.6f}, "
+                    f"mean={test_r2_stats['mean']:.6f}, "
+                    f"max={test_r2_stats['max']:.6f}\n"
                 )
             if tm_stats is not None:
                 handle.write(
@@ -655,8 +756,13 @@ def run_per_protein_job(
         raise SystemExit(1)
 
     assign_size_bins(records, N_SIZE_BINS)
+    assign_pair_splits(records)
     log_progress(f"Loaded proteins:  {len(records)}")
     log_progress(f"Loaded by source: {source_counts(records)}")
+    log_progress(
+        f"Pair split:       deterministic {100.0 * (1.0 - TEST_SIZE):.0f}/"
+        f"{100.0 * TEST_SIZE:.0f} train/test within each protein, seed={RANDOM_STATE}"
+    )
 
     per_protein_rows = []
     geometry_rows = []
@@ -724,7 +830,9 @@ def run_per_protein_job(
                 geometry_rows.append(geometry_row)
                 log_progress(
                     f"Layer {layer:02d}: finished {protein_id} "
-                    f"R2={per_row['per_protein_r2']:.4f}, "
+                    f"R2_all={per_row['per_protein_r2']:.4f}, "
+                    f"R2_train={per_row['train_r2']:.4f}, "
+                    f"R2_test={per_row['test_r2']:.4f}, "
                     f"TM={geometry_row['tm_score']:.4f}, "
                     f"elapsed={time.time() - protein_t0:.1f}s"
                 )

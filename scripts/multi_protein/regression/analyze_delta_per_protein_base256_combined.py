@@ -31,6 +31,8 @@ OUT_DIR = PER_PROTEIN_DIR / "analysis"
 PREFIX = "per_protein_base256_combined"
 EXPECTED_LAYERS = tuple(range(48))
 FEATURE_DIM = 256
+R2_COLUMN = "test_r2"
+R2_LABEL = "Held-out pair R$^2$"
 
 ORANGE = "#f58518"
 BLUE = "#4c78a8"
@@ -110,7 +112,16 @@ def load_per_protein_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
     require_columns(
         per_protein_path,
         per_protein,
-        {"layer", "source", "protein_id", "n_residues", "feature_dim", "per_protein_r2"},
+        {
+            "layer",
+            "source",
+            "protein_id",
+            "n_residues",
+            "feature_dim",
+            "per_protein_r2",
+            "train_r2",
+            "test_r2",
+        },
     )
     require_columns(
         geometry_path,
@@ -122,6 +133,8 @@ def load_per_protein_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
             "n_residues",
             "feature_dim",
             "per_protein_r2",
+            "train_r2",
+            "test_r2",
             "tm_score",
             "frac_top3_eigenvalues",
             "n_negative_eigenvalues",
@@ -217,28 +230,28 @@ def padded_limits(values: list[np.ndarray], include_zero: bool = False) -> tuple
 
 def plot_r2_tm_with_trajectories(per_protein: pd.DataFrame, geometry: pd.DataFrame) -> Path:
     out_path = OUT_DIR / f"{PREFIX}_r2_tmscore_vs_layer.png"
-    r2_mean = layer_mean(per_protein, ["per_protein_r2"])
+    r2_mean = layer_mean(per_protein, [R2_COLUMN])
     tm_mean = layer_mean(geometry, ["tm_score"])
 
     fig, axes = plt.subplots(2, 1, figsize=(10.5, 9.2), sharex=True, constrained_layout=True)
 
     for _, group in per_protein.sort_values(["protein_id", "layer"]).groupby("protein_id", sort=True):
-        axes[0].plot(group["layer"], group["per_protein_r2"], color=GREY, linewidth=0.65, alpha=0.35)
+        axes[0].plot(group["layer"], group[R2_COLUMN], color=GREY, linewidth=0.65, alpha=0.35)
     axes[0].plot(
         r2_mean["layer"],
-        r2_mean["per_protein_r2"],
+        r2_mean[R2_COLUMN],
         color=ORANGE,
         linewidth=2.8,
-        label="Per-protein model mean",
+        label="Held-out pair mean",
     )
-    axes[0].set_title("per_protein_base256_combined R$^2$ across layers")
-    axes[0].set_ylabel("Per-protein R$^2$")
-    axes[0].set_ylim(padded_limits([per_protein["per_protein_r2"].to_numpy()], include_zero=True))
+    axes[0].set_title("per_protein_base256_combined held-out pair R$^2$ across layers")
+    axes[0].set_ylabel(R2_LABEL)
+    axes[0].set_ylim(padded_limits([per_protein[R2_COLUMN].to_numpy()], include_zero=True))
     add_common_axis_style(axes[0])
     axes[0].legend(
         handles=[
             Line2D([0], [0], color=GREY, linewidth=1.0, alpha=0.55, label="Individual proteins"),
-            Line2D([0], [0], color=ORANGE, linewidth=2.8, label="Per-protein model mean"),
+            Line2D([0], [0], color=ORANGE, linewidth=2.8, label="Held-out pair mean"),
         ],
         loc="lower right",
         frameon=False,
@@ -267,7 +280,7 @@ def plot_r2_tm_with_trajectories(per_protein: pd.DataFrame, geometry: pd.DataFra
 
 def plot_r2_tm_mean_only(per_protein: pd.DataFrame, geometry: pd.DataFrame) -> Path:
     out_path = OUT_DIR / f"{PREFIX}_r2_tmscore_vs_layer_mean_only.png"
-    r2_mean = layer_mean(per_protein, ["per_protein_r2"])
+    r2_mean = layer_mean(per_protein, [R2_COLUMN])
     tm_mean = layer_mean(geometry, ["tm_score"])
 
     fig, axes = plt.subplots(2, 1, figsize=(9.5, 8.5), sharex=True, constrained_layout=True)
@@ -275,9 +288,9 @@ def plot_r2_tm_mean_only(per_protein: pd.DataFrame, geometry: pd.DataFrame) -> P
         (
             axes[0],
             r2_mean,
-            "per_protein_r2",
-            "per_protein_base256_combined mean R$^2$ across layers",
-            "Mean per-protein R$^2$",
+            R2_COLUMN,
+            "per_protein_base256_combined mean held-out pair R$^2$ across layers",
+            f"Mean {R2_LABEL}",
         ),
         (
             axes[1],
@@ -305,6 +318,8 @@ def save_geometry_layer_means(geometry: pd.DataFrame) -> Path:
     df["negative_eigenvalue_count_fraction"] = df["n_negative_eigenvalues"] / df["n_residues"]
     value_columns = [
         "per_protein_r2",
+        "train_r2",
+        "test_r2",
         "tm_score",
         "frac_top3_eigenvalues",
         "n_negative_eigenvalues",
@@ -434,8 +449,8 @@ def plot_negative_eigenvalues(geometry: pd.DataFrame) -> Path:
 def save_general_comparison(per_protein: pd.DataFrame, geometry: pd.DataFrame) -> tuple[Path, Path]:
     general_per_protein, general_geometry = load_general_inputs()
 
-    per_r2 = layer_mean(per_protein, ["per_protein_r2"]).rename(
-        columns={"per_protein_r2": "per_protein_base256_combined_mean_r2"}
+    per_r2 = layer_mean(per_protein, [R2_COLUMN]).rename(
+        columns={R2_COLUMN: "per_protein_base256_combined_test_mean_r2"}
     )
     per_tm = layer_mean(geometry, ["tm_score"]).rename(
         columns={"tm_score": "per_protein_base256_combined_mean_tm_score"}
@@ -448,8 +463,8 @@ def save_general_comparison(per_protein: pd.DataFrame, geometry: pd.DataFrame) -
     )
 
     merged = per_r2.merge(per_tm, on="layer").merge(general_r2, on="layer").merge(general_tm, on="layer")
-    merged["per_protein_r2_minus_general_test"] = (
-        merged["per_protein_base256_combined_mean_r2"] - merged["general_base256_combined_test_mean_r2"]
+    merged["per_protein_test_r2_minus_general_test"] = (
+        merged["per_protein_base256_combined_test_mean_r2"] - merged["general_base256_combined_test_mean_r2"]
     )
     merged["per_protein_tm_minus_general_test"] = (
         merged["per_protein_base256_combined_mean_tm_score"]
@@ -464,10 +479,10 @@ def save_general_comparison(per_protein: pd.DataFrame, geometry: pd.DataFrame) -
 
     axes[0].plot(
         merged["layer"],
-        merged["per_protein_base256_combined_mean_r2"],
+        merged["per_protein_base256_combined_test_mean_r2"],
         color=ORANGE,
         linewidth=2.8,
-        label="per_protein_base256_combined mean",
+        label="per_protein_base256_combined held-out pair mean",
     )
     axes[0].plot(
         merged["layer"],
@@ -476,8 +491,8 @@ def save_general_comparison(per_protein: pd.DataFrame, geometry: pd.DataFrame) -
         linewidth=2.4,
         label="general_base256_combined held-out mean",
     )
-    axes[0].set_title("R$^2$: per-protein base256 vs general base256")
-    axes[0].set_ylabel("Mean per-protein R$^2$")
+    axes[0].set_title("Held-out R$^2$: per-protein base256 vs general base256")
+    axes[0].set_ylabel("Mean held-out R$^2$")
     axes[0].set_ylim(0.0, 1.0)
     add_common_axis_style(axes[0])
     axes[0].legend(loc="lower right", frameon=False)
@@ -515,7 +530,7 @@ def best_layer(df: pd.DataFrame, column: str, higher_is_better: bool) -> tuple[i
 
 
 def write_report(per_protein: pd.DataFrame, geometry: pd.DataFrame, artifact_paths: list[Path]) -> Path:
-    r2_mean = layer_mean(per_protein, ["per_protein_r2"])
+    r2_mean = layer_mean(per_protein, [R2_COLUMN])
     tm_mean = layer_mean(geometry, ["tm_score"])
     triangle_mean = layer_mean(
         geometry,
@@ -523,7 +538,7 @@ def write_report(per_protein: pd.DataFrame, geometry: pd.DataFrame, artifact_pat
     )
     top3_mean = layer_mean(geometry, ["frac_top3_eigenvalues"])
 
-    best_r2_layer, best_r2_value = best_layer(r2_mean, "per_protein_r2", True)
+    best_r2_layer, best_r2_value = best_layer(r2_mean, R2_COLUMN, True)
     best_tm_layer, best_tm_value = best_layer(tm_mean, "tm_score", True)
     best_triangle_frac_layer, best_triangle_frac_value = best_layer(
         triangle_mean,
@@ -556,7 +571,7 @@ CAMEO proteins: {int(source_counts.get("cameo", 0))}
 ECOD proteins: {int(source_counts.get("ecod", 0))}
 
 Layer highlights:
-- Best mean R^2: layer {best_r2_layer} ({best_r2_value:.4f})
+- Best mean held-out pair R^2: layer {best_r2_layer} ({best_r2_value:.4f})
 - Best mean TM-score: layer {best_tm_layer} ({best_tm_value:.4f})
 - Lowest mean triangle violation fraction: layer {best_triangle_frac_layer} ({best_triangle_frac_value:.4f})
 - Highest mean severe (>=10 A) violation fraction: layer {worst_triangle_10plus_layer} ({worst_triangle_10plus_value:.4f})
@@ -573,7 +588,7 @@ The triangle columns in `geometry_metrics.csv` / `geometry_summary.csv` are the 
 These are per-protein aggregates; individual `(i, j, k)` triples are not stored.
 
 Comparison caveat:
-The comparison plot uses `per_protein_base256_combined` all-protein means and `general_base256_combined` held-out/test means. The per-protein run fits one model per protein using all unordered residue pairs, while the generalized run fits a shared train/test model.
+The comparison plot uses `per_protein_base256_combined` held-out residue-pair R^2 means and `general_base256_combined` held-out/test protein means. The per-protein run fits one model per protein on deterministic 80/20 train pairs, predicts all pairs for geometry, and reports `per_protein_r2` as all-pair R^2 from that train-fit model.
 
 Generated artifacts:
 {artifact_lines}

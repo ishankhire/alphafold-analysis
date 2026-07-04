@@ -41,8 +41,28 @@ def expected_layers_for_shard(path: Path) -> set[int]:
     return set(range(start, end + 1))
 
 
+def select_shard_paths(pattern: str) -> list[Path]:
+    """Prefer a complete Slurm-array one-layer shard set when it exists."""
+    shard_paths = sorted(INPUT_DIR.glob(pattern), key=shard_sort_key)
+    if not shard_paths:
+        return []
+
+    one_layer_paths = [
+        path
+        for path in shard_paths
+        if len(expected_layers_for_shard(path)) == 1
+    ]
+    one_layer_coverage = set()
+    for path in one_layer_paths:
+        one_layer_coverage.update(expected_layers_for_shard(path))
+    if one_layer_coverage == EXPECTED_LAYERS:
+        return one_layer_paths
+
+    return shard_paths
+
+
 def aggregate_csv(prefix: str, output_name: str) -> tuple[int, list[Path]]:
-    shard_paths = sorted(INPUT_DIR.glob(f"{prefix}_layers*.csv"), key=shard_sort_key)
+    shard_paths = select_shard_paths(f"{prefix}_layers*.csv")
     if not shard_paths:
         raise FileNotFoundError(f"No shard files found for {prefix!r} in {INPUT_DIR}")
 
@@ -133,7 +153,7 @@ def parse_summary(path: Path) -> tuple[dict[str, object], list[str], list[str]]:
     in_skipped = False
 
     for line in path.read_text().splitlines():
-        if re.match(r"Layer \d{2} (?:R2|TM-score):", line):
+        if re.match(r"Layer \d{2} (?:R2|train R2|test R2|TM-score):", line):
             layer_lines.append(line)
             in_skipped = False
             continue
@@ -191,7 +211,7 @@ def parse_summary(path: Path) -> tuple[dict[str, object], list[str], list[str]]:
 
 
 def load_summary_metadata() -> tuple[dict[str, object], list[str], list[str], list[Path]]:
-    summary_paths = sorted(INPUT_DIR.glob("summary_layers*.txt"), key=shard_sort_key)
+    summary_paths = select_shard_paths("summary_layers*.txt")
     if not summary_paths:
         raise FileNotFoundError(f"No shard summaries found in {INPUT_DIR}")
 
