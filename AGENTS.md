@@ -56,6 +56,8 @@ Always consult these PDFs when writing or modifying sbatch files or cluster scri
 
 - Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
 - Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
+- For sbatch files that need to call a Python script by path, follow the local convention:
+  `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and then `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
 
 ### Cluster data paths
 
