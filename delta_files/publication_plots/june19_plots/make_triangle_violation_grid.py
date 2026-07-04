@@ -171,7 +171,7 @@ draw_block(sub_right, pp_df, PER_PROTEIN_COLOR,
            f"Per-protein base256 (n={p_n})", p_n, PER_PROTEIN_BG_ALPHA)
 
 fig.suptitle(
-    "Triangle inequality violations in MDS-reconstructed structures across layers",
+    "Triangle inequality violations across layers",
     fontsize=14, fontweight="bold",
 )
 

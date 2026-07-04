@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8g
-#SBATCH --time=18:00:00
+#SBATCH --time=1:00:00
 #SBATCH --constraint="scratch"
 #SBATCH --array=0-47%12
 #SBATCH -o slurm-%A_%a.out
