@@ -30,5 +30,10 @@ export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
+if [ ! -f "$SCRIPT_DIR/per_protein_base256_array.py" ]; then
+    echo "ERROR: per_protein_base256_array.py not found in SCRIPT_DIR=$SCRIPT_DIR" >&2
+    echo "Submit this job from scripts/cluster_scripts/per_protein_scripts or set SLURM_SUBMIT_DIR accordingly." >&2
+    exit 1
+fi
 srun python3 -u "$SCRIPT_DIR/per_protein_base256_array.py"
