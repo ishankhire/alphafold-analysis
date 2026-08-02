@@ -1278,3 +1278,8 @@ by the June 19 publication plots.
 
 Updated per-protein base256 runs to fit train pairs only, save train/test R²,
 add a Slurm layer array, and plot held-out pair scores.
+
+## Session: 2026-08-02 — Combined XGBoost searches
+
+Added shared and per-protein XGBoost search/winner arrays for anchor layers,
+with deterministic splits, cap sweeps, validation-only selection, and MDS/TM outputs.
