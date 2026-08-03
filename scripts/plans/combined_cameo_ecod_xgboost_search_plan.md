@@ -5,8 +5,8 @@
 Build two independent XGBoost pipelines—a shared model and per-protein models—
 with separate search and selected-model evaluation arrays. Use the fixed
 TM-score-filtered combined CAMEO+ECOD dataset, select hyperparameters using
-validation results only, and generate detailed regression and geometry outputs
-only for freshly trained models using the selected configuration.
+validation results only, and generate detailed regression outputs only for
+freshly trained models using the selected configuration.
 
 This document specifies the intended final behavior and output schema. It
 supersedes the original implementation where the requirements below differ.
@@ -29,8 +29,10 @@ supersedes the original implementation where the requirements below differ.
   protein.
 - After shared-config selection, train fresh models at 5k, 10k, and 20k
   sampled training pairs per training protein. Do not run an all-pairs cap.
-- Compute per-protein regression and geometry rows only for selected-config
-  evaluations, never for search candidates.
+- Compute per-protein regression rows only for selected-config evaluations,
+  never for search candidates.
+- Do not compute or save geometry, MDS, TM-score, RMSD, spectral, stress,
+  negative-distance, or triangle-violation statistics in either pipeline.
 - Use the reference combined-regression output style in
   `delta_files/general_base256_combined/` unless a schema below explicitly
   differs.
@@ -62,13 +64,11 @@ The helper module will:
 9. Map XGBoost gain, weight, and cover importance back to channels 0–127.
 10. Implement deterministic cross-layer winner selection without reading
     training or test columns.
-11. Compute complete-matrix MDS/TM-score diagnostics and exact unordered-
-    triangle inequality metrics for selected models.
-12. Fail before fitting when search artifacts are missing, incomplete, or use
+11. Fail before fitting when search artifacts are missing, incomplete, or use
     inconsistent splits.
-13. Fail clearly if a complete per-protein search configuration remains
+12. Fail clearly if a complete per-protein search configuration remains
     degenerate at boosting iteration zero for every protein.
-14. Import XGBoost lazily and emit a clear dependency error when it is absent.
+13. Import XGBoost lazily and emit a clear dependency error when it is absent.
 
 ## XGBoost settings
 
@@ -123,7 +123,7 @@ For each task:
    and every full test protein. Stream full proteins where practical.
 5. Checkpoint the aggregate search CSV after every completed configuration.
 6. Delete each candidate booster after recording its metrics. Do not save
-   candidate per-protein rows, geometry, channel importance, or boosters.
+   candidate per-protein rows, channel importance, or boosters.
 7. Keep one stable `summary.txt`. Do not create timestamped
    `summary_YYYYMMDD_HHMMSS.txt` checkpoint files.
 
@@ -190,11 +190,6 @@ contained in 20k.
   `sampled_training_rows`.
 - Validation and test protein regression rows use every unordered pair in the
   protein. Their `evaluation_scope` is `full_protein_pairs`.
-- Geometry always requires a complete predicted distance matrix. Therefore,
-  geometry loads and predicts every unordered pair for training, validation,
-  and test proteins. The `per_protein_r2` embedded in a training geometry row
-  is a full-pair geometry R² and is intentionally different in scope from the
-  sampled training R² in `per_protein.csv`.
 
 ### Exact shared selected-model outputs
 
@@ -227,33 +222,14 @@ Each `shared/winner_cap_sweep/layer_XX/cap_{5k|10k|20k}/` directory contains:
     `per_protein_rmse_mean`, `per_protein_rmse_std`.
   - `pair_weighted_r2`, `pair_weighted_mse`, `pair_weighted_mae`,
     `pair_weighted_rmse`, and `mean_error_pred_minus_true`.
-- `geometry_metrics.csv`: exactly one full-matrix geometry row per dataset
-  protein, including training proteins. Columns mirror the combined-regression
-  reference and add XGBoost identity/scope fields:
-  - `variant`, `feature_dim`, `config_id`, `cap`, `layer`, `split`,
-    `geometry_prediction_scope` (`full_protein_pairs`), `source`, `protein_id`,
-    `n_residues`, `size_bin`, `n_pairs`, `per_protein_r2`.
-  - `rmsd`, `tm_score`, `frac_top3_eigenvalues`,
-    `n_negative_eigenvalues`, `neg_eigenvalue_fraction`,
-    `n_negative_predictions`, `stress`.
-  - `triangle_violation_fraction`, `triangle_mean_violation`,
-    `triangle_max_violation`, `triangle_no_violation_fraction`,
-    `triangle_violation_0_5_fraction`, `triangle_violation_5_10_fraction`, and
-    `triangle_violation_10_plus_fraction`.
-- `geometry_summary.csv`: three rows—train, validation, and test. It contains
-  `variant`, `feature_dim`, `config_id`, `cap`, `layer`, `split`, `n_proteins`,
-  and mean/std columns for `per_protein_r2`, `tm_score`, `rmsd`, `stress`,
-  `frac_top3_eigenvalues`, `n_negative_eigenvalues`,
-  `neg_eigenvalue_fraction`, `n_negative_predictions`, and every triangle
-  metric listed above.
 - `channel_importance.csv`: 384 rows—128 channels for each of gain, weight,
   and cover—with `layer`, `cap`, `config_id`, `importance_type`, `channel`,
   `feature_name`, and `importance`.
 - `booster.json`: the fresh early-stopped model for this layer/cap.
 - `timing.csv`: one task-level row with model identity; row/protein counts;
-  training and validation materialization; fit time; train, validation, test,
-  and full-geometry prediction/materialization/metric times; exact-triangle
-  time; best iteration; best validation RMSE; and total elapsed time.
+  training and validation materialization; fit time; train, validation, and
+  test prediction/materialization/metric times; best iteration; best
+  validation RMSE; and total elapsed time.
 - `selection_provenance.json`: validation-only selection rule, tolerance,
   tie-break order, selected configuration, and selected score.
 - `cross_layer_selection_table.csv`: task-local copy of the canonical
@@ -262,14 +238,12 @@ Each `shared/winner_cap_sweep/layer_XX/cap_{5k|10k|20k}/` directory contains:
   reproducibility and completion metadata, including the explicit weighting
   and evaluation scopes.
 - `summary.txt`: selected configuration, cap, layer, best iteration, best
-  validation RMSE, split digest, completed protein/geometry counts, and total
-  elapsed time.
+  validation RMSE, split digest, completed per-protein regression count, and
+  total elapsed time.
 
-Triangle metrics are exact over all unordered residue triples after negative
-predictions are counted and distances are clamped to zero for geometry. No
-separate `exact_triangle_metrics.csv` is required because the exact values are
-stored directly in `geometry_metrics.csv` and summarized in
-`geometry_summary.csv`.
+The task does not write `geometry_metrics.csv`, `geometry_summary.csv`, or an
+exact-triangle output. It does not perform complete-matrix prediction solely
+for structural reconstruction.
 
 Across the nine task directories, `split_summary.csv` provides aggregate
 train/validation/test comparisons for all three caps and all three layers. Only
@@ -295,7 +269,7 @@ For each task:
 8. Checkpoint only after all 50 proteins complete for a configuration and
    refuse to complete an incomplete configuration.
 9. Do not save candidate per-protein regression rows, per-protein timing rows,
-   boosters, importance, or geometry.
+   boosters, or importance.
 10. Keep one stable `summary.txt`; do not create timestamped summary files.
 
 ### Exact per-protein-search outputs
@@ -348,14 +322,9 @@ For each of the 50 proteins at the assigned layer:
    pairs, using uniform rows and early stopping on the original 20% validation
    pairs.
 2. Predict and save training, validation, and held-out test pair metrics.
-3. Predict all unordered pairs to create one complete matrix for geometry.
-4. Save gain/weight/cover importance per protein and equal-protein aggregate
+3. Save gain/weight/cover importance per protein and equal-protein aggregate
    channel summaries.
-5. Do not save booster JSON files.
-
-The complete geometry prediction is explicitly labeled
-`all_pairs_model_predictions`: test regression metrics remain held out at the
-pair level, but per-protein geometry is not a wholly held-out-protein result.
+4. Do not save booster JSON files.
 
 ### Exact per-protein selected-model outputs
 
@@ -377,13 +346,6 @@ Each `per_protein/winner_evaluation/layer_XX/` directory contains:
 - `split_summary.csv`: three rows—train, validation, and test—with the same
   aggregate regression columns as the shared `split_summary.csv`, excluding
   `cap`.
-- `geometry_metrics.csv`: 50 rows, one complete all-pairs geometry row per
-  protein. Columns follow the shared geometry schema without `cap`; `split` is
-  `all_pairs`, and `geometry_prediction_scope` is
-  `all_pairs_model_predictions`. It includes all MDS/TM-score, spectral,
-  negative-prediction, stress, and exact-triangle columns.
-- `geometry_summary.csv`: one `all_pairs` row with mean/std for R² and every
-  geometry and exact-triangle metric.
 - `per_protein_channel_importance.csv`: 50 × 128 × 3 rows with model/protein
   identity, importance type, channel, feature name, and importance.
 - `aggregate_channel_importance.csv`: 128 × 3 rows containing equal-protein
@@ -392,13 +354,14 @@ Each `per_protein/winner_evaluation/layer_XX/` directory contains:
   selected-configuration evidence.
 - `pair_split_summary.csv`, `skipped_proteins.csv`, and `run_metadata.json`:
   reproducibility and completion metadata, including uniform-row weighting and
-  regression/geometry scopes.
-- `summary.txt`: selected configuration, layer, completed fit/regression/
-  geometry counts, split digest, best-iteration summary, and total layer-task
-  elapsed time.
+  regression scopes.
+- `summary.txt`: selected configuration, layer, completed fit/regression
+  counts, split digest, best-iteration summary, and total layer-task elapsed
+  time.
 
 There is no per-protein timing CSV. Only the selected configuration receives
-per-protein regression, geometry, triangle, and importance outputs.
+per-protein regression and importance outputs. The task does not write
+`geometry_metrics.csv`, `geometry_summary.csv`, or an exact-triangle output.
 
 ## Output layout
 
@@ -475,7 +438,6 @@ Add or update local synthetic tests covering:
 - Training R² aggregation from actual sampled/shared rows and pair-split
   per-protein rows.
 - Streaming pooled R² parity with direct concatenation.
-- Exact-triangle metric parity with known synthetic distance matrices.
 - Early failure for missing, incomplete, or inconsistent search artifacts.
 - Failure when an entire completed per-protein candidate remains at boosting
   iteration zero for all 50 proteins.
