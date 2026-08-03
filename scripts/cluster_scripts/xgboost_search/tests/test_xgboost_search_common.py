@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 
@@ -12,10 +13,13 @@ if str(PACKAGE_DIR) not in sys.path:
     sys.path.insert(0, str(PACKAGE_DIR))
 
 from xgboost_search_common import (  # noqa: E402
-    ANCHOR_LAYERS, PooledStats, averaged_symmetric_features,
-    build_shared_split, load_complete_search, map_search_task,
+    ANCHOR_LAYERS, PER_PROTEIN_WEIGHTING_MODE, SHARED_WEIGHTING_MODE,
+    PooledStats, averaged_symmetric_features, build_shared_split, fit_xgboost,
+    load_complete_search, map_search_task,
     map_shared_winner_task, map_winner_layer_task, nested_sample_indices,
-    pair_split_indices, protein_equal_weights, r2_score, select_winner,
+    pair_split_indices, protein_equal_weights, r2_score,
+    require_non_degenerate_iterations, select_winner,
+    summarize_prediction_bundle,
 )
 
 
@@ -84,9 +88,88 @@ class SplitAndSamplingTests(unittest.TestCase):
         self.assertEqual([map_search_task(i) for i in range(3)], [0, 23, 47])
         self.assertEqual([map_winner_layer_task(i) for i in range(3)], [0, 23, 47])
         self.assertEqual(
-            [map_shared_winner_task(i) for i in range(12)],
-            [(layer, cap, label) for layer in (0, 23, 47) for cap, label in zip((5000, 10000, 20000, None), ("5k", "10k", "20k", "all"))],
+            [map_shared_winner_task(i) for i in range(9)],
+            [(layer, cap, label) for layer in (0, 23, 47) for cap, label in zip((5000, 10000, 20000), ("5k", "10k", "20k"))],
         )
+        with self.assertRaises(ValueError):
+            map_shared_winner_task(9)
+
+
+class WeightingTests(unittest.TestCase):
+    class FakeRegressor:
+        instances = []
+
+        def __init__(self, **kwargs):
+            self.init_kwargs = kwargs
+            self.fit_kwargs = None
+            self.best_iteration = 7
+            self.best_score = 1.25
+            self.__class__.instances.append(self)
+
+        def fit(self, x, y, **kwargs):
+            self.fit_kwargs = kwargs
+            return self
+
+    @staticmethod
+    def bundle(ids):
+        n = len(ids)
+        return {
+            "x": np.zeros((n, 128), dtype=np.float64),
+            "y": np.arange(n, dtype=np.float64),
+            "protein_ids": ids,
+        }
+
+    def setUp(self):
+        self.FakeRegressor.instances.clear()
+
+    def test_per_protein_fit_omits_all_sample_weights(self):
+        train = self.bundle(["p"] * 12)
+        validation = self.bundle(["p"] * 4)
+        with patch(
+            "xgboost_search_common.require_xgboost",
+            return_value=self.FakeRegressor,
+        ):
+            _, info = fit_xgboost(
+                {"max_depth": 3, "learning_rate": 0.1, "min_child_weight": 5},
+                train,
+                validation,
+                2,
+                PER_PROTEIN_WEIGHTING_MODE,
+            )
+        kwargs = self.FakeRegressor.instances[-1].fit_kwargs
+        self.assertNotIn("sample_weight", kwargs)
+        self.assertNotIn("sample_weight_eval_set", kwargs)
+        self.assertEqual(info["weighting_mode"], "uniform_rows")
+
+    def test_shared_fit_uses_equal_protein_mass_for_train_and_validation(self):
+        train = self.bundle(["a"] * 2 + ["b"] * 5)
+        validation = self.bundle(["c"] * 3 + ["d"] * 6)
+        with patch(
+            "xgboost_search_common.require_xgboost",
+            return_value=self.FakeRegressor,
+        ):
+            fit_xgboost(
+                {"max_depth": 3, "learning_rate": 0.1, "min_child_weight": 5},
+                train,
+                validation,
+                2,
+                SHARED_WEIGHTING_MODE,
+            )
+        kwargs = self.FakeRegressor.instances[-1].fit_kwargs
+        train_weights = kwargs["sample_weight"]
+        validation_weights = kwargs["sample_weight_eval_set"][0]
+        np.testing.assert_allclose(
+            [train_weights[:2].sum(), train_weights[2:].sum()], [1.0, 1.0]
+        )
+        np.testing.assert_allclose(
+            [validation_weights[:3].sum(), validation_weights[3:].sum()],
+            [1.0, 1.0],
+        )
+
+    def test_all_iteration_zero_configuration_fails(self):
+        with self.assertRaisesRegex(RuntimeError, "iteration 0"):
+            require_non_degenerate_iterations("P0", [0] * 50, 50)
+        require_non_degenerate_iterations("P0", [0] * 49 + [1], 50)
 
 
 class SelectionAndMetricTests(unittest.TestCase):
@@ -100,11 +183,12 @@ class SelectionAndMetricTests(unittest.TestCase):
         for layer in ANCHOR_LAYERS:
             rows[layer] = [
                 {"config_id": "A", "validation_mean_per_protein_r2": 0.8000, "fit_seconds": 1, "test_mean_per_protein_r2": 999},
-                {"config_id": "B", "validation_mean_per_protein_r2": 0.7995, "fit_seconds": 5, "test_mean_per_protein_r2": -999},
+                {"config_id": "B", "validation_mean_per_protein_r2": 0.7995, "fit_seconds": 5, "train_mean_per_protein_r2": -9999, "test_mean_per_protein_r2": -999},
                 {"config_id": "C", "validation_mean_per_protein_r2": 0.7995, "fit_seconds": 8, "test_mean_per_protein_r2": 9999},
             ]
         winner, _, provenance = select_winner(rows, configs)
         self.assertEqual(winner["config_id"], "B")  # lower depth, then shorter runtime
+        self.assertFalse(provenance["training_metrics_used"])
         self.assertFalse(provenance["test_metrics_used"])
         for layer in ANCHOR_LAYERS:
             rows[layer][2]["fit_seconds"] = 5
@@ -120,6 +204,40 @@ class SelectionAndMetricTests(unittest.TestCase):
         direct = r2_score(np.concatenate(y_parts), np.concatenate(p_parts))
         self.assertAlmostEqual(stats.metrics()["r2"], direct, places=14)
 
+    def test_regression_rows_and_summary_use_reference_style_schema(self):
+        records = [
+            {"protein_id": "a", "source": "synthetic", "n_residues": 3,
+             "size_bin": 0},
+            {"protein_id": "b", "source": "synthetic", "n_residues": 4,
+             "size_bin": 1},
+        ]
+        y = np.array([1.0, 2.0, 4.0, 8.0, 16.0])
+        pred = np.array([1.1, 1.9, 3.0, 9.0, 15.0])
+        bundle = {
+            "y": y,
+            "offsets": [
+                (records[0], np.array([0, 1]), 0, 2),
+                (records[1], np.array([0, 1, 2]), 2, 5),
+            ],
+        }
+        rows, summary = summarize_prediction_bundle(
+            bundle,
+            pred,
+            "fit",
+            "sampled_training_rows",
+            {"variant": "test", "config_id": "S0", "layer": 0},
+        )
+        self.assertEqual([row["split"] for row in rows], ["train", "train"])
+        self.assertTrue(all(row["evaluation_scope"] == "sampled_training_rows" for row in rows))
+        for column in (
+            "target_variance", "per_protein_r2", "per_protein_mse",
+            "per_protein_mae", "per_protein_rmse", "mean_true_distance",
+            "mean_predicted_distance", "mean_error_pred_minus_true",
+        ):
+            self.assertIn(column, rows[0])
+        self.assertEqual(summary["split"], "train")
+        self.assertAlmostEqual(summary["pair_weighted_r2"], r2_score(y, pred))
+
 
 class ArtifactValidationTests(unittest.TestCase):
     CONFIGS = ({"config_id": "X", "max_depth": 1},)
@@ -129,10 +247,23 @@ class ArtifactValidationTests(unittest.TestCase):
         layer_dir = root / f"layer_{layer:02d}"
         layer_dir.mkdir(parents=True)
         with (layer_dir / "search_summary.csv").open("w", newline="") as handle:
-            writer = csv.DictWriter(handle, fieldnames=["config_id", "validation_mean_per_protein_r2", "fit_seconds", "split_digest"])
+            writer = csv.DictWriter(handle, fieldnames=[
+                "config_id", "train_mean_per_protein_r2", "train_pooled_r2",
+                "validation_mean_per_protein_r2", "validation_pooled_r2",
+                "test_mean_per_protein_r2", "test_pooled_r2", "fit_seconds",
+                "split_digest",
+            ])
             writer.writeheader()
             if include_row:
-                writer.writerow({"config_id": "X", "validation_mean_per_protein_r2": 0.2, "fit_seconds": 1, "split_digest": digest})
+                writer.writerow({
+                    "config_id": "X", "train_mean_per_protein_r2": 0.3,
+                    "train_pooled_r2": 0.3,
+                    "validation_mean_per_protein_r2": 0.2,
+                    "validation_pooled_r2": 0.2,
+                    "test_mean_per_protein_r2": 0.1,
+                    "test_pooled_r2": 0.1, "fit_seconds": 1,
+                    "split_digest": digest,
+                })
         (layer_dir / "search_metadata.json").write_text(json.dumps({"layer": layer, "split_digest": digest, "status": "complete"}))
 
     def test_missing_incomplete_and_inconsistent_artifacts_fail(self):
@@ -150,6 +281,16 @@ class ArtifactValidationTests(unittest.TestCase):
                 self.write_layer(root, layer, f"digest-{layer}")
             with self.assertRaises(RuntimeError):
                 load_complete_search(root, self.CONFIGS)
+
+    def test_winner_rejects_search_with_old_weighting_mode(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for layer in ANCHOR_LAYERS:
+                self.write_layer(root, layer, "same")
+            with self.assertRaisesRegex(RuntimeError, "weighting mode"):
+                load_complete_search(
+                    root, self.CONFIGS, PER_PROTEIN_WEIGHTING_MODE
+                )
 
 
 if __name__ == "__main__":

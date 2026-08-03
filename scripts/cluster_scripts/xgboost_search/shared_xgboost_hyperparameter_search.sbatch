@@ -11,6 +11,8 @@
 #SBATCH --constraint="scratch"
 #SBATCH -o shared_xgb_search_%A_%a.out
 #SBATCH -e shared_xgb_search_%A_%a.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=ikhire3@gatech.edu
 
 module reset
 module load python

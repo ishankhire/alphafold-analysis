@@ -31,13 +31,7 @@ for _path in (CLUSTER_DIR, GENERALIZED_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
-from cluster_regression_helpers import (  # noqa: E402
-    classical_mds,
-    compute_distance_matrix,
-    compute_tm_score,
-    extract_ca_coordinates,
-    superimpose_structures,
-)
+from cluster_regression_helpers import compute_distance_matrix, extract_ca_coordinates  # noqa: E402
 from general_train_test_common import (  # noqa: E402
     build_dataset_protein_manifest,
     resolve_pair_block_path,
@@ -46,8 +40,8 @@ from general_train_test_common import (  # noqa: E402
 
 
 ANCHOR_LAYERS = (0, 23, 47)
-CAPS = (5000, 10000, 20000, None)
-CAP_LABELS = ("5k", "10k", "20k", "all")
+CAPS = (5000, 10000, 20000)
+CAP_LABELS = ("5k", "10k", "20k")
 N_CHANNELS = 128
 N_SIZE_BINS = 5
 RANDOM_STATE = 42
@@ -56,6 +50,10 @@ N_ESTIMATORS = 700
 EARLY_STOPPING_ROUNDS = 30
 SELECTION_TOLERANCE = 0.001
 EPS = 1e-12
+SHARED_VARIANT = "shared_xgboost_avg_symmetric_128"
+PER_PROTEIN_VARIANT = "per_protein_xgboost_avg_symmetric_128"
+SHARED_WEIGHTING_MODE = "protein_equal"
+PER_PROTEIN_WEIGHTING_MODE = "uniform_rows"
 FIXED_XGBOOST_PARAMETERS = {
     "objective": "reg:squarederror", "tree_method": "hist", "max_bin": 256,
     "n_estimators": N_ESTIMATORS, "early_stopping_rounds": EARLY_STOPPING_ROUNDS,
@@ -131,6 +129,21 @@ def write_json(path: Path, payload: Mapping | Sequence) -> None:
         handle.write("\n")
 
 
+def remove_obsolete_outputs(
+    directory: Path,
+    filenames: Sequence[str] = (),
+    glob_patterns: Sequence[str] = (),
+) -> None:
+    """Remove only explicitly named legacy artifacts from a task directory."""
+    candidates = [directory / filename for filename in filenames]
+    for pattern in glob_patterns:
+        candidates.extend(directory.glob(pattern))
+    for path in sorted(set(candidates)):
+        if path.is_file():
+            path.unlink()
+            log(f"Removed obsolete output: {path}")
+
+
 def stable_seed(*parts: object) -> int:
     digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
     return int.from_bytes(digest[:8], "little") % (2**32)
@@ -184,7 +197,8 @@ def build_shared_split(records: Sequence[dict], seed: int = RANDOM_STATE):
             assignments.append({
                 "protein_id": r["protein_id"], "source": r.get("source", ""),
                 "n_residues": int(r["n_residues"]), "n_pairs": int(r["n_pairs"]),
-                "size_bin": int(r["size_bin"]), "split": split_name,
+                "size_bin": int(r["size_bin"]),
+                "split": "train" if split_name == "fit" else split_name,
             })
     if len({r["protein_id"] for r in assignments}) != len(records):
         raise AssertionError("Shared split is not disjoint and exhaustive.")
@@ -231,11 +245,11 @@ def map_search_task(task_id: int) -> int:
         raise ValueError(f"Search task ID must be 0..2; got {task_id}.") from None
 
 
-def map_shared_winner_task(task_id: int) -> tuple[int, int | None, str]:
-    if not 0 <= int(task_id) < 12:
-        raise ValueError(f"Shared winner task ID must be 0..11; got {task_id}.")
+def map_shared_winner_task(task_id: int) -> tuple[int, int, str]:
+    if not 0 <= int(task_id) < 9:
+        raise ValueError(f"Shared winner task ID must be 0..8; got {task_id}.")
     task_id = int(task_id)
-    layer_idx, cap_idx = divmod(task_id, 4)
+    layer_idx, cap_idx = divmod(task_id, 3)
     return ANCHOR_LAYERS[layer_idx], CAPS[cap_idx], CAP_LABELS[cap_idx]
 
 
@@ -352,8 +366,20 @@ def r2_score(y_true, y_pred) -> float:
 
 
 def metric_row(y_true, y_pred) -> dict[str, float]:
-    err = np.asarray(y_pred, dtype=np.float64) - np.asarray(y_true, dtype=np.float64)
-    return {"r2": r2_score(y_true, y_pred), "mae": float(np.mean(np.abs(err))), "rmse": float(np.sqrt(np.mean(err * err)))}
+    y = np.asarray(y_true, dtype=np.float64)
+    pred = np.asarray(y_pred, dtype=np.float64)
+    err = pred - y
+    mse = float(np.mean(err * err))
+    return {
+        "target_variance": float(np.var(y, dtype=np.float64)),
+        "r2": r2_score(y, pred),
+        "mse": mse,
+        "mae": float(np.mean(np.abs(err))),
+        "rmse": float(np.sqrt(mse)),
+        "mean_true_distance": float(np.mean(y)),
+        "mean_predicted_distance": float(np.mean(pred)),
+        "mean_error_pred_minus_true": float(np.mean(err)),
+    }
 
 
 @dataclass
@@ -361,6 +387,7 @@ class PooledStats:
     n: int = 0
     sum_y: float = 0.0
     sum_y2: float = 0.0
+    sum_error: float = 0.0
     sum_abs_error: float = 0.0
     sum_squared_error: float = 0.0
 
@@ -370,63 +397,103 @@ class PooledStats:
         self.n += int(y.size)
         self.sum_y += float(np.sum(y, dtype=np.float64))
         self.sum_y2 += float(np.sum(y * y, dtype=np.float64))
+        self.sum_error += float(np.sum(err, dtype=np.float64))
         self.sum_abs_error += float(np.sum(np.abs(err), dtype=np.float64))
         self.sum_squared_error += float(np.sum(err * err, dtype=np.float64))
 
     def metrics(self) -> dict[str, float]:
         if self.n == 0:
-            return {"r2": float("nan"), "mae": float("nan"), "rmse": float("nan")}
+            return {
+                "r2": float("nan"), "mse": float("nan"), "mae": float("nan"),
+                "rmse": float("nan"), "mean_error_pred_minus_true": float("nan"),
+            }
         sst = self.sum_y2 - self.sum_y * self.sum_y / self.n
+        mse = self.sum_squared_error / self.n
         return {
             "r2": float("nan") if sst <= EPS else 1.0 - self.sum_squared_error / sst,
+            "mse": mse,
             "mae": self.sum_abs_error / self.n,
-            "rmse": math.sqrt(self.sum_squared_error / self.n),
+            "rmse": math.sqrt(mse),
+            "mean_error_pred_minus_true": self.sum_error / self.n,
         }
 
 
-def summarize_prediction_bundle(bundle: Mapping, predictions: np.ndarray):
+def regression_output_row(
+    record: Mapping,
+    y_true: np.ndarray,
+    predictions: np.ndarray,
+    split_name: str,
+    evaluation_scope: str,
+    metadata: Mapping | None = None,
+) -> dict:
+    metrics = metric_row(y_true, predictions)
+    return {
+        **dict(metadata or {}),
+        "feature_dim": N_CHANNELS,
+        "split": "train" if split_name == "fit" else split_name,
+        "evaluation_scope": evaluation_scope,
+        "source": record["source"],
+        "protein_id": record["protein_id"],
+        "n_residues": int(record["n_residues"]),
+        "size_bin": int(record["size_bin"]),
+        "n_pairs": int(np.asarray(y_true).size),
+        "target_variance": metrics["target_variance"],
+        "per_protein_r2": metrics["r2"],
+        "per_protein_mse": metrics["mse"],
+        "per_protein_mae": metrics["mae"],
+        "per_protein_rmse": metrics["rmse"],
+        "mean_true_distance": metrics["mean_true_distance"],
+        "mean_predicted_distance": metrics["mean_predicted_distance"],
+        "mean_error_pred_minus_true": metrics["mean_error_pred_minus_true"],
+    }
+
+
+def split_summary_row(
+    rows: Sequence[Mapping], pooled: PooledStats, metadata: Mapping | None = None,
+) -> dict:
+    if not rows:
+        raise ValueError("Cannot summarize an empty regression split.")
+
+    def values(name: str) -> np.ndarray:
+        return np.asarray([float(row[name]) for row in rows], dtype=np.float64)
+
+    pooled_metrics = pooled.metrics()
+    return {
+        **dict(metadata or {}),
+        "feature_dim": N_CHANNELS,
+        "split": rows[0]["split"],
+        "n_proteins": len(rows),
+        "n_pairs": pooled.n,
+        "per_protein_r2_mean": float(np.nanmean(values("per_protein_r2"))),
+        "per_protein_r2_std": float(np.nanstd(values("per_protein_r2"))),
+        "per_protein_mae_mean": float(np.mean(values("per_protein_mae"))),
+        "per_protein_mae_std": float(np.std(values("per_protein_mae"))),
+        "per_protein_rmse_mean": float(np.mean(values("per_protein_rmse"))),
+        "per_protein_rmse_std": float(np.std(values("per_protein_rmse"))),
+        "pair_weighted_r2": pooled_metrics["r2"],
+        "pair_weighted_mse": pooled_metrics["mse"],
+        "pair_weighted_mae": pooled_metrics["mae"],
+        "pair_weighted_rmse": pooled_metrics["rmse"],
+        "mean_error_pred_minus_true": pooled_metrics["mean_error_pred_minus_true"],
+    }
+
+
+def summarize_prediction_bundle(
+    bundle: Mapping,
+    predictions: np.ndarray,
+    split_name: str,
+    evaluation_scope: str,
+    metadata: Mapping | None = None,
+):
     rows, pooled = [], PooledStats()
     for record, indices, start, end in bundle["offsets"]:
         y = bundle["y"][start:end]
         pred = predictions[start:end]
-        metrics = metric_row(y, pred)
         pooled.update(y, pred)
-        rows.append({"protein_id": record["protein_id"], "source": record["source"], "n_residues": record["n_residues"], "n_pairs": int(len(indices)), **metrics})
-    finite = [r for r in rows if np.isfinite(r["r2"])]
-    return rows, {"mean_per_protein_r2": float(np.mean([r["r2"] for r in finite])), **{f"pooled_{k}": v for k, v in pooled.metrics().items()}}
-
-
-def geometry_metrics(record: Mapping, predictions: np.ndarray) -> dict[str, float | int]:
-    n = int(record["n_residues"])
-    pred = np.asarray(predictions, dtype=np.float64)
-    n_negative = int(np.count_nonzero(pred < 0.0))
-    dist = np.zeros((n, n), dtype=np.float64)
-    clipped = np.maximum(pred, 0.0)
-    dist[record["pair_i"], record["pair_j"]] = clipped
-    dist[record["pair_j"], record["pair_i"]] = clipped
-    mds_coords, eigenvalues = classical_mds(dist, n_dims=3)
-    reflected = mds_coords.copy()
-    reflected[:, 2] *= -1.0
-    true_coords = np.asarray(record["coordinates"], dtype=np.float64)
-    aligned, rmsd = superimpose_structures(true_coords, mds_coords)
-    aligned_reflected, rmsd_reflected = superimpose_structures(true_coords, reflected)
-    if rmsd_reflected < rmsd:
-        aligned, rmsd = aligned_reflected, rmsd_reflected
-    positive = eigenvalues[eigenvalues > 0]
-    positive_mass = float(np.sum(positive, dtype=np.float64))
-    frac_top3 = float(np.sum(np.maximum(eigenvalues[:3], 0.0)) / positive_mass) if positive_mass > 0 else float("nan")
-    negative = eigenvalues[eigenvalues < 0]
-    negative_fraction = float(abs(np.sum(negative)) / positive_mass) if positive_mass > 0 else float("nan")
-    mds_dist = compute_distance_matrix(aligned)
-    mds_pairs = mds_dist[record["pair_i"], record["pair_j"]]
-    denominator = float(np.sum(clipped * clipped, dtype=np.float64))
-    stress = float(np.sqrt(np.sum((clipped - mds_pairs) ** 2) / denominator)) if denominator > 0 else float("nan")
-    return {
-        "tm_score": compute_tm_score(true_coords, aligned, n), "kabsch_rmsd": float(rmsd),
-        "mds_stress": stress, "top3_positive_spectral_mass_fraction": frac_top3,
-        "negative_eigenvalue_count": int(negative.size), "negative_eigenvalue_fraction": negative_fraction,
-        "negative_prediction_count": n_negative,
-    }
+        rows.append(regression_output_row(
+            record, y, pred, split_name, evaluation_scope, metadata,
+        ))
+    return rows, split_summary_row(rows, pooled, metadata)
 
 
 def require_xgboost():
@@ -439,26 +506,41 @@ def require_xgboost():
     return XGBRegressor
 
 
-def fit_xgboost(config: Mapping, train_bundle: Mapping, validation_bundle: Mapping, n_jobs: int):
+def fit_xgboost(
+    config: Mapping,
+    train_bundle: Mapping,
+    validation_bundle: Mapping,
+    n_jobs: int,
+    weighting_mode: str,
+):
     XGBRegressor = require_xgboost()
     model = XGBRegressor(
         **FIXED_XGBOOST_PARAMETERS, n_jobs=n_jobs,
         max_depth=int(config["max_depth"]), learning_rate=float(config["learning_rate"]),
         min_child_weight=float(config["min_child_weight"]),
     )
-    train_weights = protein_equal_weights(train_bundle["protein_ids"])
-    validation_weights = protein_equal_weights(validation_bundle["protein_ids"])
+    fit_kwargs = {
+        "eval_set": [(validation_bundle["x"], validation_bundle["y"])],
+        "verbose": False,
+    }
+    if weighting_mode == SHARED_WEIGHTING_MODE:
+        fit_kwargs["sample_weight"] = protein_equal_weights(train_bundle["protein_ids"])
+        fit_kwargs["sample_weight_eval_set"] = [
+            protein_equal_weights(validation_bundle["protein_ids"])
+        ]
+    elif weighting_mode != PER_PROTEIN_WEIGHTING_MODE:
+        raise ValueError(
+            f"Unknown XGBoost weighting mode {weighting_mode!r}; expected "
+            f"{SHARED_WEIGHTING_MODE!r} or {PER_PROTEIN_WEIGHTING_MODE!r}."
+        )
     tick = time.perf_counter()
-    model.fit(
-        train_bundle["x"], train_bundle["y"], sample_weight=train_weights,
-        eval_set=[(validation_bundle["x"], validation_bundle["y"])],
-        sample_weight_eval_set=[validation_weights], verbose=False,
-    )
+    model.fit(train_bundle["x"], train_bundle["y"], **fit_kwargs)
     fit_seconds = time.perf_counter() - tick
     return model, {
         "fit_seconds": fit_seconds,
         "best_iteration": int(getattr(model, "best_iteration", -1)),
         "best_validation_rmse": float(getattr(model, "best_score", float("nan"))),
+        "weighting_mode": weighting_mode,
     }
 
 
@@ -496,7 +578,8 @@ def select_winner(layer_rows: Mapping[int, Sequence[Mapping]], configs: Sequence
     selected = dict(config_map[selected_row["config_id"]])
     provenance = {
         "selection_metric": "validation_mean_per_protein_r2_equal_layer_average",
-        "test_metrics_used": False, "tie_tolerance": SELECTION_TOLERANCE,
+        "training_metrics_used": False, "test_metrics_used": False,
+        "tie_tolerance": SELECTION_TOLERANCE,
         "tie_break_order": ["lower_max_depth", "shorter_summed_fit_seconds", "lower_config_id"],
         "selected_config": selected, "selected_score": selected_row["mean_validation_r2_across_layers"],
         "selected_at": timestamp(),
@@ -504,8 +587,23 @@ def select_winner(layer_rows: Mapping[int, Sequence[Mapping]], configs: Sequence
     return selected, table, provenance
 
 
-def load_complete_search(search_dir: Path, configs: Sequence[Mapping]):
+def load_complete_search(
+    search_dir: Path,
+    configs: Sequence[Mapping],
+    expected_weighting_mode: str | None = None,
+):
     expected_ids = {str(c["config_id"]) for c in configs}
+    required_columns = {
+        "config_id",
+        "train_mean_per_protein_r2",
+        "train_pooled_r2",
+        "validation_mean_per_protein_r2",
+        "validation_pooled_r2",
+        "test_mean_per_protein_r2",
+        "test_pooled_r2",
+        "fit_seconds",
+        "split_digest",
+    }
     layers, digests = {}, set()
     for layer in ANCHOR_LAYERS:
         layer_dir = search_dir / f"layer_{layer:02d}"
@@ -513,6 +611,14 @@ def load_complete_search(search_dir: Path, configs: Sequence[Mapping]):
         ids = [r.get("config_id", "") for r in rows]
         if len(rows) != len(configs) or set(ids) != expected_ids or len(ids) != len(set(ids)):
             raise RuntimeError(f"Incomplete search summary for layer {layer}: expected {sorted(expected_ids)}, observed {ids}.")
+        for row in rows:
+            missing_columns = sorted(required_columns - set(row))
+            if missing_columns:
+                raise RuntimeError(
+                    f"Incomplete search summary schema for layer {layer}, "
+                    f"configuration {row.get('config_id')}: missing "
+                    f"{missing_columns}. Rerun the search."
+                )
         metadata_path = layer_dir / "search_metadata.json"
         if not metadata_path.exists():
             raise FileNotFoundError(f"Required search metadata is missing: {metadata_path}")
@@ -521,6 +627,15 @@ def load_complete_search(search_dir: Path, configs: Sequence[Mapping]):
             raise RuntimeError(f"Search metadata layer mismatch in {metadata_path}.")
         if metadata.get("status") != "complete":
             raise RuntimeError(f"Search task for layer {layer} is not complete: {metadata.get('status')!r}.")
+        if (
+            expected_weighting_mode is not None
+            and metadata.get("weighting_mode") != expected_weighting_mode
+        ):
+            raise RuntimeError(
+                f"Search task for layer {layer} used weighting mode "
+                f"{metadata.get('weighting_mode')!r}; expected "
+                f"{expected_weighting_mode!r}. Rerun the search before winner evaluation."
+            )
         if any(row.get("split_digest") != metadata.get("split_digest") for row in rows):
             raise RuntimeError(f"Search summary rows disagree with metadata split digest in {layer_dir}.")
         digests.add(metadata.get("split_digest"))
@@ -532,19 +647,6 @@ def load_complete_search(search_dir: Path, configs: Sequence[Mapping]):
 
 def n_jobs_from_environment() -> int:
     return int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
-
-
-def aggregate_rows(rows: Sequence[Mapping], split_name: str) -> dict:
-    stats = PooledStats()
-    r2s = []
-    for row in rows:
-        if row.get("split") != split_name:
-            continue
-        if "_y_true" in row:
-            stats.update(row["_y_true"], row["_y_pred"])
-        if np.isfinite(float(row["r2"])):
-            r2s.append(float(row["r2"]))
-    return {"split": split_name, "n_proteins": len(r2s), "mean_per_protein_r2": float(np.mean(r2s)), **{f"pooled_{k}": v for k, v in stats.metrics().items()}}
 
 
 def write_summary(path: Path, title: str, lines: Sequence[str]) -> None:
@@ -563,7 +665,8 @@ def pair_split_summary(records: Sequence[dict]) -> tuple[list[dict], str]:
         for split_name in ("fit", "validation", "test"):
             indices = np.asarray(record["pair_splits"][split_name], dtype=np.int64)
             rows.append({
-                "protein_id": record["protein_id"], "split": split_name,
+                "protein_id": record["protein_id"],
+                "split": "train" if split_name == "fit" else split_name,
                 "n_pairs": int(indices.size),
                 "indices_sha256": hashlib.sha256(indices.tobytes()).hexdigest(),
             })
@@ -571,12 +674,23 @@ def pair_split_summary(records: Sequence[dict]) -> tuple[list[dict], str]:
     return rows, hashlib.sha256(json.dumps(canonical, separators=(",", ":")).encode()).hexdigest()
 
 
-def evaluate_model_records(model, records: Sequence[dict], layer: int, split_name: str, geometry: bool = False, metadata: Mapping | None = None):
+def evaluate_model_records(
+    model,
+    records: Sequence[dict],
+    layer: int,
+    split_name: str,
+    evaluation_scope: str,
+    metadata: Mapping | None = None,
+):
     """Stream full proteins through feature loading, prediction, and metrics."""
     metadata = dict(metadata or {})
-    rows, geometry_rows = [], []
+    rows = []
     pooled = PooledStats()
-    times = {"materialization_seconds": 0.0, "prediction_seconds": 0.0, "metric_seconds": 0.0, "geometry_seconds": 0.0}
+    times = {
+        "materialization_seconds": 0.0,
+        "prediction_seconds": 0.0,
+        "metric_seconds": 0.0,
+    }
     for record in records:
         tick = time.perf_counter()
         x = load_pair_features(record, layer)
@@ -587,57 +701,33 @@ def evaluate_model_records(model, records: Sequence[dict], layer: int, split_nam
         del x
         tick = time.perf_counter()
         y = np.asarray(record["y"], dtype=np.float64)
-        metrics = metric_row(y, pred)
         pooled.update(y, pred)
-        rows.append({
-            **metadata, "layer": layer, "split": split_name,
-            "protein_id": record["protein_id"], "source": record["source"],
-            "size_bin": record["size_bin"], "n_residues": record["n_residues"],
-            "n_pairs": record["n_pairs"], **metrics,
-        })
+        rows.append(regression_output_row(
+            record,
+            y,
+            pred,
+            split_name,
+            evaluation_scope,
+            {**metadata, "layer": layer},
+        ))
         times["metric_seconds"] += time.perf_counter() - tick
-        if geometry:
-            tick = time.perf_counter()
-            geometry_rows.append({
-                **metadata, "layer": layer, "split": split_name,
-                "geometry_prediction_scope": "held_out_protein_predictions",
-                "protein_id": record["protein_id"], "source": record["source"],
-                "size_bin": record["size_bin"], "n_residues": record["n_residues"],
-                "n_pairs": record["n_pairs"], "regression_r2": metrics["r2"],
-                **geometry_metrics(record, pred),
-            })
-            times["geometry_seconds"] += time.perf_counter() - tick
         del pred
-    finite_r2 = [float(r["r2"]) for r in rows if np.isfinite(float(r["r2"]))]
-    pooled_metrics = pooled.metrics()
-    aggregate = {
-        **metadata, "layer": layer, "split": split_name,
-        "n_proteins": len(rows), "n_pairs": pooled.n,
-        "mean_per_protein_r2": float(np.mean(finite_r2)),
-        "mean_per_protein_mae": float(np.mean([float(r["mae"]) for r in rows])),
-        "mean_per_protein_rmse": float(np.mean([float(r["rmse"]) for r in rows])),
-        **{f"pooled_{key}": value for key, value in pooled_metrics.items()},
-    }
-    return rows, aggregate, geometry_rows, times
+    return rows, split_summary_row(rows, pooled, {**metadata, "layer": layer}), times
 
 
-def summarize_geometry(geometry_rows: Sequence[Mapping]) -> list[dict]:
-    output = []
-    metric_names = (
-        "tm_score", "kabsch_rmsd", "mds_stress",
-        "top3_positive_spectral_mass_fraction", "negative_eigenvalue_count",
-        "negative_eigenvalue_fraction", "negative_prediction_count",
-    )
-    groups = sorted({(int(r["layer"]), str(r["split"])) for r in geometry_rows})
-    for layer, split_name in groups:
-        group = [r for r in geometry_rows if int(r["layer"]) == layer and str(r["split"]) == split_name]
-        row = {"layer": layer, "split": split_name, "n_proteins": len(group)}
-        for name in metric_names:
-            values = np.asarray([float(r[name]) for r in group], dtype=np.float64)
-            row[f"{name}_mean"] = float(np.nanmean(values))
-            row[f"{name}_std"] = float(np.nanstd(values))
-        output.append(row)
-    return output
+def require_non_degenerate_iterations(
+    config_id: str, best_iterations: Sequence[int], expected_fits: int,
+) -> None:
+    if len(best_iterations) != expected_fits:
+        raise RuntimeError(
+            f"Configuration {config_id} completed {len(best_iterations)}/{expected_fits} fits."
+        )
+    if all(int(iteration) == 0 for iteration in best_iterations):
+        raise RuntimeError(
+            f"Configuration {config_id} stopped at iteration 0 for all "
+            f"{expected_fits} proteins. Refusing to save a degenerate per-protein "
+            "search; verify uniform row weighting and XGBoost inputs."
+        )
 
 
 def cleanup_bundle(bundle: Mapping) -> None:

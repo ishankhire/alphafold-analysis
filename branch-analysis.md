@@ -1274,6 +1274,11 @@ per-metric shared y-scales). Outputs `triangle_violation_grid.{png,pdf}`.
 Added one CSV combining generalized held-out and per-protein layer summaries used
 by the June 19 publication plots.
 
+## Session: 2026-08-03 — Correct XGBoost search evaluation
+
+Fixed per-protein XGBoost row weighting, added train R², reduced the shared cap
+sweep to 5k/10k/20k, and made winner outputs regression-only.
+
 ## Session: 2026-07-04 — Per-protein held-out pair R²
 
 Updated per-protein base256 runs to fit train pairs only, save train/test R²,

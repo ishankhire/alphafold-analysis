@@ -11,6 +11,8 @@
 #SBATCH --constraint="scratch"
 #SBATCH -o per_protein_xgb_search_%A_%a.out
 #SBATCH -e per_protein_xgb_search_%A_%a.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=ikhire3@gatech.edu
 
 module reset
 module load python

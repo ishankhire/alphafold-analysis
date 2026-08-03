@@ -2,7 +2,7 @@
 #SBATCH --job-name=XGBSharedWinner
 #SBATCH --account=bekh-delta-cpu
 #SBATCH --partition=cpu
-#SBATCH --array=0-11%3
+#SBATCH --array=0-8%3
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
@@ -11,6 +11,8 @@
 #SBATCH --constraint="scratch"
 #SBATCH -o shared_xgb_winner_%A_%a.out
 #SBATCH -e shared_xgb_winner_%A_%a.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=ikhire3@gatech.edu
 
 module reset
 module load python

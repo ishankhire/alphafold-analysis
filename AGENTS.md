@@ -56,6 +56,9 @@ Always consult these PDFs when writing or modifying sbatch files or cluster scri
 
 - Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
 - Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
+- Every new or modified sbatch file must include both notification directives:
+  `#SBATCH --mail-type=BEGIN,END,FAIL` and
+  `#SBATCH --mail-user=ikhire3@gatech.edu`.
 - For sbatch files that need to call a Python script by path, follow the local convention:
   `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and then `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
 
@@ -81,6 +84,12 @@ Those roots cover the CAMEO layout only. New or modified combined-dataset analys
 
 **Visualizations:** All plots saved to `proteins/<id>/visualizations/` or `proteins/multi_protein_results/visualizations/`.
 
+**Regression output schema:** Unless a task explicitly requests another layout,
+follow the file organization and column style in
+`delta_files/general_base256_combined/`. In particular, prefer separate
+`per_protein.csv` and aggregate summary CSVs with explicit split labels rather
+than combining unrelated row granularities.
+
 **Path resolution:** All scripts compute paths via `ROOT_DIR = os.path.dirname(...)` so they work regardless of working directory.
 
 **Shared cluster helper:** A reusable helper module now lives at `scripts/cluster_scripts/cluster_regression_helpers.py`.
@@ -101,6 +110,12 @@ Those roots cover the CAMEO layout only. New or modified combined-dataset analys
 
 - Default to fixed script configuration (repo-relative paths/constants in code).
 - Do not add CLI arguments unless they are necessary for multi-environment use, reproducibility control, or unavoidable input/output variability.
+
+## Planning Requirements
+
+- Every implementation plan must specify the exact intended outputs, including
+  output directories, filenames, row granularity, split/evaluation scope, and
+  principal columns or fields.
 
 ## Change Log
 

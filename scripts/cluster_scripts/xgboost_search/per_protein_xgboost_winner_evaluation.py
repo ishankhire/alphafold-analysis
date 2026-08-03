@@ -9,13 +9,34 @@ import time
 import numpy as np
 
 from xgboost_search_common import (
-    ANCHOR_LAYERS, PER_PROTEIN_CONFIGS, PooledStats, attach_pair_splits,
-    cleanup_bundle, fit_xgboost, geometry_metrics, importance_rows,
-    load_combined_records, load_complete_search, load_pair_features, log,
-    map_winner_layer_task, materialize_records, metric_row,
-    n_jobs_from_environment, pair_split_summary, per_protein_search_dir,
-    per_protein_winner_dir, select_per_protein_manifest, select_winner,
-    summarize_geometry, timestamp, write_csv, write_json, write_summary,
+    ANCHOR_LAYERS,
+    PER_PROTEIN_VARIANT,
+    PER_PROTEIN_CONFIGS,
+    PER_PROTEIN_WEIGHTING_MODE,
+    PooledStats,
+    attach_pair_splits,
+    cleanup_bundle,
+    fit_xgboost,
+    importance_rows,
+    load_combined_records,
+    load_complete_search,
+    log,
+    map_winner_layer_task,
+    materialize_records,
+    n_jobs_from_environment,
+    pair_split_summary,
+    per_protein_search_dir,
+    per_protein_winner_dir,
+    regression_output_row,
+    remove_obsolete_outputs,
+    require_non_degenerate_iterations,
+    select_per_protein_manifest,
+    select_winner,
+    split_summary_row,
+    timestamp,
+    write_csv,
+    write_json,
+    write_summary,
 )
 
 
@@ -26,9 +47,15 @@ def run(task_id: int) -> None:
     task_start = time.perf_counter()
     log(f"Per-protein winner task {task_id}: layer={layer}")
 
-    # Fail on missing/inconsistent artifacts before any fit can start.
-    search_rows, expected_digest = load_complete_search(per_protein_search_dir(), PER_PROTEIN_CONFIGS)
-    selected, selection_table, provenance = select_winner(search_rows, PER_PROTEIN_CONFIGS)
+    # Fail on old, missing, incomplete, or inconsistent search artifacts first.
+    search_rows, expected_digest = load_complete_search(
+        per_protein_search_dir(),
+        PER_PROTEIN_CONFIGS,
+        PER_PROTEIN_WEIGHTING_MODE,
+    )
+    selected, selection_table, provenance = select_winner(
+        search_rows, PER_PROTEIN_CONFIGS
+    )
     write_json(task_dir / "selection_provenance.json", provenance)
     write_csv(task_dir / "cross_layer_selection_table.csv", selection_table)
     canonical_path = per_protein_winner_dir() / "selected_config.json"
@@ -37,81 +64,91 @@ def run(task_id: int) -> None:
     elif canonical_path.exists():
         canonical = json.loads(canonical_path.read_text())
         if canonical["selected_config"]["config_id"] != selected["config_id"]:
-            raise RuntimeError("This task derived a different per-protein winner than canonical task 0.")
+            raise RuntimeError(
+                "This task derived a different per-protein winner than canonical task 0."
+            )
 
     records, skipped = load_combined_records(ANCHOR_LAYERS)
     selected_records = select_per_protein_manifest(records)
+    if len(selected_records) != 50:
+        raise RuntimeError(
+            f"Expected exactly 50 winner-evaluation proteins; found "
+            f"{len(selected_records)}."
+        )
     attach_pair_splits(selected_records)
     split_rows, observed_digest = pair_split_summary(selected_records)
     if observed_digest != expected_digest:
-        raise RuntimeError(f"Current pair split {observed_digest} differs from search split {expected_digest}.")
+        raise RuntimeError(
+            f"Current pair split {observed_digest} differs from search split "
+            f"{expected_digest}."
+        )
     write_csv(task_dir / "pair_split_summary.csv", split_rows)
-    write_csv(task_dir / "skipped_proteins.csv", skipped, ["protein_id", "source", "reason"])
+    write_csv(
+        task_dir / "skipped_proteins.csv",
+        skipped,
+        ["protein_id", "source", "reason"],
+    )
+    remove_obsolete_outputs(
+        task_dir,
+        filenames=(
+            "per_protein_regression_metrics.csv",
+            "aggregate_regression_metrics.csv",
+            "per_protein_timing.csv",
+            "per_protein_geometry_metrics.csv",
+            "aggregate_geometry_metrics.csv",
+        ),
+    )
 
-    regression_rows, geometry_rows, timing_rows, all_importance = [], [], [], []
-    pooled = {name: PooledStats() for name in ("fit", "validation", "test")}
-    r2_values = {name: [] for name in pooled}
-    mae_values = {name: [] for name in pooled}
-    rmse_values = {name: [] for name in pooled}
+    identity = {
+        "variant": PER_PROTEIN_VARIANT,
+        "config_id": selected["config_id"],
+        "layer": layer,
+    }
+    regression_rows, all_importance = [], []
+    pools = {name: PooledStats() for name in ("train", "validation", "test")}
+    split_regression_rows = {name: [] for name in pools}
+    best_iterations, best_scores = [], []
+    total_fit_seconds = 0.0
+
     for protein_number, record in enumerate(selected_records, start=1):
-        protein_start = time.perf_counter()
-        bundles = {name: materialize_records([record], layer, split_name=name) for name in pooled}
-        model, fit_info = fit_xgboost(selected, bundles["fit"], bundles["validation"], n_jobs_from_environment())
-        prediction_seconds = {}
+        bundles = {
+            "train": materialize_records([record], layer, split_name="fit"),
+            "validation": materialize_records(
+                [record], layer, split_name="validation"
+            ),
+            "test": materialize_records([record], layer, split_name="test"),
+        }
+        model, fit_info = fit_xgboost(
+            selected,
+            bundles["train"],
+            bundles["validation"],
+            n_jobs_from_environment(),
+            PER_PROTEIN_WEIGHTING_MODE,
+        )
+        best_iterations.append(fit_info["best_iteration"])
+        best_scores.append(fit_info["best_validation_rmse"])
+        total_fit_seconds += fit_info["fit_seconds"]
+
         for split_name, bundle in bundles.items():
-            tick = time.perf_counter()
             pred = np.asarray(model.predict(bundle["x"]), dtype=np.float64)
-            prediction_seconds[f"{split_name}_prediction_seconds"] = time.perf_counter() - tick
-            metrics = metric_row(bundle["y"], pred)
-            pooled[split_name].update(bundle["y"], pred)
-            r2_values[split_name].append(metrics["r2"])
-            mae_values[split_name].append(metrics["mae"])
-            rmse_values[split_name].append(metrics["rmse"])
-            regression_rows.append({
-                "layer": layer, "config_id": selected["config_id"], "split": split_name,
-                "protein_id": record["protein_id"], "source": record["source"],
-                "size_bin": record["size_bin"], "n_residues": record["n_residues"],
-                "n_pairs": int(bundle["y"].size), **metrics,
-            })
+            pools[split_name].update(bundle["y"], pred)
+            row = regression_output_row(
+                record,
+                bundle["y"],
+                pred,
+                "fit" if split_name == "train" else split_name,
+                "pair_split_rows",
+                identity,
+            )
+            regression_rows.append(row)
+            split_regression_rows[split_name].append(row)
             del pred
 
-        tick = time.perf_counter()
-        all_x = load_pair_features(record, layer)
-        all_pair_materialization_seconds = time.perf_counter() - tick
-        tick = time.perf_counter()
-        all_pred = np.asarray(model.predict(all_x), dtype=np.float64)
-        all_pair_prediction_seconds = time.perf_counter() - tick
-        del all_x
-        tick = time.perf_counter()
-        geometry_rows.append({
-            "layer": layer, "config_id": selected["config_id"], "split": "all_pairs",
-            "geometry_prediction_scope": "all_pairs_model_predictions",
-            "regression_test_scope": "held_out_pair_predictions",
-            "protein_id": record["protein_id"], "source": record["source"],
-            "size_bin": record["size_bin"], "n_residues": record["n_residues"],
-            "n_pairs": record["n_pairs"], **geometry_metrics(record, all_pred),
-        })
-        geometry_seconds = time.perf_counter() - tick
-        del all_pred
-
         all_importance.extend(importance_rows(model, {
-            "layer": layer, "config_id": selected["config_id"],
-            "protein_id": record["protein_id"], "source": record["source"],
+            **identity,
+            "protein_id": record["protein_id"],
+            "source": record["source"],
         }))
-        timing_rows.append({
-            "layer": layer, "config_id": selected["config_id"], "protein_id": record["protein_id"],
-            "n_fit_rows": int(bundles["fit"]["y"].size),
-            "fit_materialization_seconds": bundles["fit"]["materialization_seconds"],
-            "validation_materialization_seconds": bundles["validation"]["materialization_seconds"],
-            "test_materialization_seconds": bundles["test"]["materialization_seconds"],
-            "fit_seconds": fit_info["fit_seconds"], **prediction_seconds,
-            "all_pair_materialization_seconds": all_pair_materialization_seconds,
-            "all_pair_prediction_seconds": all_pair_prediction_seconds,
-            "geometry_seconds": geometry_seconds,
-            "best_iteration": fit_info["best_iteration"],
-            "best_validation_rmse": fit_info["best_validation_rmse"],
-            "total_seconds": time.perf_counter() - protein_start,
-        })
         del model
         for bundle in bundles.values():
             cleanup_bundle(bundle)
@@ -119,62 +156,89 @@ def run(task_id: int) -> None:
         if protein_number % 10 == 0:
             log(f"Completed {protein_number}/50 selected-protein winner fits")
 
-    if len(timing_rows) != 50:
-        raise RuntimeError(f"Winner evaluation completed only {len(timing_rows)}/50 proteins.")
-    aggregate_rows = []
-    for split_name in ("fit", "validation", "test"):
-        pooled_metrics = pooled[split_name].metrics()
-        aggregate_rows.append({
-            "layer": layer, "config_id": selected["config_id"], "split": split_name,
-            "n_proteins": 50, "n_pairs": pooled[split_name].n,
-            "mean_per_protein_r2": float(np.mean(r2_values[split_name])),
-            "mean_per_protein_mae": float(np.mean(mae_values[split_name])),
-            "mean_per_protein_rmse": float(np.mean(rmse_values[split_name])),
-            **{f"pooled_{key}": value for key, value in pooled_metrics.items()},
-        })
+    require_non_degenerate_iterations(
+        selected["config_id"], best_iterations, len(selected_records)
+    )
+    if len(regression_rows) != 150:
+        raise RuntimeError(
+            f"Expected 150 train/validation/test regression rows; observed "
+            f"{len(regression_rows)}."
+        )
 
+    split_summaries = [
+        split_summary_row(split_regression_rows[name], pools[name], identity)
+        for name in ("train", "validation", "test")
+    ]
     aggregate_importance = []
     for importance_type in ("gain", "weight", "cover"):
         for channel in range(128):
-            values = [float(r["importance"]) for r in all_importance if r["importance_type"] == importance_type and int(r["channel"]) == channel]
+            values = [
+                float(row["importance"])
+                for row in all_importance
+                if row["importance_type"] == importance_type
+                and int(row["channel"]) == channel
+            ]
             if len(values) != 50:
-                raise RuntimeError("Importance aggregation did not receive exactly one row per protein/channel/type.")
+                raise RuntimeError(
+                    "Importance aggregation did not receive exactly one row per "
+                    "protein/channel/type."
+                )
             aggregate_importance.append({
-                "layer": layer, "config_id": selected["config_id"],
-                "importance_type": importance_type, "channel": channel,
+                **identity,
+                "importance_type": importance_type,
+                "channel": channel,
                 "feature_name": f"avg_symmetric_ch_{channel}",
                 "equal_protein_mean_importance": float(np.mean(values)),
                 "equal_protein_std_importance": float(np.std(values)),
             })
 
-    write_csv(task_dir / "per_protein_regression_metrics.csv", regression_rows)
-    write_csv(task_dir / "aggregate_regression_metrics.csv", aggregate_rows)
-    write_csv(task_dir / "per_protein_timing.csv", timing_rows)
+    write_csv(task_dir / "per_protein.csv", regression_rows)
+    write_csv(task_dir / "split_summary.csv", split_summaries)
     write_csv(task_dir / "per_protein_channel_importance.csv", all_importance)
     write_csv(task_dir / "aggregate_channel_importance.csv", aggregate_importance)
-    write_csv(task_dir / "per_protein_geometry_metrics.csv", geometry_rows)
-    write_csv(task_dir / "aggregate_geometry_metrics.csv", summarize_geometry(geometry_rows))
+
+    task_elapsed = time.perf_counter() - task_start
     metadata = {
-        "status": "complete", "completed_at": timestamp(), "task_id": task_id,
-        "layer": layer, "selected_config": selected, "split_digest": observed_digest,
-        "n_proteins": 50, "fit_pair_cap": None,
-        "kept_early_stopped_60_percent_fit_model": True,
-        "refit_on_fit_plus_validation": False,
-        "geometry_prediction_scope": "all_pairs_model_predictions",
-        "regression_test_scope": "held_out_pair_predictions",
-        "geometry_includes_triangle_analysis": False,
+        "status": "complete",
+        "completed_at": timestamp(),
+        "task_id": task_id,
+        "layer": layer,
+        "selected_config": selected,
+        "split_digest": observed_digest,
+        "n_proteins": 50,
+        "n_regression_rows": len(regression_rows),
+        "fit_pair_cap": None,
+        "weighting_mode": PER_PROTEIN_WEIGHTING_MODE,
+        "regression_evaluation_scope": "pair_split_rows",
+        "kept_early_stopped_60_percent_training_model": True,
+        "refit_on_train_plus_validation": False,
+        "geometry_computed": False,
         "booster_json_saved": False,
-        "task_elapsed_seconds": time.perf_counter() - task_start,
+        "best_iteration_mean": float(np.mean(best_iterations)),
+        "best_iteration_median": float(np.median(best_iterations)),
+        "best_iteration_min": int(np.min(best_iterations)),
+        "best_iteration_max": int(np.max(best_iterations)),
+        "best_validation_rmse_mean": float(np.mean(best_scores)),
+        "total_fit_seconds": total_fit_seconds,
+        "task_elapsed_seconds": task_elapsed,
     }
     write_json(task_dir / "run_metadata.json", metadata)
     write_summary(
-        task_dir / "summary.txt", f"Per-protein XGBoost winner evaluation — layer {layer}",
-        [f"Selected configuration: {selected['config_id']}", "Proteins: 50",
-         "Geometry scope: all_pairs_model_predictions (not wholly held out)",
-         "Regression test scope: held-out pairs", f"Split digest: {observed_digest}",
-         f"Task elapsed seconds: {metadata['task_elapsed_seconds']:.3f}"],
+        task_dir / "summary.txt",
+        f"Per-protein XGBoost winner evaluation — layer {layer}",
+        [
+            f"Selected configuration: {selected['config_id']}",
+            "Proteins: 50",
+            f"Per-protein regression rows: {len(regression_rows)}",
+            "Regression splits: train, validation, test",
+            "Weighting mode: uniform_rows",
+            "Geometry computed: no",
+            f"Best iteration mean: {metadata['best_iteration_mean']:.3f}",
+            f"Split digest: {observed_digest}",
+            f"Task elapsed seconds: {task_elapsed:.3f}",
+        ],
     )
-    log(f"Per-protein winner layer {layer} complete")
+    log(f"Per-protein winner layer {layer} complete in {task_elapsed:.3f}s")
 
 
 if __name__ == "__main__":
