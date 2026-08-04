@@ -1,45 +1,68 @@
-# Project Summary: AlphaFold2 Pair Representation Analysis
+# Project Summary: Interpreting Protein-Folding Models
 
-## What is AlphaFold2?
+## Research focus
 
-AlphaFold2 is a deep learning system developed by DeepMind that predicts protein 3D structures from amino acid sequences with near-experimental accuracy. It uses a neural network architecture called the Evoformer, which processes two key representations through 48 layers:
+This project studies how AI systems for protein folding build internal
+representations of three-dimensional structure. The current experiments use
+**OpenFold** pair representations, with the analysis designed to extend to
+other folding models such as **Boltz** and **ESMFold**. The goal is not simply
+to measure final structure accuracy, but to understand the intermediate
+computations that turn sequence- and evolutionary-information into a fold.
 
-- **Single representation:** per-residue features (one vector per amino acid)
-- **Pair representation:** pairwise residue features (one vector per pair of amino acids)
+## Central question
 
-The pair representation is a 3D tensor of shape `(R, R, 128)` at each layer, where `R` is the number of residues and `128` is the number of feature channels. These representations evolve through the 48 Evoformer layers and ultimately guide the structure module that produces the final 3D coordinates.
+At what stage, and in what form, do a model's internal features encode protein
+geometry? In OpenFold, the main object of study is the pair representation: a
+feature vector for every residue pair at every one of 48 Evoformer layers. By
+probing these representations layer by layer, the project tracks the emergence
+of spatial knowledge during inference.
 
-## What This Project Does
+## Main analyses
 
-This project performs **mechanistic interpretability** on AlphaFold's pair representations. We extract the pair representation tensors at every Evoformer layer (0 through 47) for multiple proteins, then use linear probing techniques to understand what geometric and structural information these representations encode.
+- **Distance decoding:** predict C-alpha distances between residue pairs from
+  internal pair features. Linear probes establish what is directly accessible;
+  XGBoost and other tree-based probes test for nonlinear structure that linear
+  models miss.
+- **Generalization versus capacity:** compare one shared probe across proteins
+  with separate per-protein probes. Protein-level train/validation/test splits,
+  size stratification, and k-fold checks distinguish transferable signals from
+  protein-specific fitting.
+- **Layer dynamics:** measure how predictive performance, learned feature
+  directions, and geometry change from early to late layers. Feature variants
+  test directional pair features, symmetrization, diagonal/self features, and
+  local or axial context.
+- **Intermediate structures:** decode a full distance matrix from each layer,
+  then reconstruct a 3D C-alpha trace with classical multidimensional scaling
+  (MDS). These intermediate reconstructions make the evolving fold directly
+  inspectable and can be exported for molecular visualization.
+- **Geometric validity:** evaluate reconstructed distances and structures using
+  MDS stress, spectral diagnostics, TM-score, RMSD, negative-distance rates,
+  and exact triangle-inequality violations. This separates accurate local
+  distance prediction from distances that form a coherent 3D protein.
+- **Interpretation and comparison:** aggregate results across proteins and
+  layers, analyze coefficients or feature importance, and relate decodability
+  to protein size and structural reconstruction quality.
 
-### Core Analysis Pipeline
+## Data and evaluation
 
-1. **Data extraction:** Pair block tensors are saved per-layer per-protein as `.npy` files.
-2. **Structure parsing:** Predicted PDB structures are parsed to extract C-alpha coordinates and compute pairwise distance matrices (ground-truth distances between residues).
-3. **Linear regression probes:** We train linear models to predict pairwise residue distances from the 128-channel pair representation features at each layer. This reveals how much distance information is linearly accessible at each depth of the network.
-4. **Layer-wise analysis:** We track regression R-squared values across all 48 layers to see how distance information builds up through the network.
-5. **Multi-protein aggregation:** Results are aggregated across multiple proteins to identify general patterns rather than protein-specific artifacts.
+The primary benchmark is a TM-score-filtered combined CAMEO + ECOD collection
+(currently 554 discovered proteins). Each protein contributes saved pair-block
+tensors and predicted PDB coordinates. Analyses use C-alpha distance matrices
+as structural targets and report per-protein as well as pooled results, with
+held-out proteins kept separate wherever the question is generalization.
 
-### Analysis Variants
+## Why this matters
 
-- **Per-protein regression:** Layer-wise R-squared curves for individual proteins
-- **Multi-protein regression:** Combined analysis across all proteins
-- **Logistic regression with diagonal features:** Classification-based probes incorporating self-representation (diagonal) features
-- **K-fold cross-validation:** Robust evaluation of probe generalization
+Protein-folding models are often treated as black boxes that map a sequence to
+a final structure. This work instead asks how a fold becomes represented inside
+the network: whether geometry is linearly available or requires nonlinear
+decoding, when a globally consistent structure appears, and which internal
+features support it. The longer-term aim is a comparative, mechanistic account
+of representation formation across modern protein-folding AI models.
 
-## Goals
+## Implementation at a glance
 
-The overarching goals of this project are:
-
-1. **Interpretability:** Understand what information AlphaFold's pair representations carry at each layer — specifically, how much they encode about the physical distances between residue pairs in the folded protein.
-2. **Layer dynamics:** Characterize how structural information emerges and refines across the 48 Evoformer layers. Do early layers capture coarse distance patterns? Do later layers sharpen fine-grained spatial relationships?
-3. **Representation understanding:** Determine whether simple linear probes can decode meaningful structural signals, or whether the information is encoded in more complex, nonlinear ways.
-4. **Protein folding insight:** Use these findings to better understand the computational mechanism by which AlphaFold transforms sequence-level features into accurate 3D structure predictions.
-
-## Technical Stack
-
-- **Languages:** Python
-- **Key libraries:** NumPy, SciPy, Matplotlib, Biopython, scikit-learn
-- **Compute:** SLURM clusters (Delta and ICE) for large-scale regression across proteins and layers
-- **Data format:** `.npy` pair block tensors, PDB structure files, CSV result tables
+The codebase is Python-based (NumPy, SciPy, scikit-learn, XGBoost, Biopython,
+and Matplotlib) and runs larger layer/protein sweeps on the Delta SLURM cluster.
+Outputs are structured CSV summaries, regression and geometry diagnostics,
+plots, and visualization-ready reconstructed structures.
