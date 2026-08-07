@@ -1304,3 +1304,8 @@ add a Slurm layer array, and plot held-out pair scores.
 
 Added shared and per-protein XGBoost search/winner arrays for anchor layers,
 with deterministic splits, cap sweeps, validation-only selection, and MDS/TM outputs.
+
+## Session: 2026-08-07 — Layer-47 salt-bridge classification probe
+
+Added a two-hour CAMEO-50 probe with matched controls, protein-level splits,
+regularized logistic feature ablations, and matched/natural-pool evaluation.
