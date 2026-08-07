@@ -1,5 +1,16 @@
 # Branch Analysis
 
+## Session: 2026-08-07 — CAMEO-50 pair-interaction annotation prototype
+
+Added Delta DSSP setup/job scripts and a restart-safe structural annotation
+pipeline for salt bridges, DSSP backbone/beta interactions, and hydrophobic cores.
+
+## Session: 2026-07-27 — Add ECOD input copy utility
+
+Added a Delta-ready script to copy the first 100 ECOD `.a3m` files and layer-47
+predicted PDBs into `$HOME/csv_files`, plus a matching sbatch launcher that
+activates `~/protein_venv`.
+
 ## Session: 2026-07-03 — Rename generalized exact triangle replay
 
 Renamed the generalized base256 exact-triangle replay script/sbatch from

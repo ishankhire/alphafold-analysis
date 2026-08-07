@@ -1,0 +1,32 @@
+[2026-08-03T05:57:00-05:00] job starting on cn094.delta.ncsa.illinois.edu
+[2026-08-03T05:57:05-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/per_protein/search/layer_23/per_protein_timing.csv
+[2026-08-03T05:57:05-05:00] Per-protein XGBoost search task 1: layer 23
+[2026-08-03T05:59:33-05:00] Starting P0 across all 50 proteins with uniform rows
+[2026-08-03T05:59:45-05:00] P0: completed 10/50 proteins
+[2026-08-03T05:59:58-05:00] P0: completed 20/50 proteins
+[2026-08-03T06:00:14-05:00] P0: completed 30/50 proteins
+[2026-08-03T06:00:34-05:00] P0: completed 40/50 proteins
+[2026-08-03T06:01:07-05:00] P0: completed 50/50 proteins
+[2026-08-03T06:01:07-05:00] Checkpointed P0; validation mean protein R2=0.970525
+[2026-08-03T06:01:07-05:00] Starting P1 across all 50 proteins with uniform rows
+[2026-08-03T06:01:22-05:00] P1: completed 10/50 proteins
+[2026-08-03T06:01:40-05:00] P1: completed 20/50 proteins
+[2026-08-03T06:02:00-05:00] P1: completed 30/50 proteins
+[2026-08-03T06:02:25-05:00] P1: completed 40/50 proteins
+[2026-08-03T06:03:04-05:00] P1: completed 50/50 proteins
+[2026-08-03T06:03:04-05:00] Checkpointed P1; validation mean protein R2=0.974688
+[2026-08-03T06:03:04-05:00] Starting P2 across all 50 proteins with uniform rows
+[2026-08-03T06:03:17-05:00] P2: completed 10/50 proteins
+[2026-08-03T06:03:34-05:00] P2: completed 20/50 proteins
+[2026-08-03T06:03:55-05:00] P2: completed 30/50 proteins
+[2026-08-03T06:04:20-05:00] P2: completed 40/50 proteins
+[2026-08-03T06:05:00-05:00] P2: completed 50/50 proteins
+[2026-08-03T06:05:00-05:00] Checkpointed P2; validation mean protein R2=0.975059
+[2026-08-03T06:05:00-05:00] Starting P3 across all 50 proteins with uniform rows
+[2026-08-03T06:05:27-05:00] P3: completed 10/50 proteins
+[2026-08-03T06:06:05-05:00] P3: completed 20/50 proteins
+[2026-08-03T06:06:50-05:00] P3: completed 30/50 proteins
+[2026-08-03T06:07:44-05:00] P3: completed 40/50 proteins
+[2026-08-03T06:08:56-05:00] P3: completed 50/50 proteins
+[2026-08-03T06:08:56-05:00] Checkpointed P3; validation mean protein R2=0.977444
+[2026-08-03T06:08:56-05:00] Per-protein layer 23 search complete in 710.613s

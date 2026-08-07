@@ -1,0 +1,37 @@
+{
+  "anchor_layers": [
+    0,
+    23,
+    47
+  ],
+  "completed_at": "2026-08-03T06:18:51-05:00",
+  "early_stopping_rounds": 30,
+  "feature_count": 128,
+  "feature_definition": "float64 0.5*(pair_block[i,j,:]+pair_block[j,i,:])",
+  "fit_cap_per_protein": 10000,
+  "fixed_xgboost_parameters": {
+    "colsample_bytree": 0.8,
+    "early_stopping_rounds": 30,
+    "eval_metric": "rmse",
+    "max_bin": 256,
+    "n_estimators": 700,
+    "objective": "reg:squarederror",
+    "random_state": 42,
+    "reg_lambda": 1.0,
+    "subsample": 0.8,
+    "tree_method": "hist"
+  },
+  "layer": 47,
+  "n_estimators": 700,
+  "n_skipped_proteins": 2,
+  "n_valid_proteins": 552,
+  "pipeline": "shared_search",
+  "selection_metric": "validation_mean_per_protein_r2",
+  "split_digest": "0107dbe9928ec83fc1accb02682a770008c5c5a059bceb285ce8431883a3a2b1",
+  "standardized": false,
+  "started_at": "2026-08-03T05:59:33-05:00",
+  "status": "complete",
+  "task_elapsed_seconds": 1304.710965229082,
+  "task_id": 2,
+  "weighting_mode": "protein_equal"
+}

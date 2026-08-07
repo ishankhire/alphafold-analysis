@@ -1,0 +1,32 @@
+[2026-08-03T05:57:03-05:00] job starting on cn061.delta.ncsa.illinois.edu
+[2026-08-03T05:57:08-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/per_protein/search/layer_00/per_protein_timing.csv
+[2026-08-03T05:57:08-05:00] Per-protein XGBoost search task 0: layer 0
+[2026-08-03T05:59:33-05:00] Starting P0 across all 50 proteins with uniform rows
+[2026-08-03T05:59:44-05:00] P0: completed 10/50 proteins
+[2026-08-03T05:59:58-05:00] P0: completed 20/50 proteins
+[2026-08-03T06:00:14-05:00] P0: completed 30/50 proteins
+[2026-08-03T06:00:36-05:00] P0: completed 40/50 proteins
+[2026-08-03T06:01:12-05:00] P0: completed 50/50 proteins
+[2026-08-03T06:01:12-05:00] Checkpointed P0; validation mean protein R2=0.707588
+[2026-08-03T06:01:12-05:00] Starting P1 across all 50 proteins with uniform rows
+[2026-08-03T06:01:25-05:00] P1: completed 10/50 proteins
+[2026-08-03T06:01:43-05:00] P1: completed 20/50 proteins
+[2026-08-03T06:02:05-05:00] P1: completed 30/50 proteins
+[2026-08-03T06:02:32-05:00] P1: completed 40/50 proteins
+[2026-08-03T06:03:15-05:00] P1: completed 50/50 proteins
+[2026-08-03T06:03:15-05:00] Checkpointed P1; validation mean protein R2=0.721433
+[2026-08-03T06:03:15-05:00] Starting P2 across all 50 proteins with uniform rows
+[2026-08-03T06:03:24-05:00] P2: completed 10/50 proteins
+[2026-08-03T06:03:38-05:00] P2: completed 20/50 proteins
+[2026-08-03T06:03:56-05:00] P2: completed 30/50 proteins
+[2026-08-03T06:04:23-05:00] P2: completed 40/50 proteins
+[2026-08-03T06:05:06-05:00] P2: completed 50/50 proteins
+[2026-08-03T06:05:06-05:00] Checkpointed P2; validation mean protein R2=0.722624
+[2026-08-03T06:05:06-05:00] Starting P3 across all 50 proteins with uniform rows
+[2026-08-03T06:05:27-05:00] P3: completed 10/50 proteins
+[2026-08-03T06:06:03-05:00] P3: completed 20/50 proteins
+[2026-08-03T06:06:43-05:00] P3: completed 30/50 proteins
+[2026-08-03T06:07:37-05:00] P3: completed 40/50 proteins
+[2026-08-03T06:08:50-05:00] P3: completed 50/50 proteins
+[2026-08-03T06:08:50-05:00] Checkpointed P3; validation mean protein R2=0.731799
+[2026-08-03T06:08:50-05:00] Per-protein layer 0 search complete in 702.618s
