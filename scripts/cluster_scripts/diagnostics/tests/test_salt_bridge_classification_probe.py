@@ -38,7 +38,7 @@ def annotation_row(**overrides):
     return row
 
 
-def candidate(pair_id, label, ca=8.0, sasa=0.1, seq=8, acid="GLU", base="LYS"):
+def candidate(pair_id, label, ca=8.0, seq=8, acid="GLU", base="LYS"):
     return {
         "protein_id": "protein",
         "pair_id": pair_id,
@@ -52,10 +52,6 @@ def candidate(pair_id, label, ca=8.0, sasa=0.1, seq=8, acid="GLU", base="LYS"):
         "sequence_separation": seq,
         "sequence_bin": probe.separation_bin(seq),
         "ca_distance": ca,
-        "acid_dssp": "helix",
-        "base_dssp": "coil",
-        "relative_sasa_acid": sasa,
-        "relative_sasa_base": sasa,
         "label": label,
         "match_set_id": "",
         "match_tier": None,
@@ -63,23 +59,23 @@ def candidate(pair_id, label, ca=8.0, sasa=0.1, seq=8, acid="GLU", base="LYS"):
     }
 
 
-def test_candidate_is_canonicalized_as_acid_then_base_and_complete_case():
+def test_candidate_is_canonicalized_and_ignores_failed_dssp_fields():
     parsed, reason = probe.parse_candidate_row(annotation_row())
     assert reason is None
     assert parsed["acid_index"] == 2
     assert parsed["base_index"] == 0
     assert parsed["acid_name"] == "GLU"
     assert parsed["base_name"] == "LYS"
-    assert parsed["acid_dssp"] == "beta"
-    assert parsed["base_dssp"] == "helix"
-    assert parsed["relative_sasa_acid"] == 0.10
-    assert parsed["relative_sasa_base"] == 0.30
-
-    missing, reason = probe.parse_candidate_row(
-        annotation_row(relative_sasa_i="")
+    no_dssp, reason = probe.parse_candidate_row(
+        annotation_row(
+            dssp_3state_i="",
+            dssp_3state_j="",
+            relative_sasa_i="",
+            relative_sasa_j="",
+        )
     )
-    assert missing is None
-    assert reason == "missing_or_invalid_ordinary_covariate"
+    assert reason is None
+    assert no_dssp["acid_name"] == "GLU"
     noncandidate, reason = probe.parse_candidate_row(
         annotation_row(resname_i="ALA", resname_j="GLY")
     )
@@ -87,50 +83,17 @@ def test_candidate_is_canonicalized_as_acid_then_base_and_complete_case():
     assert reason == "not_acidic_basic_candidate"
 
 
-def test_annotation_loader_fails_fast_when_every_dssp_run_failed(tmp_path):
-    (tmp_path / "annotation_config.json").write_text(
-        json.dumps({"config_hash": "failed_dssp"})
-    )
-    with (tmp_path / "protein_manifest.csv").open("w", newline="") as handle:
-        writer = csv.DictWriter(
-            handle,
-            fieldnames=["protein_id", "status", "residue_count", "failure_reason"],
-        )
-        writer.writeheader()
-        for index in range(50):
-            writer.writerow(
-                {
-                    "protein_id": f"p{index:02d}",
-                    "status": "success",
-                    "residue_count": 10,
-                    "failure_reason": "mkdssp returned non-zero exit status 1",
-                }
-            )
-    try:
-        probe.load_annotation_records(tmp_path)
-    except RuntimeError as exc:
-        assert "all 50 annotation proteins report DSSP failures" in str(exc)
-    else:
-        raise AssertionError("expected a complete-case DSSP failure")
-
-
 def test_ordinary_baseline_is_simple_and_excludes_label_defining_distances():
     parsed, _ = probe.parse_candidate_row(annotation_row())
     matrix = probe.build_ordinary_features([parsed])
-    assert matrix.shape == (1, 10)
+    assert matrix.shape == (1, 4)
     assert "charged_atom_distance" not in probe.ORDINARY_FEATURE_NAMES
     assert "min_heavy_atom_distance" not in probe.ORDINARY_FEATURE_NAMES
     assert probe.ORDINARY_FEATURE_NAMES == [
         "ca_distance",
         "log1p_sequence_separation",
-        "relative_sasa_acid",
-        "relative_sasa_base",
         "acid_is_glu",
         "base_is_lys",
-        "acid_dssp_is_helix",
-        "acid_dssp_is_beta",
-        "base_dssp_is_helix",
-        "base_dssp_is_beta",
     ]
 
 
@@ -281,10 +244,6 @@ def test_synthetic_fifty_protein_end_to_end(tmp_path, monkeypatch):
         "resname_j",
         "sequence_separation",
         "ca_distance",
-        "dssp_3state_i",
-        "dssp_3state_j",
-        "relative_sasa_i",
-        "relative_sasa_j",
         "salt_bridge",
         "salt_bridge_valid",
     ]
@@ -292,13 +251,18 @@ def test_synthetic_fifty_protein_end_to_end(tmp_path, monkeypatch):
     for protein_index in range(50):
         protein_id = f"p{protein_index:02d}"
         manifests.append(
-            {"protein_id": protein_id, "status": "success", "residue_count": 8}
+            {
+                "protein_id": protein_id,
+                "status": "success",
+                "residue_count": 8,
+                "failure_reason": "mkdssp returned non-zero exit status 1",
+            }
         )
         rows = [
-            [protein_id, 0, 8, 0, 1, "ASP", "LYS", 1, 8.0, "helix", "coil", 0.1, 0.2, 1, 1],
-            [protein_id, 1, 8, 2, 3, "ASP", "LYS", 1, 8.1, "helix", "coil", 0.1, 0.2, 0, 1],
-            [protein_id, 2, 8, 4, 5, "GLU", "ARG", 1, 9.0, "beta", "coil", 0.2, 0.3, 1, 1],
-            [protein_id, 3, 8, 6, 7, "GLU", "ARG", 1, 9.1, "beta", "coil", 0.2, 0.3, 0, 1],
+            [protein_id, 0, 8, 0, 1, "ASP", "LYS", 1, 8.0, 1, 1],
+            [protein_id, 1, 8, 2, 3, "ASP", "LYS", 1, 8.1, 0, 1],
+            [protein_id, 2, 8, 4, 5, "GLU", "ARG", 1, 9.0, 1, 1],
+            [protein_id, 3, 8, 6, 7, "GLU", "ARG", 1, 9.1, 0, 1],
         ]
         with gzip.open(
             annotation_root / "annotations" / "per_protein" / f"{protein_id}.csv.gz",
@@ -317,7 +281,8 @@ def test_synthetic_fifty_protein_end_to_end(tmp_path, monkeypatch):
         np.save(protein_pair_root / f"{protein_id}_pair_block_47.npy", block)
     with (annotation_root / "protein_manifest.csv").open("w", newline="") as handle:
         writer = csv.DictWriter(
-            handle, fieldnames=["protein_id", "status", "residue_count"]
+            handle,
+            fieldnames=["protein_id", "status", "residue_count", "failure_reason"],
         )
         writer.writeheader()
         writer.writerows(manifests)

@@ -52,7 +52,6 @@ SPLIT_TARGETS = {"train": 30, "validation": 10, "test": 10}
 SPLIT_PRIORITY = {"train": 0, "validation": 1, "test": 2}
 ACIDIC = frozenset(("ASP", "GLU"))
 BASIC = frozenset(("LYS", "ARG"))
-DSSP_STATES = frozenset(("helix", "beta", "coil"))
 MIN_MATCHED_POSITIVES = {"train": 100, "validation": 20, "test": 20}
 MIN_CONTRIBUTING_PROTEINS = 5
 UNMATCHED_COST = 10_000.0
@@ -73,14 +72,8 @@ COMBINED_VARIANTS = frozenset(
 ORDINARY_FEATURE_NAMES = [
     "ca_distance",
     "log1p_sequence_separation",
-    "relative_sasa_acid",
-    "relative_sasa_base",
     "acid_is_glu",
     "base_is_lys",
-    "acid_dssp_is_helix",
-    "acid_dssp_is_beta",
-    "base_dssp_is_helix",
-    "base_dssp_is_beta",
 ]
 CROSS_FEATURE_NAMES = [f"pair_acid_base_ch_{idx}" for idx in range(N_CHANNELS)] + [
     f"pair_base_acid_ch_{idx}" for idx in range(N_CHANNELS)
@@ -260,7 +253,8 @@ def parse_candidate_row(row):
 
     Return ``(candidate, reason)``.  Non-candidates and incomplete ordinary
     covariates are excluded before any model variant is constructed so all
-    variants use identical rows.
+    variants use identical rows. DSSP, SASA, and DSSP-derived annotations are
+    deliberately ignored because they are not required to define salt bridges.
     """
     res_i, res_j = row.get("resname_i", ""), row.get("resname_j", "")
     if res_i in ACIDIC and res_j in BASIC:
@@ -277,10 +271,6 @@ def parse_candidate_row(row):
         sequence_separation = int(row["sequence_separation"])
         if sequence_separation < 1:
             raise ValueError("invalid sequence separation")
-        acid_dssp = row[f"dssp_3state_{acid_side}"]
-        base_dssp = row[f"dssp_3state_{base_side}"]
-        if acid_dssp not in DSSP_STATES or base_dssp not in DSSP_STATES:
-            return None, "missing_dssp_3state"
         candidate = {
             "protein_id": row["protein_id"],
             "pair_id": int(row["pair_id"]),
@@ -294,10 +284,6 @@ def parse_candidate_row(row):
             "sequence_separation": sequence_separation,
             "sequence_bin": separation_bin(sequence_separation),
             "ca_distance": finite_float(row["ca_distance"]),
-            "acid_dssp": acid_dssp,
-            "base_dssp": base_dssp,
-            "relative_sasa_acid": finite_float(row[f"relative_sasa_{acid_side}"]),
-            "relative_sasa_base": finite_float(row[f"relative_sasa_{base_side}"]),
             "label": int(row["salt_bridge"]),
             "match_set_id": "",
             "match_tier": None,
@@ -322,14 +308,6 @@ def load_annotation_records(annotation_root):
         raise RuntimeError(
             f"expected 50 successful annotation proteins for a 30/10/10 split; got {len(successful)}"
         )
-    dssp_failures = [row for row in successful if row.get("failure_reason", "").strip()]
-    if len(dssp_failures) == len(successful):
-        raise RuntimeError(
-            "all 50 annotation proteins report DSSP failures; the chosen complete-case "
-            "baseline has no secondary-structure or relative-SASA rows. Regenerate the "
-            "annotation cache after fixing DSSP before running this probe"
-        )
-
     records = []
     exclusion_rows = []
     for manifest in sorted(successful, key=lambda item: item["protein_id"]):
@@ -372,7 +350,7 @@ def load_annotation_records(annotation_root):
             }
         )
         log(
-            f"{protein_id}: retained {len(candidates):,} complete acid-base candidates "
+            f"{protein_id}: retained {len(candidates):,} valid acid-base candidates "
             f"({records[-1]['n_positive']} positive)"
         )
     return annotation_config, records, exclusion_rows
@@ -439,40 +417,25 @@ def matching_tier(positive, negative):
     ):
         return None
     ca_diff = abs(positive["ca_distance"] - negative["ca_distance"])
-    acid_sasa_diff = abs(
-        positive["relative_sasa_acid"] - negative["relative_sasa_acid"]
-    )
-    base_sasa_diff = abs(
-        positive["relative_sasa_base"] - negative["relative_sasa_base"]
-    )
     bin_diff = abs(positive["sequence_bin"] - negative["sequence_bin"])
-    ss_mismatch = int(positive["acid_dssp"] != negative["acid_dssp"]) + int(
-        positive["base_dssp"] != negative["base_dssp"]
-    )
     specs = (
-        (0, 0.5, 0.10, 0, 0),
-        (1, 1.0, 0.20, 0, 0),
-        (2, 1.5, 0.25, 1, 0),
-        (3, 2.0, 0.25, 1, 1),
+        (0, 0.5, 0),
+        (1, 1.0, 0),
+        (2, 1.5, 1),
+        (3, 2.0, 1),
     )
-    for tier, ca_limit, sasa_limit, bin_limit, ss_limit in specs:
+    for tier, ca_limit, bin_limit in specs:
         if (
             ca_diff <= ca_limit
-            and acid_sasa_diff <= sasa_limit
-            and base_sasa_diff <= sasa_limit
             and bin_diff <= bin_limit
-            and ss_mismatch <= ss_limit
         ):
             continuous_cost = (
                 ca_diff / ca_limit
-                + acid_sasa_diff / sasa_limit
-                + base_sasa_diff / sasa_limit
                 + abs(
                     math.log1p(positive["sequence_separation"])
                     - math.log1p(negative["sequence_separation"])
                 )
                 / math.log(2.0)
-                + float(ss_mismatch)
             )
             return tier, 100.0 * tier + continuous_cost
     return None
@@ -556,8 +519,6 @@ def match_protein_candidates(protein_id, candidates):
     numeric = {
         "ca_distance": lambda row: row["ca_distance"],
         "log1p_sequence_separation": lambda row: math.log1p(row["sequence_separation"]),
-        "relative_sasa_acid": lambda row: row["relative_sasa_acid"],
-        "relative_sasa_base": lambda row: row["relative_sasa_base"],
     }
     diagnostics = {
         "protein_id": protein_id,
@@ -575,19 +536,6 @@ def match_protein_candidates(protein_id, candidates):
             [getter(row) for row in matched_positive],
             [getter(row) for row in matched_negative],
         )
-    diagnostics["matched_dssp_role_mismatch_fraction"] = (
-        float(
-            np.mean(
-                [
-                    int(first["acid_dssp"] != second["acid_dssp"])
-                    or int(first["base_dssp"] != second["base_dssp"])
-                    for first, second in zip(matched_positive, matched_negative)
-                ]
-            )
-        )
-        if matched_positive
-        else float("nan")
-    )
     return matched_rows, diagnostics, unmatched_rows
 
 
@@ -598,14 +546,8 @@ def build_ordinary_features(candidates):
         result[row_index] = (
             row["ca_distance"],
             math.log1p(row["sequence_separation"]),
-            row["relative_sasa_acid"],
-            row["relative_sasa_base"],
             int(row["acid_name"] == "GLU"),
             int(row["base_name"] == "LYS"),
-            int(row["acid_dssp"] == "helix"),
-            int(row["acid_dssp"] == "beta"),
-            int(row["base_dssp"] == "helix"),
-            int(row["base_dssp"] == "beta"),
         )
     return result
 
@@ -1185,10 +1127,6 @@ def matching_assignment_rows(matched_by_protein, assignments):
         "ca_distance",
         "sequence_separation",
         "sequence_bin",
-        "acid_dssp",
-        "base_dssp",
-        "relative_sasa_acid",
-        "relative_sasa_base",
         "match_tier",
         "match_cost",
     ]
@@ -1224,18 +1162,31 @@ def build_probe_config(annotation_config, annotation_root, pair_blocks_root):
         "annotation_config_hash": annotation_config.get("config_hash"),
         "layer": LAYER,
         "split_targets": SPLIT_TARGETS,
-        "split_balance_fields": ["complete_case_salt_bridge_positives", "n_residues"],
+        "split_balance_fields": ["valid_salt_bridge_positives", "n_residues"],
         "negative_policy": "one_to_one_unique_within_protein_acidic_basic",
         "matching_tiers": [
-            {"tier": 0, "same_dssp": True, "sequence_bin_delta": 0, "ca_delta": 0.5, "sasa_delta": 0.10},
-            {"tier": 1, "same_dssp": True, "sequence_bin_delta": 0, "ca_delta": 1.0, "sasa_delta": 0.20},
-            {"tier": 2, "same_dssp": True, "sequence_bin_delta": 1, "ca_delta": 1.5, "sasa_delta": 0.25},
-            {"tier": 3, "max_dssp_role_mismatches": 1, "sequence_bin_delta": 1, "ca_delta": 2.0, "sasa_delta": 0.25},
+            {"tier": 0, "sequence_bin_delta": 0, "ca_delta": 0.5},
+            {"tier": 1, "sequence_bin_delta": 0, "ca_delta": 1.0},
+            {"tier": 2, "sequence_bin_delta": 1, "ca_delta": 1.5},
+            {"tier": 3, "sequence_bin_delta": 1, "ca_delta": 2.0},
         ],
         "ordinary_baseline": {
-            "design": "simple_linear_provisional_key_scientific_choice",
+            "design": "simple_linear_salt_only_no_dssp_or_sasa",
             "features": ORDINARY_FEATURE_NAMES,
         },
+        "ignored_annotation_fields": [
+            "dssp_code_i",
+            "dssp_code_j",
+            "dssp_3state_i",
+            "dssp_3state_j",
+            "absolute_sasa_i",
+            "absolute_sasa_j",
+            "relative_sasa_i",
+            "relative_sasa_j",
+            "backbone_hbond",
+            "beta_bridge",
+            "hydrophobic_core_contact",
+        ],
         "variants": {name: feature_names_for_variant(name) for name in VARIANT_ORDER},
         "training_weighting": "equal_total_weight_per_protein",
         "regularization": "L2",
@@ -1467,7 +1418,8 @@ def main():
         f"classification_config_hash={probe_config['classification_config_hash']}",
         f"annotation_config_hash={annotation_config.get('config_hash', '')}",
         "interpretation=interactions in OpenFold unrelaxed predicted structures",
-        "ordinary_baseline_design=simple linear (provisional key scientific choice)",
+        "ordinary_baseline_design=simple linear amino-acid identity, C-alpha distance, and sequence separation",
+        "dssp_sasa_policy=ignored; unavailable DSSP-derived fields do not affect salt-bridge eligibility",
         "training_data=one-to-one within-protein matched acid-base pairs",
         "test_scopes=matched,natural_candidate_pool",
         f"runtime_seconds={elapsed:.1f}",
