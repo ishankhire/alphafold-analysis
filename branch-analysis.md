@@ -1317,3 +1317,8 @@ zero-indexed layers (0–47) as independent array tasks with isolated outputs.
 
 Added reproducible 48-layer metric/hyperparameter plots, aggregate CSVs, and a
 report recommending a compact cross-probe regularization grid.
+
+## Session: 2026-08-08 — Layer-47 coefficient clustering
+
+Added reproducible k-means diagnostics and metadata-confound checks for the
+per-protein layer-47 standardized coefficient profiles.
