@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-08-07 — ECOD category probe analysis
+
+Added a local ECOD category analysis for shared/per-protein base256 trajectories,
+coefficient cosine clustering, permutation testing, and length-adjusted effects.
+
 ## Session: 2026-08-07 — CAMEO-50 pair-interaction annotation prototype
 
 Added Delta DSSP setup/job scripts and a restart-safe structural annotation

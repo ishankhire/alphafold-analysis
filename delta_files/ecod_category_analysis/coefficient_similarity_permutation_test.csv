@@ -1,0 +1,2 @@
+statistic,observed_value,null_mean,null_standard_deviation,permutation_p_value_greater,n_permutations,random_seed
+mean_across_layer_within_minus_between_cosine,0.016355388131311654,1.000022632490788e-05,0.0004668944393268616,0.0004997501249375312,2000,20260807
