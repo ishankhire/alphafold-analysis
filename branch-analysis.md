@@ -1310,3 +1310,5 @@ with deterministic splits, cap sweeps, validation-only selection, and MDS/TM out
 Added a two-hour CAMEO-50 probe with matched controls, protein-level splits,
 regularized logistic feature ablations, and matched/natural-pool evaluation.
 Revised the salt-bridge probe to ignore failed DSSP/SASA annotations entirely.
+Generalized the probe to one configurable layer and made its sbatch run layers
+1–47 as independent array tasks with isolated outputs.

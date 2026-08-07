@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Layer-47 salt-bridge classification probe for the cached CAMEO-50 annotations.
+"""Single-layer salt-bridge classification probe for cached CAMEO-50 annotations.
 
 The probe uses one-to-one within-protein matched controls for fitting and also
 evaluates the selected models on the natural pool of chemically eligible
@@ -41,8 +41,12 @@ from sklearn.metrics import (
 )
 
 
+# Keep the established identifier because the statistical specification is
+# unchanged and existing layer-47 checkpoints must remain restart-compatible.
 PROBE_VERSION = "salt_bridge_layer47_v1"
-LAYER = 47
+LAYER = int(os.environ.get("PROBE_LAYER", "47"))
+if not 0 <= LAYER <= 47:
+    raise ValueError(f"PROBE_LAYER must be between 0 and 47, got {LAYER}")
 RANDOM_STATE = 42
 N_CHANNELS = 128
 MAX_ITER = 5000
@@ -567,7 +571,7 @@ def extract_representation_features(pair_block, candidates):
 
 
 def build_feature_bundle(records, assignments, matched_by_protein, pair_blocks_root, deadline):
-    """Read every layer-47 block once and cache only required base feature arrays."""
+    """Read every selected-layer block once and cache required base feature arrays."""
     chunks = {
         split: {"metadata": [], "ordinary": [], "cross": [], "diagonal": []}
         for split in SPLIT_TARGETS
@@ -1064,7 +1068,7 @@ def add_ordinary_gains(summary_rows):
 
 
 def write_comparison_plot(summary_rows, destination):
-    """Plot layer-47 held-out AUROC and AP for matched and natural scopes."""
+    """Plot selected-layer held-out AUROC and AP for matched and natural scopes."""
     lookup = {
         (row["model_variant"], row["evaluation_scope"]): row
         for row in summary_rows
@@ -1222,7 +1226,7 @@ def main():
     pair_blocks_root = Path(
         os.environ.get("PAIR_BLOCKS_ROOT", "/work/hdd/bekh/thayes/openfold_reps")
     ).resolve()
-    output_dir = annotation_root / "classification" / "salt_bridge" / "layer_47"
+    output_dir = annotation_root / "classification" / "salt_bridge" / f"layer_{LAYER}"
     checkpoint_dir = output_dir / "prediction_shards"
     output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
@@ -1408,12 +1412,12 @@ def main():
     write_csv_atomic(output_dir / "interaction_type_summary.csv", SUMMARY_FIELDS, summary_rows)
     merge_prediction_shards(shard_paths, output_dir / "predictions.csv.gz")
     write_comparison_plot(
-        summary_rows, output_dir / "visualizations" / "layer47_model_comparison.png"
+        summary_rows, output_dir / "visualizations" / f"layer{LAYER}_model_comparison.png"
     )
 
     elapsed = time.time() - deadline.started
     lines = [
-        "Layer-47 salt-bridge classification probe",
+        f"Layer-{LAYER} salt-bridge classification probe",
         f"probe_version={PROBE_VERSION}",
         f"classification_config_hash={probe_config['classification_config_hash']}",
         f"annotation_config_hash={annotation_config.get('config_hash', '')}",
