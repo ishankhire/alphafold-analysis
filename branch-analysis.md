@@ -1312,3 +1312,8 @@ regularized logistic feature ablations, and matched/natural-pool evaluation.
 Revised the salt-bridge probe to ignore failed DSSP/SASA annotations entirely.
 Generalized the probe to one configurable layer and made its sbatch run all 48
 zero-indexed layers (0–47) as independent array tasks with isolated outputs.
+
+## Session: 2026-08-07 — Salt-bridge layer trajectories
+
+Added reproducible 48-layer metric/hyperparameter plots, aggregate CSVs, and a
+report recommending a compact cross-probe regularization grid.
