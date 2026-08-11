@@ -1327,3 +1327,8 @@ report recommending a compact cross-probe regularization grid.
 
 Added reproducible k-means diagnostics and metadata-confound checks for the
 per-protein layer-47 standardized coefficient profiles.
+
+## Session: 2026-08-11 — Local pair-update probe pilot
+
+Added a portable 15-task Delta bundle for pre-MDS local distance-change Ridge
+classification and regression across three transitions and five context radii.
