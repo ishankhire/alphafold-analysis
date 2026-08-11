@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-08-11 — Local predicted-distance change SE pilot
+
+Added a 10-replicate protein-bootstrap array for raw layer 10→16 transition
+changes, pair-specific SEs, threshold buckets/stability, and shard aggregation.
+
 ## Session: 2026-08-07 — ECOD category probe analysis
 
 Added a local ECOD category analysis for shared/per-protein base256 trajectories,
