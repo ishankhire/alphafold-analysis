@@ -120,26 +120,35 @@ class LocalPairUpdateProbeTests(unittest.TestCase):
         self.assertEqual(x[1, i_plus_slot + 2 * pilot.N_CHANNELS], 1.0)
         self.assertEqual(x[1, j_minus_slot + 2 * pilot.N_CHANNELS], 1.0)
 
-    def test_saved_distance_change_order_and_intercept_cancellation(self):
+    def test_saved_distance_change_uses_each_endpoint_probe(self):
         rng = np.random.default_rng(7)
         pb_from = rng.normal(size=(9, 9, pilot.N_CHANNELS))
         pb_to = rng.normal(size=(9, 9, pilot.N_CHANNELS))
         i = np.array([0, 2, 3])
         j = np.array([4, 7, 8])
-        coefficients = rng.normal(size=pilot.DISTANCE_FEATURE_DIM)
-        intercept = 17.0
+        coefficients_from = rng.normal(size=pilot.DISTANCE_FEATURE_DIM)
+        coefficients_to = rng.normal(size=pilot.DISTANCE_FEATURE_DIM)
+        intercept_from = 17.0
+        intercept_to = -3.0
         distance_from, change = pilot.distance_change_and_current(
-            pb_from, pb_to, i, j, intercept, coefficients
+            pb_from,
+            pb_to,
+            i,
+            j,
+            intercept_from,
+            coefficients_from,
+            intercept_to,
+            coefficients_to,
         )
         direct_from = (
-            intercept
-            + pb_from[j, i] @ coefficients[:pilot.N_CHANNELS]
-            + pb_from[i, j] @ coefficients[pilot.N_CHANNELS:]
+            intercept_from
+            + pb_from[j, i] @ coefficients_from[:pilot.N_CHANNELS]
+            + pb_from[i, j] @ coefficients_from[pilot.N_CHANNELS:]
         )
         direct_to = (
-            intercept
-            + pb_to[j, i] @ coefficients[:pilot.N_CHANNELS]
-            + pb_to[i, j] @ coefficients[pilot.N_CHANNELS:]
+            intercept_to
+            + pb_to[j, i] @ coefficients_to[:pilot.N_CHANNELS]
+            + pb_to[i, j] @ coefficients_to[pilot.N_CHANNELS:]
         )
         np.testing.assert_allclose(distance_from, direct_from)
         np.testing.assert_allclose(

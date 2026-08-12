@@ -210,6 +210,7 @@ def summary_text(classification_rows, regression_rows, metadata_rows):
         f"Completed shards: {len(metadata_rows)}/15",
         "Transitions: 10->11, 20->21, 30->31",
         "Distance type: raw pre-MDS",
+        "Distance probes: saved own-layer probes at both endpoints",
         "Classification threshold: +/-0.5 Angstrom",
         "",
         "Mean held-out classifier ranking by pair macro-F1:",

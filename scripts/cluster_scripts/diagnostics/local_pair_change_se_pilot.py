@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """Protein-bootstrap pilot for uncertainty in consecutive-layer distance changes.
 
-One Slurm array task handles one transition x -> x+1 for x in 10..15. The
-layer-x general_base256_combined distance model is refit on ten protein-level
-bootstrap samples. Each refitted model is applied to both layer x and layer
-x+1, so the bootstrap distribution measures weight-estimation uncertainty in
-the predicted change.
+One Slurm array task handles one transition x -> x+1 for x in 10..15. Separate
+layer-x and layer-(x+1) general_base256_combined distance models are refit on
+ten paired protein-level bootstrap samples. Each endpoint representation is
+decoded by its own layer's model, so the bootstrap distribution measures
+weight-estimation uncertainty in the difference between layer-specific
+predictions.
 
 The expensive all-pair training pass is performed once. Per-protein normal-
 equation sufficient statistics are accumulated directly into all bootstrap
-replicates, after which the ten 257-parameter solves are inexpensive. All
-materialized features and regression calculations use float64.
+replicates, after which the twenty 257-parameter bootstrap solves are
+inexpensive. All materialized features and regression calculations use
+float64.
 
 This pilot intentionally analyzes raw pre-MDS predictions only.
 """
@@ -386,30 +388,36 @@ def solve_sufficient_statistics(gram, cross):
     }
 
 
-def extract_local_change_inputs(pb_from, pb_to, record, saved_bundle):
-    """Extract local feature differences and saved-model point predictions."""
+def extract_local_change_inputs(
+    pb_from, pb_to, record, saved_bundle_from, saved_bundle_to
+):
+    """Extract endpoint features and predictions from saved own-layer probes."""
     i, j, separation = local_pair_indices(record["n_residues"])
     n_local = int(i.size)
-    feature_difference = np.empty((n_local, FEATURE_DIM), dtype=np.float64)
+    feature_from = np.empty((n_local, FEATURE_DIM), dtype=np.float64)
+    feature_to = np.empty((n_local, FEATURE_DIM), dtype=np.float64)
 
     # The fitted model used lower-triangle order: pair_ij is (j, i) for i < j.
-    feature_difference[:, :N_CHANNELS] = pb_to[j, i, :] - pb_from[j, i, :]
-    feature_difference[:, N_CHANNELS:] = pb_to[i, j, :] - pb_from[i, j, :]
+    feature_from[:, :N_CHANNELS] = pb_from[j, i, :]
+    feature_from[:, N_CHANNELS:] = pb_from[i, j, :]
+    feature_to[:, :N_CHANNELS] = pb_to[j, i, :]
+    feature_to[:, N_CHANNELS:] = pb_to[i, j, :]
 
-    coef = saved_bundle["coef"]
-    intercept = float(saved_bundle["intercept"])
-    distance_from = np.full((n_local,), intercept, dtype=np.float64)
-    distance_to = np.full((n_local,), intercept, dtype=np.float64)
-    distance_from += np.asarray(pb_from[j, i, :], dtype=np.float64) @ coef[:N_CHANNELS]
-    distance_from += np.asarray(pb_from[i, j, :], dtype=np.float64) @ coef[N_CHANNELS:]
-    distance_to += np.asarray(pb_to[j, i, :], dtype=np.float64) @ coef[:N_CHANNELS]
-    distance_to += np.asarray(pb_to[i, j, :], dtype=np.float64) @ coef[N_CHANNELS:]
+    distance_from = (
+        float(saved_bundle_from["intercept"])
+        + feature_from @ saved_bundle_from["coef"]
+    )
+    distance_to = (
+        float(saved_bundle_to["intercept"])
+        + feature_to @ saved_bundle_to["coef"]
+    )
 
     return {
         "i": i,
         "j": j,
         "sequence_separation": separation,
-        "feature_difference": feature_difference,
+        "feature_from": feature_from,
+        "feature_to": feature_to,
         "distance_from": distance_from,
         "distance_to": distance_to,
     }
@@ -647,38 +655,41 @@ def write_pair_rows(path, layer_from, records, local_results):
     os.replace(tmp_path, path)
 
 
-def coefficient_rows(layer_from, fitted_models, saved_bundle):
+def coefficient_rows(fitted_models_by_layer):
     names = feature_names_for_variant(VARIANT)
     rows = []
-    models = [("recomputed_original", -1, fitted_models[0])]
-    models.extend(
-        ("protein_bootstrap", index, model)
-        for index, model in enumerate(fitted_models[1:])
-    )
-    for model_type, replicate, model in models:
-        rows.append(
-            {
-                "variant": VARIANT_NAME,
-                "layer": layer_from,
-                "model_type": model_type,
-                "bootstrap_replicate": replicate,
-                "feature_index": -1,
-                "feature_name": "intercept",
-                "coefficient_raw_scale": model["intercept"],
-            }
+    for layer, fitted_models in fitted_models_by_layer.items():
+        if not fitted_models:
+            continue
+        models = [("recomputed_original", -1, fitted_models[0])]
+        models.extend(
+            ("protein_bootstrap", index, model)
+            for index, model in enumerate(fitted_models[1:])
         )
-        for feature_index, feature_name in enumerate(names):
+        for model_type, replicate, model in models:
             rows.append(
                 {
                     "variant": VARIANT_NAME,
-                    "layer": layer_from,
+                    "layer": layer,
                     "model_type": model_type,
                     "bootstrap_replicate": replicate,
-                    "feature_index": feature_index,
-                    "feature_name": feature_name,
-                    "coefficient_raw_scale": model["coef"][feature_index],
+                    "feature_index": -1,
+                    "feature_name": "intercept",
+                    "coefficient_raw_scale": model["intercept"],
                 }
             )
+            for feature_index, feature_name in enumerate(names):
+                rows.append(
+                    {
+                        "variant": VARIANT_NAME,
+                        "layer": layer,
+                        "model_type": model_type,
+                        "bootstrap_replicate": replicate,
+                        "feature_index": feature_index,
+                        "feature_name": feature_name,
+                        "coefficient_raw_scale": model["coef"][feature_index],
+                    }
+                )
     return rows
 
 
@@ -719,8 +730,9 @@ def write_summary_text(
             "each sampled protein has equal total regression weight.\n"
         )
         handle.write(
-            "The same refitted layer-x model is applied to both x and x+1. "
-            "The intercept therefore cancels from raw changes.\n"
+            "Each replicate uses the same protein draw to fit separate layer-x "
+            "and layer-(x+1) models. Each endpoint is decoded by its own model, "
+            "so the two fitted intercepts do not cancel from raw changes.\n"
         )
         handle.write(
             "The naive pair SEM in change_statistics.csv is descriptive only; "
@@ -762,7 +774,10 @@ def main():
     log_progress(f"Split source:       {assignment_path}")
     log_progress(f"Output directory:   {output_dir}")
 
-    saved_bundle = load_saved_coefficient_bundle(coefficient_path, layer_from)
+    saved_bundles = {
+        layer_from: load_saved_coefficient_bundle(coefficient_path, layer_from),
+        layer_to: load_saved_coefficient_bundle(coefficient_path, layer_to),
+    }
     records = load_records(assignment_path)
     train_records = sorted(
         [record for record in records if record["split"] == "train"],
@@ -790,14 +805,19 @@ def main():
     )
     write_csv_atomic(
         output_dir / "coefficients_used.csv",
-        list(saved_bundle["source_rows"][0]),
-        saved_bundle["source_rows"],
+        list(saved_bundles[layer_from]["source_rows"][0]),
+        (
+            saved_bundles[layer_from]["source_rows"]
+            + saved_bundles[layer_to]["source_rows"]
+        ),
     )
 
     fit_grams = np.zeros(
-        (N_BOOTSTRAPS + 1, AUGMENTED_DIM, AUGMENTED_DIM), dtype=np.float64
+        (2, N_BOOTSTRAPS + 1, AUGMENTED_DIM, AUGMENTED_DIM), dtype=np.float64
     )
-    fit_crosses = np.zeros((N_BOOTSTRAPS + 1, AUGMENTED_DIM), dtype=np.float64)
+    fit_crosses = np.zeros(
+        (2, N_BOOTSTRAPS + 1, AUGMENTED_DIM), dtype=np.float64
+    )
     local_inputs = {}
     manifest_rows = []
 
@@ -843,23 +863,29 @@ def main():
                     f"{protein_id} CA coordinates {coordinates.shape} do not match "
                     f"{record['n_residues']} residues"
                 )
-            gram, cross = compute_equal_protein_sufficient_statistics(
-                pb_from, coordinates
-            )
             protein_train_index = train_index[protein_id]
-            fit_grams[0] += gram
-            fit_crosses[0] += cross
-            for replicate in range(N_BOOTSTRAPS):
-                multiplicity = int(
-                    bootstrap_counts[replicate, protein_train_index]
+            for endpoint_index, pb in enumerate((pb_from, pb_to)):
+                gram, cross = compute_equal_protein_sufficient_statistics(
+                    pb, coordinates
                 )
-                if multiplicity:
-                    fit_grams[replicate + 1] += multiplicity * gram
-                    fit_crosses[replicate + 1] += multiplicity * cross
-            del gram, cross, coordinates, ca_data
+                fit_grams[endpoint_index, 0] += gram
+                fit_crosses[endpoint_index, 0] += cross
+                for replicate in range(N_BOOTSTRAPS):
+                    multiplicity = int(
+                        bootstrap_counts[replicate, protein_train_index]
+                    )
+                    if multiplicity:
+                        fit_grams[endpoint_index, replicate + 1] += multiplicity * gram
+                        fit_crosses[endpoint_index, replicate + 1] += multiplicity * cross
+                del gram, cross
+            del coordinates, ca_data
 
         local_inputs[protein_id] = extract_local_change_inputs(
-            pb_from, pb_to, record, saved_bundle
+            pb_from,
+            pb_to,
+            record,
+            saved_bundles[layer_from],
+            saved_bundles[layer_to],
         )
         n_local = int(local_inputs[protein_id]["i"].size)
         manifest_rows.append(
@@ -897,70 +923,83 @@ def main():
         "solving bootstrap models"
     )
 
-    fitted_models = []
+    fitted_models_by_layer = {layer_from: [], layer_to: []}
     fit_rows = []
-    for model_index in range(N_BOOTSTRAPS + 1):
-        fit_t0 = time.time()
-        fitted = solve_sufficient_statistics(
-            fit_grams[model_index], fit_crosses[model_index]
-        )
-        fitted_models.append(fitted)
-        if model_index == 0:
-            model_type = "recomputed_original"
-            replicate = -1
-            unique_proteins = len(train_records)
-        else:
-            model_type = "protein_bootstrap"
-            replicate = model_index - 1
-            unique_proteins = int(
-                np.count_nonzero(bootstrap_counts[replicate])
+    for endpoint_index, layer in enumerate((layer_from, layer_to)):
+        for model_index in range(N_BOOTSTRAPS + 1):
+            fit_t0 = time.time()
+            fitted = solve_sufficient_statistics(
+                fit_grams[endpoint_index, model_index],
+                fit_crosses[endpoint_index, model_index],
             )
-        fit_rows.append(
-            {
-                "variant": VARIANT_NAME,
-                "layer": layer_from,
-                "model_type": model_type,
-                "bootstrap_replicate": replicate,
-                "n_draws": len(train_records),
-                "n_unique_proteins": unique_proteins,
-                "rank": fitted["rank"],
-                "normal_matrix_condition": fitted["normal_matrix_condition"],
-                "estimated_design_condition": fitted["estimated_design_condition"],
-                "scale_min": fitted["scale_min"],
-                "scale_max": fitted["scale_max"],
-                "intercept": fitted["intercept"],
-                "coefficient_l2": float(np.linalg.norm(fitted["coef"])),
-                "elapsed_seconds": time.time() - fit_t0,
-            }
-        )
-        write_csv_atomic(
-            output_dir / "bootstrap_fit_summary.csv",
-            list(fit_rows[0]),
-            fit_rows,
-        )
-        write_csv_atomic(
-            output_dir / "bootstrap_coefficients.csv",
-            [
-                "variant",
-                "layer",
-                "model_type",
-                "bootstrap_replicate",
-                "feature_index",
-                "feature_name",
-                "coefficient_raw_scale",
-            ],
-            coefficient_rows(layer_from, fitted_models, saved_bundle),
-        )
-        log_progress(
-            f"Solved {model_type} replicate={replicate}; rank={fitted['rank']}; "
-            f"design_condition={fitted['estimated_design_condition']:.3g}"
-        )
+            fitted_models_by_layer[layer].append(fitted)
+            if model_index == 0:
+                model_type = "recomputed_original"
+                replicate = -1
+                unique_proteins = len(train_records)
+            else:
+                model_type = "protein_bootstrap"
+                replicate = model_index - 1
+                unique_proteins = int(
+                    np.count_nonzero(bootstrap_counts[replicate])
+                )
+            fit_rows.append(
+                {
+                    "variant": VARIANT_NAME,
+                    "layer": layer,
+                    "model_type": model_type,
+                    "bootstrap_replicate": replicate,
+                    "n_draws": len(train_records),
+                    "n_unique_proteins": unique_proteins,
+                    "rank": fitted["rank"],
+                    "normal_matrix_condition": fitted["normal_matrix_condition"],
+                    "estimated_design_condition": fitted["estimated_design_condition"],
+                    "scale_min": fitted["scale_min"],
+                    "scale_max": fitted["scale_max"],
+                    "intercept": fitted["intercept"],
+                    "coefficient_l2": float(np.linalg.norm(fitted["coef"])),
+                    "elapsed_seconds": time.time() - fit_t0,
+                }
+            )
+            write_csv_atomic(
+                output_dir / "bootstrap_fit_summary.csv",
+                list(fit_rows[0]),
+                fit_rows,
+            )
+            write_csv_atomic(
+                output_dir / "bootstrap_coefficients.csv",
+                [
+                    "variant",
+                    "layer",
+                    "model_type",
+                    "bootstrap_replicate",
+                    "feature_index",
+                    "feature_name",
+                    "coefficient_raw_scale",
+                ],
+                coefficient_rows(fitted_models_by_layer),
+            )
+            log_progress(
+                f"Solved layer={layer} {model_type} replicate={replicate}; "
+                f"rank={fitted['rank']}; "
+                f"design_condition={fitted['estimated_design_condition']:.3g}"
+            )
 
     del fit_grams, fit_crosses
-    bootstrap_coefs = np.stack(
-        [model["coef"] for model in fitted_models[1:]], axis=1
-    )
-    recomputed_coef = fitted_models[0]["coef"]
+    bootstrap_coefs = {
+        layer: np.stack(
+            [model["coef"] for model in fitted_models_by_layer[layer][1:]],
+            axis=1,
+        )
+        for layer in (layer_from, layer_to)
+    }
+    bootstrap_intercepts = {
+        layer: np.asarray(
+            [model["intercept"] for model in fitted_models_by_layer[layer][1:]],
+            dtype=np.float64,
+        )
+        for layer in (layer_from, layer_to)
+    }
 
     all_changes = []
     all_pair_se = []
@@ -974,12 +1013,28 @@ def main():
     prediction_t0 = time.time()
     for record_index, record in enumerate(records, start=1):
         result = local_inputs[record["protein_id"]]
-        feature_difference = result.pop("feature_difference")
+        feature_from = result.pop("feature_from")
+        feature_to = result.pop("feature_to")
         saved_change = result["distance_to"] - result["distance_from"]
-        bootstrap_changes = feature_difference @ bootstrap_coefs
+        bootstrap_distance_from = (
+            feature_from @ bootstrap_coefs[layer_from]
+            + bootstrap_intercepts[layer_from]
+        )
+        bootstrap_distance_to = (
+            feature_to @ bootstrap_coefs[layer_to]
+            + bootstrap_intercepts[layer_to]
+        )
+        bootstrap_changes = bootstrap_distance_to - bootstrap_distance_from
         bootstrap_mean = np.mean(bootstrap_changes, axis=1, dtype=np.float64)
         pair_se = pair_change_standard_error(bootstrap_changes)
-        recomputed_change = feature_difference @ recomputed_coef
+        recomputed_from = fitted_models_by_layer[layer_from][0]
+        recomputed_to = fitted_models_by_layer[layer_to][0]
+        recomputed_change = (
+            recomputed_to["intercept"]
+            + feature_to @ recomputed_to["coef"]
+            - recomputed_from["intercept"]
+            - feature_from @ recomputed_from["coef"]
+        )
 
         result["saved_change"] = saved_change
         result["bootstrap_mean"] = bootstrap_mean
@@ -1024,7 +1079,14 @@ def main():
                 **{f"se_{key}": value for key, value in se_summary.items()},
             }
         )
-        del feature_difference, bootstrap_changes, recomputed_change
+        del (
+            feature_from,
+            feature_to,
+            bootstrap_distance_from,
+            bootstrap_distance_to,
+            bootstrap_changes,
+            recomputed_change,
+        )
 
         if record_index % 25 == 0 or record_index == len(records):
             log_progress(
@@ -1100,6 +1162,9 @@ def main():
         "n_bootstraps": N_BOOTSTRAPS,
         "bootstrap_seed": BOOTSTRAP_SEED,
         "bootstrap_unit": "protein",
+        "bootstrap_pairing": "same_protein_draw_for_both_layers",
+        "distance_probe_policy": "own_layer",
+        "distance_probe_layers": [layer_from, layer_to],
         "n_train_proteins": len(train_records),
         "n_test_proteins": sum(record["split"] == "test" for record in records),
         "n_local_pairs": int(changes.size),

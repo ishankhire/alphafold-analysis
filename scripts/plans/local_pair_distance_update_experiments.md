@@ -24,20 +24,22 @@ information.
 ## Defining a predicted distance update
 
 The experiment uses the existing `general_base256_combined` linear distance
-probe. That probe maps the two directional pair representations for a residue
-pair to a predicted Cα distance. For a transition from layer `x` to layer
-`x+1`, the coefficients learned at layer `x` are applied to both layers:
+probe family. Each probe maps the two directional pair representations for a
+residue pair to a predicted Cα distance. For a transition from layer `x` to
+layer `x+1`, each representation is decoded with its own saved layer-specific
+probe:
 
 ```text
 distance at x     = layer-x probe applied to the layer-x pair representation
-distance at x + 1 = the same layer-x probe applied to the layer-(x+1) representation
+distance at x + 1 = layer-(x+1) probe applied to the layer-(x+1) representation
 change            = distance at x + 1 minus distance at x
 ```
 
-Using the same probe on both layers is important. It means the target measures
-the change in the representations under one fixed readout, rather than mixing
-representational change with a change in the fitted distance model. The
-intercept cancels when the two distances are subtracted.
+This own-layer definition preserves each layer's fitted distance calibration.
+The target therefore includes both changes in the pair representation and
+changes in the fitted readout. Because the probes have separate intercepts,
+the intercept terms do not generally cancel when the distances are
+subtracted.
 
 All changes are raw, pre-MDS predictions. They are not clipped at zero and are
 not projected into a three-dimensional structure. Consequently, this is an
@@ -284,12 +286,13 @@ stable to uncertainty in the weights of the original distance probe. It is not
 part of the training or labeling procedure for the fixed-threshold main pilot.
 
 For each transition from 10→11 through 15→16, the script resamples the 441
-training proteins with replacement ten times. It refits the full 256-feature
-directional distance model for each bootstrap sample using the structural Cα
-distances as targets. Each protein has equal total influence regardless of its
-number of residue pairs. The refitted model is then applied to both consecutive
-layers, so every local residue pair receives ten bootstrap estimates of its
-distance change.
+training proteins with replacement ten times. For every bootstrap sample, it
+separately refits the full 256-feature directional distance model at both
+endpoint layers using the structural Cα distances as targets. Each protein has
+equal total influence regardless of its number of residue pairs. The same
+resampled protein draw is used for both fits, and each refitted model is
+applied only to its own layer, so every local residue pair receives ten paired
+bootstrap estimates of its own-layer-probe distance change.
 
 The per-pair standard error is the sample standard deviation of those ten
 bootstrap changes. This is a protein-level cluster bootstrap: it captures how

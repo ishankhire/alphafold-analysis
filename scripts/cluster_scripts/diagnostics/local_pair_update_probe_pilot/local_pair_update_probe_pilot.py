@@ -2,9 +2,11 @@
 """Pre-MDS local pair-update classification and regression pilot.
 
 One Slurm array task fits one feature variant for one transition.  The frozen
-general_base256_combined protein split and layer-x distance coefficients are
-read from CSV_ROOT.  Only pairs with inclusive sequence separation 4..12 are
-used, and only layer-x representations are exposed to the probes.
+general_base256_combined protein split and saved distance coefficients for
+both endpoint layers are read from CSV_ROOT.  Each endpoint representation is
+decoded by its own layer's probe.  Only pairs with inclusive sequence
+separation 4..12 are used, and only layer-x representations are exposed to the
+update-prediction probes.
 
 The file is deliberately self-contained so this directory can be copied to
 $HOME/openfold_interpretability_files/ on Delta without copying repository
@@ -393,18 +395,36 @@ def validate_pair_block(pb, n_residues, path):
         raise ValueError(f"Pair block {path} has shape {pb.shape}; expected {expected}")
 
 
-def distance_change_and_current(pb_from, pb_to, i, j, intercept, coefficients):
-    """Use exact saved lower-triangle feature order for i < j."""
-    coef_lower = coefficients[:N_CHANNELS]
-    coef_upper = coefficients[N_CHANNELS:]
+def distance_change_and_current(
+    pb_from,
+    pb_to,
+    i,
+    j,
+    intercept_from,
+    coefficients_from,
+    intercept_to,
+    coefficients_to,
+):
+    """Decode each endpoint with its own saved probe for canonical i < j pairs."""
+    coef_lower_from = coefficients_from[:N_CHANNELS]
+    coef_upper_from = coefficients_from[N_CHANNELS:]
+    coef_lower_to = coefficients_to[:N_CHANNELS]
+    coef_upper_to = coefficients_to[N_CHANNELS:]
     lower_from = np.asarray(pb_from[j, i, :], dtype=np.float64)
     upper_from = np.asarray(pb_from[i, j, :], dtype=np.float64)
     lower_to = np.asarray(pb_to[j, i, :], dtype=np.float64)
     upper_to = np.asarray(pb_to[i, j, :], dtype=np.float64)
     distance_from = (
-        float(intercept) + lower_from @ coef_lower + upper_from @ coef_upper
+        float(intercept_from)
+        + lower_from @ coef_lower_from
+        + upper_from @ coef_upper_from
     )
-    change = (lower_to - lower_from) @ coef_lower + (upper_to - upper_from) @ coef_upper
+    distance_to = (
+        float(intercept_to)
+        + lower_to @ coef_lower_to
+        + upper_to @ coef_upper_to
+    )
+    change = distance_to - distance_from
     return np.asarray(distance_from, dtype=np.float64), np.asarray(change, dtype=np.float64)
 
 
@@ -747,6 +767,7 @@ def write_task_summary(path, layer_from, layer_to, variant, status, counts, timi
         f"Feature variant:    {variant}",
         f"Feature dimension:  {feature_dim(variant)}",
         "Distance type:      raw pre-MDS",
+        "Distance probes:    saved own-layer probes at both endpoints",
         f"Threshold:          +/-{CLASS_THRESHOLD:.1f} Angstrom",
         f"Train proteins:     {counts.get('train_proteins', 0)}",
         f"Test proteins:      {counts.get('test_proteins', 0)}",
@@ -800,9 +821,14 @@ def main():
     coefficient_output_rows = []
 
     records, split_source_rows = load_split_records(assignment_path)
-    intercept, distance_coef, coefficient_source_rows = load_distance_coefficients(
+    intercept_from, distance_coef_from, coefficient_source_rows_from = load_distance_coefficients(
         coefficient_path, layer_from
     )
+    intercept_to, distance_coef_to, coefficient_source_rows_to = load_distance_coefficients(
+        coefficient_path, layer_to
+    )
+    coefficient_source_rows = coefficient_source_rows_from + coefficient_source_rows_to
+    log(f"Loaded saved distance probes for layers {layer_from} and {layer_to}")
     offsets_by_split = {}
     row_counts = {}
     for split in ("train", "test"):
@@ -847,7 +873,14 @@ def main():
                 validate_pair_block(pb_to, record["n_residues"], to_path)
                 i, j, separation = local_pair_indices(record["n_residues"])
                 distance_from, change = distance_change_and_current(
-                    pb_from, pb_to, i, j, intercept, distance_coef
+                    pb_from,
+                    pb_to,
+                    i,
+                    j,
+                    intercept_from,
+                    distance_coef_from,
+                    intercept_to,
+                    distance_coef_to,
                 )
                 x_chunk = build_feature_chunk(
                     pb_from, i, j, separation, variant, distance_from=distance_from
@@ -939,6 +972,8 @@ def main():
         "relative_alpha": RELATIVE_RIDGE_ALPHA, "actual_alpha": alpha,
         "solver": "lsqr", "tolerance": LSQR_TOLERANCE, "max_iter": LSQR_MAX_ITER,
         "coefficient_source": str(coefficient_path), "split_source": str(assignment_path),
+        "distance_probe_policy": "saved_own_layer",
+        "distance_probe_layers": [layer_from, layer_to],
         "feature_dtype": "float64", "started_at": now_timestamp(),
     }
     write_json_atomic(output_dir / "run_metadata.json", metadata)

@@ -1345,3 +1345,8 @@ the local update probes and supporting bootstrap uncertainty pilot.
 
 Added a six-transition Delta probe comparing raw, moment-aligned, own-layer,
 and pooled distance readouts, with channelwise distribution-drift diagnostics.
+
+## Session: 2026-08-12 — Own-layer local distance changes
+
+Changed local update targets and paired bootstrap SEs to decode each endpoint
+with its own layer-specific distance probe.

@@ -81,6 +81,44 @@ def test_pair_change_se_uses_sample_standard_deviation():
     np.testing.assert_allclose(actual, [1.0, 0.0])
 
 
+def test_local_predictions_use_distinct_saved_endpoint_probes():
+    rng = np.random.default_rng(23)
+    pb_from = rng.normal(size=(9, 9, pilot.N_CHANNELS))
+    pb_to = rng.normal(size=(9, 9, pilot.N_CHANNELS))
+    bundle_from = {
+        "intercept": 4.0,
+        "coef": rng.normal(size=pilot.FEATURE_DIM),
+    }
+    bundle_to = {
+        "intercept": -2.5,
+        "coef": rng.normal(size=pilot.FEATURE_DIM),
+    }
+    result = pilot.extract_local_change_inputs(
+        pb_from,
+        pb_to,
+        {"n_residues": 9},
+        bundle_from,
+        bundle_to,
+    )
+
+    expected_from = (
+        bundle_from["intercept"] + result["feature_from"] @ bundle_from["coef"]
+    )
+    expected_to = bundle_to["intercept"] + result["feature_to"] @ bundle_to["coef"]
+    np.testing.assert_allclose(result["distance_from"], expected_from)
+    np.testing.assert_allclose(result["distance_to"], expected_to)
+
+
+def test_bootstrap_coefficient_rows_include_both_layers():
+    model = {
+        "intercept": 1.0,
+        "coef": np.zeros(pilot.FEATURE_DIM, dtype=np.float64),
+    }
+    rows = pilot.coefficient_rows({10: [model], 11: [model]})
+    assert {row["layer"] for row in rows} == {10, 11}
+    assert len(rows) == 2 * pilot.AUGMENTED_DIM
+
+
 def test_disjoint_buckets_exhaust_values_and_respect_boundaries():
     values = np.asarray([-0.6, -0.5, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, 0.5, 0.6])
     rows = pilot.disjoint_bucket_counts(values)

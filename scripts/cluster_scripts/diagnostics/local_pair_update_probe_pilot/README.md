@@ -2,13 +2,16 @@
 
 This portable Delta bundle fits classification and continuous-change Ridge
 probes for transitions 10→11, 20→21, and 30→31. It uses raw pre-MDS distance
-changes and all residue pairs with inclusive sequence separation 4–12.
+changes and all residue pairs with inclusive sequence separation 4–12. Each
+endpoint distance is decoded with the saved probe for that endpoint's layer;
+the script does not refit the distance probes.
 
 ## Inputs
 
 The runner expects:
 
-- `$HOME/csv_files/general_base256_combined/coefficients.csv`
+- `$HOME/csv_files/general_base256_combined/coefficients.csv`, containing
+  coefficients for both layers of every requested transition
 - `$HOME/csv_files/general_base256_combined/split_assignments.csv`
 - CAMEO pair blocks under `/work/hdd/bekh/thayes/openfold_reps`
 - ECOD pair blocks under
