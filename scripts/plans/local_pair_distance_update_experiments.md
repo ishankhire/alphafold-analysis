@@ -236,6 +236,46 @@ result until convergence is checked with a higher iteration allowance or a
 tighter solver study. This caveat matters especially when interpreting small
 differences between the three radii.
 
+## Consecutive-layer distance-control probe
+
+The fixed-readout definition above is sensitive to shifts and rescaling of the
+pair-representation channels between layers. The
+`local_pair_distance_controls` Delta bundle therefore compares four predictive
+definitions over transitions 10→11 through 15→16:
+
+1. `fixed_raw_layer_x` is the original target, applying the saved layer-`x`
+   probe to both raw representations.
+2. `fixed_moment_aligned_to_x` maps layer `x+1` into layer-`x` coordinates
+   using per-channel means and standard deviations estimated from training
+   proteins only, then applies the saved layer-`x` probe.
+3. `saved_own_layer` uses the saved probe associated with each endpoint.
+4. `pooled_two_layer` fits one unregularized distance model jointly to both
+   endpoint layers. Each training protein has equal total weight, divided
+   equally between its two layer observations.
+
+The separate `distribution_drift` diagnostic reports channelwise mean shifts,
+scale ratios, standardized shifts, and their coefficient-weighted
+contributions. It is not presented as a fifth predictive model and therefore
+does not receive artificial R² values. As an internal identity check, the sum
+of the layer-`x` coefficient times each channel's mean shift must reproduce the
+mean raw fixed-readout change.
+
+Every predictive variant is evaluated against structural Cα distances at both
+endpoints, on both all unordered residue pairs and local pairs with sequence
+separation 4–12. Outputs include held-out and training R²/error metrics,
+predicted-distance distributions, change distributions, per-protein results,
+pair-weighted versus protein-equal summaries, control agreement, fit and
+alignment provenance, and held-out layer-trend plots. Raw pair-level records
+are intentionally not saved. Pair-level means and error metrics are exact;
+pair-level quantiles use bounded deterministic reservoir samples.
+
+These controls answer different questions. Moment alignment removes marginal
+per-channel location and scale drift but not channel rotations or nonlinear
+changes. Own-layer probes preserve each layer's calibration but combine
+representation and readout changes. The pooled model supplies one shared
+coordinate system learned from both layers, at the cost of using information
+from both endpoints when defining that coordinate system.
+
 ## Supporting distance-probe uncertainty pilot
 
 `scripts/cluster_scripts/diagnostics/local_pair_change_se_pilot.py` addresses a

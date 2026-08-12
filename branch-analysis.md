@@ -1337,3 +1337,8 @@ classification and regression across three transitions and five context radii.
 
 Added a human-readable methods, outputs, results, and interpretation guide for
 the local update probes and supporting bootstrap uncertainty pilot.
+
+## Session: 2026-08-12 — Consecutive-layer distance controls
+
+Added a six-transition Delta probe comparing raw, moment-aligned, own-layer,
+and pooled distance readouts, with channelwise distribution-drift diagnostics.
