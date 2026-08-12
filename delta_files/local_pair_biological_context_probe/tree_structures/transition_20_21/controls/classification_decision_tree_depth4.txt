@@ -1,0 +1,40 @@
+|--- current_distance <= 13.37
+|   |--- sequence_separation <= 4.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |--- protein_length <= 200.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- protein_length >  200.50
+|   |   |   |   |--- class: 1
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 8.31
+|   |   |   |--- current_distance <= 6.03
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  6.03
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  8.31
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  13.37
+|   |--- sequence_separation <= 7.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- class: 1
+|   |--- sequence_separation >  7.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |--- current_distance <= 25.54
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  25.54
+|   |   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |--- current_distance <= 16.31
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  16.31
+|   |   |   |   |--- class: 1

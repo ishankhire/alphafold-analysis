@@ -1363,3 +1363,8 @@ bootstraps and triangle collinearity checks, and strengthened model settings.
 
 Added the 35-task biological/triangle update probe with logistic validation,
 100-iteration HistGB benchmarks, paired bootstraps, and auditable tree exports.
+
+## Session: 2026-08-12 — Biological-context probe results
+
+Moved the completed 35-shard aggregate into its intended result directory and
+added reproducible performance, ablation, importance, depth, and target plots.

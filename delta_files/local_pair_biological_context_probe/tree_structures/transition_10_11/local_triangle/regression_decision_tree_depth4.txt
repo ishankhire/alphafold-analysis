@@ -1,0 +1,46 @@
+|--- current_distance <= 11.13
+|   |--- sequence_separation <= 4.50
+|   |   |--- grow_violation_fraction <= 0.30
+|   |   |   |--- grow_violation_fraction <= 0.10
+|   |   |   |   |--- value: [-0.92]
+|   |   |   |--- grow_violation_fraction >  0.10
+|   |   |   |   |--- value: [-0.58]
+|   |   |--- grow_violation_fraction >  0.30
+|   |   |   |--- current_distance <= 1.78
+|   |   |   |   |--- value: [0.65]
+|   |   |   |--- current_distance >  1.78
+|   |   |   |   |--- value: [-0.05]
+|   |--- sequence_separation >  4.50
+|   |   |--- grow_violation_fraction <= 0.42
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- value: [0.62]
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- value: [0.19]
+|   |   |--- grow_violation_fraction >  0.42
+|   |   |   |--- grow_pressure_mean <= 3.14
+|   |   |   |   |--- value: [0.90]
+|   |   |   |--- grow_pressure_mean >  3.14
+|   |   |   |   |--- value: [1.44]
+|--- current_distance >  11.13
+|   |--- shrink_violation_fraction <= 0.15
+|   |   |--- sequence_separation <= 4.50
+|   |   |   |--- current_distance <= 17.05
+|   |   |   |   |--- value: [-0.91]
+|   |   |   |--- current_distance >  17.05
+|   |   |   |   |--- value: [-1.29]
+|   |   |--- sequence_separation >  4.50
+|   |   |   |--- current_distance <= 13.51
+|   |   |   |   |--- value: [0.15]
+|   |   |   |--- current_distance >  13.51
+|   |   |   |   |--- value: [-0.20]
+|   |--- shrink_violation_fraction >  0.15
+|   |   |--- sequence_separation <= 4.50
+|   |   |   |--- current_distance <= 16.87
+|   |   |   |   |--- value: [-1.15]
+|   |   |   |--- current_distance >  16.87
+|   |   |   |   |--- value: [-1.86]
+|   |   |--- sequence_separation >  4.50
+|   |   |   |--- current_distance <= 14.30
+|   |   |   |   |--- value: [-0.22]
+|   |   |   |--- current_distance >  14.30
+|   |   |   |   |--- value: [-0.65]

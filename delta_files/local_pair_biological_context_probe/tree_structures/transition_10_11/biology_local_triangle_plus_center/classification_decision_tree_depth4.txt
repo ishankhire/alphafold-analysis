@@ -1,0 +1,46 @@
+|--- current_distance <= 12.38
+|   |--- center_avg_ch_34 <= 6.38
+|   |   |--- center_avg_ch_67 <= 14.03
+|   |   |   |--- current_distance <= 8.41
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  8.41
+|   |   |   |   |--- class: 0
+|   |   |--- center_avg_ch_67 >  14.03
+|   |   |   |--- current_distance <= 9.33
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  9.33
+|   |   |   |   |--- class: 0
+|   |--- center_avg_ch_34 >  6.38
+|   |   |--- center_avg_ch_79 <= -3.63
+|   |   |   |--- center_avg_ch_12 <= -24.68
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_12 >  -24.68
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_79 >  -3.63
+|   |   |   |--- grow_pressure_mean <= 1.18
+|   |   |   |   |--- class: 1
+|   |   |   |--- grow_pressure_mean >  1.18
+|   |   |   |   |--- class: 0
+|--- current_distance >  12.38
+|   |--- shrink_violation_fraction <= 0.15
+|   |   |--- center_avg_ch_34 <= 4.56
+|   |   |   |--- center_avg_ch_103 <= -3.78
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_103 >  -3.78
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_34 >  4.56
+|   |   |   |--- center_avg_ch_65 <= -5.57
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_65 >  -5.57
+|   |   |   |   |--- class: 1
+|   |--- shrink_violation_fraction >  0.15
+|   |   |--- center_avg_ch_34 <= 20.57
+|   |   |   |--- current_distance <= 15.95
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  15.95
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_34 >  20.57
+|   |   |   |--- center_avg_ch_7 <= 10.55
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_7 >  10.55
+|   |   |   |   |--- class: 1

@@ -1,0 +1,46 @@
+|--- current_distance <= 11.28
+|   |--- current_distance <= 6.45
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- endpoint_count_ARG <= 0.50
+|   |   |   |   |--- value: [0.92]
+|   |   |   |--- endpoint_count_ARG >  0.50
+|   |   |   |   |--- value: [1.60]
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 3.85
+|   |   |   |   |--- value: [2.26]
+|   |   |   |--- current_distance >  3.85
+|   |   |   |   |--- value: [1.58]
+|   |--- current_distance >  6.45
+|   |   |--- local_between_residue_count <= 5.50
+|   |   |   |--- endpoint_aromatic_count <= 0.50
+|   |   |   |   |--- value: [0.28]
+|   |   |   |--- endpoint_aromatic_count >  0.50
+|   |   |   |   |--- value: [-0.44]
+|   |   |--- local_between_residue_count >  5.50
+|   |   |   |--- endpoint_aromatic_count <= 0.50
+|   |   |   |   |--- value: [0.69]
+|   |   |   |--- endpoint_aromatic_count >  0.50
+|   |   |   |   |--- value: [0.23]
+|--- current_distance >  11.28
+|   |--- current_distance <= 24.38
+|   |   |--- sequence_separation <= 4.50
+|   |   |   |--- current_distance <= 14.56
+|   |   |   |   |--- value: [-0.62]
+|   |   |   |--- current_distance >  14.56
+|   |   |   |   |--- value: [-1.79]
+|   |   |--- sequence_separation >  4.50
+|   |   |   |--- current_distance <= 17.77
+|   |   |   |   |--- value: [0.07]
+|   |   |   |--- current_distance >  17.77
+|   |   |   |   |--- value: [-0.33]
+|   |--- current_distance >  24.38
+|   |   |--- current_distance <= 30.27
+|   |   |   |--- local_third_residue_count <= 19.50
+|   |   |   |   |--- value: [-0.92]
+|   |   |   |--- local_third_residue_count >  19.50
+|   |   |   |   |--- value: [-0.52]
+|   |   |--- current_distance >  30.27
+|   |   |   |--- local_between_residue_count <= 9.50
+|   |   |   |   |--- value: [-1.69]
+|   |   |   |--- local_between_residue_count >  9.50
+|   |   |   |   |--- value: [-1.20]

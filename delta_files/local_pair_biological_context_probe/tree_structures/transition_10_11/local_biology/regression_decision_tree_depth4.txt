@@ -1,0 +1,46 @@
+|--- current_distance <= 11.13
+|   |--- local_between_residue_count <= 3.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- current_distance <= 6.63
+|   |   |   |   |--- value: [-0.25]
+|   |   |   |--- current_distance >  6.63
+|   |   |   |   |--- value: [-0.85]
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 6.03
+|   |   |   |   |--- value: [1.14]
+|   |   |   |--- current_distance >  6.03
+|   |   |   |   |--- value: [0.27]
+|   |--- local_between_residue_count >  3.50
+|   |   |--- current_distance <= 7.88
+|   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |--- value: [0.83]
+|   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |--- value: [1.45]
+|   |   |--- current_distance >  7.88
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- value: [0.58]
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- value: [0.17]
+|--- current_distance >  11.13
+|   |--- sequence_separation <= 4.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- current_distance <= 16.83
+|   |   |   |   |--- value: [-1.20]
+|   |   |   |--- current_distance >  16.83
+|   |   |   |   |--- value: [-1.80]
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 15.82
+|   |   |   |   |--- value: [-0.25]
+|   |   |   |--- current_distance >  15.82
+|   |   |   |   |--- value: [-1.03]
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 14.76
+|   |   |   |--- endpoint_hydropathy_sum <= -6.85
+|   |   |   |   |--- value: [-0.45]
+|   |   |   |--- endpoint_hydropathy_sum >  -6.85
+|   |   |   |   |--- value: [0.02]
+|   |   |--- current_distance >  14.76
+|   |   |   |--- endpoint_hydropathy_sum <= -4.15
+|   |   |   |   |--- value: [-0.70]
+|   |   |   |--- endpoint_hydropathy_sum >  -4.15
+|   |   |   |   |--- value: [-0.40]

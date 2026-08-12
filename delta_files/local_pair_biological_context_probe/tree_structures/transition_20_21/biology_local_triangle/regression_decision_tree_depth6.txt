@@ -1,0 +1,115 @@
+|--- grow_violation_fraction <= 0.08
+|   |--- sequence_separation <= 8.50
+|   |   |--- shrink_pressure_mean <= 0.46
+|   |   |   |--- local_between_residue_count <= 3.50
+|   |   |   |   |--- endpoint_count_ALA <= 0.50
+|   |   |   |   |   |--- endpoint_count_ASP <= 0.50
+|   |   |   |   |   |   |--- value: [-0.35]
+|   |   |   |   |   |--- endpoint_count_ASP >  0.50
+|   |   |   |   |   |   |--- value: [-0.73]
+|   |   |   |   |--- endpoint_count_ALA >  0.50
+|   |   |   |   |   |--- value: [-0.82]
+|   |   |   |--- local_between_residue_count >  3.50
+|   |   |   |   |--- current_distance <= 11.54
+|   |   |   |   |   |--- endpoint_count_ILE <= 0.50
+|   |   |   |   |   |   |--- value: [-0.07]
+|   |   |   |   |   |--- endpoint_count_ILE >  0.50
+|   |   |   |   |   |   |--- value: [0.22]
+|   |   |   |   |--- current_distance >  11.54
+|   |   |   |   |   |--- local_between_residue_count <= 4.50
+|   |   |   |   |   |   |--- value: [-0.54]
+|   |   |   |   |   |--- local_between_residue_count >  4.50
+|   |   |   |   |   |   |--- value: [-0.28]
+|   |   |--- shrink_pressure_mean >  0.46
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |   |--- value: [0.20]
+|   |   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |   |--- current_distance <= 15.30
+|   |   |   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |   |   |--- value: [-0.64]
+|   |   |   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |   |   |--- value: [-0.26]
+|   |   |   |   |--- current_distance >  15.30
+|   |   |   |   |   |--- local_between_residue_count <= 4.50
+|   |   |   |   |   |   |--- value: [-0.77]
+|   |   |   |   |   |--- local_between_residue_count >  4.50
+|   |   |   |   |   |   |--- value: [-0.53]
+|   |--- sequence_separation >  8.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |--- value: [0.59]
+|   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |--- current_distance <= 16.30
+|   |   |   |   |--- endpoint_hydrophobic_count <= 0.50
+|   |   |   |   |   |--- current_distance <= 14.79
+|   |   |   |   |   |   |--- value: [0.02]
+|   |   |   |   |   |--- current_distance >  14.79
+|   |   |   |   |   |   |--- value: [-0.15]
+|   |   |   |   |--- endpoint_hydrophobic_count >  0.50
+|   |   |   |   |   |--- endpoint_count_VAL <= 0.50
+|   |   |   |   |   |   |--- value: [0.11]
+|   |   |   |   |   |--- endpoint_count_VAL >  0.50
+|   |   |   |   |   |   |--- value: [-0.08]
+|   |   |   |--- current_distance >  16.30
+|   |   |   |   |--- shrink_pressure_mean <= 0.26
+|   |   |   |   |   |--- normalized_nearest_terminus_distance <= 0.04
+|   |   |   |   |   |   |--- value: [0.11]
+|   |   |   |   |   |--- normalized_nearest_terminus_distance >  0.04
+|   |   |   |   |   |   |--- value: [-0.10]
+|   |   |   |   |--- shrink_pressure_mean >  0.26
+|   |   |   |   |   |--- protein_length <= 148.00
+|   |   |   |   |   |   |--- value: [-0.34]
+|   |   |   |   |   |--- protein_length >  148.00
+|   |   |   |   |   |   |--- value: [-0.18]
+|--- grow_violation_fraction >  0.08
+|   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |--- shrink_violation_fraction <= 0.21
+|   |   |   |--- value: [0.90]
+|   |   |--- shrink_violation_fraction >  0.21
+|   |   |   |--- value: [0.58]
+|   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |--- shrink_violation_fraction <= 0.07
+|   |   |   |--- grow_violation_fraction <= 0.31
+|   |   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |   |--- endpoint_polarity_sum <= 20.25
+|   |   |   |   |   |   |--- value: [0.04]
+|   |   |   |   |   |--- endpoint_polarity_sum >  20.25
+|   |   |   |   |   |   |--- value: [-0.17]
+|   |   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |   |--- current_distance <= 18.60
+|   |   |   |   |   |   |--- value: [0.15]
+|   |   |   |   |   |--- current_distance >  18.60
+|   |   |   |   |   |   |--- value: [0.00]
+|   |   |   |--- grow_violation_fraction >  0.31
+|   |   |   |   |--- local_third_residue_count <= 13.50
+|   |   |   |   |   |--- endpoint_polarity_sum <= 20.25
+|   |   |   |   |   |   |--- value: [0.14]
+|   |   |   |   |   |--- endpoint_polarity_sum >  20.25
+|   |   |   |   |   |   |--- value: [-0.31]
+|   |   |   |   |--- local_third_residue_count >  13.50
+|   |   |   |   |   |--- current_distance <= 6.40
+|   |   |   |   |   |   |--- value: [0.38]
+|   |   |   |   |   |--- current_distance >  6.40
+|   |   |   |   |   |   |--- value: [0.19]
+|   |   |--- shrink_violation_fraction >  0.07
+|   |   |   |--- endpoint_hydrophobic_count <= 0.50
+|   |   |   |   |--- protein_length <= 148.00
+|   |   |   |   |   |--- shrink_pressure_mean <= 0.50
+|   |   |   |   |   |   |--- value: [-0.20]
+|   |   |   |   |   |--- shrink_pressure_mean >  0.50
+|   |   |   |   |   |   |--- value: [-0.34]
+|   |   |   |   |--- protein_length >  148.00
+|   |   |   |   |   |--- endpoint_count_ASN <= 0.50
+|   |   |   |   |   |   |--- value: [-0.12]
+|   |   |   |   |   |--- endpoint_count_ASN >  0.50
+|   |   |   |   |   |   |--- value: [0.05]
+|   |   |   |--- endpoint_hydrophobic_count >  0.50
+|   |   |   |   |--- local_third_residue_count <= 13.50
+|   |   |   |   |   |--- current_distance <= 8.06
+|   |   |   |   |   |   |--- value: [-0.43]
+|   |   |   |   |   |--- current_distance >  8.06
+|   |   |   |   |   |   |--- value: [-0.03]
+|   |   |   |   |--- local_third_residue_count >  13.50
+|   |   |   |   |   |--- current_distance <= 10.54
+|   |   |   |   |   |   |--- value: [0.21]
+|   |   |   |   |   |--- current_distance >  10.54
+|   |   |   |   |   |   |--- value: [-0.01]

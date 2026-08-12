@@ -1,0 +1,169 @@
+|--- current_distance <= 12.38
+|   |--- local_between_residue_count <= 3.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- grow_violation_fraction <= 0.30
+|   |   |   |   |--- endpoint_small_count <= 0.50
+|   |   |   |   |   |--- endpoint_polarity_absolute_difference <= 1.85
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_polarity_absolute_difference >  1.85
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- endpoint_small_count >  0.50
+|   |   |   |   |   |--- endpoint_count_ALA <= 0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_count_ALA >  0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- grow_violation_fraction >  0.30
+|   |   |   |   |--- endpoint_hydropathy_sum <= 3.55
+|   |   |   |   |   |--- endpoint_count_ASP <= 0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_count_ASP >  0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- endpoint_hydropathy_sum >  3.55
+|   |   |   |   |   |--- protein_length <= 270.00
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  270.00
+|   |   |   |   |   |   |--- class: 1
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 6.06
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  6.06
+|   |   |   |   |--- grow_pressure_mean <= 0.23
+|   |   |   |   |   |--- class: 0
+|   |   |   |   |--- grow_pressure_mean >  0.23
+|   |   |   |   |   |--- grow_pressure_mean <= 0.77
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- grow_pressure_mean >  0.77
+|   |   |   |   |   |   |--- class: 0
+|   |--- local_between_residue_count >  3.50
+|   |   |--- current_distance <= 9.65
+|   |   |   |--- grow_pressure_mean <= 1.18
+|   |   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |   |--- shrink_violation_fraction <= 0.09
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- shrink_violation_fraction >  0.09
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- grow_pressure_mean >  1.18
+|   |   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |   |--- grow_pressure_mean <= 3.10
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- grow_pressure_mean >  3.10
+|   |   |   |   |   |   |--- class: 0
+|   |   |--- current_distance >  9.65
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |--- shrink_violation_fraction <= 0.14
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- shrink_violation_fraction >  0.14
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |--- endpoint_hydropathy_sum <= -0.95
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_hydropathy_sum >  -0.95
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- shrink_pressure_mean <= 0.05
+|   |   |   |   |   |--- endpoint_hydropathy_sum <= -6.85
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_hydropathy_sum >  -6.85
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- shrink_pressure_mean >  0.05
+|   |   |   |   |   |--- shrink_violation_fraction <= 0.21
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- shrink_violation_fraction >  0.21
+|   |   |   |   |   |   |--- class: 1
+|--- current_distance >  12.38
+|   |--- shrink_violation_fraction <= 0.15
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- current_distance <= 15.61
+|   |   |   |   |--- endpoint_volume_sum <= 135.50
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- endpoint_volume_sum >  135.50
+|   |   |   |   |   |--- endpoint_polarity_absolute_difference <= 2.55
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_polarity_absolute_difference >  2.55
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  15.61
+|   |   |   |   |--- shrink_pressure_max <= 1.44
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- shrink_pressure_max >  1.44
+|   |   |   |   |   |--- class: 1
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- endpoint_count_ARG <= 0.50
+|   |   |   |   |--- shrink_pressure_mean <= 0.10
+|   |   |   |   |   |--- local_count_HIS <= 4.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- local_count_HIS >  4.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- shrink_pressure_mean >  0.10
+|   |   |   |   |   |--- current_distance <= 15.21
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- current_distance >  15.21
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_ARG >  0.50
+|   |   |   |   |--- protein_length <= 188.50
+|   |   |   |   |   |--- shrink_pressure_mean <= 0.06
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- shrink_pressure_mean >  0.06
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- protein_length >  188.50
+|   |   |   |   |   |--- endpoint_polarity_sum <= 20.95
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_polarity_sum >  20.95
+|   |   |   |   |   |   |--- class: 1
+|   |--- shrink_violation_fraction >  0.15
+|   |   |--- shrink_pressure_mean <= 1.16
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- current_distance <= 16.87
+|   |   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- current_distance >  16.87
+|   |   |   |   |   |--- current_distance <= 19.47
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- current_distance >  19.47
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- current_distance <= 15.13
+|   |   |   |   |   |--- local_third_residue_count <= 16.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- local_third_residue_count >  16.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- current_distance >  15.13
+|   |   |   |   |   |--- protein_length <= 190.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  190.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |--- shrink_pressure_mean >  1.16
+|   |   |   |--- grow_violation_fraction <= 0.06
+|   |   |   |   |--- shrink_pressure_mean <= 2.17
+|   |   |   |   |   |--- current_distance <= 15.23
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- current_distance >  15.23
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- shrink_pressure_mean >  2.17
+|   |   |   |   |   |--- protein_length <= 190.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  190.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- grow_violation_fraction >  0.06
+|   |   |   |   |--- current_distance <= 17.04
+|   |   |   |   |   |--- local_between_residue_count <= 3.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- local_between_residue_count >  3.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- current_distance >  17.04
+|   |   |   |   |   |--- protein_length <= 249.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  249.50
+|   |   |   |   |   |   |--- class: 1

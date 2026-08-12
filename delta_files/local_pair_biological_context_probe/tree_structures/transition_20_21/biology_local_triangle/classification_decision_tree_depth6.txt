@@ -1,0 +1,166 @@
+|--- grow_violation_fraction <= 0.08
+|   |--- sequence_separation <= 8.50
+|   |   |--- current_distance <= 12.96
+|   |   |   |--- local_between_residue_count <= 3.50
+|   |   |   |   |--- endpoint_count_THR <= 0.50
+|   |   |   |   |   |--- endpoint_count_PRO <= 0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_count_PRO >  0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- endpoint_count_THR >  0.50
+|   |   |   |   |   |--- class: 1
+|   |   |   |--- local_between_residue_count >  3.50
+|   |   |   |   |--- current_distance <= 10.00
+|   |   |   |   |   |--- endpoint_count_ILE <= 0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_count_ILE >  0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- current_distance >  10.00
+|   |   |   |   |   |--- protein_length <= 327.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  327.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |--- current_distance >  12.96
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |   |--- shrink_pressure_mean <= 0.49
+|   |   |   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- shrink_pressure_mean >  0.49
+|   |   |   |   |   |--- current_distance <= 15.67
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- current_distance >  15.67
+|   |   |   |   |   |   |--- class: 1
+|   |--- sequence_separation >  8.50
+|   |   |--- current_distance <= 16.22
+|   |   |   |--- endpoint_hydrophobic_count <= 0.50
+|   |   |   |   |--- current_distance <= 14.63
+|   |   |   |   |   |--- protein_length <= 448.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- protein_length >  448.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- current_distance >  14.63
+|   |   |   |   |   |--- shrink_pressure_mean <= 0.26
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- shrink_pressure_mean >  0.26
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_hydrophobic_count >  0.50
+|   |   |   |   |--- endpoint_count_VAL <= 0.50
+|   |   |   |   |   |--- local_hydrophobic_count <= 7.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- local_hydrophobic_count >  7.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- endpoint_count_VAL >  0.50
+|   |   |   |   |   |--- endpoint_volume_sum <= 116.25
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_volume_sum >  116.25
+|   |   |   |   |   |   |--- class: 1
+|   |   |--- current_distance >  16.22
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |   |--- current_distance <= 21.98
+|   |   |   |   |   |--- class: 0
+|   |   |   |   |--- current_distance >  21.98
+|   |   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |   |--- shrink_pressure_mean <= 0.26
+|   |   |   |   |   |--- normalized_nearest_terminus_distance <= 0.04
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- normalized_nearest_terminus_distance >  0.04
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- shrink_pressure_mean >  0.26
+|   |   |   |   |   |--- endpoint_count_ASN <= 0.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_count_ASN >  0.50
+|   |   |   |   |   |   |--- class: 0
+|--- grow_violation_fraction >  0.08
+|   |--- grow_violation_fraction <= 0.24
+|   |   |--- endpoint_hydrophobic_count <= 0.50
+|   |   |   |--- shrink_pressure_max <= 2.44
+|   |   |   |   |--- local_between_residue_count <= 5.50
+|   |   |   |   |   |--- endpoint_polarity_sum <= 21.15
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- endpoint_polarity_sum >  21.15
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- local_between_residue_count >  5.50
+|   |   |   |   |   |--- normalized_nearest_terminus_distance <= 0.03
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- normalized_nearest_terminus_distance >  0.03
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- shrink_pressure_max >  2.44
+|   |   |   |   |--- endpoint_count_ASN <= 0.50
+|   |   |   |   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- endpoint_count_ASN >  0.50
+|   |   |   |   |   |--- endpoint_volume_absolute_difference <= 23.75
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_volume_absolute_difference >  23.75
+|   |   |   |   |   |   |--- class: 1
+|   |   |--- endpoint_hydrophobic_count >  0.50
+|   |   |   |--- endpoint_count_VAL <= 0.50
+|   |   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |   |--- endpoint_count_ILE <= 0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_count_ILE >  0.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |   |--- current_distance <= 17.82
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- current_distance >  17.82
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_count_VAL >  0.50
+|   |   |   |   |--- endpoint_charge_sum <= -0.50
+|   |   |   |   |   |--- current_distance <= 14.40
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- current_distance >  14.40
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |--- endpoint_charge_sum >  -0.50
+|   |   |   |   |   |--- current_distance <= 24.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- current_distance >  24.50
+|   |   |   |   |   |   |--- class: 1
+|   |--- grow_violation_fraction >  0.24
+|   |   |--- endpoint_polarity_sum <= 21.20
+|   |   |   |--- endpoint_count_VAL <= 0.50
+|   |   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |   |--- current_distance <= 8.06
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- current_distance >  8.06
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |   |--- current_distance <= 8.04
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- current_distance >  8.04
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_count_VAL >  0.50
+|   |   |   |   |--- grow_pressure_mean <= 1.26
+|   |   |   |   |   |--- protein_length <= 200.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  200.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- grow_pressure_mean >  1.26
+|   |   |   |   |   |--- endpoint_volume_absolute_difference <= 51.75
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |   |--- endpoint_volume_absolute_difference >  51.75
+|   |   |   |   |   |   |--- class: 0
+|   |   |--- endpoint_polarity_sum >  21.20
+|   |   |   |--- both_negative <= 0.50
+|   |   |   |   |--- shrink_violation_fraction <= 0.07
+|   |   |   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |   |--- shrink_violation_fraction >  0.07
+|   |   |   |   |   |--- protein_length <= 179.50
+|   |   |   |   |   |   |--- class: 1
+|   |   |   |   |   |--- protein_length >  179.50
+|   |   |   |   |   |   |--- class: 0
+|   |   |   |--- both_negative >  0.50
+|   |   |   |   |--- local_between_residue_count <= 5.50
+|   |   |   |   |   |--- class: 1
+|   |   |   |   |--- local_between_residue_count >  5.50
+|   |   |   |   |   |--- class: 1

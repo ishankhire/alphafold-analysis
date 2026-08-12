@@ -1,0 +1,46 @@
+|--- current_distance <= 18.09
+|   |--- current_distance <= 8.24
+|   |   |--- current_distance <= 5.92
+|   |   |   |--- current_distance <= 3.72
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  3.72
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  5.92
+|   |   |   |--- sequence_separation <= 6.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  6.50
+|   |   |   |   |--- class: 0
+|   |--- current_distance >  8.24
+|   |   |--- sequence_separation <= 4.50
+|   |   |   |--- current_distance <= 12.22
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  12.22
+|   |   |   |   |--- class: 1
+|   |   |--- sequence_separation >  4.50
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  18.09
+|   |--- current_distance <= 26.23
+|   |   |--- sequence_separation <= 10.50
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- class: 1
+|   |   |--- sequence_separation >  10.50
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |   |--- class: 1
+|   |   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |   |--- class: 1
+|   |--- current_distance >  26.23
+|   |   |--- current_distance <= 30.21
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  30.21
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 1

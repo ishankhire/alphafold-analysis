@@ -1,0 +1,46 @@
+|--- current_distance <= 12.88
+|   |--- current_distance <= 10.18
+|   |   |--- current_distance <= 1.90
+|   |   |   |--- endpoint_aromatic_count <= 0.50
+|   |   |   |   |--- value: [0.52]
+|   |   |   |--- endpoint_aromatic_count >  0.50
+|   |   |   |   |--- value: [1.42]
+|   |   |--- current_distance >  1.90
+|   |   |   |--- endpoint_count_MET <= 0.50
+|   |   |   |   |--- value: [0.38]
+|   |   |   |--- endpoint_count_MET >  0.50
+|   |   |   |   |--- value: [0.02]
+|   |--- current_distance >  10.18
+|   |   |--- sequence_separation <= 8.50
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- value: [0.47]
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- value: [0.25]
+|   |   |--- sequence_separation >  8.50
+|   |   |   |--- current_distance <= 11.40
+|   |   |   |   |--- value: [0.17]
+|   |   |   |--- current_distance >  11.40
+|   |   |   |   |--- value: [0.03]
+|--- current_distance >  12.88
+|   |--- sequence_separation <= 7.50
+|   |   |--- protein_length <= 88.50
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- value: [-0.08]
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- value: [-0.32]
+|   |   |--- protein_length >  88.50
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- value: [0.35]
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- value: [0.16]
+|   |--- sequence_separation >  7.50
+|   |   |--- protein_length <= 99.50
+|   |   |   |--- protein_length <= 68.00
+|   |   |   |   |--- value: [-0.68]
+|   |   |   |--- protein_length >  68.00
+|   |   |   |   |--- value: [-0.36]
+|   |   |--- protein_length >  99.50
+|   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |--- value: [-0.03]
+|   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |--- value: [-0.37]

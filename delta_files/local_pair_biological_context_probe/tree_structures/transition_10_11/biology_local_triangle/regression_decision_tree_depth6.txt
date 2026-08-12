@@ -1,0 +1,157 @@
+|--- current_distance <= 11.13
+|   |--- local_between_residue_count <= 3.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- grow_violation_fraction <= 0.29
+|   |   |   |   |--- endpoint_small_count <= 0.50
+|   |   |   |   |   |--- local_count_PRO <= 0.50
+|   |   |   |   |   |   |--- value: [-1.39]
+|   |   |   |   |   |--- local_count_PRO >  0.50
+|   |   |   |   |   |   |--- value: [-0.95]
+|   |   |   |   |--- endpoint_small_count >  0.50
+|   |   |   |   |   |--- endpoint_count_ALA <= 0.50
+|   |   |   |   |   |   |--- value: [-0.53]
+|   |   |   |   |   |--- endpoint_count_ALA >  0.50
+|   |   |   |   |   |   |--- value: [-1.17]
+|   |   |   |--- grow_violation_fraction >  0.29
+|   |   |   |   |--- endpoint_hydropathy_sum <= 3.55
+|   |   |   |   |   |--- grow_pressure_mean <= 1.45
+|   |   |   |   |   |   |--- value: [-0.24]
+|   |   |   |   |   |--- grow_pressure_mean >  1.45
+|   |   |   |   |   |   |--- value: [0.23]
+|   |   |   |   |--- endpoint_hydropathy_sum >  3.55
+|   |   |   |   |   |--- value: [-0.79]
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 6.03
+|   |   |   |   |--- value: [1.14]
+|   |   |   |--- current_distance >  6.03
+|   |   |   |   |--- grow_pressure_mean <= 0.58
+|   |   |   |   |   |--- value: [0.09]
+|   |   |   |   |--- grow_pressure_mean >  0.58
+|   |   |   |   |   |--- value: [0.59]
+|   |--- local_between_residue_count >  3.50
+|   |   |--- grow_violation_fraction <= 0.42
+|   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |--- shrink_violation_fraction <= 0.07
+|   |   |   |   |   |   |--- value: [0.71]
+|   |   |   |   |   |--- shrink_violation_fraction >  0.07
+|   |   |   |   |   |   |--- value: [0.36]
+|   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |--- current_distance <= 8.60
+|   |   |   |   |   |   |--- value: [1.32]
+|   |   |   |   |   |--- current_distance >  8.60
+|   |   |   |   |   |   |--- value: [0.90]
+|   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |--- shrink_pressure_mean <= 0.20
+|   |   |   |   |   |--- endpoint_count_ARG <= 0.50
+|   |   |   |   |   |   |--- value: [0.33]
+|   |   |   |   |   |--- endpoint_count_ARG >  0.50
+|   |   |   |   |   |   |--- value: [-0.12]
+|   |   |   |   |--- shrink_pressure_mean >  0.20
+|   |   |   |   |   |--- grow_violation_fraction <= 0.21
+|   |   |   |   |   |   |--- value: [-0.23]
+|   |   |   |   |   |--- grow_violation_fraction >  0.21
+|   |   |   |   |   |   |--- value: [0.13]
+|   |   |--- grow_violation_fraction >  0.42
+|   |   |   |--- grow_pressure_mean <= 3.14
+|   |   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |   |--- value: [0.98]
+|   |   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |   |--- value: [1.57]
+|   |   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |   |--- current_distance <= 8.47
+|   |   |   |   |   |   |--- value: [0.64]
+|   |   |   |   |   |--- current_distance >  8.47
+|   |   |   |   |   |   |--- value: [0.34]
+|   |   |   |--- grow_pressure_mean >  3.14
+|   |   |   |   |--- current_distance <= 6.80
+|   |   |   |   |   |--- local_third_residue_count <= 17.50
+|   |   |   |   |   |   |--- value: [1.84]
+|   |   |   |   |   |--- local_third_residue_count >  17.50
+|   |   |   |   |   |   |--- value: [1.32]
+|   |   |   |   |--- current_distance >  6.80
+|   |   |   |   |   |--- local_between_residue_count <= 6.50
+|   |   |   |   |   |   |--- value: [1.09]
+|   |   |   |   |   |--- local_between_residue_count >  6.50
+|   |   |   |   |   |   |--- value: [0.60]
+|--- current_distance >  11.13
+|   |--- shrink_violation_fraction <= 0.15
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- endpoint_small_count <= 0.50
+|   |   |   |   |--- endpoint_polarity_absolute_difference <= 4.40
+|   |   |   |   |   |--- value: [-1.53]
+|   |   |   |   |--- endpoint_polarity_absolute_difference >  4.40
+|   |   |   |   |   |--- value: [-0.99]
+|   |   |   |--- endpoint_small_count >  0.50
+|   |   |   |   |--- current_distance <= 17.05
+|   |   |   |   |   |--- endpoint_volume_sum <= 113.00
+|   |   |   |   |   |   |--- value: [-0.44]
+|   |   |   |   |   |--- endpoint_volume_sum >  113.00
+|   |   |   |   |   |   |--- value: [-0.85]
+|   |   |   |   |--- current_distance >  17.05
+|   |   |   |   |   |--- value: [-1.21]
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- current_distance <= 13.51
+|   |   |   |   |--- endpoint_hydropathy_sum <= -6.85
+|   |   |   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |   |   |--- value: [-0.15]
+|   |   |   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |   |   |--- value: [-0.50]
+|   |   |   |   |--- endpoint_hydropathy_sum >  -6.85
+|   |   |   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |   |   |--- value: [0.32]
+|   |   |   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |   |   |--- value: [0.04]
+|   |   |   |--- current_distance >  13.51
+|   |   |   |   |--- endpoint_count_ARG <= 0.50
+|   |   |   |   |   |--- shrink_pressure_mean <= 0.10
+|   |   |   |   |   |   |--- value: [-0.02]
+|   |   |   |   |   |--- shrink_pressure_mean >  0.10
+|   |   |   |   |   |   |--- value: [-0.30]
+|   |   |   |   |--- endpoint_count_ARG >  0.50
+|   |   |   |   |   |--- protein_length <= 190.50
+|   |   |   |   |   |   |--- value: [-0.40]
+|   |   |   |   |   |--- protein_length >  190.50
+|   |   |   |   |   |   |--- value: [-0.86]
+|   |--- shrink_violation_fraction >  0.15
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |--- current_distance <= 16.87
+|   |   |   |   |   |--- endpoint_small_count <= 0.50
+|   |   |   |   |   |   |--- value: [-1.60]
+|   |   |   |   |   |--- endpoint_small_count >  0.50
+|   |   |   |   |   |   |--- value: [-1.11]
+|   |   |   |   |--- current_distance >  16.87
+|   |   |   |   |   |--- current_distance <= 19.97
+|   |   |   |   |   |   |--- value: [-1.80]
+|   |   |   |   |   |--- current_distance >  19.97
+|   |   |   |   |   |   |--- value: [-2.35]
+|   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |--- current_distance <= 15.70
+|   |   |   |   |   |--- value: [-0.25]
+|   |   |   |   |--- current_distance >  15.70
+|   |   |   |   |   |--- value: [-1.04]
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- current_distance <= 14.30
+|   |   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |   |   |--- value: [-0.15]
+|   |   |   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |   |   |--- value: [0.35]
+|   |   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |   |--- endpoint_hydropathy_sum <= -4.85
+|   |   |   |   |   |   |--- value: [-0.79]
+|   |   |   |   |   |--- endpoint_hydropathy_sum >  -4.85
+|   |   |   |   |   |   |--- value: [-0.34]
+|   |   |   |--- current_distance >  14.30
+|   |   |   |   |--- shrink_pressure_mean <= 1.49
+|   |   |   |   |   |--- endpoint_hydropathy_sum <= -4.25
+|   |   |   |   |   |   |--- value: [-0.78]
+|   |   |   |   |   |--- endpoint_hydropathy_sum >  -4.25
+|   |   |   |   |   |   |--- value: [-0.47]
+|   |   |   |   |--- shrink_pressure_mean >  1.49
+|   |   |   |   |   |--- endpoint_hydropathy_sum <= -2.15
+|   |   |   |   |   |   |--- value: [-1.05]
+|   |   |   |   |   |--- endpoint_hydropathy_sum >  -2.15
+|   |   |   |   |   |   |--- value: [-0.74]

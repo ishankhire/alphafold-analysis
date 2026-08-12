@@ -1,0 +1,43 @@
+|--- current_distance <= 13.37
+|   |--- sequence_separation <= 4.50
+|   |   |--- endpoint_count_THR <= 0.50
+|   |   |   |--- endpoint_count_ILE <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_ILE >  0.50
+|   |   |   |   |--- class: 0
+|   |   |--- endpoint_count_THR >  0.50
+|   |   |   |--- endpoint_volume_absolute_difference <= 39.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_volume_absolute_difference >  39.50
+|   |   |   |   |--- class: 0
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 8.31
+|   |   |   |--- endpoint_count_ILE <= 0.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_count_ILE >  0.50
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  8.31
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  13.37
+|   |--- sequence_separation <= 7.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- class: 1
+|   |--- sequence_separation >  7.50
+|   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |--- current_distance <= 25.54
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  25.54
+|   |   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |--- endpoint_hydrophobic_count <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_hydrophobic_count >  0.50
+|   |   |   |   |--- class: 0

@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.12
+|   |--- center_avg_ch_12 <= 26.83
+|   |   |--- center_avg_ch_43 <= 14.24
+|   |   |   |--- center_avg_ch_7 <= -1.04
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_7 >  -1.04
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_43 >  14.24
+|   |   |   |--- center_avg_ch_66 <= -12.82
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_66 >  -12.82
+|   |   |   |   |--- class: 1
+|   |--- center_avg_ch_12 >  26.83
+|   |   |--- center_avg_ch_58 <= 116.45
+|   |   |   |--- current_distance <= 15.42
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  15.42
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_58 >  116.45
+|   |   |   |--- protein_length <= 264.00
+|   |   |   |   |--- class: 0
+|   |   |   |--- protein_length >  264.00
+|   |   |   |   |--- class: 1
+|--- grow_violation_fraction >  0.12
+|   |--- center_avg_ch_62 <= 46.49
+|   |   |--- grow_pressure_mean <= 0.96
+|   |   |   |--- center_avg_ch_57 <= 7.20
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_57 >  7.20
+|   |   |   |   |--- class: 1
+|   |   |--- grow_pressure_mean >  0.96
+|   |   |   |--- center_avg_ch_100 <= -3.09
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_100 >  -3.09
+|   |   |   |   |--- class: 0
+|   |--- center_avg_ch_62 >  46.49
+|   |   |--- center_avg_ch_80 <= 223.34
+|   |   |   |--- current_distance <= 7.30
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  7.30
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_80 >  223.34
+|   |   |   |--- center_avg_ch_33 <= 4.79
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_33 >  4.79
+|   |   |   |   |--- class: 1

@@ -1,0 +1,46 @@
+|--- current_distance <= 11.13
+|   |--- sequence_separation <= 4.50
+|   |   |--- current_distance <= 6.08
+|   |   |   |--- current_distance <= 1.78
+|   |   |   |   |--- value: [0.65]
+|   |   |   |--- current_distance >  1.78
+|   |   |   |   |--- value: [-0.02]
+|   |   |--- current_distance >  6.08
+|   |   |   |--- current_distance <= 9.22
+|   |   |   |   |--- value: [-0.56]
+|   |   |   |--- current_distance >  9.22
+|   |   |   |   |--- value: [-0.80]
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 7.88
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- value: [1.07]
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- value: [0.61]
+|   |   |--- current_distance >  7.88
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- value: [0.58]
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- value: [0.17]
+|--- current_distance >  11.13
+|   |--- sequence_separation <= 4.50
+|   |   |--- current_distance <= 16.77
+|   |   |   |--- current_distance <= 14.02
+|   |   |   |   |--- value: [-0.97]
+|   |   |   |--- current_distance >  14.02
+|   |   |   |   |--- value: [-1.23]
+|   |   |--- current_distance >  16.77
+|   |   |   |--- current_distance <= 19.97
+|   |   |   |   |--- value: [-1.59]
+|   |   |   |--- current_distance >  19.97
+|   |   |   |   |--- value: [-2.14]
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 14.76
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- value: [0.09]
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- value: [-0.18]
+|   |   |--- current_distance >  14.76
+|   |   |   |--- protein_length <= 191.50
+|   |   |   |   |--- value: [-0.36]
+|   |   |   |--- protein_length >  191.50
+|   |   |   |   |--- value: [-0.62]

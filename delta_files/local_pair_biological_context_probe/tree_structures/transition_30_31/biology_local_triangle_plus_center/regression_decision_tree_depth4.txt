@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.12
+|   |--- current_distance <= 13.29
+|   |   |--- center_avg_ch_52 <= -13.26
+|   |   |   |--- center_avg_ch_99 <= -0.76
+|   |   |   |   |--- value: [0.38]
+|   |   |   |--- center_avg_ch_99 >  -0.76
+|   |   |   |   |--- value: [-0.10]
+|   |   |--- center_avg_ch_52 >  -13.26
+|   |   |   |--- center_avg_ch_119 <= -35.35
+|   |   |   |   |--- value: [-0.66]
+|   |   |   |--- center_avg_ch_119 >  -35.35
+|   |   |   |   |--- value: [-0.02]
+|   |--- current_distance >  13.29
+|   |   |--- center_avg_ch_91 <= 5.70
+|   |   |   |--- center_avg_ch_59 <= 5.36
+|   |   |   |   |--- value: [-0.49]
+|   |   |   |--- center_avg_ch_59 >  5.36
+|   |   |   |   |--- value: [-0.17]
+|   |   |--- center_avg_ch_91 >  5.70
+|   |   |   |--- sequence_separation <= 6.50
+|   |   |   |   |--- value: [0.30]
+|   |   |   |--- sequence_separation >  6.50
+|   |   |   |   |--- value: [-0.12]
+|--- grow_violation_fraction >  0.12
+|   |--- grow_violation_fraction <= 0.28
+|   |   |--- center_avg_ch_52 <= -18.47
+|   |   |   |--- center_avg_ch_34 <= 3.66
+|   |   |   |   |--- value: [0.32]
+|   |   |   |--- center_avg_ch_34 >  3.66
+|   |   |   |   |--- value: [0.66]
+|   |   |--- center_avg_ch_52 >  -18.47
+|   |   |   |--- center_avg_ch_59 <= 3.89
+|   |   |   |   |--- value: [-0.01]
+|   |   |   |--- center_avg_ch_59 >  3.89
+|   |   |   |   |--- value: [0.20]
+|   |--- grow_violation_fraction >  0.28
+|   |   |--- center_avg_ch_92 <= 14.54
+|   |   |   |--- center_avg_ch_19 <= 5.10
+|   |   |   |   |--- value: [0.67]
+|   |   |   |--- center_avg_ch_19 >  5.10
+|   |   |   |   |--- value: [0.41]
+|   |   |--- center_avg_ch_92 >  14.54
+|   |   |   |--- center_avg_ch_53 <= -7.93
+|   |   |   |   |--- value: [-0.24]
+|   |   |   |--- center_avg_ch_53 >  -7.93
+|   |   |   |   |--- value: [0.34]

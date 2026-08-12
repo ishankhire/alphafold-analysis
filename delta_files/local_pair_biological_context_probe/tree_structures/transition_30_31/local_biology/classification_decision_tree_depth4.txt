@@ -1,0 +1,46 @@
+|--- current_distance <= 13.17
+|   |--- endpoint_count_MET <= 0.50
+|   |   |--- local_between_residue_count <= 7.50
+|   |   |   |--- protein_length <= 91.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- protein_length >  91.50
+|   |   |   |   |--- class: 0
+|   |   |--- local_between_residue_count >  7.50
+|   |   |   |--- current_distance <= 11.38
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  11.38
+|   |   |   |   |--- class: 1
+|   |--- endpoint_count_MET >  0.50
+|   |   |--- protein_length <= 172.50
+|   |   |   |--- current_distance <= 9.58
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  9.58
+|   |   |   |   |--- class: 1
+|   |   |--- protein_length >  172.50
+|   |   |   |--- local_small_count <= 5.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- local_small_count >  5.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  13.17
+|   |--- local_between_residue_count <= 6.50
+|   |   |--- protein_length <= 88.50
+|   |   |   |--- local_third_residue_count <= 13.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- local_third_residue_count >  13.50
+|   |   |   |   |--- class: 1
+|   |   |--- protein_length >  88.50
+|   |   |   |--- local_third_residue_count <= 14.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- local_third_residue_count >  14.50
+|   |   |   |   |--- class: 0
+|   |--- local_between_residue_count >  6.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- protein_length <= 99.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- protein_length >  99.50
+|   |   |   |   |--- class: 1
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- endpoint_volume_sum <= 124.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_volume_sum >  124.50
+|   |   |   |   |--- class: 1

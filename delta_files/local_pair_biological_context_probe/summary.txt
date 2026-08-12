@@ -1,0 +1,219 @@
+Local biological-context distance-update probe
+===============================================
+
+Status: complete
+Transitions: 10->11, 15->16, 20->21, 30->31, 40->41
+Completed shards: 35/35
+HistGradientBoosting: 100 iterations; early_stopping=False
+
+Held-out bundle rankings:
+  classification/logistic (mean_per_protein_balanced_accuracy): biology_local_triangle_plus_center=0.7840, biology_local_triangle_mediator=0.6175, biology_local_triangle=0.6172, local_triangle=0.6030, local_biology=0.6023, endpoint_biology=0.5984, controls=0.5857
+  classification/decision_tree_depth4 (mean_per_protein_balanced_accuracy): biology_local_triangle_plus_center=0.6309, biology_local_triangle=0.6105, biology_local_triangle_mediator=0.6105, local_triangle=0.6103, endpoint_biology=0.5977, local_biology=0.5976, controls=0.5924
+  classification/hist_gradient_boosting (mean_per_protein_balanced_accuracy): biology_local_triangle_plus_center=0.7478, biology_local_triangle_mediator=0.6396, biology_local_triangle=0.6394, local_biology=0.6254, local_triangle=0.6242, endpoint_biology=0.6238, controls=0.6067
+  regression/ridge (mean_per_protein_r2): biology_local_triangle_plus_center=0.4132, biology_local_triangle_mediator=0.0607, biology_local_triangle=0.0600, local_triangle=0.0399, local_biology=0.0388, endpoint_biology=0.0322, controls=0.0160
+  regression/decision_tree_depth4 (mean_per_protein_r2): biology_local_triangle_plus_center=0.0795, biology_local_triangle=0.0436, biology_local_triangle_mediator=0.0436, local_triangle=0.0422, endpoint_biology=0.0370, local_biology=0.0370, controls=0.0344
+  regression/hist_gradient_boosting (mean_per_protein_r2): biology_local_triangle_plus_center=0.3016, biology_local_triangle_mediator=0.0985, biology_local_triangle=0.0983, local_biology=0.0812, endpoint_biology=0.0784, local_triangle=0.0735, controls=0.0505
+
+Declared paired bundle gains (held-out protein bootstrap):
+  10->11 classification/logistic local_biology_minus_endpoint_biology: +0.0030 [95% +0.0010, +0.0053]
+  10->11 classification/logistic local_triangle_minus_controls: +0.0073 [95% +0.0024, +0.0125]
+  10->11 classification/logistic biology_local_triangle_minus_local_triangle: +0.0177 [95% +0.0142, +0.0214]
+  10->11 classification/logistic biology_local_triangle_mediator_minus_biology_local_triangle: +0.0001 [95% -0.0009, +0.0010]
+  10->11 classification/logistic biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1414 [95% +0.1354, +0.1461]
+  10->11 classification/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0005 [95% -0.0007, +0.0016]
+  10->11 classification/decision_tree_depth4 local_triangle_minus_controls: -0.0001 [95% -0.0034, +0.0036]
+  10->11 classification/decision_tree_depth4 biology_local_triangle_minus_local_triangle: -0.0032 [95% -0.0066, +0.0005]
+  10->11 classification/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  10->11 classification/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0163 [95% +0.0120, +0.0207]
+  10->11 classification/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0009 [95% -0.0005, +0.0027]
+  10->11 classification/hist_gradient_boosting local_triangle_minus_controls: +0.0108 [95% +0.0070, +0.0150]
+  10->11 classification/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0158 [95% +0.0128, +0.0188]
+  10->11 classification/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  10->11 classification/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0729 [95% +0.0686, +0.0770]
+  10->11 regression/ridge local_biology_minus_endpoint_biology: +0.0073 [95% +0.0045, +0.0101]
+  10->11 regression/ridge local_triangle_minus_controls: +0.0314 [95% +0.0272, +0.0365]
+  10->11 regression/ridge biology_local_triangle_minus_local_triangle: +0.0326 [95% +0.0289, +0.0372]
+  10->11 regression/ridge biology_local_triangle_mediator_minus_biology_local_triangle: +0.0005 [95% +0.0002, +0.0009]
+  10->11 regression/ridge biology_local_triangle_plus_center_minus_biology_local_triangle: +0.3500 [95% +0.3387, +0.3616]
+  10->11 regression/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0000 [95% +0.0000, +0.0000]
+  10->11 regression/decision_tree_depth4 local_triangle_minus_controls: +0.0044 [95% +0.0011, +0.0079]
+  10->11 regression/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0023 [95% +0.0011, +0.0032]
+  10->11 regression/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  10->11 regression/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0432 [95% +0.0350, +0.0493]
+  10->11 regression/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0028 [95% +0.0005, +0.0055]
+  10->11 regression/hist_gradient_boosting local_triangle_minus_controls: +0.0220 [95% +0.0187, +0.0257]
+  10->11 regression/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0324 [95% +0.0281, +0.0381]
+  10->11 regression/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  10->11 regression/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1867 [95% +0.1759, +0.1959]
+  15->16 classification/logistic local_biology_minus_endpoint_biology: +0.0022 [95% -0.0005, +0.0047]
+  15->16 classification/logistic local_triangle_minus_controls: +0.0189 [95% +0.0143, +0.0226]
+  15->16 classification/logistic biology_local_triangle_minus_local_triangle: +0.0164 [95% +0.0125, +0.0197]
+  15->16 classification/logistic biology_local_triangle_mediator_minus_biology_local_triangle: +0.0001 [95% -0.0008, +0.0011]
+  15->16 classification/logistic biology_local_triangle_plus_center_minus_biology_local_triangle: +0.2263 [95% +0.2187, +0.2325]
+  15->16 classification/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0000 [95% +0.0000, +0.0000]
+  15->16 classification/decision_tree_depth4 local_triangle_minus_controls: +0.0241 [95% +0.0164, +0.0311]
+  15->16 classification/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0060 [95% +0.0011, +0.0100]
+  15->16 classification/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  15->16 classification/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0249 [95% +0.0183, +0.0320]
+  15->16 classification/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0017 [95% -0.0005, +0.0039]
+  15->16 classification/hist_gradient_boosting local_triangle_minus_controls: +0.0188 [95% +0.0143, +0.0224]
+  15->16 classification/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0195 [95% +0.0162, +0.0227]
+  15->16 classification/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0007 [95% -0.0002, +0.0015]
+  15->16 classification/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1267 [95% +0.1216, +0.1313]
+  15->16 regression/ridge local_biology_minus_endpoint_biology: +0.0054 [95% +0.0018, +0.0097]
+  15->16 regression/ridge local_triangle_minus_controls: +0.0246 [95% +0.0202, +0.0288]
+  15->16 regression/ridge biology_local_triangle_minus_local_triangle: +0.0271 [95% +0.0221, +0.0324]
+  15->16 regression/ridge biology_local_triangle_mediator_minus_biology_local_triangle: +0.0007 [95% +0.0002, +0.0013]
+  15->16 regression/ridge biology_local_triangle_plus_center_minus_biology_local_triangle: +0.5491 [95% +0.5382, +0.5600]
+  15->16 regression/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0001 [95% -0.0000, +0.0003]
+  15->16 regression/decision_tree_depth4 local_triangle_minus_controls: +0.0066 [95% +0.0015, +0.0109]
+  15->16 regression/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0035 [95% +0.0008, +0.0062]
+  15->16 regression/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  15->16 regression/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0276 [95% +0.0226, +0.0343]
+  15->16 regression/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0017 [95% -0.0021, +0.0050]
+  15->16 regression/hist_gradient_boosting local_triangle_minus_controls: +0.0266 [95% +0.0211, +0.0305]
+  15->16 regression/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0331 [95% +0.0280, +0.0382]
+  15->16 regression/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0007 [95% -0.0000, +0.0013]
+  15->16 regression/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.2582 [95% +0.2503, +0.2684]
+  20->21 classification/logistic local_biology_minus_endpoint_biology: +0.0083 [95% +0.0052, +0.0111]
+  20->21 classification/logistic local_triangle_minus_controls: +0.0199 [95% +0.0149, +0.0246]
+  20->21 classification/logistic biology_local_triangle_minus_local_triangle: +0.0171 [95% +0.0135, +0.0205]
+  20->21 classification/logistic biology_local_triangle_mediator_minus_biology_local_triangle: -0.0000 [95% -0.0013, +0.0014]
+  20->21 classification/logistic biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1745 [95% +0.1686, +0.1807]
+  20->21 classification/decision_tree_depth4 local_biology_minus_endpoint_biology: -0.0008 [95% -0.0020, +0.0005]
+  20->21 classification/decision_tree_depth4 local_triangle_minus_controls: +0.0154 [95% +0.0105, +0.0201]
+  20->21 classification/decision_tree_depth4 biology_local_triangle_minus_local_triangle: -0.0004 [95% -0.0026, +0.0022]
+  20->21 classification/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  20->21 classification/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0349 [95% +0.0298, +0.0411]
+  20->21 classification/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0008 [95% -0.0019, +0.0030]
+  20->21 classification/hist_gradient_boosting local_triangle_minus_controls: +0.0167 [95% +0.0117, +0.0203]
+  20->21 classification/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0170 [95% +0.0132, +0.0203]
+  20->21 classification/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: -0.0001 [95% -0.0011, +0.0010]
+  20->21 classification/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1384 [95% +0.1320, +0.1455]
+  20->21 regression/ridge local_biology_minus_endpoint_biology: +0.0116 [95% +0.0087, +0.0146]
+  20->21 regression/ridge local_triangle_minus_controls: +0.0211 [95% +0.0179, +0.0235]
+  20->21 regression/ridge biology_local_triangle_minus_local_triangle: +0.0175 [95% +0.0143, +0.0207]
+  20->21 regression/ridge biology_local_triangle_mediator_minus_biology_local_triangle: +0.0003 [95% +0.0000, +0.0007]
+  20->21 regression/ridge biology_local_triangle_plus_center_minus_biology_local_triangle: +0.3014 [95% +0.2891, +0.3108]
+  20->21 regression/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0000 [95% +0.0000, +0.0000]
+  20->21 regression/decision_tree_depth4 local_triangle_minus_controls: +0.0038 [95% +0.0001, +0.0072]
+  20->21 regression/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0005 [95% -0.0000, +0.0011]
+  20->21 regression/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  20->21 regression/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0541 [95% +0.0465, +0.0610]
+  20->21 regression/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0039 [95% +0.0013, +0.0061]
+  20->21 regression/hist_gradient_boosting local_triangle_minus_controls: +0.0194 [95% +0.0162, +0.0228]
+  20->21 regression/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0243 [95% +0.0208, +0.0282]
+  20->21 regression/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0002 [95% -0.0001, +0.0006]
+  20->21 regression/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.2179 [95% +0.2075, +0.2259]
+  30->31 classification/logistic local_biology_minus_endpoint_biology: +0.0034 [95% +0.0012, +0.0059]
+  30->31 classification/logistic local_triangle_minus_controls: +0.0160 [95% +0.0109, +0.0211]
+  30->31 classification/logistic biology_local_triangle_minus_local_triangle: +0.0128 [95% +0.0100, +0.0159]
+  30->31 classification/logistic biology_local_triangle_mediator_minus_biology_local_triangle: +0.0009 [95% -0.0001, +0.0019]
+  30->31 classification/logistic biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1094 [95% +0.1040, +0.1155]
+  30->31 classification/decision_tree_depth4 local_biology_minus_endpoint_biology: -0.0004 [95% -0.0008, -0.0000]
+  30->31 classification/decision_tree_depth4 local_triangle_minus_controls: +0.0123 [95% +0.0078, +0.0168]
+  30->31 classification/decision_tree_depth4 biology_local_triangle_minus_local_triangle: -0.0011 [95% -0.0036, +0.0010]
+  30->31 classification/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  30->31 classification/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0091 [95% +0.0056, +0.0127]
+  30->31 classification/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0019 [95% -0.0002, +0.0035]
+  30->31 classification/hist_gradient_boosting local_triangle_minus_controls: +0.0164 [95% +0.0120, +0.0201]
+  30->31 classification/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0160 [95% +0.0129, +0.0189]
+  30->31 classification/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0004 [95% -0.0004, +0.0012]
+  30->31 classification/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0875 [95% +0.0822, +0.0928]
+  30->31 regression/ridge local_biology_minus_endpoint_biology: +0.0040 [95% +0.0022, +0.0058]
+  30->31 regression/ridge local_triangle_minus_controls: +0.0185 [95% +0.0151, +0.0212]
+  30->31 regression/ridge biology_local_triangle_minus_local_triangle: +0.0129 [95% +0.0104, +0.0149]
+  30->31 regression/ridge biology_local_triangle_mediator_minus_biology_local_triangle: +0.0003 [95% +0.0000, +0.0006]
+  30->31 regression/ridge biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1989 [95% +0.1922, +0.2052]
+  30->31 regression/decision_tree_depth4 local_biology_minus_endpoint_biology: -0.0003 [95% -0.0007, +0.0003]
+  30->31 regression/decision_tree_depth4 local_triangle_minus_controls: +0.0093 [95% +0.0064, +0.0123]
+  30->31 regression/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0004 [95% -0.0000, +0.0009]
+  30->31 regression/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  30->31 regression/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0117 [95% +0.0083, +0.0142]
+  30->31 regression/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0016 [95% +0.0003, +0.0033]
+  30->31 regression/hist_gradient_boosting local_triangle_minus_controls: +0.0213 [95% +0.0183, +0.0239]
+  30->31 regression/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0197 [95% +0.0170, +0.0226]
+  30->31 regression/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: +0.0001 [95% -0.0002, +0.0004]
+  30->31 regression/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1355 [95% +0.1294, +0.1404]
+  40->41 classification/logistic local_biology_minus_endpoint_biology: +0.0027 [95% -0.0001, +0.0056]
+  40->41 classification/logistic local_triangle_minus_controls: +0.0243 [95% +0.0191, +0.0291]
+  40->41 classification/logistic biology_local_triangle_minus_local_triangle: +0.0069 [95% +0.0048, +0.0093]
+  40->41 classification/logistic biology_local_triangle_mediator_minus_biology_local_triangle: +0.0004 [95% -0.0010, +0.0018]
+  40->41 classification/logistic biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1823 [95% +0.1758, +0.1893]
+  40->41 classification/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0000 [95% +0.0000, +0.0000]
+  40->41 classification/decision_tree_depth4 local_triangle_minus_controls: +0.0379 [95% +0.0314, +0.0435]
+  40->41 classification/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  40->41 classification/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  40->41 classification/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0163 [95% +0.0110, +0.0232]
+  40->41 classification/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0029 [95% +0.0004, +0.0055]
+  40->41 classification/hist_gradient_boosting local_triangle_minus_controls: +0.0246 [95% +0.0193, +0.0293]
+  40->41 classification/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0079 [95% +0.0054, +0.0105]
+  40->41 classification/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: -0.0001 [95% -0.0012, +0.0011]
+  40->41 classification/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.1164 [95% +0.1118, +0.1216]
+  40->41 regression/ridge local_biology_minus_endpoint_biology: +0.0046 [95% +0.0029, +0.0066]
+  40->41 regression/ridge local_triangle_minus_controls: +0.0239 [95% +0.0186, +0.0289]
+  40->41 regression/ridge biology_local_triangle_minus_local_triangle: +0.0105 [95% +0.0081, +0.0131]
+  40->41 regression/ridge biology_local_triangle_mediator_minus_biology_local_triangle: +0.0013 [95% +0.0007, +0.0018]
+  40->41 regression/ridge biology_local_triangle_plus_center_minus_biology_local_triangle: +0.3664 [95% +0.3530, +0.3784]
+  40->41 regression/decision_tree_depth4 local_biology_minus_endpoint_biology: +0.0000 [95% +0.0000, +0.0000]
+  40->41 regression/decision_tree_depth4 local_triangle_minus_controls: +0.0150 [95% +0.0105, +0.0200]
+  40->41 regression/decision_tree_depth4 biology_local_triangle_minus_local_triangle: +0.0004 [95% +0.0000, +0.0007]
+  40->41 regression/decision_tree_depth4 biology_local_triangle_mediator_minus_biology_local_triangle: +0.0000 [95% +0.0000, +0.0000]
+  40->41 regression/decision_tree_depth4 biology_local_triangle_plus_center_minus_biology_local_triangle: +0.0429 [95% +0.0388, +0.0479]
+  40->41 regression/hist_gradient_boosting local_biology_minus_endpoint_biology: +0.0039 [95% +0.0019, +0.0065]
+  40->41 regression/hist_gradient_boosting local_triangle_minus_controls: +0.0254 [95% +0.0215, +0.0295]
+  40->41 regression/hist_gradient_boosting biology_local_triangle_minus_local_triangle: +0.0147 [95% +0.0117, +0.0180]
+  40->41 regression/hist_gradient_boosting biology_local_triangle_mediator_minus_biology_local_triangle: -0.0002 [95% -0.0009, +0.0004]
+  40->41 regression/hist_gradient_boosting biology_local_triangle_plus_center_minus_biology_local_triangle: +0.2181 [95% +0.2114, +0.2256]
+
+Most directional held-out depth-4 rules (minimum 10 proteins):
+  10->11 biology_local_triangle_plus_center regression leaf 29 (109 proteins): mean delta=-2.961 A; pressure-distance label=none; rule=current_distance > 11.1303382 AND center_avg_ch_34 > 15.7747331 AND center_avg_ch_34 > 24.7312136 AND center_avg_ch_71 <= -8.99298859
+  15->16 biology_local_triangle_plus_center regression leaf 15 (73 proteins): mean delta=-2.616 A; pressure-distance label=moderate; rule=grow_violation_fraction <= 0.184659094 AND current_distance > 20.3895216 AND current_distance > 28.6306667 AND center_avg_ch_41 > 10.9062958
+  40->41 controls regression leaf 3 (104 proteins): mean delta=+2.478 A; pressure-distance label=none; rule=current_distance <= 5.01779604 AND current_distance <= 1.44370925 AND current_distance <= -0.852983326
+  40->41 endpoint_biology regression leaf 3 (104 proteins): mean delta=+2.478 A; pressure-distance label=none; rule=current_distance <= 5.01779604 AND current_distance <= 1.44370925 AND current_distance <= -0.852983326
+  40->41 local_biology regression leaf 3 (104 proteins): mean delta=+2.478 A; pressure-distance label=none; rule=current_distance <= 5.01779604 AND current_distance <= 1.44370925 AND current_distance <= -0.852983326
+  40->41 local_triangle regression leaf 19 (104 proteins): mean delta=+2.478 A; pressure-distance label=moderate; rule=grow_violation_fraction > 0.12132353 AND current_distance <= 3.57481456 AND current_distance <= 1.35478371 AND current_distance <= -0.852983326
+  40->41 biology_local_triangle regression leaf 19 (104 proteins): mean delta=+2.478 A; pressure-distance label=moderate; rule=grow_violation_fraction > 0.12132353 AND current_distance <= 3.57481456 AND current_distance <= 1.35478371 AND current_distance <= -0.852983326
+  40->41 biology_local_triangle_mediator regression leaf 19 (104 proteins): mean delta=+2.478 A; pressure-distance label=moderate; rule=grow_violation_fraction > 0.12132353 AND current_distance <= 3.57481456 AND current_distance <= 1.35478371 AND current_distance <= -0.852983326
+  15->16 endpoint_biology regression leaf 7 (95 proteins): mean delta=+2.184 A; pressure-distance label=none; rule=current_distance <= 11.2766237 AND current_distance <= 6.45320225 AND endpoint_count_GLY > 0.5 AND current_distance <= 3.85399103
+  15->16 local_biology regression leaf 7 (95 proteins): mean delta=+2.184 A; pressure-distance label=none; rule=current_distance <= 11.2766237 AND current_distance <= 6.45320225 AND endpoint_count_GLY > 0.5 AND current_distance <= 3.85399103
+  10->11 controls regression leaf 23 (98 proteins): mean delta=-2.101 A; pressure-distance label=none; rule=current_distance > 11.1303382 AND sequence_separation <= 4.5 AND current_distance > 16.7656794 AND current_distance > 19.9725609
+  20->21 biology_local_triangle_plus_center regression leaf 15 (101 proteins): mean delta=-2.006 A; pressure-distance label=none; rule=center_avg_ch_58 <= -82.3721657 AND center_avg_ch_19 > 13.9015675 AND center_avg_ch_22 > 30.5840855 AND center_avg_ch_18 > 2.07078111
+  10->11 biology_local_triangle_plus_center regression leaf 30 (107 proteins): mean delta=-1.966 A; pressure-distance label=none; rule=current_distance > 11.1303382 AND center_avg_ch_34 > 15.7747331 AND center_avg_ch_34 > 24.7312136 AND center_avg_ch_71 > -8.99298859
+  10->11 biology_local_triangle_plus_center regression leaf 26 (108 proteins): mean delta=-1.954 A; pressure-distance label=none; rule=current_distance > 11.1303382 AND center_avg_ch_34 > 15.7747331 AND center_avg_ch_34 <= 24.7312136 AND center_avg_ch_79 <= -7.00986958
+  15->16 controls regression leaf 20 (110 proteins): mean delta=-1.951 A; pressure-distance label=none; rule=current_distance > 11.2766237 AND current_distance <= 24.3760929 AND sequence_separation <= 4.5 AND current_distance > 14.5593724
+
+Triangle-pressure rule collinearity:
+  10->11 local_triangle classification leaf 4: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 5: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 7: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 8: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 11: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 12: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 19: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 20: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 22: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 23: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 26: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 27: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 29: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle classification leaf 30: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 4: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 5: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 7: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 8: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 11: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 12: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 14: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 15: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 19: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 20: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 22: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 23: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 26: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 27: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 29: moderate correlation; interpret geometric attribution as cautious.
+  10->11 local_triangle regression leaf 30: moderate correlation; interpret geometric attribution as cautious.
+  ... 1084 additional flagged rule rows in tree_rule_metrics.csv
+
+Interpretation: predictive associations are diagnostic, not causal evidence.

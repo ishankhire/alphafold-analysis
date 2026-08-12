@@ -1,0 +1,46 @@
+|--- current_distance <= 12.38
+|   |--- sequence_separation <= 4.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- current_distance <= 6.84
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  6.84
+|   |   |   |   |--- class: 1
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 6.06
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  6.06
+|   |   |   |   |--- class: 0
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 9.65
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  9.65
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  12.38
+|   |--- sequence_separation <= 4.50
+|   |   |--- current_distance <= 16.93
+|   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  16.93
+|   |   |   |--- current_distance <= 19.48
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  19.48
+|   |   |   |   |--- class: 1
+|   |--- sequence_separation >  4.50
+|   |   |--- current_distance <= 15.15
+|   |   |   |--- sequence_separation <= 8.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  8.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  15.15
+|   |   |   |--- protein_length <= 191.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- protein_length >  191.50
+|   |   |   |   |--- class: 1

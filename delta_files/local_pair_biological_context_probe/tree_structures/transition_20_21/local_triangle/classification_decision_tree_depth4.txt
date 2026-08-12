@@ -1,0 +1,43 @@
+|--- grow_violation_fraction <= 0.08
+|   |--- sequence_separation <= 8.50
+|   |   |--- current_distance <= 12.96
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  12.96
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |   |--- class: 1
+|   |--- sequence_separation >  8.50
+|   |   |--- current_distance <= 16.22
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.03
+|   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.03
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  16.22
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.01
+|   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.01
+|   |   |   |   |--- class: 1
+|--- grow_violation_fraction >  0.08
+|   |--- grow_violation_fraction <= 0.24
+|   |   |--- shrink_pressure_mean <= 0.28
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- class: 0
+|   |   |--- shrink_pressure_mean >  0.28
+|   |   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |   |--- class: 0
+|   |   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |   |--- class: 1
+|   |--- grow_violation_fraction >  0.24
+|   |   |--- normalized_nearest_terminus_distance <= 0.00
+|   |   |   |--- class: 0
+|   |   |--- normalized_nearest_terminus_distance >  0.00
+|   |   |   |--- local_third_residue_count <= 13.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- local_third_residue_count >  13.50
+|   |   |   |   |--- class: 0

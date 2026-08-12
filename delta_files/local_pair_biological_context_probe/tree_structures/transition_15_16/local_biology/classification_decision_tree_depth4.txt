@@ -1,0 +1,46 @@
+|--- current_distance <= 18.09
+|   |--- current_distance <= 8.24
+|   |   |--- current_distance <= 5.92
+|   |   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  5.92
+|   |   |   |--- endpoint_aromatic_count <= 0.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_aromatic_count >  0.50
+|   |   |   |   |--- class: 0
+|   |--- current_distance >  8.24
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- current_distance <= 12.22
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  12.22
+|   |   |   |   |--- class: 1
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- endpoint_aromatic_count <= 0.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- endpoint_aromatic_count >  0.50
+|   |   |   |   |--- class: 1
+|--- current_distance >  18.09
+|   |--- current_distance <= 26.23
+|   |   |--- local_third_residue_count <= 19.50
+|   |   |   |--- endpoint_count_HIS <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_HIS >  0.50
+|   |   |   |   |--- class: 1
+|   |   |--- local_third_residue_count >  19.50
+|   |   |   |--- endpoint_count_HIS <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_HIS >  0.50
+|   |   |   |   |--- class: 1
+|   |--- current_distance >  26.23
+|   |   |--- current_distance <= 30.21
+|   |   |   |--- local_between_residue_count <= 9.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- local_between_residue_count >  9.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  30.21
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 1

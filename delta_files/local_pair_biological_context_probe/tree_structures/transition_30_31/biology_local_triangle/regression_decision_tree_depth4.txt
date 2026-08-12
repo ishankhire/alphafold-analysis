@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.12
+|   |--- current_distance <= 13.29
+|   |   |--- endpoint_count_MET <= 0.50
+|   |   |   |--- shrink_violation_fraction <= 0.10
+|   |   |   |   |--- value: [0.22]
+|   |   |   |--- shrink_violation_fraction >  0.10
+|   |   |   |   |--- value: [0.07]
+|   |   |--- endpoint_count_MET >  0.50
+|   |   |   |--- endpoint_volume_absolute_difference <= 21.50
+|   |   |   |   |--- value: [-0.36]
+|   |   |   |--- endpoint_volume_absolute_difference >  21.50
+|   |   |   |   |--- value: [-0.12]
+|   |--- current_distance >  13.29
+|   |   |--- sequence_separation <= 5.50
+|   |   |   |--- shrink_pressure_mean <= 0.66
+|   |   |   |   |--- value: [0.31]
+|   |   |   |--- shrink_pressure_mean >  0.66
+|   |   |   |   |--- value: [0.02]
+|   |   |--- sequence_separation >  5.50
+|   |   |   |--- protein_length <= 99.50
+|   |   |   |   |--- value: [-0.48]
+|   |   |   |--- protein_length >  99.50
+|   |   |   |   |--- value: [-0.18]
+|--- grow_violation_fraction >  0.12
+|   |--- grow_violation_fraction <= 0.28
+|   |   |--- local_between_residue_count <= 7.50
+|   |   |   |--- protein_length <= 85.50
+|   |   |   |   |--- value: [-0.01]
+|   |   |   |--- protein_length >  85.50
+|   |   |   |   |--- value: [0.33]
+|   |   |--- local_between_residue_count >  7.50
+|   |   |   |--- current_distance <= 11.27
+|   |   |   |   |--- value: [0.27]
+|   |   |   |--- current_distance >  11.27
+|   |   |   |   |--- value: [0.01]
+|   |--- grow_violation_fraction >  0.28
+|   |   |--- grow_pressure_mean <= 1.35
+|   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |--- value: [0.44]
+|   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |--- value: [0.27]
+|   |   |--- grow_pressure_mean >  1.35
+|   |   |   |--- endpoint_charge_sum <= -1.50
+|   |   |   |   |--- value: [1.23]
+|   |   |   |--- endpoint_charge_sum >  -1.50
+|   |   |   |   |--- value: [0.54]

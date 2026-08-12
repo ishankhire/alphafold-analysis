@@ -1,0 +1,43 @@
+|--- current_distance <= 5.02
+|   |--- current_distance <= 1.44
+|   |   |--- current_distance <= -0.85
+|   |   |   |--- value: [2.31]
+|   |   |--- current_distance >  -0.85
+|   |   |   |--- endpoint_volume_sum <= 165.50
+|   |   |   |   |--- value: [1.87]
+|   |   |   |--- endpoint_volume_sum >  165.50
+|   |   |   |   |--- value: [1.42]
+|   |--- current_distance >  1.44
+|   |   |--- endpoint_small_count <= 0.50
+|   |   |   |--- local_between_residue_count <= 4.50
+|   |   |   |   |--- value: [0.20]
+|   |   |   |--- local_between_residue_count >  4.50
+|   |   |   |   |--- value: [0.83]
+|   |   |--- endpoint_small_count >  0.50
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- value: [1.33]
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- value: [0.84]
+|--- current_distance >  5.02
+|   |--- current_distance <= 24.36
+|   |   |--- local_between_residue_count <= 4.50
+|   |   |   |--- current_distance <= 14.20
+|   |   |   |   |--- value: [-0.14]
+|   |   |   |--- current_distance >  14.20
+|   |   |   |   |--- value: [-0.67]
+|   |   |--- local_between_residue_count >  4.50
+|   |   |   |--- current_distance <= 10.04
+|   |   |   |   |--- value: [0.48]
+|   |   |   |--- current_distance >  10.04
+|   |   |   |   |--- value: [0.08]
+|   |--- current_distance >  24.36
+|   |   |--- protein_length <= 163.50
+|   |   |   |--- current_distance <= 32.22
+|   |   |   |   |--- value: [-0.12]
+|   |   |   |--- current_distance >  32.22
+|   |   |   |   |--- value: [-0.63]
+|   |   |--- protein_length >  163.50
+|   |   |   |--- current_distance <= 32.77
+|   |   |   |   |--- value: [-0.69]
+|   |   |   |--- current_distance >  32.77
+|   |   |   |   |--- value: [-1.31]

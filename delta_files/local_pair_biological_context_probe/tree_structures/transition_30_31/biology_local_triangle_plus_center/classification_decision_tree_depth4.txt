@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.11
+|   |--- current_distance <= 14.15
+|   |   |--- center_avg_ch_52 <= -17.28
+|   |   |   |--- center_avg_ch_22 <= 2.25
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_22 >  2.25
+|   |   |   |   |--- class: 0
+|   |   |--- center_avg_ch_52 >  -17.28
+|   |   |   |--- center_avg_ch_113 <= -6.97
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_113 >  -6.97
+|   |   |   |   |--- class: 1
+|   |--- current_distance >  14.15
+|   |   |--- center_avg_ch_91 <= 9.97
+|   |   |   |--- center_avg_ch_59 <= 5.46
+|   |   |   |   |--- class: 1
+|   |   |   |--- center_avg_ch_59 >  5.46
+|   |   |   |   |--- class: 1
+|   |   |--- center_avg_ch_91 >  9.97
+|   |   |   |--- sequence_separation <= 6.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- sequence_separation >  6.50
+|   |   |   |   |--- class: 1
+|--- grow_violation_fraction >  0.11
+|   |--- center_avg_ch_0 <= -8.19
+|   |   |--- center_avg_ch_20 <= 9.18
+|   |   |   |--- local_between_residue_count <= 4.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- local_between_residue_count >  4.50
+|   |   |   |   |--- class: 0
+|   |   |--- center_avg_ch_20 >  9.18
+|   |   |   |--- center_avg_ch_119 <= 11.77
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_119 >  11.77
+|   |   |   |   |--- class: 0
+|   |--- center_avg_ch_0 >  -8.19
+|   |   |--- grow_violation_fraction <= 0.23
+|   |   |   |--- center_avg_ch_121 <= -16.45
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_121 >  -16.45
+|   |   |   |   |--- class: 1
+|   |   |--- grow_violation_fraction >  0.23
+|   |   |   |--- center_avg_ch_12 <= -1.06
+|   |   |   |   |--- class: 0
+|   |   |   |--- center_avg_ch_12 >  -1.06
+|   |   |   |   |--- class: 0

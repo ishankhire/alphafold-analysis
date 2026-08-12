@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.14
+|   |--- current_distance <= 25.45
+|   |   |--- current_distance <= 15.16
+|   |   |   |--- protein_length <= 139.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- protein_length >  139.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  15.16
+|   |   |   |--- shrink_violation_fraction <= 0.15
+|   |   |   |   |--- class: 1
+|   |   |   |--- shrink_violation_fraction >  0.15
+|   |   |   |   |--- class: 1
+|   |--- current_distance >  25.45
+|   |   |--- current_distance <= 29.46
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 1
+|   |   |--- current_distance >  29.46
+|   |   |   |--- sequence_separation <= 10.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  10.50
+|   |   |   |   |--- class: 1
+|--- grow_violation_fraction >  0.14
+|   |--- current_distance <= 7.63
+|   |   |--- grow_pressure_mean <= 1.11
+|   |   |   |--- protein_length <= 119.00
+|   |   |   |   |--- class: 0
+|   |   |   |--- protein_length >  119.00
+|   |   |   |   |--- class: 0
+|   |   |--- grow_pressure_mean >  1.11
+|   |   |   |--- current_distance <= 5.21
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  5.21
+|   |   |   |   |--- class: 0
+|   |--- current_distance >  7.63
+|   |   |--- current_distance <= 23.17
+|   |   |   |--- sequence_separation <= 4.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- sequence_separation >  4.50
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  23.17
+|   |   |   |--- current_distance <= 27.18
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  27.18
+|   |   |   |   |--- class: 1

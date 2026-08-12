@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.12
+|   |--- grow_pressure_mean <= 0.00
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- current_distance <= 16.84
+|   |   |   |   |--- value: [-0.58]
+|   |   |   |--- current_distance >  16.84
+|   |   |   |   |--- value: [-1.47]
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- current_distance <= 25.22
+|   |   |   |   |--- value: [-0.26]
+|   |   |   |--- current_distance >  25.22
+|   |   |   |   |--- value: [-0.87]
+|   |--- grow_pressure_mean >  0.00
+|   |   |--- current_distance <= 24.52
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- value: [-0.32]
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- value: [0.03]
+|   |   |--- current_distance >  24.52
+|   |   |   |--- protein_length <= 163.50
+|   |   |   |   |--- value: [-0.16]
+|   |   |   |--- protein_length >  163.50
+|   |   |   |   |--- value: [-0.75]
+|--- grow_violation_fraction >  0.12
+|   |--- current_distance <= 3.57
+|   |   |--- current_distance <= 1.35
+|   |   |   |--- current_distance <= -0.85
+|   |   |   |   |--- value: [2.31]
+|   |   |   |--- current_distance >  -0.85
+|   |   |   |   |--- value: [1.64]
+|   |   |--- current_distance >  1.35
+|   |   |   |--- endpoint_small_count <= 0.50
+|   |   |   |   |--- value: [0.70]
+|   |   |   |--- endpoint_small_count >  0.50
+|   |   |   |   |--- value: [1.22]
+|   |--- current_distance >  3.57
+|   |   |--- local_between_residue_count <= 4.50
+|   |   |   |--- local_between_residue_count <= 3.50
+|   |   |   |   |--- value: [0.30]
+|   |   |   |--- local_between_residue_count >  3.50
+|   |   |   |   |--- value: [-0.25]
+|   |   |--- local_between_residue_count >  4.50
+|   |   |   |--- grow_pressure_mean <= 0.89
+|   |   |   |   |--- value: [0.29]
+|   |   |   |--- grow_pressure_mean >  0.89
+|   |   |   |   |--- value: [0.71]

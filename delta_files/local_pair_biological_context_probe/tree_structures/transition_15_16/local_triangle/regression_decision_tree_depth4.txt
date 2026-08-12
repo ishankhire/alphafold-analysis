@@ -1,0 +1,46 @@
+|--- grow_violation_fraction <= 0.18
+|   |--- current_distance <= 20.39
+|   |   |--- grow_pressure_max <= 0.00
+|   |   |   |--- current_distance <= 15.15
+|   |   |   |   |--- value: [-0.21]
+|   |   |   |--- current_distance >  15.15
+|   |   |   |   |--- value: [-0.53]
+|   |   |--- grow_pressure_max >  0.00
+|   |   |   |--- protein_length <= 107.50
+|   |   |   |   |--- value: [0.34]
+|   |   |   |--- protein_length >  107.50
+|   |   |   |   |--- value: [-0.02]
+|   |--- current_distance >  20.39
+|   |   |--- current_distance <= 28.63
+|   |   |   |--- shrink_pressure_mean <= 1.37
+|   |   |   |   |--- value: [-0.52]
+|   |   |   |--- shrink_pressure_mean >  1.37
+|   |   |   |   |--- value: [-1.24]
+|   |   |--- current_distance >  28.63
+|   |   |   |--- shrink_pressure_mean <= 2.18
+|   |   |   |   |--- value: [-1.22]
+|   |   |   |--- shrink_pressure_mean >  2.18
+|   |   |   |   |--- value: [-1.90]
+|--- grow_violation_fraction >  0.18
+|   |--- current_distance <= 7.49
+|   |   |--- grow_pressure_mean <= 1.96
+|   |   |   |--- protein_length <= 108.50
+|   |   |   |   |--- value: [1.19]
+|   |   |   |--- protein_length >  108.50
+|   |   |   |   |--- value: [0.82]
+|   |   |--- grow_pressure_mean >  1.96
+|   |   |   |--- sequence_separation <= 5.50
+|   |   |   |   |--- value: [1.27]
+|   |   |   |--- sequence_separation >  5.50
+|   |   |   |   |--- value: [1.73]
+|   |--- current_distance >  7.49
+|   |   |--- sequence_separation <= 4.50
+|   |   |   |--- current_distance <= 11.96
+|   |   |   |   |--- value: [0.21]
+|   |   |   |--- current_distance >  11.96
+|   |   |   |   |--- value: [-1.12]
+|   |   |--- sequence_separation >  4.50
+|   |   |   |--- current_distance <= 20.19
+|   |   |   |   |--- value: [0.55]
+|   |   |   |--- current_distance >  20.19
+|   |   |   |   |--- value: [-0.21]

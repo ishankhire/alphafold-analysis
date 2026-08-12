@@ -1,0 +1,46 @@
+|--- current_distance <= 12.38
+|   |--- local_between_residue_count <= 3.50
+|   |   |--- endpoint_count_GLY <= 0.50
+|   |   |   |--- grow_violation_fraction <= 0.30
+|   |   |   |   |--- class: 1
+|   |   |   |--- grow_violation_fraction >  0.30
+|   |   |   |   |--- class: 1
+|   |   |--- endpoint_count_GLY >  0.50
+|   |   |   |--- current_distance <= 6.06
+|   |   |   |   |--- class: 0
+|   |   |   |--- current_distance >  6.06
+|   |   |   |   |--- class: 0
+|   |--- local_between_residue_count >  3.50
+|   |   |--- current_distance <= 9.65
+|   |   |   |--- grow_pressure_mean <= 1.18
+|   |   |   |   |--- class: 0
+|   |   |   |--- grow_pressure_mean >  1.18
+|   |   |   |   |--- class: 0
+|   |   |--- current_distance >  9.65
+|   |   |   |--- local_between_residue_count <= 7.50
+|   |   |   |   |--- class: 0
+|   |   |   |--- local_between_residue_count >  7.50
+|   |   |   |   |--- class: 0
+|--- current_distance >  12.38
+|   |--- shrink_violation_fraction <= 0.15
+|   |   |--- local_between_residue_count <= 3.50
+|   |   |   |--- current_distance <= 15.61
+|   |   |   |   |--- class: 1
+|   |   |   |--- current_distance >  15.61
+|   |   |   |   |--- class: 1
+|   |   |--- local_between_residue_count >  3.50
+|   |   |   |--- endpoint_count_ARG <= 0.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- endpoint_count_ARG >  0.50
+|   |   |   |   |--- class: 1
+|   |--- shrink_violation_fraction >  0.15
+|   |   |--- shrink_pressure_mean <= 1.16
+|   |   |   |--- local_between_residue_count <= 3.50
+|   |   |   |   |--- class: 1
+|   |   |   |--- local_between_residue_count >  3.50
+|   |   |   |   |--- class: 1
+|   |   |--- shrink_pressure_mean >  1.16
+|   |   |   |--- grow_violation_fraction <= 0.06
+|   |   |   |   |--- class: 1
+|   |   |   |--- grow_violation_fraction >  0.06
+|   |   |   |   |--- class: 1
