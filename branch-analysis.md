@@ -1358,3 +1358,8 @@ fixed nonlinear benchmarks, magnitude-stratified evaluation, and Delta outputs.
 
 Expanded the plan to five transitions and seven bundles, added paired protein
 bootstraps and triangle collinearity checks, and strengthened model settings.
+
+## Session: 2026-08-12 — Biological-context update probe implementation
+
+Added the 35-task biological/triangle update probe with logistic validation,
+100-iteration HistGB benchmarks, paired bootstraps, and auditable tree exports.

@@ -310,7 +310,7 @@ interpretability interface.
 Use scikit-learn histogram gradient boosting for both targets with fixed
 settings:
 
-- 500 boosting iterations;
+- 100 boosting iterations;
 - learning rate 0.08;
 - at most 15 leaves per component tree;
 - minimum 200 rows per leaf;
@@ -415,7 +415,7 @@ declared models to be complete.
 Apart from the declared four-value training-only logistic `C` search, no
 cross-validated hyperparameter search, SHAP calculation, all-layer sweep,
 all-residue triangle scan, or pair-level prediction export belongs in this
-pilot. If 500-round histogram boosting threatens the one-hour budget, change
+pilot. If 100-round histogram boosting threatens the one-hour budget, change
 its fixed iteration count only in a new versioned configuration rather than
 silently sampling the test set or dropping models.
 
@@ -525,7 +525,7 @@ the diagnostic conclusions without a very large export.
 - The classifier never fits on `abs(delta_d) <= 0.5 A`; central-bin reports
   state that those rows were excluded.
 - Both histogram-gradient-boosting estimators explicitly have
-  `early_stopping=False` and complete all 500 declared iterations.
+  `early_stopping=False` and complete all 100 declared iterations.
 - All bundle shards within a transition contain identical bootstrap
   assignments, and aggregate gain intervals subtract matched replicate IDs.
 - Triangle-distance correlations match direct calculations and every reported
