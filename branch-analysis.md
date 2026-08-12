@@ -1368,3 +1368,8 @@ Added the 35-task biological/triangle update probe with logistic validation,
 
 Moved the completed 35-shard aggregate into its intended result directory and
 added reproducible performance, ablation, importance, depth, and target plots.
+
+## Session: 2026-08-12 — Expanded local pair-update Ridge probe
+
+Added a 42-shard center/radius-1–9 Ridge probe with memory-safe LSQR, amino-acid
+pair diagnostics, held-out protein bootstraps, and tiered Delta arrays.

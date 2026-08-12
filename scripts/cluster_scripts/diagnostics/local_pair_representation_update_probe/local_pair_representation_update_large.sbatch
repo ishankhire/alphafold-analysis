@@ -1,0 +1,34 @@
+#!/bin/bash
+#SBATCH --job-name=LocalPairRepLarge
+#SBATCH --account=bekh-delta-cpu
+#SBATCH --partition=cpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=128g
+#SBATCH --time=01:30:00
+#SBATCH --constraint="scratch"
+#SBATCH --array=0-11%8
+#SBATCH -o slurm-%A_%a.out
+#SBATCH -e slurm-%A_%a.err
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --mail-user=ikhire3@gatech.edu
+
+module reset
+module load python
+source ~/protein_venv/bin/activate
+module list
+
+echo "large-variant job is starting on $(hostname)"
+echo "array job id: ${SLURM_ARRAY_JOB_ID:-none}"
+echo "array task id: ${SLURM_ARRAY_TASK_ID:-none}"
+
+export CSV_ROOT=$HOME/csv_files
+export VARIANT_GROUP=large
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export NUMEXPR_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
+srun python3 -u "$SCRIPT_DIR/local_pair_representation_update_probe.py"
