@@ -1332,3 +1332,8 @@ per-protein layer-47 standardized coefficient profiles.
 
 Added a portable 15-task Delta bundle for pre-MDS local distance-change Ridge
 classification and regression across three transitions and five context radii.
+
+## Session: 2026-08-12 — Document local distance-update experiments
+
+Added a human-readable methods, outputs, results, and interpretation guide for
+the local update probes and supporting bootstrap uncertainty pilot.
