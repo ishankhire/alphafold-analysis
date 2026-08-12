@@ -1355,3 +1355,6 @@ with its own layer-specific distance probe.
 
 Specified a compact local biology/triangle feature probe with inspectable trees,
 fixed nonlinear benchmarks, magnitude-stratified evaluation, and Delta outputs.
+
+Expanded the plan to five transitions and seven bundles, added paired protein
+bootstraps and triangle collinearity checks, and strengthened model settings.

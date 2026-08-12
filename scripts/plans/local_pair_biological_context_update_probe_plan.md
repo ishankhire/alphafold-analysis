@@ -10,23 +10,25 @@ only a predictive score. It is a set of inspectable rules such as:
 > A pair containing glycine is likely to shrink when a nearby residue creates a
 > strong upper-bound triangle violation.
 
-The first run is deliberately narrow and should finish in roughly 30--60 minutes
-of array wall time. It uses three transitions, six fixed feature bundles, and
-fixed model settings rather than a hyperparameter search.
+The first run is deliberately narrow and should finish each array task in
+roughly 30--60 minutes. It uses five transitions, seven fixed feature bundles,
+and fixed model settings apart from a compact training-only logistic
+regularization search.
 
 ## Locked initial scope
 
-- Analyze transitions 10->11, 20->21, and 30->31.
+- Analyze transitions 10->11, 15->16, 20->21, 30->31, and 40->41.
 - Use the frozen split-0 combined CAMEO+ECOD assignment from
   `general_base256_combined`: currently 441 training proteins and 111 held-out
   test proteins. CAMEO and ECOD remain one analysis population.
 - Use every canonical pair `i < j` with inclusive sequence separation 4--12.
 - Use only sequence information and distances decoded at layer `x` as model
   inputs. Layer `x+1` is used only to construct the target.
-- Do not use final-PDB coordinates, final contacts, DSSP, solvent exposure, or
-  pair-representation channels as predictor features. The PDB residue records
-  may be used to recover amino-acid identity after validating that their order
-  and count match the pair block.
+- Do not use final-PDB coordinates, final contacts, DSSP, or solvent exposure
+  as predictor features. Pair-representation channels are excluded from every
+  bundle except the explicitly named `biology_local_triangle_plus_center`
+  ablation. The PDB residue records may be used to recover amino-acid identity
+  after validating that their order and count match the pair block.
 - Fit continuous distance-change regression on all eligible pairs.
 - Fit binary direction classification only on meaningful updates:
   `shrink` for `delta_d < -0.5 A` and `expand` for `delta_d > +0.5 A`.
@@ -50,8 +52,9 @@ delta_d(i,j) = d_x+1(i,j) - d_x(i,j)
 For example, 10->11 must use the saved layer-10 coefficients and intercept for
 `d_10`, and the separately fitted layer-11 coefficients and intercept for
 `d_11`. It must not apply one shared probe to both endpoint representations.
-The same rule applies to 20->21 and 30->31. The source is the split-0
-`general_base256_combined` 256-feature bidirectional linear probe family.
+The same rule applies to 15->16, 20->21, 30->31, and 40->41. The source is the
+split-0 `general_base256_combined` 256-feature bidirectional linear probe
+family.
 
 The regression target and current-distance control use raw pre-MDS decoded
 values without clipping. Local triangle calculations use the complete decoded
@@ -192,6 +195,19 @@ the smallest sequence index and the tie policy is recorded. This tests whether
 mediator identity adds information beyond the magnitude of the geometric
 inconsistency without constructing per-amino-acid pressure summaries.
 
+### 8. Center pair-representation extension: 128 features
+
+As a separate final ablation, append the symmetrized layer-`x` center pair
+representation:
+
+```text
+center_ch_c = 0.5 * (pair_block_x[i,j,c] + pair_block_x[j,i,c])
+```
+
+This is the only predictor family permitted to contain pair-representation
+channels. It is not combined with the strongest-mediator identity extension in
+the initial run. Layer `x+1` representations remain target-only.
+
 ### Feature totals
 
 | Feature family | Width | Cumulative full width |
@@ -203,10 +219,11 @@ inconsistency without constructing per-amino-acid pressure summaries.
 | Local sequence biology | 26 | 73 |
 | Compact local triangle pressure | 6 | 79 |
 | Optional strongest-mediator identity | 40 | 119 |
+| Optional symmetrized center representation | 128 | 207 when added to the 79-feature model |
 
 ## Feature bundles
 
-Fit the following six nested or targeted bundles. The local-triangle bundle
+Fit the following seven nested or targeted bundles. The local-triangle bundle
 uses the local-third-residue count from the local-biology family but none of
 its other biological composition columns.
 
@@ -218,6 +235,7 @@ its other biological composition columns.
 | `local_triangle` | Controls + local-third-residue count + six triangle-pressure features | 12 |
 | `biology_local_triangle` | All families except mediator identity | 79 |
 | `biology_local_triangle_mediator` | Full model + strongest shrink/grow mediator identities | 119 |
+| `biology_local_triangle_plus_center` | 79-feature biology/triangle model + layer-`x` symmetrized center representation | 207 |
 
 The primary scientific comparisons are:
 
@@ -227,6 +245,9 @@ The primary scientific comparisons are:
   geometry;
 - `biology_local_triangle_mediator - biology_local_triangle`: value of the
   strongest mediator's amino-acid identity.
+- `biology_local_triangle_plus_center - biology_local_triangle`: additional
+  pair-representation signal beyond the explicit biological and local-geometric
+  features.
 
 ## Models and fixed settings
 
@@ -239,12 +260,19 @@ features; linear models consume standardized features.
 
 - Continuous target: L2-regularized Ridge regression using the existing
   relative-alpha convention (`0.001` times normalized training weight mass).
-- Binary target: L2-regularized logistic regression with a fixed `C=1.0`,
-  `lbfgs`, and a convergence limit of 200 iterations.
+- Binary target: L2-regularized logistic regression with `lbfgs` and a
+  convergence limit of 200 iterations. Select `C` from the fixed grid
+  `{0.001, 0.01, 0.1, 1.0}` using a deterministic source/size-stratified 80/20
+  split of the 441 training proteins. Use mean per-protein balanced accuracy on
+  meaningful-change validation pairs as the selection metric, break exact ties
+  toward smaller `C`, then refit the selected setting on all 441 training
+  proteins. The held-out 111 proteins never participate in selection. Reuse
+  one saved validation assignment across transitions and bundles.
 
-Save intercepts, standardized coefficients, raw-unit coefficients when well
-defined, convergence status, and iteration counts. No regularization search is
-performed.
+Save all grid scores, the selected `C`, validation assignments, intercepts,
+standardized coefficients, raw-unit coefficients when well defined,
+convergence status, and iteration counts. Ignore nonconverged candidates when
+selecting and fail the shard if no candidate converges.
 
 ### Primary shallow decision trees
 
@@ -282,13 +310,14 @@ interpretability interface.
 Use scikit-learn histogram gradient boosting for both targets with fixed
 settings:
 
-- 100 boosting iterations;
+- 500 boosting iterations;
 - learning rate 0.08;
 - at most 15 leaves per component tree;
 - minimum 200 rows per leaf;
 - L2 regularization 1.0;
 - fixed random seed;
-- no early stopping and no hyperparameter search.
+- `early_stopping=False` passed explicitly to both estimators;
+- no histogram-gradient-boosting hyperparameter search.
 
 This is a stronger nonlinear benchmark, not a formal upper bound. Its purpose
 is to reveal whether simple nonlinear combinations contain substantially more
@@ -297,6 +326,21 @@ training/test metrics. For inexpensive interpretation, measure held-out
 permutation importance by shuffling one feature family at a time on a fixed
 protein-balanced sample of at most 25,000 test pairs, with three repeats. Do
 not run feature-by-feature SHAP in the pilot.
+
+## Triangle-pressure collinearity diagnostic
+
+For every transition and split, compute the Pearson correlation between raw
+decoded current distance `d_x(i,j)` and each of the six compact triangle-
+pressure features. Save pair-pooled correlation, mean finite per-protein
+correlation, and the number of proteins with a defined correlation in
+`triangle_distance_correlations.csv`.
+
+Whenever a pressure feature appears in a reported shallow-tree rule, include
+the corresponding correlation beside the rule in `tree_rule_metrics.csv` and
+`summary.txt`. Label absolute correlations below 0.3 as weak, 0.3--0.7 as
+moderate, and at least 0.7 as high. A high-correlation pressure rule must be
+flagged as ambiguous with current distance rather than described as cleanly
+independent geometric evidence.
 
 ## Evaluation
 
@@ -333,10 +377,17 @@ because narrow target ranges make it unstable.
 
 ### Uncertainty and model comparison
 
-The aggregation job computes 200 protein-bootstrap confidence intervals by
-resampling held-out proteins without refitting models. Save intervals for
-headline model metrics, bundle-to-bundle gains, and shallow-tree rule/leaf
-effects. This is inexpensive and reflects protein-level dependence, but it is
+Use 200 deterministic protein-bootstrap replicates over held-out proteins
+without refitting models. Within a transition, every bundle and estimator must
+use the same protein draw for a given replicate ID. Generate the assignments
+from the ordered test-protein list and a fixed transition-specific seed, save
+each protein's multiplicity in `bootstrap_assignments.csv`, and make aggregation
+fail if bundle shards disagree about an assignment.
+
+Save replicate-level headline metrics in `bootstrap_metrics.csv`. Construct
+bundle-to-bundle gains by subtracting matched replicate metrics, so confidence
+intervals are paired rather than based on independent draws. Use the same
+assignments for shallow-tree rule/leaf effects. This reflects protein-level
 evaluation uncertainty rather than full refit uncertainty.
 
 The held-out test split is used only for final reporting. Fixed model settings
@@ -345,25 +396,28 @@ select settings by test performance.
 
 ## Parallel execution and runtime budget
 
-Use an 18-task Slurm array: three transitions crossed with six feature bundles.
+Use a 35-task Slurm array: five transitions crossed with seven feature bundles.
 Each task builds one bundle once, then fits its regression and classification
 linear, shallow-tree, and histogram-boosting models. The depth-6 sensitivity
-models run inside the three `biology_local_triangle` tasks. A dependent
+models run inside the five `biology_local_triangle` tasks. A dependent
 aggregation job validates and combines all completed shards.
 
 The initial sbatch target should be one hour per array task, with the same Delta
 CPU partition and scratch-node convention as the existing local update pilot.
 Start with at most 18 concurrent tasks, 16 CPUs, and 64 GB per task; lower the
-concurrency if allocation pressure warrants it. Log feature construction and
-each fit separately. Save classification results before regression/remaining
-fits so a timeout leaves useful partial diagnostics, but aggregation requires
-all declared models to be complete.
+concurrency if allocation pressure warrants it. The 35 tasks may therefore run
+in two scheduler waves, so total elapsed array time can exceed one hour even
+when each task meets the target. Log feature construction and each fit
+separately. Save classification results before regression/remaining fits so a
+timeout leaves useful partial diagnostics, but aggregation requires all
+declared models to be complete.
 
-No cross-validated hyperparameter search, SHAP calculation, all-layer sweep,
+Apart from the declared four-value training-only logistic `C` search, no
+cross-validated hyperparameter search, SHAP calculation, all-layer sweep,
 all-residue triangle scan, or pair-level prediction export belongs in this
-pilot. If histogram boosting threatens the one-hour budget, reduce its fixed
-iteration count in a new versioned configuration rather than silently sampling
-the test set or dropping models.
+pilot. If 500-round histogram boosting threatens the one-hour budget, change
+its fixed iteration count only in a new versioned configuration rather than
+silently sampling the test set or dropping models.
 
 ## Intended implementation and outputs
 
@@ -399,6 +453,11 @@ Principal aggregate files and row granularities are:
 - `feature_ablation_summary.csv`: one row per transition, target, estimator,
   and declared bundle contrast; held-out metric difference and protein-
   bootstrap interval.
+- `logistic_regularization_search.csv`: one row per transition, bundle, and
+  candidate `C`, with validation metrics, convergence, selection status, and
+  fit timing.
+- `logistic_validation_assignments.csv`: one row per training protein with its
+  deterministic logistic fit/validation role and stratification fields.
 - `classification_magnitude_metrics.csv`: one row per transition, bundle,
   estimator, split, and signed or cumulative magnitude bin.
 - `regression_magnitude_metrics.csv`: one row per transition, bundle,
@@ -416,6 +475,13 @@ Principal aggregate files and row granularities are:
 - `tree_structures/<transition>/<bundle>/<target>_<depth>.dot`: Graphviz tree.
 - `feature_family_importance.csv`: one row per transition, bundle, target,
   estimator, feature family, and permutation repeat/summary.
+- `triangle_distance_correlations.csv`: one row per transition, split, and
+  triangle-pressure feature, with pair-pooled and mean per-protein correlation
+  plus the interpretive correlation label.
+- `bootstrap_assignments.csv`: one row per transition, replicate, and held-out
+  protein with its draw multiplicity.
+- `bootstrap_metrics.csv`: one row per transition, replicate, bundle, target,
+  estimator, metric, and aggregation scope.
 - `feature_schema.csv`: one row per feature and bundle membership, with family,
   units, biological definition, transformation, and source layer.
 - `feature_transforms.csv`: one row per transition, bundle, and feature with
@@ -450,13 +516,23 @@ the diagnostic conclusions without a very large export.
   one endpoint and never contains `i` or `j`.
 - Triangle pressure boundary cases match the upper and reverse triangle
   inequalities, and all pressure values are nonnegative.
-- Feature schemas have widths 5, 47, 73, 12, 79, and 119 for the six bundles.
+- Feature schemas have widths 5, 47, 73, 12, 79, 119, and 207 for the seven
+  bundles, and center channels occur only in the 207-feature schema.
 - Training-only scaling and protein-level splitting are verified by tests.
+- Logistic validation assignments are deterministic and test proteins never
+  enter `C` selection; selection uses only converged candidates and applies the
+  declared tie break.
 - The classifier never fits on `abs(delta_d) <= 0.5 A`; central-bin reports
   state that those rows were excluded.
+- Both histogram-gradient-boosting estimators explicitly have
+  `early_stopping=False` and complete all 500 declared iterations.
+- All bundle shards within a transition contain identical bootstrap
+  assignments, and aggregate gain intervals subtract matched replicate IDs.
+- Triangle-distance correlations match direct calculations and every reported
+  pressure-based rule includes its correlation and ambiguity label.
 - Every saved tree text/DOT/node/rule representation reconstructs the same
   predictions as its serialized model on test fixtures.
-- Aggregate tables reconcile exactly with all 18 complete shards and with the
+- Aggregate tables reconcile exactly with all 35 complete shards and with the
   frozen protein assignment.
 
 ## Interpretation boundary
