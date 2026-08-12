@@ -1,0 +1,26 @@
+Consecutive-layer distance-control probe aggregate
+===================================================
+
+Status: complete
+Completed transitions: 6/6 (10->11 through 15->16)
+Distance type: raw pre-MDS, unclipped
+Scopes: all pairs and local sequence separation 4..12
+
+Held-out local pair-weighted mean changes:
+  10->11: fixed_raw_layer_x=-1.9534 Å; fixed_moment_aligned_to_x=-1.3949 Å; saved_own_layer=-0.1623 Å; pooled_two_layer=-1.5001 Å
+  11->12: fixed_raw_layer_x=-0.1225 Å; fixed_moment_aligned_to_x=-0.2484 Å; saved_own_layer=-0.0539 Å; pooled_two_layer=-0.5590 Å
+  12->13: fixed_raw_layer_x=-0.6145 Å; fixed_moment_aligned_to_x=-1.0100 Å; saved_own_layer=-0.1485 Å; pooled_two_layer=-0.8983 Å
+  13->14: fixed_raw_layer_x=-3.2486 Å; fixed_moment_aligned_to_x=-0.9382 Å; saved_own_layer=+0.0866 Å; pooled_two_layer=-1.1858 Å
+  14->15: fixed_raw_layer_x=+1.0305 Å; fixed_moment_aligned_to_x=+0.7129 Å; saved_own_layer=+0.1221 Å; pooled_two_layer=+0.0731 Å
+  15->16: fixed_raw_layer_x=-1.7168 Å; fixed_moment_aligned_to_x=-0.1454 Å; saved_own_layer=+0.0062 Å; pooled_two_layer=-0.8941 Å
+
+Held-out all-pair layer-x+1 pair-weighted R2:
+  10->11: fixed_raw_layer_x=0.6065; fixed_moment_aligned_to_x=0.6135; saved_own_layer=0.6235; pooled_two_layer=0.6265
+  11->12: fixed_raw_layer_x=0.6126; fixed_moment_aligned_to_x=0.6243; saved_own_layer=0.6409; pooled_two_layer=0.6369
+  12->13: fixed_raw_layer_x=0.6598; fixed_moment_aligned_to_x=0.6739; saved_own_layer=0.7018; pooled_two_layer=0.6986
+  13->14: fixed_raw_layer_x=0.6783; fixed_moment_aligned_to_x=0.6890; saved_own_layer=0.7096; pooled_two_layer=0.7092
+  14->15: fixed_raw_layer_x=0.7319; fixed_moment_aligned_to_x=0.7219; saved_own_layer=0.7561; pooled_two_layer=0.7513
+  15->16: fixed_raw_layer_x=0.7936; fixed_moment_aligned_to_x=0.7999; saved_own_layer=0.8188; pooled_two_layer=0.8109
+
+Maximum drift reconstruction error: 2.91225377e-14 Å
+Pair-level quantiles use bounded reservoir samples; means and error metrics are exact.

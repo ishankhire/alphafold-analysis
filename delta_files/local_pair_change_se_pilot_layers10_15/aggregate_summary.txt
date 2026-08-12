@@ -1,0 +1,16 @@
+Local pair change SE pilot aggregate
+====================================
+
+Completed transitions: 10->11 through 15->16
+Pair-specific CSV.gz files remain in their transition shards.
+
+change_statistics.csv: 180 rows
+pair_se_statistics.csv: 180 rows
+change_buckets.csv: 1620 rows
+threshold_stability.csv: 720 rows
+per_protein_statistics.csv: 3312 rows
+bootstrap_fit_summary.csv: 66 rows
+bootstrap_coefficients.csv: 16962 rows
+bootstrap_assignments.csv: 26460 rows
+protein_manifest.csv: 3312 rows
+coefficients_used.csv: 1542 rows

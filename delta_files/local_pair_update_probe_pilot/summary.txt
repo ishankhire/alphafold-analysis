@@ -1,0 +1,47 @@
+Local pair-update probe pilot aggregate
+========================================
+
+Status: complete
+Completed shards: 15/15
+Transitions: 10->11, 20->21, 30->31
+Distance type: raw pre-MDS
+Classification threshold: +/-0.5 Angstrom
+
+Mean held-out classifier ranking by pair macro-F1:
+  1. triangle_r3: 0.5784 (gain vs distance=+0.1819, vs center=+0.0260)
+  2. triangle_r2: 0.5761 (gain vs distance=+0.1796, vs center=+0.0237)
+  3. triangle_r1: 0.5721 (gain vs distance=+0.1755, vs center=+0.0197)
+  4. center: 0.5524 (gain vs distance=+0.1558, vs center=+0.0000)
+  5. distance_seqsep: 0.3965 (gain vs distance=+0.0000, vs center=-0.1558)
+
+Mean held-out classifier ranking by pair balanced accuracy:
+  1. triangle_r3: 0.6263
+  2. triangle_r2: 0.6239
+  3. triangle_r1: 0.6201
+  4. center: 0.6010
+  5. distance_seqsep: 0.4255
+
+Mean held-out regression ranking by pair R2:
+  1. triangle_r3: 0.6028 (gain vs distance=+0.4756, vs center=+0.0865)
+  2. triangle_r2: 0.5953 (gain vs distance=+0.4681, vs center=+0.0790)
+  3. triangle_r1: 0.5808 (gain vs distance=+0.4536, vs center=+0.0646)
+  4. center: 0.5163 (gain vs distance=+0.3891, vs center=+0.0000)
+  5. distance_seqsep: 0.1272 (gain vs distance=+0.0000, vs center=-0.3891)
+
+Mean held-out regression ranking by protein-equal mean R2:
+  1. triangle_r3: 0.5686
+  2. triangle_r2: 0.5596
+  3. triangle_r1: 0.5429
+  4. center: 0.4713
+  5. distance_seqsep: 0.0614
+
+Iteration-cap flags:
+  10->11 triangle_r1: classifier,regression
+  10->11 triangle_r2: classifier,regression
+  10->11 triangle_r3: classifier,regression
+  20->21 triangle_r1: classifier,regression
+  20->21 triangle_r2: classifier,regression
+  20->21 triangle_r3: classifier,regression
+  30->31 triangle_r1: classifier,regression
+  30->31 triangle_r2: classifier,regression
+  30->31 triangle_r3: classifier,regression

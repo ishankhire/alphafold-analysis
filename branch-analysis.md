@@ -14,6 +14,9 @@ coefficient cosine clustering, permutation testing, and length-adjusted effects.
 
 Added Delta DSSP setup/job scripts and a restart-safe structural annotation
 pipeline for salt bridges, DSSP backbone/beta interactions, and hydrophobic cores.
+The DSSP setup bootstraps Micromamba because Delta RH9 removed Anaconda modules.
+Added a one-protein Delta job that preserves DSSP stderr and compares direct
+execution with `micromamba run`.
 
 ## Session: 2026-07-27 — Add ECOD input copy utility
 
