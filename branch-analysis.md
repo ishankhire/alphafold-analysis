@@ -1350,3 +1350,8 @@ and pooled distance readouts, with channelwise distribution-drift diagnostics.
 
 Changed local update targets and paired bootstrap SEs to decode each endpoint
 with its own layer-specific distance probe.
+
+## Session: 2026-08-12 — Biological-context update probe plan
+
+Specified a compact local biology/triangle feature probe with inspectable trees,
+fixed nonlinear benchmarks, magnitude-stratified evaluation, and Delta outputs.
