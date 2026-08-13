@@ -52,6 +52,11 @@ Always consult these PDFs when writing or modifying sbatch files or cluster scri
 
 **IMPORTANT:** When moving, renaming, or creating cluster Python scripts, always verify that every sbatch file in `scripts/cluster_scripts/` references the correct Python script filename. A mismatch will cause silent job failures on the cluster.
 
+### Cluster repository and documentation conventions
+
+- Cluster-ready Python scripts and sbatch launchers are normally run from the repository checkout, with submission from the relevant script directory so `SLURM_SUBMIT_DIR` resolves the entrypoint. Flat copies under a Delta working directory are supported only when a workflow explicitly requires them; copied scripts must retain their documented environment variables and any colocated/shared helper modules.
+- Keep script-specific usage notes concise and centralized in `datasets.md`, this file, `branch-analysis.md`, or a nearby diagnostics index. Do not create a separate README for every cluster script unless the workflow has substantial, standalone operational instructions that cannot reasonably live in shared documentation.
+
 ### Cluster script guidelines
 
 - Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
