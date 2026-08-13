@@ -59,6 +59,7 @@ Always consult these PDFs when writing or modifying sbatch files or cluster scri
 
 ### Cluster script guidelines
 
+- Request walltime and memory conservatively, leaving reasonable headroom without reserving substantially more than the job is expected to use. Scale requests to the number of proteins and layers processed by each individual job or array task. For reference, the `192g` request in `general_base256_train_test_layers_24_47.sbatch` supports a large combined-dataset run over roughly 500 proteins and many layers; a task processing about 100 proteins at only one layer should normally request substantially less. Use observed runtime and peak memory from comparable jobs to refine future requests.
 - Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
 - Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
 - Every new or modified sbatch file must include both notification directives:
