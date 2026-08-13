@@ -102,19 +102,25 @@ def resolve_predicted_pdb(protein_id: str) -> Path:
 
 
 def make_dssp_input(source: Path) -> Path:
-    """Add a synthetic CRYST1 record when needed, then return a temporary PDB.
+    """Prepare a DSSP-compatible temporary PDB without altering ``source``.
 
     Some predicted OpenFold PDBs omit CRYST1.  Adding a large P1 box is the
     compatibility workaround used by the existing DSSP annotation pipeline.
+    OpenFold PDBs can also start with ``PARENT`` records, which mkdssp 4 rejects;
+    those unsupported records are omitted only from this temporary input.
     """
     raw = source.read_text()
+    filtered_lines = [
+        line for line in raw.splitlines(keepends=True)
+        if not line.startswith("PARENT")
+    ]
     descriptor, temporary_name = tempfile.mkstemp(
         prefix="dssp_smoke_", suffix=".pdb", dir=os.environ.get("TMPDIR")
     )
     with os.fdopen(descriptor, "w") as handle:
-        if not any(line.startswith("CRYST1") for line in raw.splitlines()):
+        if not any(line.startswith("CRYST1") for line in filtered_lines):
             handle.write("CRYST1  999.000  999.000  999.000  90.00  90.00  90.00 P 1           1\n")
-        handle.write(raw)
+        handle.writelines(filtered_lines)
     return Path(temporary_name)
 
 

@@ -35,5 +35,6 @@ The job writes `$HOME/csv_files/dssp_smoke_test/<protein-id>/`:
   coordinate-based candidates, not confirmed chemical disulfide bonds.
 - `mkdssp.stderr.txt`: retained error details if DSSP cannot process the PDB.
 
-The script adds a large P1 `CRYST1` record only to the temporary DSSP input
-when the prediction lacks one; it never modifies the original PDB.
+The script adds a large P1 `CRYST1` record when the prediction lacks one and
+removes OpenFold's unsupported `PARENT` records, only in the temporary DSSP
+input. It never modifies the original PDB.

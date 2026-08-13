@@ -108,12 +108,15 @@ def parse_residues(path):
 
 def prepare_dssp_input(source):
     raw = source.read_text()
-    has_cryst1 = any(line.startswith("CRYST1") for line in raw.splitlines())
+    # mkdssp 4 rejects OpenFold's unsupported PARENT records.  Preserve the
+    # original PDB and remove those records only from its temporary DSSP input.
+    filtered_lines = [line for line in raw.splitlines(keepends=True) if not line.startswith("PARENT")]
+    has_cryst1 = any(line.startswith("CRYST1") for line in filtered_lines)
     fd, name = tempfile.mkstemp(prefix="dssp_", suffix=".pdb", dir=os.environ.get("TMPDIR"))
     with os.fdopen(fd, "w") as handle:
         if not has_cryst1:
             handle.write("CRYST1  999.000  999.000  999.000  90.00  90.00  90.00 P 1           1\n")
-        handle.write(raw)
+        handle.writelines(filtered_lines)
     return Path(name)
 
 
