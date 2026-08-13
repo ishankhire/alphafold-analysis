@@ -1347,3 +1347,8 @@ report recommending a compact cross-probe regularization grid.
 
 Added reproducible k-means diagnostics and metadata-confound checks for the
 per-protein layer-47 standardized coefficient profiles.
+
+## Session: 2026-08-13 — Sequence-separation-gated distance probes
+
+Added a six-layer array comparing sequence-separation-gated base256 probes with
+a sequence-separation-only baseline using 100 training proteins.
