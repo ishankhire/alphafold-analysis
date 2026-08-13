@@ -37,6 +37,7 @@ HYDROPHOBIC = frozenset("ALA VAL ILE LEU MET PHE TRP TYR".split())
 CHARGED = {"ASP": ("OD1", "OD2"), "GLU": ("OE1", "OE2"), "LYS": ("NZ",), "ARG": ("NH1", "NH2")}
 ACIDIC, BASIC = frozenset(("ASP", "GLU")), frozenset(("LYS", "ARG"))
 SANDER = residue_sasa_scales["Sander"]
+DSSP_PDB_RECORDS = frozenset(("CRYST1", "MODEL ", "ATOM  ", "HETATM", "ANISOU", "TER   ", "ENDMDL", "END   "))
 
 PAIR_FIELDS = """protein_id source annotation_version config_hash pair_id n_residues i j chain_i chain_j pdb_resseq_i pdb_resseq_j insertion_code_i insertion_code_j resname_i resname_j same_chain sequence_separation ca_distance min_heavy_atom_distance min_sidechain_heavy_atom_distance charged_atom_distance dssp_code_i dssp_code_j dssp_3state_i dssp_3state_j absolute_sasa_i absolute_sasa_j relative_sasa_i relative_sasa_j hbond_i_donor_j hbond_j_donor_i hbond_i_donor_j_energy hbond_j_donor_i_energy best_hbond_energy salt_bridge salt_bridge_valid backbone_hbond backbone_hbond_valid beta_bridge beta_bridge_valid backbone_hbond_or_beta_bridge hydrophobic_contact hydrophobic_contact_valid hydrophobic_core_contact hydrophobic_core_contact_valid exclusion_reason""".split()
 RESIDUE_FIELDS = """protein_id source annotation_version config_hash residue_index chain pdb_resseq insertion_code resname backbone_complete sidechain_complete dssp_mapped dssp_index dssp_code dssp_3state absolute_sasa relative_sasa phi psi dssp_failure_reason""".split()
@@ -108,9 +109,12 @@ def parse_residues(path):
 
 def prepare_dssp_input(source):
     raw = source.read_text()
-    # mkdssp 4 rejects OpenFold's unsupported PARENT records.  Preserve the
-    # original PDB and remove those records only from its temporary DSSP input.
-    filtered_lines = [line for line in raw.splitlines(keepends=True) if not line.startswith("PARENT")]
+    # mkdssp 4 rejects OpenFold's nonstandard REMARK and PARENT metadata.
+    # Preserve the original PDB and retain only structural records in the
+    # temporary input used by DSSP.
+    filtered_lines = [line for line in raw.splitlines(keepends=True) if line[:6] in DSSP_PDB_RECORDS]
+    if not any(line.startswith(("ATOM  ", "HETATM")) for line in filtered_lines):
+        raise ValueError(f"No ATOM or HETATM records remain after filtering {source}")
     has_cryst1 = any(line.startswith("CRYST1") for line in filtered_lines)
     fd, name = tempfile.mkstemp(prefix="dssp_", suffix=".pdb", dir=os.environ.get("TMPDIR"))
     with os.fdopen(fd, "w") as handle:

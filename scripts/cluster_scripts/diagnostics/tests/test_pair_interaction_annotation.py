@@ -44,14 +44,22 @@ def test_three_state_codes():
     assert annotation.three_state("H") == "helix"
 
 
-def test_prepare_dssp_input_removes_openfold_parent_records(tmp_path):
+def test_prepare_dssp_input_removes_openfold_metadata(tmp_path):
     source = tmp_path / "openfold.pdb"
-    source.write_text("PARENT N/A\nATOM      1  CA  ALA A   1       0.000   0.000   0.000  1.00  0.00           C  \nEND\n")
+    source.write_text(
+        "REMARK no_recycling=3, max_templates=4\n"
+        "PARENT N/A\n"
+        "MODEL     1\n"
+        "ATOM      1  CA  ALA A   1       0.000   0.000   0.000  1.00  0.00           C  \n"
+        "ENDMDL\nEND\n"
+    )
     prepared = annotation.prepare_dssp_input(source)
     try:
         prepared_text = prepared.read_text()
     finally:
         prepared.unlink(missing_ok=True)
     assert prepared_text.startswith("CRYST1")
+    assert "REMARK" not in prepared_text
     assert "PARENT" not in prepared_text
+    assert "MODEL     1" in prepared_text
     assert "ATOM      1  CA  ALA" in prepared_text

@@ -53,6 +53,9 @@ DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results" / "dia
 HELIX_CODES = frozenset(("H", "G", "I"))
 BETA_CODES = frozenset(("E", "B"))
 DISULFIDE_SG_SG_CUTOFF_ANGSTROM = 2.3
+DSSP_PDB_RECORDS = frozenset(
+    ("CRYST1", "MODEL ", "ATOM  ", "HETATM", "ANISOU", "TER   ", "ENDMDL", "END   ")
+)
 
 
 def log(message: str) -> None:
@@ -106,14 +109,17 @@ def make_dssp_input(source: Path) -> Path:
 
     Some predicted OpenFold PDBs omit CRYST1.  Adding a large P1 box is the
     compatibility workaround used by the existing DSSP annotation pipeline.
-    OpenFold PDBs can also start with ``PARENT`` records, which mkdssp 4 rejects;
-    those unsupported records are omitted only from this temporary input.
+    OpenFold PDBs can also start with nonstandard ``REMARK`` and ``PARENT``
+    metadata that mkdssp 4 rejects.  Keep only coordinate/model records in this
+    temporary input because DSSP does not need the prediction metadata.
     """
     raw = source.read_text()
     filtered_lines = [
         line for line in raw.splitlines(keepends=True)
-        if not line.startswith("PARENT")
+        if line[:6] in DSSP_PDB_RECORDS
     ]
+    if not any(line.startswith(("ATOM  ", "HETATM")) for line in filtered_lines):
+        raise ValueError(f"No ATOM or HETATM records remain after filtering {source}")
     descriptor, temporary_name = tempfile.mkstemp(
         prefix="dssp_smoke_", suffix=".pdb", dir=os.environ.get("TMPDIR")
     )
@@ -128,6 +134,10 @@ def run_dssp(source: Path, executable: Path, output_path: Path) -> dict:
     """Run mkdssp and save raw output; raise an informative error on failure."""
     temporary_input = make_dssp_input(source)
     try:
+        atomic_write_text(
+            output_path.with_name("prepared_input.pdb"),
+            temporary_input.read_text(),
+        )
         result = subprocess.run(
             [str(executable), "--output-format=dssp", str(temporary_input)],
             check=False,

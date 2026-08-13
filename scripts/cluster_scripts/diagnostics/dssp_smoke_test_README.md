@@ -25,6 +25,8 @@ layout the launcher-provided PDB and output environment variables are used.
 The job writes `$HOME/csv_files/dssp_smoke_test/<protein-id>/`:
 
 - `summary.json`: DSSP version, mapped-residue count, and compact structural counts.
+- `prepared_input.pdb`: structural-only temporary input passed to `mkdssp`,
+  retained to make parser failures reproducible.
 - `raw.dssp`: direct `mkdssp` output for manual inspection.
 - `residues.csv`: one row per polymer residue with DSSP code, simplified class,
   solvent-accessible surface area, and phi/psi.
@@ -36,5 +38,6 @@ The job writes `$HOME/csv_files/dssp_smoke_test/<protein-id>/`:
 - `mkdssp.stderr.txt`: retained error details if DSSP cannot process the PDB.
 
 The script adds a large P1 `CRYST1` record when the prediction lacks one and
-removes OpenFold's unsupported `PARENT` records, only in the temporary DSSP
-input. It never modifies the original PDB.
+keeps only coordinate/model records in the temporary DSSP input. This removes
+OpenFold's nonstandard `REMARK` and `PARENT` metadata without modifying the
+original PDB.

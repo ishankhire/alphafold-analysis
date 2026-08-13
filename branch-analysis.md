@@ -4,7 +4,7 @@
 
 Added a one-protein Delta DSSP smoke test that exports raw DSSP, residue and
 secondary-structure segment tables, plus coordinate-based CYS SG--SG candidates.
-Its temporary PDB preparation now removes OpenFold `PARENT` records, which
+Its temporary PDB preparation now removes OpenFold metadata records that
 mkdssp rejects, and the shared annotation pipeline applies the same fix.
 
 ## Session: 2026-08-13 — Matched-R² geometry null
