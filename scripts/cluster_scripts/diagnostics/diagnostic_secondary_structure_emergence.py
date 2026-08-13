@@ -1108,9 +1108,17 @@ def prepare_stage() -> None:
     atomic_write_csv(output_root / "validation.csv", VALIDATION_FIELDS, long_validation)
 
     test_auc_rows = [row for row in long_validation if row["category"] == "helix_score" and row["split"] == "test"]
-    if not test_auc_rows or float(test_auc_rows[0]["value"]) < MIN_TRUE_HELIX_AUROC:
+    if not test_auc_rows:
         raise RuntimeError(
-            f"True-distance held-out helix AUROC failed the {MIN_TRUE_HELIX_AUROC:.2f} validation gate"
+            "True-distance held-out helix AUROC could not be computed: "
+            f"no test result was produced; see {output_root / 'validation.csv'}"
+        )
+    test_auc = float(test_auc_rows[0]["value"])
+    if not np.isfinite(test_auc) or test_auc < MIN_TRUE_HELIX_AUROC:
+        raise RuntimeError(
+            "True-distance held-out helix AUROC "
+            f"was {test_auc:.6f}, below the {MIN_TRUE_HELIX_AUROC:.2f} validation gate; "
+            f"see {output_root / 'validation.csv'}"
         )
     completion = {"status": "complete", "manifest": manifest, "n_assignments": len(assignments), "n_structure_usable": successful, "runtime_seconds": round(time.time() - started, 3)}
     atomic_write_text(output_root / "preparation_complete.json", json.dumps(completion, indent=2, sort_keys=True) + "\n")
