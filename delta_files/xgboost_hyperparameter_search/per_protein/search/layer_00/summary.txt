@@ -1,9 +1,0 @@
-Per-protein XGBoost search — layer 0
-Generated: 2026-08-03T06:08:50-05:00
-Completed configurations: 4/4
-Completed fits: 200
-Weighting mode: uniform_rows
-All-proteins-iteration-zero diagnostic: passed
-Split digest: 735997c9aff1fed5abcc6ec91646ec1b5e35e64d46d873ea83cfd18b19820410
-Task elapsed seconds: 702.618
-

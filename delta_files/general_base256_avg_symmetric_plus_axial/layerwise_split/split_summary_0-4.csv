@@ -1,6 +1,0 @@
-variant,feature_dim,split_id,layer,n_train_proteins,n_test_proteins,n_train_rows,n_test_rows,train_mean_per_protein_r2,test_mean_per_protein_r2,train_pair_weighted_r2,test_pair_weighted_r2,train_pair_weighted_mae,test_pair_weighted_mae,train_pair_weighted_rmse,test_pair_weighted_rmse,train_mean_bias,test_mean_bias,elapsed_seconds
-general_base256_avg_symmetric_plus_axial,640,0,0,147,37,6778100,1576525,0.463211,0.345424,0.518831,0.561934,8.157816,7.078568,12.893222,9.723975,0.000000,0.379376,507.890588
-general_base256_avg_symmetric_plus_axial,640,0,1,147,37,6778100,1576525,0.456391,0.352353,0.509006,0.545904,8.218233,7.181665,13.024182,9.900283,0.000000,0.287378,456.219391
-general_base256_avg_symmetric_plus_axial,640,0,2,147,37,6778100,1576525,0.457313,0.360001,0.511876,0.555253,8.200336,7.156968,12.986069,9.797842,0.000000,0.412785,441.377708
-general_base256_avg_symmetric_plus_axial,640,0,3,147,37,6778100,1576525,0.454723,0.338385,0.506241,0.547019,8.249173,7.323554,13.060809,9.888120,-0.000000,0.399343,444.956901
-general_base256_avg_symmetric_plus_axial,640,0,4,147,37,6778100,1576525,0.451598,0.354772,0.522252,0.564107,8.160086,7.253578,12.847305,9.699821,0.000000,0.414010,435.727077

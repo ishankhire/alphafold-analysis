@@ -1,8 +1,0 @@
-variant_label,variant,k_neighbors,n_layers,mean_train_r2,mean_test_r2,min_test_r2,min_test_r2_layer,max_test_r2,max_test_r2_layer,mean_train_minus_test_r2,mean_test_r2_gain_vs_center,winning_layers_vs_center
-Zero delta baseline,zero_delta,,47,-0.018471,-0.017718,-0.243074,3,-0.000074,10,-0.000754,nan,
-Train-mean delta baseline,train_mean_delta,,47,0.000000,-0.000118,-0.000675,39,-0.000000,9,0.000118,nan,
-Current decoded distance,current_distance,,47,0.014836,0.014900,-0.000786,31,0.094712,42,-0.000064,nan,
-Center pair + current distance,center_pair_plus_current_distance,,47,0.284117,0.277549,0.147854,30,0.435765,46,0.006568,nan,
-Full context k=5,full_context,5,47,0.488987,0.211802,-0.084423,27,0.455386,2,0.277185,-0.065747,14
-Full context k=10,full_context,10,47,0.530240,0.095360,-0.449622,28,0.442611,15,0.434880,-0.182189,9
-Full context k=20,full_context,20,47,0.586092,0.017331,-0.524583,28,0.418793,15,0.568761,-0.260218,2
