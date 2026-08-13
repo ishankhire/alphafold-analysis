@@ -52,3 +52,19 @@ def test_empirical_tail_uses_metric_direction():
     null_values = [0.1, 0.2, 0.3]
     assert diagnostic.empirical_favorable_tail(null_values, 0.25, True) == 0.5
     assert diagnostic.empirical_favorable_tail(null_values, 0.25, False) == 0.75
+
+
+def test_default_layers_and_array_task_selection():
+    requested = diagnostic.parse_layers(None)
+    assert requested == [0, 10, 20, 30, 40, 47]
+    assert diagnostic.select_task_layers(requested, "30") == [30]
+    assert diagnostic.select_task_layers(requested, None) == requested
+
+
+def test_array_task_must_belong_to_requested_layers():
+    try:
+        diagnostic.select_task_layers([0, 10], "20")
+    except ValueError as exc:
+        assert "not in NULL_LAYERS" in str(exc)
+    else:
+        raise AssertionError("Expected invalid task-layer selection to fail")

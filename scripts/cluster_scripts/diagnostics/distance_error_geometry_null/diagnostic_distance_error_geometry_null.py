@@ -15,6 +15,7 @@ per_protein.csv and observed geometry from geometry_metrics.csv.
 from __future__ import annotations
 
 import csv
+import fcntl
 import hashlib
 import math
 import os
@@ -48,10 +49,11 @@ ANALYSIS_SPLIT = "test"
 DEFAULT_N_REPLICATES = 20
 DEFAULT_RANDOM_SEED = 20260813
 N_LAYERS = 48
+DEFAULT_ANALYSIS_LAYERS = (0, 10, 20, 30, 40, 47)
 FLOAT_EPS = 1e-12
 R2_MATCH_TOLERANCE = 1e-10
 PDB_EXPORT_N_PROTEINS = 10
-PDB_EXPORT_LAYERS = (0, 10, 20, 30, 40, 47)
+PDB_EXPORT_LAYERS = DEFAULT_ANALYSIS_LAYERS
 
 LOCAL_RESULTS_DIR = PROJECT_ROOT / "delta_files" / "general_base256_combined"
 LOCAL_PDB_ROOT = PROJECT_ROOT.parent / "protein_data"
@@ -213,11 +215,23 @@ def log_progress(message):
 
 def parse_layers(value):
     if value is None or not value.strip():
-        return list(range(N_LAYERS))
+        return list(DEFAULT_ANALYSIS_LAYERS)
     layers = sorted({int(token.strip()) for token in value.split(",") if token.strip()})
     if not layers or layers[0] < 0 or layers[-1] >= N_LAYERS:
         raise ValueError(f"NULL_LAYERS must contain integers from 0 to {N_LAYERS - 1}")
     return layers
+
+
+def select_task_layers(requested_layers, task_layer_value):
+    """Select one array-task layer while retaining a shared requested-layer set."""
+    if task_layer_value is None or not task_layer_value.strip():
+        return list(requested_layers)
+    task_layer = int(task_layer_value)
+    if task_layer not in requested_layers:
+        raise ValueError(
+            f"NULL_TASK_LAYER={task_layer} is not in NULL_LAYERS={requested_layers}"
+        )
+    return [task_layer]
 
 
 def resolve_paths():
@@ -242,7 +256,9 @@ def read_csv(path, required_fields=None):
 
 def atomic_write_csv(path, fieldnames, rows):
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary_path = path.with_suffix(path.suffix + ".tmp")
+    temporary_path = path.with_name(
+        f".{path.name}.tmp.{os.getpid()}.{os.environ.get('SLURM_ARRAY_TASK_ID', 'local')}"
+    )
     with temporary_path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
@@ -615,7 +631,10 @@ def format_atom_line(serial, residue, coord, bfactor):
 
 def write_ca_trace_pdb(path, residues, coordinates, deviations, remark):
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as handle:
+    temporary_path = path.with_name(
+        f".{path.name}.tmp.{os.getpid()}.{os.environ.get('SLURM_ARRAY_TASK_ID', 'local')}"
+    )
+    with temporary_path.open("w") as handle:
         handle.write("REMARK CA-only trace for matched-R2 geometry null\n")
         handle.write(f"REMARK {remark}\n")
         previous_chain = None
@@ -634,6 +653,7 @@ def write_ca_trace_pdb(path, residues, coordinates, deviations, remark):
         for serial_a, serial_b in chain_connections:
             handle.write(f"CONECT{serial_a:5d}{serial_b:5d}\n")
         handle.write("END\n")
+    temporary_path.replace(path)
 
 
 def choose_pdb_exports(pdb_records):
@@ -715,7 +735,9 @@ def write_summary(output_root, manifest, completed_layers, n_available, n_skippe
     tm_deltas = [float(row["observed_minus_null_mean_tm_score"]) for row in layer_rows]
     stress_deltas = [float(row["observed_minus_null_mean_stress"]) for row in layer_rows]
     path = output_root / "summary.txt"
-    temporary_path = path.with_suffix(".txt.tmp")
+    temporary_path = path.with_name(
+        f".{path.name}.tmp.{os.getpid()}.{os.environ.get('SLURM_ARRAY_TASK_ID', 'local')}"
+    )
     with temporary_path.open("w") as handle:
         handle.write("Matched-R2 distance-error geometry null\n")
         handle.write("=======================================\n")
@@ -752,6 +774,28 @@ def write_summary(output_root, manifest, completed_layers, n_available, n_skippe
             "calculation, not an external TM-align run. Exported PDBs are CA-only traces.\n"
         )
     temporary_path.replace(path)
+
+
+def consolidate_outputs(
+    output_root,
+    requested_layers,
+    manifest,
+    n_available,
+    n_skipped,
+):
+    """Serialize root-output rebuilding across concurrent Slurm array tasks."""
+    lock_path = output_root / ".consolidate.lock"
+    with lock_path.open("a+") as lock_handle:
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        completed = combine_layer_shards(output_root, requested_layers)
+        write_summary(
+            output_root,
+            manifest,
+            completed,
+            n_available,
+            n_skipped,
+        )
+        return completed
 
 
 def run_layer(layer, layer_rows, pdb_records, n_replicates, base_seed, output_root, export_ids):
@@ -842,7 +886,11 @@ def run_layer(layer, layer_rows, pdb_records, n_replicates, base_seed, output_ro
 
 def main():
     t0 = time.time()
-    layers = parse_layers(os.environ.get("NULL_LAYERS"))
+    requested_layers = parse_layers(os.environ.get("NULL_LAYERS"))
+    task_layers = select_task_layers(
+        requested_layers,
+        os.environ.get("NULL_TASK_LAYER"),
+    )
     n_replicates = int(os.environ.get("NULL_N_REPLICATES", DEFAULT_N_REPLICATES))
     base_seed = int(os.environ.get("NULL_RANDOM_SEED", DEFAULT_RANDOM_SEED))
     if n_replicates < 1:
@@ -852,10 +900,14 @@ def main():
     output_root.mkdir(parents=True, exist_ok=True)
     log_progress(f"Input results: {input_results_dir}")
     log_progress(f"Output root:   {output_root}")
-    log_progress(f"Layers:        {layers}")
+    log_progress(f"Requested:     {requested_layers}")
+    log_progress(f"This task:     {task_layers}")
     log_progress(f"Replicates:    {n_replicates}")
 
-    analysis_rows, per_path, geometry_path = load_analysis_rows(input_results_dir, layers)
+    analysis_rows, per_path, geometry_path = load_analysis_rows(
+        input_results_dir,
+        task_layers,
+    )
     pdb_records, skipped = load_pdb_records(analysis_rows)
     log_progress(
         f"Loaded {len(pdb_records)} held-out PDBs; skipped {len(skipped)} unavailable PDBs"
@@ -865,13 +917,18 @@ def main():
     rows_by_layer = defaultdict(list)
     for row in usable_rows:
         rows_by_layer[row["layer"]].append(row)
-    for layer in layers:
+    for layer in task_layers:
         rows_by_layer[layer].sort(key=lambda row: row["protein_id"])
         if not rows_by_layer[layer]:
             raise ValueError(f"No usable proteins remain for layer {layer}")
 
     manifest = make_manifest(
-        input_results_dir, per_path, geometry_path, layers, n_replicates, base_seed
+        input_results_dir,
+        per_path,
+        geometry_path,
+        requested_layers,
+        n_replicates,
+        base_seed,
     )
     manifest = validate_or_write_manifest(output_root / "run_manifest.csv", manifest)
     atomic_write_csv(output_root / "skipped_proteins.csv", SKIPPED_FIELDS, skipped)
@@ -896,10 +953,16 @@ def main():
             f"protein={protein_id} source={record['pdb_path']}",
         )
 
-    completed = combine_layer_shards(output_root, layers)
+    completed = consolidate_outputs(
+        output_root,
+        requested_layers,
+        manifest,
+        len(pdb_records),
+        len(skipped),
+    )
     if completed:
         log_progress(f"Resuming with completed layer checkpoints: {completed}")
-    for layer in layers:
+    for layer in task_layers:
         if layer in completed:
             continue
         log_progress(f"Layer {layer:02d}: starting matched-R2 null")
@@ -912,13 +975,24 @@ def main():
             output_root,
             set(export_ids),
         )
-        completed = combine_layer_shards(output_root, layers)
-        write_summary(output_root, manifest, completed, len(pdb_records), len(skipped))
+        completed = consolidate_outputs(
+            output_root,
+            requested_layers,
+            manifest,
+            len(pdb_records),
+            len(skipped),
+        )
 
-    completed = combine_layer_shards(output_root, layers)
-    write_summary(output_root, manifest, completed, len(pdb_records), len(skipped))
+    completed = consolidate_outputs(
+        output_root,
+        requested_layers,
+        manifest,
+        len(pdb_records),
+        len(skipped),
+    )
     log_progress(
-        f"Finished {len(completed)}/{len(layers)} layers in {time.time() - t0:.1f}s"
+        f"Finished task layers {task_layers}; consolidated {len(completed)}/"
+        f"{len(requested_layers)} requested layers in {time.time() - t0:.1f}s"
     )
 
 

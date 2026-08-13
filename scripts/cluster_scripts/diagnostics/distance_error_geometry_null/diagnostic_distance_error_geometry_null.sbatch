@@ -7,9 +7,10 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32g
 #SBATCH --time=48:00:00
+#SBATCH --array=0-5
 #SBATCH --constraint="work"
-#SBATCH -o slurm-%j.out
-#SBATCH -e slurm-%j.err
+#SBATCH -o slurm-%A_%a.out
+#SBATCH -e slurm-%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=ikhire3@gatech.edu
 
@@ -28,6 +29,10 @@ export ECOD_PDB_ROOT=/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_output
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
+
+ANALYSIS_LAYERS=(0 10 20 30 40 47)
+export NULL_LAYERS=0,10,20,30,40,47
+export NULL_TASK_LAYER=${ANALYSIS_LAYERS[$SLURM_ARRAY_TASK_ID]}
 
 SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
 srun python3 -u "$SCRIPT_DIR/diagnostic_distance_error_geometry_null.py"

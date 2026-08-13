@@ -6,6 +6,9 @@ Added a checkpointed Delta diagnostic that perturbs final-PDB distances to each
 probe's saved held-out R², reruns MDS, and compares observed geometry with an IID
 matched-error null without refitting probes.
 
+Restricted it to layers 0/10/20/30/40/47 and made the launcher a concurrency-safe
+six-task Slurm array with one checkpointed layer per task.
+
 ## Session: 2026-08-07 — ECOD category probe analysis
 
 Added a local ECOD category analysis for shared/per-protein base256 trajectories,

@@ -54,6 +54,25 @@ Submit from this directory so `SLURM_SUBMIT_DIR` resolves the Python entrypoint:
 sbatch diagnostic_distance_error_geometry_null.sbatch
 ```
 
+The launcher is a six-task Slurm array (`--array=0-5`). Each task processes one
+layer using this mapping:
+
+| Array task | Layer |
+|---:|---:|
+| 0 | 0 |
+| 1 | 10 |
+| 2 | 20 |
+| 3 | 30 |
+| 4 | 40 |
+| 5 | 47 |
+
+All tasks write atomic, layer-specific checkpoints into the same output
+directory. After writing its shard, each task rebuilds the consolidated CSVs
+from every complete shard it can see. This brief consolidation is protected by
+an advisory filesystem lock, while the expensive MDS work remains parallel.
+Consequently, the last task to finish produces the complete six-layer root
+CSVs. Logs use `slurm-<job>_<task>.out` and `.err`.
+
 The launcher reads:
 
 - `$HOME/csv_files/general_base256_combined/per_protein.csv`
@@ -62,13 +81,13 @@ The launcher reads:
   `datasets.md`
 
 It writes `$HOME/csv_files/distance_error_geometry_null/`. The defaults are the
-held-out `test` split, all 48 layers, 20 replicates per protein/layer, and random
-seed `20260813`. For a smoke test, environment overrides may restrict the job,
-for example:
+held-out `test` split, layers 0, 10, 20, 30, 40, and 47 only, 20 replicates per
+protein/layer, and random seed `20260813`. For a two-layer smoke test with two
+replicates, submit only array tasks 0 and 5:
 
 ```bash
-NULL_LAYERS=0,47 NULL_N_REPLICATES=2 \
-  sbatch diagnostic_distance_error_geometry_null.sbatch
+NULL_N_REPLICATES=2 \
+  sbatch --array=0,5 diagnostic_distance_error_geometry_null.sbatch
 ```
 
 Do not reuse an output directory with different settings. The script validates
@@ -88,9 +107,9 @@ path-resolution detail.
   probability.
 - `layer_summary.csv`: one row per layer. Observed held-out means are compared
   with null layer means formed separately for each replicate.
-- `layer_shards/`: the same results checkpointed after every completed layer so
-  partial work survives a timeout. A rerun with the same manifest skips complete
-  layers and rebuilds the consolidated CSVs.
+- `layer_shards/`: the same results checkpointed independently by array task
+  after every completed layer, so partial work survives a timeout. A rerun with
+  the same manifest skips complete layers and rebuilds the consolidated CSVs.
 - `pdb_exports/`: reference CA traces and replicate-0 MDS reconstructions at
   layers 0, 10, 20, 30, 40, and 47 for up to ten proteins selected across the
   held-out length range. B-factors hold per-residue reconstruction deviations.
