@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-08-13 — DSSP final-PDB smoke test
+
+Added a one-protein Delta DSSP smoke test that exports raw DSSP, residue and
+secondary-structure segment tables, plus coordinate-based CYS SG--SG candidates.
+
 ## Session: 2026-08-13 — Matched-R² geometry null
 
 Added a checkpointed Delta diagnostic that perturbs final-PDB distances to each
