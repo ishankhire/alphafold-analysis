@@ -30,9 +30,31 @@ import numpy as np
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-CLUSTER_SCRIPTS_DIR = SCRIPT_DIR.parent.parent
-if str(CLUSTER_SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(CLUSTER_SCRIPTS_DIR))
+
+
+def find_project_root(script_dir):
+    """Find a repository checkout, or fall back safely for flat cluster copies."""
+    for candidate in (script_dir, *script_dir.parents):
+        if (candidate / "datasets.md").is_file() and (
+            candidate / "scripts" / "cluster_scripts"
+        ).is_dir():
+            return candidate
+    return script_dir
+
+
+PROJECT_ROOT = find_project_root(SCRIPT_DIR)
+CLUSTER_HELPER_DIR_CANDIDATES = (
+    SCRIPT_DIR,
+    Path(os.environ["CLUSTER_SCRIPTS_DIR"]).expanduser()
+    if os.environ.get("CLUSTER_SCRIPTS_DIR")
+    else None,
+    PROJECT_ROOT / "scripts" / "cluster_scripts",
+)
+for helper_dir in CLUSTER_HELPER_DIR_CANDIDATES:
+    if helper_dir is not None and (helper_dir / "cluster_regression_helpers.py").is_file():
+        if str(helper_dir) not in sys.path:
+            sys.path.insert(0, str(helper_dir))
+        break
 
 from cluster_regression_helpers import (  # noqa: E402
     classical_mds,
@@ -43,7 +65,6 @@ from cluster_regression_helpers import (  # noqa: E402
 )
 
 
-PROJECT_ROOT = SCRIPT_DIR.parents[3]
 ANALYSIS_NAME = "distance_error_geometry_null"
 ANALYSIS_SPLIT = "test"
 DEFAULT_N_REPLICATES = 20
@@ -56,7 +77,11 @@ PDB_EXPORT_N_PROTEINS = 10
 PDB_EXPORT_LAYERS = DEFAULT_ANALYSIS_LAYERS
 
 LOCAL_RESULTS_DIR = PROJECT_ROOT / "delta_files" / "general_base256_combined"
-LOCAL_PDB_ROOT = PROJECT_ROOT.parent / "protein_data"
+LOCAL_PDB_ROOT = (
+    PROJECT_ROOT.parent / "protein_data"
+    if PROJECT_ROOT != SCRIPT_DIR
+    else SCRIPT_DIR / "protein_data"
+)
 LOCAL_OUTPUT_PARENT = (
     PROJECT_ROOT / "proteins" / "multi_protein_results" / "diagnostics"
 )

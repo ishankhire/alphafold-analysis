@@ -18,6 +18,10 @@ sbatch dssp_smoke_test_delta.sbatch
 Set `DSSP_SAMPLE_PROTEIN` in the launcher to inspect another structure. Numeric
 IDs use the ECOD final-PDB root; other IDs use CAMEO.
 
+The Python script is safe to run from a flat Delta working directory; it no
+longer assumes a fixed number of parent directories above the script. In that
+layout the launcher-provided PDB and output environment variables are used.
+
 The job writes `$HOME/csv_files/dssp_smoke_test/<protein-id>/`:
 
 - `summary.json`: DSSP version, mapped-residue count, and compact structural counts.

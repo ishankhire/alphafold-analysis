@@ -27,7 +27,19 @@ from Bio.PDB.DSSP import make_dssp_dict
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parents[2]
+
+
+def find_project_root(script_dir: Path) -> Path:
+    """Find a repository checkout, or fall back safely for flat cluster copies."""
+    for candidate in (script_dir, *script_dir.parents):
+        if (candidate / "datasets.md").is_file() and (
+            candidate / "scripts" / "cluster_scripts"
+        ).is_dir():
+            return candidate
+    return script_dir
+
+
+PROJECT_ROOT = find_project_root(SCRIPT_DIR)
 
 # Change this constant or set DSSP_SAMPLE_PROTEIN in the sbatch file to inspect
 # a different final predicted structure.
@@ -69,7 +81,11 @@ def is_ecod_id(protein_id: str) -> bool:
 def resolve_predicted_pdb(protein_id: str) -> Path:
     """Resolve a local or Delta final-predicted PDB for one protein."""
     filename = f"{protein_id}_model_1_ptm_unrelaxed.pdb"
-    local_root = PROJECT_ROOT.parent / "protein_data"
+    local_root = (
+        PROJECT_ROOT.parent / "protein_data"
+        if PROJECT_ROOT != SCRIPT_DIR
+        else SCRIPT_DIR / "protein_data"
+    )
     root_name = "ECOD_PDB_ROOT" if is_ecod_id(protein_id) else "CAMEO_PDB_ROOT"
     default_root = DEFAULT_ECOD_PDB_ROOT if is_ecod_id(protein_id) else DEFAULT_CAMEO_PDB_ROOT
     cluster_root = Path(os.environ.get(root_name, str(default_root))).expanduser()

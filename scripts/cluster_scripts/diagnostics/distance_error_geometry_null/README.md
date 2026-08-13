@@ -80,6 +80,12 @@ The launcher reads:
 - the combined CAMEO and ECOD final predicted-PDB roots documented in
   `datasets.md`
 
+The Python script may be copied into a flat Delta working directory. It searches
+upward for a repository checkout when one exists and otherwise relies on the
+launcher-provided input/output/PDB paths. Keep `cluster_regression_helpers.py`
+beside it when copying only the diagnostic files, or set `CLUSTER_SCRIPTS_DIR`
+to the directory containing that helper.
+
 It writes `$HOME/csv_files/distance_error_geometry_null/`. The defaults are the
 held-out `test` split, layers 0, 10, 20, 30, 40, and 47 only, 20 replicates per
 protein/layer, and random seed `20260813`. For a two-layer smoke test with two

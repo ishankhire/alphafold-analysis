@@ -14,6 +14,9 @@ matched-error null without refitting probes.
 Restricted it to layers 0/10/20/30/40/47 and made the launcher a concurrency-safe
 six-task Slurm array with one checkpointed layer per task.
 
+Made this diagnostic and the DSSP smoke test safe when copied into a flat Delta
+working directory instead of retaining their repository-relative nesting.
+
 ## Session: 2026-08-07 — ECOD category probe analysis
 
 Added a local ECOD category analysis for shared/per-protein base256 trajectories,
