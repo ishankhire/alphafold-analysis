@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-13 — Secondary-structure emergence diagnostic
+
+Added a staged DSSP/calibration, six-layer replay array, and consolidation
+workflow for held-out helix and beta-sheet emergence, stability, and stratified
+distance accuracy using saved `general_base256_combined` coefficients.
+
 ## Session: 2026-08-13 — DSSP final-PDB smoke test
 
 Added a one-protein Delta DSSP smoke test that exports raw DSSP, residue and
