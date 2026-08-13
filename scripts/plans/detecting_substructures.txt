@@ -1,0 +1,154 @@
+GOAL
+
+New diagnostic, separate from the local pair update experiments. I want to know
+when secondary structure first becomes visible in the decoded distance matrices,
+and whether it stays once it appears. Layers 0, 10, 20, 30, 40, 47 only for now.
+
+APPROACH
+
+I am not training anything and not detecting anything. DSSP already tells me
+where the helices and bridge pairs are in the final structure. The experiment
+goes to those known positions and checks whether the decoded distances at each
+layer already look right.
+
+Use the saved general_base256_combined coefficients in [coefficients directory].
+For each of the six layers, apply that layer's own coefficients to that layer's
+pair representation to get a decoded Ca distance matrix per protein. Keep the
+existing frozen protein split; report on held-out proteins, with train available
+as a check.
+
+Labels come from running DSSP on the model's final predicted PDB (full backbone
+is present there, so DSSP works even though our distances are Ca-only). Use the
+predicted structure, not the experimental one — the question is whether the model
+converges to its own answer.
+
+From DSSP's 8 states use H only for helix and E only for strand. Drop G, I, B,
+T, S and coil from the main result. Report G separately if convenient, but do not
+fold it into the helix set.
+
+DSSP VALIDATION — do this before anything else
+
+Do not trust DSSP silently. Per protein save: exit status, residues assigned by
+DSSP vs residues in the pair representation, counts of each 8-state code, number
+of helix segments, number of strand segments, number of bridge pairs, and segment
+length distributions.
+
+Flag as suspect and write to dssp_failures.csv (do not drop quietly): zero
+helices AND zero strands; coil fraction above 0.9; residue count mismatch; or
+outright failure.
+
+Aggregate check: helix fraction across the dataset should land near 30-35% and
+strand near 20-25%. If totals are far off, stop and investigate.
+
+Indexing check, most important: compute d(i,i+1) from the TRUE distance matrix
+for every consecutive pair. It should be ~3.8 A throughout. Deviations mean a
+chain break, a numbering gap, or an off-by-one between PDB numbering and 0-based
+array indexing. Report the count per protein. A silent off-by-one here would
+make the entire analysis confidently wrong.
+
+Importantly, note that I am running this on the ECOD and CAMEO datasets, so I'm
+not taking random proteins. Proteins might be skewed to, for example, have a lot
+more alpha helices or something. Therefore, you don't need to have the helix fractions
+and other metrics be super strict. Just want to make sure nothing fishy is going on!
+
+HELIX MEASUREMENT
+
+For each residue i take the triple of decoded distances at offsets +2, +3, +4.
+Flat in a helix, steeply climbing in a strand.
+
+Do not hardcode canonical values. Compute ONE pair of centroids for the whole
+dataset — not per protein, not per segment — by averaging the triple from the
+TRUE distance matrices over all H-labeled residues in training proteins
+(mu_helix) and all E-labeled residues (mu_strand). Fix these and use the same
+two points everywhere. Empirical centroids absorb real helix curvature and
+fraying, and they double as a correctness check: if mu_helix lands near
+(5.5, 5.1, 6.2) that independently confirms indexing, DSSP parsing, and distance
+extraction.
+
+Score per residue, on z-scored offsets:
+
+  score = ||t - mu_strand|| - ||t - mu_helix||
+
+Positive means closer to helix. This is a nearest-centroid rule with nothing
+fitted.
+
+Its failure mode matters: a high score means "closer to helix than strand", not
+"close to helix". A degenerate early-layer triple that is far from both centroids
+can produce a positive score by accident. So ALSO save the raw ||t - mu_helix||
+per residue. "Looks helical" requires a positive score AND a small absolute
+distance. If layer 0 shows positive scores with large absolute distances, that is
+readout degeneracy, not an emerging helix.
+
+VALIDATE THE SCORE FIRST: run it on the TRUE distance matrices against DSSP
+labels. AUROC should be ~0.98+. If it is not, the score is broken and there is no
+point applying it to decoded distances.
+
+Report per layer: mean score over known-helix residues and over known-strand
+residues (both curves — if early layers squash everything toward short distances,
+helix residues score well for the wrong reason and the strand curve exposes it),
+plus AUROC between the groups. Also save, for helix residues only, the mean
+decoded distance at offsets 2/3/4 per layer with true values alongside; watching
+that curve flatten is the most interpretable single output.
+
+SHEET MEASUREMENT
+
+Take DSSP bridge partner pairs from the final structure. The score is just the
+decoded d(i,j) for that already-known pair at each layer. Nothing is being
+detected from distances.
+
+Two contrast sets:
+
+  1. Matched random: non-partner long-range pairs from the same protein, matched
+     on |i-j|. Controls for the trivial "close in sequence, close in space".
+  2. Register-shifted: (i, j+/-1) and (i, j+/-2). Same two strands, same
+     adjacency, wrong correspondence. This is the one I care about — the model
+     can place two strands side by side well before it settles which residue
+     pairs with which. If true partner and off-by-one are equally short, the
+     strands are adjacent but the register is unresolved.
+
+Split parallel and antiparallel from the start.
+
+CEILING CHECK, required before interpreting: true partner distance is ~5 A,
+off-by-one ~6.3 A, off-by-two ~8.6 A. The register test asks the probe to resolve
+~1.3 A, possibly below its own error. Push the TRUE distances through the probe
+and measure whether register is separable at all. If the register curve stays
+flat at every layer including 47, that ceiling number determines whether the
+conclusion is "the model never resolves register" or "our readout cannot see it".
+
+ADDITIONAL LINEAR PROBE ACCURACY METRICS
+
+I also want to measure general linear probe accuracy metrics categorized under
+multiple fields. Record linear probe accuracy for: 
+(1) different amino acid combinations. For example, is the probe more accurate at
+categorizing Ala-Gly pairs than Cys-Cys? Please control for actual pairwise distance.
+(2) Different true pairwise distances. Is the probe more accurate for residues that are 
+e.g., 10-15A apart in the final structure?
+(3) Different sequence separations.
+
+STABILITY
+
+Six layers is coarse, so keep it simple. Per helix segment and per bridge pair,
+record the score trajectory across the six layers, whether it is monotone, and
+the first layer crossing a threshold. Set that threshold once by calibrating on
+true structures to 95% specificity against the contrast set, then apply it
+unchanged at every layer. Flag anything that crosses up and later crosses back
+down.
+
+IMPORTANT DETAILS
+
+- Never compare raw Angstrom values across layers. Each layer has its own probe
+  and error scale. Every comparison is within-layer against a contrast set.
+- Trim the first and last residue of each helix segment (DSSP boundaries are
+  noisy at frayed ends); restrict the main result to segments >= 6 residues.
+- Drop residues where offsets +2/+4 run past the chain end. Do not pad.
+- Count and report negative decoded distances per layer. If common at layer 0,
+  "no helix detected" partly means the readout is degenerate there.
+- Bootstrap error bars over proteins, not residues.
+
+OUTPUTS
+
+Per-layer summary CSV, per-protein CSV, per-segment/per-pair trajectory CSV,
+dssp_failures.csv, validation CSV (centroid values, true-matrix AUROC, register
+ceiling, d(i,i+1) check), and run metadata, following existing diagnostics
+conventions. Plots: helix/strand score curves vs layer, the offset-2/3/4 curve
+per layer against truth, and the sheet separation curves vs layer.

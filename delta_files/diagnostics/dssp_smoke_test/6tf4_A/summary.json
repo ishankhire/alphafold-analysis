@@ -1,0 +1,27 @@
+{
+  "biopython_version": "1.86",
+  "disulfide_sg_sg_cutoff_angstrom": 2.3,
+  "dssp_executable": "/u/ikhire/dssp_env/bin/mkdssp",
+  "dssp_version": "mkdssp version 4.6.1",
+  "n_beta_bridge_segments": 0,
+  "n_beta_strand_segments": 5,
+  "n_coordinate_based_disulfide_candidates": 0,
+  "n_cysteines_with_sg": 0,
+  "n_dssp_records": 67,
+  "n_helix_segments": 0,
+  "n_polymer_residues": 67,
+  "n_residues_mapped_to_dssp": 67,
+  "n_ssbond_records_in_pdb": 0,
+  "pdb_path": "/work/hdd/bekh/thayes/openfold_reps_outputs_sm/my_outputs_align_6tf4_A_representations_load_from_saved_layer_47/predictions/6tf4_A_model_1_ptm_unrelaxed.pdb",
+  "pdb_sha256": "645a7b6c0c8aeee48cbd0dacd9e527f84e51035bd2a5a14277e44d4a043070e3",
+  "protein_id": "6tf4_A",
+  "raw_dssp_file": "/u/ikhire/csv_files/dssp_smoke_test/6tf4_A/raw.dssp",
+  "runtime_seconds": 1.764,
+  "secondary_structure_residue_counts": {
+    "bend": 9,
+    "beta_strand": 28,
+    "coil": 22,
+    "turn": 8
+  },
+  "status": "success"
+}

@@ -1,0 +1,85 @@
+REMARK CA-only trace for matched-R2 geometry null
+REMARK protein=000003088 layer=10 replicate=0 matched_R2=0.204585
+ATOM      1  CA  GLN A   1       6.187  -8.777  -4.062  1.00  1.69           C
+ATOM      2  CA  THR A   2       6.804  -4.041  -0.598  1.00  3.08           C
+ATOM      3  CA  ALA A   3      11.733  -3.347  -4.656  1.00  2.22           C
+ATOM      4  CA  ALA A   4       6.719  -7.288  -8.983  1.00  4.18           C
+ATOM      5  CA  LEU A   5       3.417  -1.515  -3.509  1.00  1.80           C
+ATOM      6  CA  MET A   6       6.835   1.920  -0.775  1.00  3.08           C
+ATOM      7  CA  ALA A   7       7.430   3.249  -5.587  1.00  2.04           C
+ATOM      8  CA  HIS A   8       2.525   1.319  -6.242  1.00  0.27           C
+ATOM      9  CA  LEU A   9       0.500   1.632  -3.051  1.00  2.23           C
+ATOM     10  CA  PHE A  10       3.194   2.263  -4.695  1.00  3.76           C
+ATOM     11  CA  GLU A  11       0.756   6.097  -6.944  1.00  2.11           C
+ATOM     12  CA  MET A  12      -1.752   7.708  -4.717  1.00  1.72           C
+ATOM     13  CA  GLY A  13       2.875  10.237  -1.318  1.00  2.15           C
+ATOM     14  CA  PHE A  14       1.292   5.833  -2.060  1.00  2.69           C
+ATOM     15  CA  CYS A  15       8.038   6.862   3.214  1.00  3.53           C
+ATOM     16  CA  ASP A  16       6.660   3.697   2.729  1.00  2.57           C
+ATOM     17  CA  ARG A  17      10.406   1.607   2.046  1.00  2.51           C
+ATOM     18  CA  GLN A  18       9.288   1.727   6.861  1.00  0.64           C
+ATOM     19  CA  LEU A  19       3.692   2.587   5.134  1.00  2.38           C
+ATOM     20  CA  ASN A  20       4.446   1.352   3.609  1.00  0.88           C
+ATOM     21  CA  LEU A  21       5.486  -2.777   4.581  1.00  1.03           C
+ATOM     22  CA  ARG A  22       5.626  -6.300   6.503  1.00  3.84           C
+ATOM     23  CA  LEU A  23       0.661  -3.944   8.854  1.00  2.78           C
+ATOM     24  CA  LEU A  24       2.535  -4.551   2.099  1.00  1.67           C
+ATOM     25  CA  LYS A  25       1.880  -7.274   5.329  1.00  2.06           C
+ATOM     26  CA  LYS A  26      -1.860  -9.087   7.880  1.00  3.15           C
+ATOM     27  CA  HIS A  27       0.819  -7.247   7.087  1.00  3.12           C
+ATOM     28  CA  ASN A  28       3.046  -5.751   3.780  1.00  5.50           C
+ATOM     29  CA  TYR A  29       2.710  -8.492   0.919  1.00  1.11           C
+ATOM     30  CA  ASN A  30      -0.881  -6.472   0.175  1.00  1.37           C
+ATOM     31  CA  ILE A  31      -1.304  -1.107  -2.552  1.00  3.07           C
+ATOM     32  CA  LEU A  32      -6.345  -4.509   0.206  1.00  2.31           C
+ATOM     33  CA  GLN A  33      -4.602  -4.952   1.247  1.00  1.73           C
+ATOM     34  CA  VAL A  34      -0.755  -0.591   3.513  1.00  2.27           C
+ATOM     35  CA  VAL A  35      -4.089   1.406   0.858  1.00  0.44           C
+ATOM     36  CA  THR A  36      -7.409   2.183   1.621  1.00  1.51           C
+ATOM     37  CA  GLU A  37      -5.682   0.120   5.505  1.00  0.96           C
+ATOM     38  CA  LEU A  38      -2.725   3.338   3.028  1.00  1.79           C
+ATOM     39  CA  LEU A  39      -9.236   5.904   2.190  1.00  3.08           C
+ATOM     40  CA  GLN A  40      -6.920   5.851   5.119  1.00  2.14           C
+ATOM     41  CA  LEU A  41      -5.550   6.781  10.797  1.00  2.13           C
+TER
+CONECT    1    2
+CONECT    2    3
+CONECT    3    4
+CONECT    4    5
+CONECT    5    6
+CONECT    6    7
+CONECT    7    8
+CONECT    8    9
+CONECT    9   10
+CONECT   10   11
+CONECT   11   12
+CONECT   12   13
+CONECT   13   14
+CONECT   14   15
+CONECT   15   16
+CONECT   16   17
+CONECT   17   18
+CONECT   18   19
+CONECT   19   20
+CONECT   20   21
+CONECT   21   22
+CONECT   22   23
+CONECT   23   24
+CONECT   24   25
+CONECT   25   26
+CONECT   26   27
+CONECT   27   28
+CONECT   28   29
+CONECT   29   30
+CONECT   30   31
+CONECT   31   32
+CONECT   32   33
+CONECT   33   34
+CONECT   34   35
+CONECT   35   36
+CONECT   36   37
+CONECT   37   38
+CONECT   38   39
+CONECT   39   40
+CONECT   40   41
+END

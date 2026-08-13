@@ -1,0 +1,23 @@
+Sequence-separation-gated distance probe diagnostic
+generated_at=2026-08-13T13:30:20-05:00
+layer=47
+array_task_id=5
+layers=0,10,20,30,40,47
+separation_bins=1,2-4,5-9,10-19,20-49,50+
+models=base256_gated_by_sequence_separation,sequence_separation_only
+n_manifest_proteins=554
+n_loaded_proteins=552
+n_train_pool_proteins=441
+n_train_proteins=100
+n_test_proteins=111
+n_unused_train_pool_proteins=341
+random_state=42
+weighting=equal_total_weight_per_training_protein_within_each_bin
+precision=float64_scaling_and_fit
+completed_bins=1,2-4,5-9,10-19,20-49,50+
+n_skipped_inputs=2
+elapsed_seconds=191.030
+
+Skipped inputs:
+000196893: CA count 425 != pair block dim 426
+001681437: CA count 194 != pair block dim 195

@@ -1,0 +1,52 @@
+category,metric,split,orientation,value,n,threshold,status,details
+helix_centroid,mu_helix_offset_2,train,,5.495506241810135,32959,,check,raw Angstrom centroid
+helix_centroid,mu_helix_offset_3,train,,5.499846468796166,32959,,check,raw Angstrom centroid
+helix_centroid,mu_helix_offset_4,train,,6.692738916910449,32959,,check,raw Angstrom centroid
+strand_centroid,mu_strand_offset_2,train,,6.53314015704252,18767,,check,raw Angstrom centroid
+strand_centroid,mu_strand_offset_3,train,,9.283445363499094,18767,,check,raw Angstrom centroid
+strand_centroid,mu_strand_offset_4,train,,11.507395557798787,18767,,check,raw Angstrom centroid
+helix_score,true_matrix_auroc,train,,0.973369674324855,51726,0.98,fail,H versus E using fixed training centroids
+helix_score,true_matrix_auroc,test,,0.970483521964463,13019,0.98,fail,H versus E using fixed training centroids
+helix_gate,score_threshold,train,,1.4503993389952943,18767,0.95,calibrated,95th percentile of true E scores
+helix_gate,closeness_threshold,train,,4.320055549146159,32959,0.95,calibrated,95th percentile of true H raw-Angstrom distances to the empirical helix centroid
+sheet_gate,partner_distance_threshold,train,all,7.750654945018784,245105,0.95,calibrated,5th percentile of matched-random true distances
+register_ceiling,partner_vs_matched_random_auroc,train,parallel,0.9955679107536608,71809,,check,partner_mean=4.83463; contrast_mean=21.6943
+register_ceiling,true_partner_mean_for_matched_random,train,parallel,4.834634535867162,3441,,check,Angstrom
+register_ceiling,true_matched_random_mean,train,parallel,21.694342857029504,68368,,check,Angstrom
+register_ceiling,partner_vs_shift_1_auroc,train,parallel,0.9901701289239955,9062,,check,partner_mean=4.83463; contrast_mean=6.04156
+register_ceiling,true_partner_mean_for_shift_1,train,parallel,4.834634535867162,3441,,check,Angstrom
+register_ceiling,true_shift_1_mean,train,parallel,6.041558615835177,5621,,check,Angstrom
+register_ceiling,partner_vs_shift_2_auroc,train,parallel,0.9994861771462639,7662,,check,partner_mean=4.83463; contrast_mean=7.96128
+register_ceiling,true_partner_mean_for_shift_2,train,parallel,4.834634535867162,3441,,check,Angstrom
+register_ceiling,true_shift_2_mean,train,parallel,7.961282303328927,4221,,check,Angstrom
+register_ceiling,partner_vs_matched_random_auroc,train,antiparallel,0.995784546000076,185653,,check,partner_mean=4.87446; contrast_mean=20.3318
+register_ceiling,true_partner_mean_for_matched_random,train,antiparallel,4.874459329809052,8916,,check,Angstrom
+register_ceiling,true_matched_random_mean,train,antiparallel,20.331832093604685,176737,,check,Angstrom
+register_ceiling,partner_vs_shift_1_auroc,train,antiparallel,0.978896386908523,23996,,check,partner_mean=4.87446; contrast_mean=6.04083
+register_ceiling,true_partner_mean_for_shift_1,train,antiparallel,4.874459329809052,8916,,check,Angstrom
+register_ceiling,true_shift_1_mean,train,antiparallel,6.040825831074205,15080,,check,Angstrom
+register_ceiling,partner_vs_shift_2_auroc,train,antiparallel,0.9993156943727701,20973,,check,partner_mean=4.87446; contrast_mean=8.0255
+register_ceiling,true_partner_mean_for_shift_2,train,antiparallel,4.874459329809052,8916,,check,Angstrom
+register_ceiling,true_shift_2_mean,train,antiparallel,8.025498885498402,12057,,check,Angstrom
+register_ceiling,partner_vs_matched_random_auroc,test,parallel,0.9944332491684651,19254,,check,partner_mean=4.82418; contrast_mean=20.7829
+register_ceiling,true_partner_mean_for_matched_random,test,parallel,4.824176667168399,919,,check,Angstrom
+register_ceiling,true_matched_random_mean,test,parallel,20.782871035457926,18335,,check,Angstrom
+register_ceiling,partner_vs_shift_1_auroc,test,parallel,0.9929875468504413,2431,,check,partner_mean=4.82418; contrast_mean=6.04229
+register_ceiling,true_partner_mean_for_shift_1,test,parallel,4.824176667168399,919,,check,Angstrom
+register_ceiling,true_shift_1_mean,test,parallel,6.04229232325383,1512,,check,Angstrom
+register_ceiling,partner_vs_shift_2_auroc,test,parallel,0.9996904762820241,2051,,check,partner_mean=4.82418; contrast_mean=7.95077
+register_ceiling,true_partner_mean_for_shift_2,test,parallel,4.824176667168399,919,,check,Angstrom
+register_ceiling,true_shift_2_mean,test,parallel,7.950774716128941,1132,,check,Angstrom
+register_ceiling,partner_vs_matched_random_auroc,test,antiparallel,0.9958821696638536,46599,,check,partner_mean=4.86581; contrast_mean=20.594
+register_ceiling,true_partner_mean_for_matched_random,test,antiparallel,4.86581483197911,2248,,check,Angstrom
+register_ceiling,true_matched_random_mean,test,antiparallel,20.593951270031948,44351,,check,Angstrom
+register_ceiling,partner_vs_shift_1_auroc,test,antiparallel,0.9765009070141806,6046,,check,partner_mean=4.86581; contrast_mean=6.04233
+register_ceiling,true_partner_mean_for_shift_1,test,antiparallel,4.86581483197911,2248,,check,Angstrom
+register_ceiling,true_shift_1_mean,test,antiparallel,6.042333347813918,3798,,check,Angstrom
+register_ceiling,partner_vs_shift_2_auroc,test,antiparallel,0.9994518727875379,5280,,check,partner_mean=4.86581; contrast_mean=8.07149
+register_ceiling,true_partner_mean_for_shift_2,test,antiparallel,4.86581483197911,2248,,check,Angstrom
+register_ceiling,true_shift_2_mean,test,antiparallel,8.071490065011604,3032,,check,Angstrom
+dssp_dataset,aggregate_helix_fraction,all,,0.35353166481244,552,advisory,check,roughly 0.30-0.35; dataset composition may shift this
+dssp_dataset,aggregate_strand_fraction,all,,0.2017851531647827,552,advisory,check,roughly 0.20-0.25; dataset composition may shift this
+indexing,total_adjacent_ca_deviations,all,,900,117197,0,warning,"expected same-chain, numbering-contiguous CA distance in [3.6, 4.0] Å"
+indexing,proteins_with_residue_count_mismatch,all,,0,552,0,pass,PDB CA count versus pair-block dimension
