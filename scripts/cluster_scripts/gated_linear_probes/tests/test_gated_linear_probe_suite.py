@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import numpy as np
 
@@ -106,11 +107,29 @@ class NumericalTests(unittest.TestCase):
         beta = rng.normal(size=common.FEATURE_DIM)
         y = (x @ beta + 0.7).astype(np.float64)
         offsets = [(i, i * 64, (i + 1) * 64) for i in range(5)]
-        fitted = common.fit_ols(x, y, offsets)
+        with mock.patch.object(
+            common.np.linalg,
+            "matrix_rank",
+            side_effect=AssertionError("fit_ols must reuse sklearn's reported rank"),
+        ):
+            fitted = common.fit_ols(x, y, offsets)
         prediction = fitted["model"].predict((x - fitted["mean"]) / fitted["scale"])
         self.assertEqual(fitted["coef_raw"].dtype, np.float64)
         self.assertLess(np.max(np.abs(prediction - y)), 1e-8)
         self.assertEqual(fitted["fit_status"], "fitted")
+
+    def test_subset_materialized_preserves_protein_slices(self):
+        materialized = {
+            "y": np.arange(9, dtype=np.float64),
+            "offsets": [(2, 0, 3), (5, 3, 7), (8, 7, 9)],
+        }
+        indices, y, offsets = common.subset_materialized(
+            materialized,
+            np.asarray([False, True, True, False, True, False, True, True, False]),
+        )
+        np.testing.assert_array_equal(indices, [1, 2, 4, 6, 7])
+        np.testing.assert_array_equal(y, [1.0, 2.0, 4.0, 6.0, 7.0])
+        self.assertEqual(offsets, [(2, 0, 2), (5, 2, 4), (8, 4, 5)])
 
     def test_eligibility_precedence_and_rank_flags(self):
         status, flags = common.gate_eligibility(10, 1)

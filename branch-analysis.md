@@ -1364,3 +1364,9 @@ layer-by-separation metric matrices.
 Added reproducible sequence-, AA-pair-, and joint-gated float64 OLS probes,
 true-distance statistics, restartable Delta arrays, strict aggregation, and a
 separate deterministic smoke workflow.
+
+## Session: 2026-08-14 — Remove redundant gated-probe rank SVD
+
+- Reused scikit-learn's dense OLS rank/singular diagnostics instead of running
+  a second full matrix-rank SVD, and tightened dense materialization, subgroup
+  slicing, timing logs, and resume-manifest validation without changing outputs.

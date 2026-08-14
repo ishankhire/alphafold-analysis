@@ -344,17 +344,23 @@ def gate_eligibility(n_rows, n_proteins):
 def fit_ols(x, y, offsets):
     if x.dtype != np.float64 or y.dtype != np.float64:
         raise TypeError("OLS inputs must be float64")
+    scaler_started = time.monotonic()
     mean, scale = weighted_scaler(x, offsets)
-    x_standardized = np.asarray((x - mean) / scale, dtype=np.float64)
+    x_standardized = np.empty_like(x)
+    np.subtract(x, mean, out=x_standardized)
+    np.divide(x_standardized, scale, out=x_standardized)
     weights = protein_equal_weights(offsets, len(y))
+    log(f"OLS scaler/materialization completed in {time.monotonic() - scaler_started:.1f}s")
     model = LinearRegression(copy_X=False)
+    solver_started = time.monotonic()
     model.fit(x_standardized, y, sample_weight=weights)
+    log(f"OLS dense least-squares solver completed in {time.monotonic() - solver_started:.1f}s")
     coef_std = np.asarray(model.coef_, dtype=np.float64)
     intercept_std = float(model.intercept_)
     coef_raw = coef_std / scale
     intercept_raw = intercept_std - float(np.dot(coef_raw, mean))
-    singular = np.asarray(getattr(model, "singular_", []), dtype=np.float64)
-    rank = int(getattr(model, "rank_", np.linalg.matrix_rank(x_standardized)))
+    singular = np.asarray(model.singular_, dtype=np.float64)
+    rank = int(model.rank_)
     largest = float(singular[0]) if singular.size else float("nan")
     smallest = float(singular[-1]) if singular.size else float("nan")
     condition = largest / smallest if singular.size and smallest > 0 else float("inf")
@@ -558,9 +564,9 @@ def materialize_gate(records, layer, aa_code=None, sequence_code=None, feature_c
     distance = np.empty(total, dtype=np.int8)
     offsets = []
     cursor = 0
-    selected_by_code = {}
+    record_by_code = {}
     for global_record_code, record, indices in selected:
-        selected_by_code[global_record_code] = (record, indices)
+        record_by_code[global_record_code] = record
         end = cursor + indices.size
         if feature_cache is None:
             pb_path = general_common.resolve_pair_block_path(record["protein_dir"], record["protein_id"], layer)
@@ -580,16 +586,15 @@ def materialize_gate(records, layer, aa_code=None, sequence_code=None, feature_c
         offsets.append((global_record_code, cursor, end))
         cursor = end
     return {"x": x, "y": y, "aa": aa, "sequence": sequence, "distance": distance,
-            "offsets": offsets, "selected": selected, "selected_by_code": selected_by_code}
+            "offsets": offsets, "record_by_code": record_by_code}
 
 
 def subset_materialized(materialized, row_mask):
-    row_indices = np.flatnonzero(row_mask)
     offsets = []
     y_pieces, pred_indices = [], []
     cursor = 0
     for protein_code, start, end in materialized["offsets"]:
-        local = row_indices[(row_indices >= start) & (row_indices < end)]
+        local = np.flatnonzero(row_mask[start:end]) + start
         if local.size:
             pred_indices.append(local)
             y_pieces.append(materialized["y"][local])
@@ -674,7 +679,7 @@ def per_protein_gate_rows(materialized, prediction, analysis_name, layer, aa_cod
         return []
     rows = []
     for protein_code, start, end in materialized["offsets"]:
-        record, _ = materialized["selected_by_code"][protein_code]
+        record = materialized["record_by_code"][protein_code]
         y = materialized["y"][start:end]
         pred = prediction[start:end]
         moments = metrics_from_moments(cell_moments(y, pred))
@@ -721,7 +726,11 @@ def run_analysis_task(analysis_name, task_id=None):
     }
     if task_manifest_path.exists():
         previous = json.loads(task_manifest_path.read_text())
-        for key in ("analysis_name", "task_id", "layer", "configuration_digest", "split_digest"):
+        for key in (
+            "analysis_name", "task_id", "layer", "sequence_task_code", "run_mode",
+            "configuration_digest", "split_digest", "expected_gate_keys",
+            "train_protein_ids", "test_protein_ids",
+        ):
             if previous.get(key) != task_manifest[key]:
                 raise ValueError(f"Existing task manifest mismatch for {key}")
         task_manifest = previous
@@ -831,6 +840,7 @@ def run_analysis_task(analysis_name, task_id=None):
         task_manifest["completed_gate_keys"].append(slug)
         atomic_write_json(task_manifest_path, task_manifest)
         log(f"{analysis_name} layer {layer}: checkpointed {slug}")
+        del train, test, fitted, train_prediction, test_prediction
     task_manifest["completed"] = True
     task_manifest["completed_at"] = utc_now()
     atomic_write_json(task_manifest_path, task_manifest)
