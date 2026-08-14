@@ -2,7 +2,7 @@
 
 ## 1. Goal and settled decisions
 
-Build one reproducible diagnostic suite for asking how linearly decodable true
+Build one reproducible analysis suite for asking how linearly decodable true
 C-alpha pairwise distance is within sequence, amino-acid, and joint gates. Use
 the combined TM-score-filtered CAMEO + ECOD pool, the six requested trunk
 layers `(0, 10, 20, 30, 40, 47)`, and a single frozen protein-level split.
@@ -40,8 +40,10 @@ Settled modeling and reporting choices:
   preserving directional representation features.
 - Exclude noncanonical/unmapped residues from amino-acid-dependent gates and
   report every exclusion explicitly.
-- Do not save pair-level predictions. Save exact subgroup sufficient statistics,
-  exact true-distance medians, and per-protein subgroup metrics.
+- Do not save pair-level predictions or reader-facing per-protein subgroup
+  tables. Save the requested aggregate subgroup metrics, exact true-distance
+  medians, a manageable test-only per-protein gate table, and compact task-level
+  audit arrays sufficient to verify the macro calculations.
 - Do not bootstrap confidence intervals.
 - Use SLURM arrays for every layer-dependent analysis and save progress after
   every completed gate.
@@ -56,8 +58,8 @@ different questions:
   errors are tiny.
 - MAE and RMSE measure absolute distance error in Angstroms, but must be read
   relative to how well a constant category mean already performs.
-- True-distance mean, median, variance, and standard deviation state how hard
-  and how dispersed the category is before considering a probe.
+- True-distance mean, median, and variance state how hard and how dispersed the
+  category is before considering a probe.
 
 Every fitted gate and evaluation subgroup must therefore report the probe, an
 intercept-only baseline, and baseline-relative skill:
@@ -76,14 +78,13 @@ Compute pooled skill from the pooled probe and baseline errors. Compute macro
 skill as `1 - mean_per_protein_probe_error /
 mean_per_protein_baseline_error`; do not average per-protein error ratios, which
 would give unstable cells with nearly zero baseline error excessive influence.
-Per-protein output rows may retain their own skill values for inspection, but
-the aggregate macro field follows the ratio-of-macro-errors definition above.
+The aggregate macro field follows the ratio-of-macro-errors definition above.
 
 For every metric family, retain both weightings rather than choosing one:
 
 - `pooled_*`: every residue pair has equal evaluation weight across the split.
-- `mean_per_protein_*` and `median_per_protein_*`: every protein with a defined
-  metric has equal evaluation weight.
+- `mean_per_protein_*`: every protein with a defined metric has equal evaluation
+  weight.
 
 For R-squared, report `n_proteins_with_finite_r2`. A protein/category R-squared
 is defined only when it has at least two pairs and target variance greater than
@@ -138,8 +139,8 @@ module; do not copy separate label lists into the runners.
 Create a one-time preparation/statistics entrypoint:
 
 ```text
-scripts/cluster_scripts/diagnostics/prepare_gated_linear_probe_suite.py
-scripts/cluster_scripts/diagnostics/prepare_gated_linear_probe_suite.sbatch
+scripts/cluster_scripts/gated_linear_probes/prepare_gated_linear_probe_suite.py
+scripts/cluster_scripts/gated_linear_probes/prepare_gated_linear_probe_suite.sbatch
 ```
 
 It should reuse the combined-dataset path resolution and stable helpers from
@@ -179,7 +180,7 @@ missing or under-supported.
 Create:
 
 ```text
-scripts/cluster_scripts/diagnostics/gated_linear_probe_common.py
+scripts/cluster_scripts/gated_linear_probes/gated_linear_probe_common.py
 ```
 
 This module should own:
@@ -240,8 +241,8 @@ underdetermined gates from looking equivalent to stable fits.
 Create:
 
 ```text
-scripts/cluster_scripts/diagnostics/diagnostic_sequence_gated_linear_probes.py
-scripts/cluster_scripts/diagnostics/diagnostic_sequence_gated_linear_probes.sbatch
+scripts/cluster_scripts/gated_linear_probes/sequence_gated_linear_probes.py
+scripts/cluster_scripts/gated_linear_probes/sequence_gated_linear_probes.sbatch
 ```
 
 One SLURM array task handles one requested layer. Within a task:
@@ -249,9 +250,9 @@ One SLURM array task handles one requested layer. Within a task:
 1. Load all valid train and test proteins for the selected layer.
 2. For each of the six sequence gates, fit one base256 OLS probe.
 3. Evaluate train and test predictions overall within the fitted sequence gate.
-4. Evaluate the same predictions by unordered AA pair, producing
+4. Evaluate held-out test predictions by unordered AA pair, producing
    `layer x sequence gate x AA pair` cells.
-5. Separately evaluate the same predictions by spatial-distance bin, producing
+5. Separately evaluate held-out test predictions by spatial-distance bin, producing
    `layer x sequence gate x spatial-distance` cells.
 6. Compare every cell with the precomputed intercept-only baseline prediction.
 7. Write outputs after every sequence gate so a timeout loses at most one gate.
@@ -265,8 +266,8 @@ outputs from preparation.
 Create:
 
 ```text
-scripts/cluster_scripts/diagnostics/diagnostic_aa_pair_gated_linear_probes.py
-scripts/cluster_scripts/diagnostics/diagnostic_aa_pair_gated_linear_probes.sbatch
+scripts/cluster_scripts/gated_linear_probes/aa_pair_gated_linear_probes.py
+scripts/cluster_scripts/gated_linear_probes/aa_pair_gated_linear_probes.sbatch
 ```
 
 One SLURM array task handles one requested layer. Within a task:
@@ -275,9 +276,9 @@ One SLURM array task handles one requested layer. Within a task:
 2. Iterate through the 210 canonical AA-pair gates in fixed order.
 3. Fit one base256 OLS probe for every eligible gate.
 4. Evaluate train and test predictions overall within the fitted AA gate.
-5. Evaluate the same predictions by sequence-separation bin, producing
+5. Evaluate held-out test predictions by sequence-separation bin, producing
    `layer x AA pair x sequence separation` cells.
-6. Separately evaluate by spatial-distance bin, producing
+6. Separately evaluate held-out test predictions by spatial-distance bin, producing
    `layer x AA pair x spatial distance` cells.
 7. Compare every cell with its precomputed AA-gate intercept baseline.
 8. Checkpoint after every AA gate.
@@ -285,9 +286,9 @@ One SLURM array task handles one requested layer. Within a task:
 Do not add a raw-sequence-separation baseline to Analysis 2. Do not compute the
 full sequence-separation x spatial-distance cross-product in this analysis.
 
-Because 323,820 coefficient/intercept values are expected
-(`6 layers x 210 gates x 257 values`), save coefficients as compressed per-task
-NPZ shards plus a small CSV index rather than a monolithic CSV.
+Save Analysis 2 coefficients in a normal `coefficients.csv`; its roughly
+323,820 coefficient/intercept rows are manageable and easier to inspect than
+NPZ shards.
 
 ## 9. Analysis 3: true-distance category statistics
 
@@ -305,19 +306,20 @@ scopes:
 8. AA pair x sequence separation x spatial distance.
 
 For each nonempty category cell, compute pair-pooled `n_pairs`, mean, exact
-median, population variance (`ddof=0`), standard deviation, minimum, maximum,
-25th percentile, 75th percentile, and IQR. Also compute the number of proteins,
-the mean and median of per-protein true-distance means, and the mean and median
-of per-protein target variances. Save noncanonical/interchain exclusions
-separately rather than folding them into an `unknown` AA or sequence category.
+median, and population variance (`ddof=0`). Also compute the number of proteins,
+the mean per-protein true distance, median per-protein true distance, and mean
+per-protein target variance. These are the quantities needed to interpret the
+probe errors; omit minimum, maximum, quartiles, IQR, and redundant standard
+deviation. Save noncanonical/interchain exclusions separately rather than
+folding them into an `unknown` AA or sequence category.
 
 ## 10. Analysis 4: AA-pair x sequence-separation-gated probes
 
 Create:
 
 ```text
-scripts/cluster_scripts/diagnostics/diagnostic_aa_sequence_gated_linear_probes.py
-scripts/cluster_scripts/diagnostics/diagnostic_aa_sequence_gated_linear_probes.sbatch
+scripts/cluster_scripts/gated_linear_probes/aa_sequence_gated_linear_probes.py
+scripts/cluster_scripts/gated_linear_probes/aa_sequence_gated_linear_probes.sbatch
 ```
 
 Use 36 array tasks: six requested layers x six sequence gates. Each task maps
@@ -327,8 +329,9 @@ AA pairs. Within a task:
 1. Extract only pairs in the task's sequence gate.
 2. Fit one base256 OLS probe per eligible AA-pair x sequence gate.
 3. Evaluate train and test predictions overall within the fitted joint gate.
-4. Evaluate the same predictions by spatial-distance bin, producing the full
-   requested `layer x AA pair x sequence separation x spatial distance` table.
+4. Evaluate held-out test predictions by spatial-distance bin, producing the
+   full requested `layer x AA pair x sequence separation x spatial distance`
+   table.
 5. Compare each cell with its precomputed joint-gate intercept baseline.
 6. Checkpoint after every AA pair.
 
@@ -339,9 +342,9 @@ million expected coefficient values as compressed NPZ shards plus a CSV index.
 
 ### 11.1 Aggregate metric fields
 
-Every gate-level and subgroup-level aggregate row should use the same principal
-schema. Identifiers that do not apply to a row use the literal `all`, not an
-empty string:
+Reader-facing gate-level and subgroup-level rows should contain only the fields
+needed to interpret or filter the scientific results. Identifiers that do not
+apply use the literal `all`, not an empty string:
 
 ```text
 analysis_name, model, feature_dim, layer, split,
@@ -351,61 +354,60 @@ fit_status, support_flags,
 n_train_pairs, n_train_proteins, n_pairs, n_proteins,
 n_proteins_with_finite_r2,
 pooled_mean_true_distance, pooled_median_true_distance,
-pooled_target_variance, pooled_target_std,
-pooled_r2, pooled_mae, pooled_rmse, pooled_bias,
-mean_per_protein_r2, median_per_protein_r2,
-mean_per_protein_mae, median_per_protein_mae,
-mean_per_protein_rmse, median_per_protein_rmse,
-mean_per_protein_bias, median_per_protein_bias,
+pooled_target_variance,
+pooled_r2, pooled_mae, pooled_rmse,
+mean_per_protein_r2, mean_per_protein_mae, mean_per_protein_rmse,
 intercept_baseline_prediction,
-baseline_pooled_r2, baseline_pooled_mae, baseline_pooled_rmse,
-baseline_mean_per_protein_r2, baseline_mean_per_protein_mae,
-baseline_mean_per_protein_rmse,
+baseline_pooled_mae, baseline_pooled_rmse,
+baseline_mean_per_protein_mae, baseline_mean_per_protein_rmse,
 pooled_mae_skill, pooled_rmse_skill,
-mean_per_protein_mae_skill, mean_per_protein_rmse_skill,
-design_rank, largest_singular_value, smallest_singular_value,
-condition_number, elapsed_seconds
+mean_per_protein_mae_skill, mean_per_protein_rmse_skill
 ```
 
 `evaluation_scope` is one of `gate_overall`, `aa_pair`,
 `sequence_separation`, or `spatial_distance`. Pooled R-squared always uses the
 mean of the current evaluation cell in its denominator; it is never an average
-of lower-level R-squared values.
+of lower-level R-squared values. Bias, median per-protein performance, baseline
+R-squared, target standard deviation, singular values, and elapsed time are not
+repeated in every scientific subgroup row.
 
-### 11.2 Per-protein metric fields
+### 11.2 Gate-status fields
 
-Save one row per nonempty protein x fitted gate x evaluation subgroup:
+Keep numerical and operational details once per fitted training gate in
+`gate_status.csv`:
 
 ```text
-analysis_name, model, feature_dim, layer, split, protein_id, source,
-n_residues, size_bin,
+analysis_name, model, feature_dim, layer,
 train_gate_aa_pair, train_gate_sequence_bin,
-evaluation_scope, eval_aa_pair, eval_sequence_bin, eval_distance_bin,
-fit_status, n_pairs, target_variance,
-per_protein_r2, per_protein_mae, per_protein_rmse,
-mean_true_distance, median_true_distance, mean_predicted_distance,
-mean_error_pred_minus_true,
-baseline_r2, baseline_mae, baseline_rmse,
-mae_skill, rmse_skill
+fit_status, support_flags, n_train_pairs, n_train_proteins,
+design_rank, largest_singular_value, smallest_singular_value,
+condition_number, elapsed_seconds
 ```
 
-Store these potentially large tables as deterministic gzip-compressed CSVs.
-Sorting keys must be documented and stable so reruns are byte-comparable apart
-from timestamps/compression headers.
+This avoids duplicating the same OLS rank and conditioning information across
+thousands of subgroup rows.
 
-### 11.3 Additive sufficient-statistic fields
+### 11.3 Compact per-protein and audit artifacts
 
-Retain an audit table per task with:
+Retain a reader-facing `test_per_protein_gate_metrics.csv.gz`, one row per test
+protein x primary fitted gate, with only:
 
 ```text
-n, sum_y, sum_y_squared, sum_prediction,
-sum_absolute_error, sum_squared_error, sum_error
+analysis_name, layer, protein_id, source, n_residues, size_bin,
+train_gate_aa_pair, train_gate_sequence_bin, fit_status, n_pairs,
+target_variance, per_protein_r2, per_protein_mae, per_protein_rmse,
+mean_true_distance, mean_predicted_distance
 ```
 
-These moments make pooled mean, variance, R-squared, MAE, RMSE, and bias exactly
-reconstructable without raw predictions. Exact median and quantiles are
-computed while the subgroup target rows are present and saved directly; they
-are not reconstructed from moments.
+Do not publish train per-protein tables or per-protein subgroup CSVs. During a
+task, compute all macro subgroup metrics from per-protein values and retain a
+compact compressed NPZ audit shard for the test split containing integer cell
+codes plus `n`, `sum_y`, `sum_y_squared`, `sum_prediction`,
+`sum_absolute_error`, and `sum_squared_error` per protein-cell. These arrays are
+enough to reproduce the reported test macro and pooled values without retaining
+pair predictions or a very large human-facing table. Keep audit shards under
+the cluster task directory; do not copy them into the consolidated repository
+results by default.
 
 ### 11.4 Coefficient fields
 
@@ -416,24 +418,28 @@ analysis_name, layer, train_gate_sequence_bin, feature_index, feature_name,
 coefficient_standardized, coefficient_raw_scale
 ```
 
-Analyses 2 and 4 use one NPZ per task containing ordered gate labels,
-standardized coefficient matrix, raw-scale coefficient matrix, standardized
-intercepts, raw-scale intercepts, scaler means/scales, ranks, singular-value
-summaries, and fit statuses. The accompanying coefficient index CSV maps each
-gate to its NPZ row and records dimensions and checksums.
+Analysis 2 also uses a normal `coefficients.csv` with the same gate identifiers
+plus AA pair. Its expected size is manageable and CSV is easier to inspect.
+
+Analysis 4 uses one NPZ per task containing ordered gate labels, standardized
+and raw-scale coefficient matrices, standardized and raw-scale intercepts,
+scaler means/scales, and fit statuses. The accompanying coefficient index CSV
+maps each gate to its NPZ row and records dimensions and checksums. Rank and
+singular-value summaries remain in `gate_status.csv` rather than being repeated
+inside reader-facing coefficient tables.
 
 ## 12. Exact output organization
 
 Cluster task outputs go under:
 
 ```text
-$CSV_ROOT/diagnostic_gated_linear_distance_probes/
+$CSV_ROOT/gated_linear_probes/
 ```
 
 Consolidated repository outputs go under:
 
 ```text
-delta_files/diagnostics/diagnostic_gated_linear_distance_probes/
+delta_files/gated_linear_probes/
 ```
 
 The root files are:
@@ -445,7 +451,9 @@ The root files are:
 - `skipped_proteins.csv`: one row per input exclusion with stage and reason.
 - `excluded_pairs_summary.csv`: one row per protein/split/exclusion reason with
   counts for noncanonical, interchain, or otherwise invalid gated pairs.
-- `metadata/per_protein/<protein_id>.npz`: prepared pair metadata cache.
+- `$CSV_ROOT/gated_linear_probes/metadata/per_protein/<protein_id>.npz`:
+  prepared pair metadata cache used by cluster tasks. Keep this working cache on
+  the cluster; do not copy it into `delta_files/gated_linear_probes/`.
 
 ### Analysis 1 directory
 
@@ -453,22 +461,20 @@ The root files are:
 analysis_1_sequence_gated/
 ```
 
-- `gate_summary.csv`: one row per layer x sequence gate x split.
+- `gate_summary.csv`: one row per layer x sequence gate x split; retains train
+  and test metrics for overfitting checks.
 - `subgroup_by_amino_acid_pair.csv`: one row per layer x sequence gate x AA
-  pair x split.
+  pair for the test split only.
 - `subgroup_by_spatial_distance.csv`: one row per layer x sequence gate x
-  distance bin x split.
-- `per_protein_gate_metrics.csv.gz`: one row per protein x layer x sequence
-  gate.
-- `per_protein_subgroup_metrics.csv.gz`: one row per nonempty protein x layer x
-  sequence gate x reported subgroup.
+  distance bin for the test split only.
+- `test_per_protein_gate_metrics.csv.gz`: one row per test protein x layer x
+  sequence gate; no subgroup expansion.
 - `coefficients.csv`: one row per layer x sequence gate x intercept/feature.
 - `raw_sequence_baseline_summary.csv`: one row per sequence gate x split; no
   layer duplication.
-- `raw_sequence_baseline_per_protein.csv.gz`: one row per sequence gate x split
-  x protein.
-- `gate_status.csv`, `sufficient_statistics.csv.gz`, and `summary.md`.
-- `task_shards/`: layer-task CSV/NPZ/JSON checkpoints and task summaries.
+- `gate_status.csv` and `summary.md`.
+- `task_shards/`: layer-task CSV/JSON checkpoints, compact test audit NPZs, and
+  task summaries; these remain cluster-side unless needed for debugging.
 
 ### Analysis 2 directory
 
@@ -478,14 +484,15 @@ analysis_2_aa_pair_gated/
 
 - `gate_summary.csv`: one row per layer x AA gate x split.
 - `subgroup_by_sequence_separation.csv`: one row per layer x AA gate x sequence
-  bin x split.
+  bin for the test split only.
 - `subgroup_by_spatial_distance.csv`: one row per layer x AA gate x distance
-  bin x split.
-- `per_protein_gate_metrics.csv.gz` and
-  `per_protein_subgroup_metrics.csv.gz`.
-- `coefficient_index.csv` and `coefficient_shards/*.npz`.
-- `gate_status.csv`, `sufficient_statistics.csv.gz`, and `summary.md`.
-- `task_shards/`: layer-task checkpoints and summaries.
+  bin for the test split only.
+- `test_per_protein_gate_metrics.csv.gz`: one row per test protein x layer x AA
+  gate.
+- `coefficients.csv`: one row per fitted layer x AA gate x intercept/feature.
+- `gate_status.csv` and `summary.md`.
+- `task_shards/`: layer-task checkpoints, compact test audit NPZs, and task
+  summaries retained cluster-side.
 
 ### Analysis 3 directory
 
@@ -495,12 +502,14 @@ analysis_3_true_distance_statistics/
 
 - `true_distance_category_stats.csv`: one row per split x category scope x
   category cell.
-- `true_distance_per_protein_category.csv.gz`: one row per protein x nonempty
-  category cell.
 - `category_support.csv`: expected/nonempty/sparse category counts by scope and
   split.
 - `summary.md`: readable overall, sequence-bin, spatial-bin, and coverage
   tables, with links/names for the larger AA cross-product CSVs.
+
+Per-protein values are computed transiently to form the macro fields but are
+not published as another large category table. They can be recomputed later
+from the retained cluster metadata caches if a protein-level question arises.
 
 ### Analysis 4 directory
 
@@ -510,24 +519,26 @@ analysis_4_aa_sequence_gated/
 
 - `gate_summary.csv`: one row per layer x AA gate x sequence gate x split.
 - `subgroup_by_spatial_distance.csv`: one row per layer x AA gate x sequence
-  gate x distance bin x split.
-- `per_protein_gate_metrics.csv.gz` and
-  `per_protein_subgroup_metrics.csv.gz`.
+  gate x distance bin for the test split only.
+- `test_per_protein_gate_metrics.csv.gz`: one row per test protein x layer x AA
+  gate x sequence gate.
 - `coefficient_index.csv` and `coefficient_shards/*.npz`.
-- `gate_status.csv`, `sufficient_statistics.csv.gz`, and `summary.md`.
-- `task_shards/`: layer x sequence-gate task checkpoints and summaries.
+- `gate_status.csv` and `summary.md`.
+- `task_shards/`: layer x sequence-gate checkpoints, compact test audit NPZs,
+  and summaries retained cluster-side.
 
-The initial implementation should make CSV/NPZ outputs authoritative. Do not
-add a large visualization suite until coverage and numerical diagnostics show
-which cells are scientifically interpretable.
+The consolidated CSVs are the reader-facing authoritative results. Cluster
+metadata and test audit NPZs are reproducibility artifacts, not additional
+tables to inspect routinely. Do not add a visualization suite until coverage
+and numerical diagnostics show which cells are scientifically interpretable.
 
 ## 13. Aggregation entrypoint
 
 Create:
 
 ```text
-scripts/cluster_scripts/diagnostics/aggregate_gated_linear_probe_suite.py
-scripts/cluster_scripts/diagnostics/aggregate_gated_linear_probe_suite.sbatch
+scripts/cluster_scripts/gated_linear_probes/aggregate_gated_linear_probe_suite.py
+scripts/cluster_scripts/gated_linear_probes/aggregate_gated_linear_probe_suite.sbatch
 ```
 
 Aggregation must:
@@ -536,16 +547,17 @@ Aggregation must:
    digests.
 2. Concatenate only completed atomic gate shards in deterministic order.
 3. Verify no duplicate identifier key exists in any final table.
-4. Recompute pooled metrics from sufficient statistics and compare them with
-   task metrics within `1e-10` before publishing.
-5. Recompute macro metrics from per-protein rows; never average already-pooled
-   values or average R-squared across lower-level bins.
+4. Recompute test pooled and macro metrics from the compact audit NPZ arrays and
+   compare them with task metrics within `1e-10` before publishing.
+5. Never average already-pooled values or average R-squared across lower-level
+   bins.
 6. Verify all expected gates have a row, including skipped/ineligible gates.
 7. Copy or materialize the consolidated tree under
-   `delta_files/diagnostics/diagnostic_gated_linear_distance_probes/`.
+   `delta_files/gated_linear_probes/`.
 8. Write concise Markdown summaries emphasizing held-out test results, OLS
    coverage, rank-deficient/ill-conditioned counts, and baseline-relative
-   skill. Training rows remain present for diagnosis.
+   skill. Training rows remain only in the compact gate summaries, not the
+   expanded subgroup tables.
 
 ## 14. SLURM layout and resources
 
@@ -589,7 +601,7 @@ preallocated arrays, and bounded per-gate materialization. Avoid
 Add a submission helper:
 
 ```text
-scripts/cluster_scripts/diagnostics/submit_gated_linear_probe_suite.sh
+scripts/cluster_scripts/gated_linear_probes/submit_gated_linear_probe_suite.sh
 ```
 
 It should submit preparation first; submit the three probe arrays with
@@ -617,7 +629,7 @@ dependencies or automatically resubmit failed tasks.
 Add focused tests under:
 
 ```text
-scripts/cluster_scripts/diagnostics/tests/
+scripts/cluster_scripts/gated_linear_probes/tests/
 ```
 
 Required unit tests:
@@ -635,14 +647,16 @@ Required unit tests:
    diagnostic flags.
 10. Protein-equal weights give every contributing protein equal total mass.
 11. Pooled metrics reconstructed from moments match direct calculations.
-12. Macro metrics match direct aggregation of per-protein rows.
+12. Macro metrics reconstructed from compact per-protein audit arrays match
+    direct calculations.
 13. Constant/near-constant targets yield undefined R-squared but finite
     MAE/RMSE without crashing.
 14. Intercept baseline skill calculations handle zero denominators explicitly.
 15. Analysis 1's raw sequence baseline is layer-independent and appears once.
 16. Analysis 1 and 2 do not accidentally emit the unrequested full four-way
     cross-product; Analysis 4 does.
-17. Coefficient NPZ rows round-trip through their CSV index and checksums.
+17. Analysis 2 coefficient CSV rows are complete and unique; Analysis 4
+    coefficient NPZ rows round-trip through their CSV index and checksums.
 18. Aggregation rejects missing tasks, duplicate keys, and mixed split hashes.
 
 Before full submission, run a local/small synthetic smoke test for all four
@@ -663,8 +677,8 @@ sbatch files, compile Python files, and run the focused test suite with
    synthetic tests.
 3. Implement Analysis 1 and compare its all-protein OLS outputs against the
    existing gated diagnostic on a controlled subset.
-4. Implement Analysis 2, compressed coefficient shards, and sparse-gate
-   coverage reporting.
+4. Implement Analysis 2, its normal coefficient CSV, and sparse-gate coverage
+   reporting.
 5. Implement Analysis 4 using the 36-task layer x sequence-gate mapping.
 6. Implement deterministic aggregation and Markdown summaries.
 7. Add sbatch files and dependency submission helper, then run local and Delta
