@@ -1375,3 +1375,9 @@ separate deterministic smoke workflow.
   R-squared values.
 - Kept consolidated production outputs under `$CSV_ROOT` for flat Delta runs.
 - Made the aggregator derive its destination directly from its working root.
+
+## Session: 2026-08-14 — Sequence-gated secondary-structure replay
+
+Added a sparse six-layer replay of the sequence-gated coefficients for only
+helix offsets and beta-sheet controls, reusing frozen DSSP annotations so the
+parallel Delta workflow targets a sub-25-minute elapsed runtime.
