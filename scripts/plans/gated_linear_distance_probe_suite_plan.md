@@ -580,7 +580,7 @@ Aggregation must:
 2. Concatenate only completed atomic gate shards in deterministic order.
 3. Verify no duplicate identifier key exists in any final table.
 4. Recompute train/test pooled and macro metrics from the compact audit NPZ
-   arrays and compare them with task metrics using `1e-9` absolute and `1e-11`
+   arrays and compare them with task metrics using `1e-8` absolute and `1e-9`
    relative tolerances before publishing.
 5. Never average already-pooled values or average R-squared across lower-level
    bins.

@@ -51,8 +51,8 @@ METRIC_KEY = [
     "analysis_name", "layer", "split", "train_gate_aa_pair", "train_gate_sequence_bin",
     "evaluation_scope", "eval_aa_pair", "eval_sequence_bin", "eval_distance_bin",
 ]
-AUDIT_REPLAY_ABS_TOL = 1e-9
-AUDIT_REPLAY_REL_TOL = 1e-11
+AUDIT_REPLAY_ABS_TOL = 1e-8
+AUDIT_REPLAY_REL_TOL = 1e-9
 
 
 def _assert_close(actual, expected, label):

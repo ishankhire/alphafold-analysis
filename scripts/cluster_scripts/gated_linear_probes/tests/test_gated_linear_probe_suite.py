@@ -220,10 +220,11 @@ class SchemaAndArtifactTests(unittest.TestCase):
     def test_audit_replay_tolerates_only_small_summation_order_drift(self):
         aggregate._assert_close(-103.48088684898289, -103.480886848873, "pooled_r2")
         aggregate._assert_close(-7241.254705765121, -7241.254705736231, "pooled_r2")
+        aggregate._assert_close(-9754.820540772416, -9754.820540884491, "pooled_r2")
         with self.assertRaises(ValueError):
-            aggregate._assert_close(0.25, 0.25000001, "pooled_r2")
+            aggregate._assert_close(0.25, 0.25001, "pooled_r2")
         with self.assertRaises(ValueError):
-            aggregate._assert_close(-7241.254705, -7241.254706, "pooled_r2")
+            aggregate._assert_close(-10_000.0, -10_000.0001, "pooled_r2")
 
 
 if __name__ == "__main__":

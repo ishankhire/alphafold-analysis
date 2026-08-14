@@ -1371,4 +1371,5 @@ separate deterministic smoke workflow.
   a second full matrix-rank SVD, and tightened dense materialization, subgroup
   slicing, timing logs, and resume-manifest validation without changing outputs.
 - Relaxed audit replay tolerance to `1e-9` for harmless summation-order drift.
-- Made audit replay scale-aware for extreme negative R-squared values.
+- Made audit replay scale-aware at nine significant digits for extreme negative
+  R-squared values.
