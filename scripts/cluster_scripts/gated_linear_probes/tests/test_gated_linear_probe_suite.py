@@ -1,5 +1,6 @@
 import math
 import importlib.util
+import os
 import sys
 import tempfile
 import unittest
@@ -28,6 +29,18 @@ DIAGNOSTIC_SPEC.loader.exec_module(existing_sequence_gated)
 
 
 class CategoryAndMappingTests(unittest.TestCase):
+    def test_consolidated_outputs_stay_under_csv_root(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with mock.patch.dict(os.environ, {"CSV_ROOT": directory}):
+                self.assertEqual(
+                    common.consolidated_root("production"),
+                    Path(directory) / "gated_linear_probes" / "consolidated",
+                )
+                self.assertEqual(
+                    common.consolidated_root("smoke"),
+                    Path(directory) / "gated_linear_probes_smoke" / "consolidated",
+                )
+
     def test_standard_aa_pairs_are_stable_and_complete(self):
         self.assertEqual(len(helpers.STANDARD_AA_PAIR_LABELS), 210)
         self.assertEqual(len(set(helpers.STANDARD_AA_PAIR_LABELS)), 210)

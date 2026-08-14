@@ -1373,3 +1373,4 @@ separate deterministic smoke workflow.
 - Relaxed audit replay tolerance to `1e-9` for harmless summation-order drift.
 - Made audit replay scale-aware at nine significant digits for extreme negative
   R-squared values.
+- Kept consolidated production outputs under `$CSV_ROOT` for flat Delta runs.

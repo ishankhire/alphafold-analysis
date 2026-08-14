@@ -467,10 +467,10 @@ Cluster task outputs go under:
 $CSV_ROOT/gated_linear_probes/
 ```
 
-Consolidated repository outputs go under:
+Consolidated cluster outputs go under:
 
 ```text
-delta_files/gated_linear_probes/
+$CSV_ROOT/gated_linear_probes/consolidated/
 ```
 
 The root files are:
@@ -484,7 +484,7 @@ The root files are:
   counts for noncanonical, interchain, or otherwise invalid gated pairs.
 - `$CSV_ROOT/gated_linear_probes/metadata/per_protein/<protein_id>.npz`:
   prepared pair metadata cache used by cluster tasks. Keep this working cache on
-  the cluster; do not copy it into `delta_files/gated_linear_probes/`.
+  the cluster; do not duplicate it inside the consolidated results directory.
 
 ### Analysis 1 directory
 
@@ -585,8 +585,8 @@ Aggregation must:
 5. Never average already-pooled values or average R-squared across lower-level
    bins.
 6. Verify all expected gates have a row, including skipped/ineligible gates.
-7. Copy or materialize the consolidated tree under
-   `delta_files/gated_linear_probes/`.
+7. Materialize the consolidated tree under
+   `$CSV_ROOT/gated_linear_probes/consolidated/`.
 8. Write concise Markdown summaries emphasizing held-out test results, OLS
    coverage, rank-deficient/ill-conditioned counts, and baseline-relative
    skill. Training subgroup rows remain available for overfitting checks, while

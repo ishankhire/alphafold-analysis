@@ -110,9 +110,7 @@ def repository_root():
 
 def consolidated_root(mode=None):
     mode = mode or run_mode()
-    if mode == "smoke":
-        return suite_root(mode) / "consolidated"
-    return repository_root() / "delta_files" / "gated_linear_probes"
+    return suite_root(mode) / "consolidated"
 
 
 def canonical_json_bytes(value):
