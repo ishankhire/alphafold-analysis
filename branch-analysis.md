@@ -1376,6 +1376,11 @@ separate deterministic smoke workflow.
 - Kept consolidated production outputs under `$CSV_ROOT` for flat Delta runs.
 - Made the aggregator derive its destination directly from its working root.
 
+## Session: 2026-08-14 — Gated-probe visualization analysis
+
+Added local trajectory, coefficient-cosine, and whole-protein comparison plots
+for consolidated A1/A2/A4 results and the general base256 probe.
+
 ## Session: 2026-08-14 — Sequence-gated secondary-structure replay
 
 Added a sparse six-layer replay of the sequence-gated coefficients for only
