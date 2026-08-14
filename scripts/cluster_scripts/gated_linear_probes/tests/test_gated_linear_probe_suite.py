@@ -17,6 +17,7 @@ for path in (SUITE_DIR, CLUSTER_DIR, GENERAL_DIR):
         sys.path.insert(0, str(path))
 
 import cluster_regression_helpers as helpers
+import aggregate_gated_linear_probe_suite as aggregate
 import gated_linear_probe_common as common
 import general_train_test_common as general_common
 
@@ -215,6 +216,11 @@ class SchemaAndArtifactTests(unittest.TestCase):
                 self.assertEqual(str(data["status"]), "fitted")
         with self.assertRaises(ValueError):
             common.validate_unique_rows([{"a": 1}, {"a": 1}], ["a"], "table")
+
+    def test_audit_replay_tolerates_only_small_summation_order_drift(self):
+        aggregate._assert_close(-103.48088684898289, -103.480886848873, "pooled_r2")
+        with self.assertRaises(ValueError):
+            aggregate._assert_close(0.25, 0.25000001, "pooled_r2")
 
 
 if __name__ == "__main__":

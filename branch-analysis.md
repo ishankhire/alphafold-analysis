@@ -1370,3 +1370,4 @@ separate deterministic smoke workflow.
 - Reused scikit-learn's dense OLS rank/singular diagnostics instead of running
   a second full matrix-rank SVD, and tightened dense materialization, subgroup
   slicing, timing logs, and resume-manifest validation without changing outputs.
+- Relaxed audit replay tolerance to `1e-9` for harmless summation-order drift.

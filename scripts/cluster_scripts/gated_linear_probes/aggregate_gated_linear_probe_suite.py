@@ -51,13 +51,14 @@ METRIC_KEY = [
     "analysis_name", "layer", "split", "train_gate_aa_pair", "train_gate_sequence_bin",
     "evaluation_scope", "eval_aa_pair", "eval_sequence_bin", "eval_distance_bin",
 ]
+AUDIT_REPLAY_ABS_TOL = 1e-9
 
 
 def _assert_close(actual, expected, label):
     actual = float(actual); expected = float(expected)
     if math.isnan(actual) and math.isnan(expected):
         return
-    if not math.isclose(actual, expected, rel_tol=0.0, abs_tol=1e-10):
+    if not math.isclose(actual, expected, rel_tol=0.0, abs_tol=AUDIT_REPLAY_ABS_TOL):
         raise ValueError(f"Audit replay mismatch for {label}: {actual} != {expected}")
 
 
