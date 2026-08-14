@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Consolidate sequence-separation-gated probe outputs across all gates.
+"""Consolidate sequence-separation-gated probe outputs across layers and gates.
 
 The source per-protein files contain one row per separation bin.  This script
 reconstructs whole-protein metrics from additive error and target moments, then
 summarizes those whole-protein rows by layer and split.  In particular, it does
-not average R-squared values across sequence-separation bins.
+not average R-squared values across sequence-separation bins.  It also combines
+the layer-specific bin summaries into one long CSV and readable metric matrices.
 """
 
 import csv
 import math
-from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +25,8 @@ RESULTS_DIR = (
 )
 LAYER_BATCHES_DIR = RESULTS_DIR / "layer_batches"
 FLOAT_EPS = 1e-12
+GATED_MODEL = "base256_gated_by_sequence_separation"
+SEPARATION_ORDER = ("1", "2-4", "5-9", "10-19", "20-49", "50+")
 
 PER_PROTEIN_FIELDS = [
     "analysis_name",
@@ -110,6 +112,33 @@ def read_source_rows():
         with path.open(newline="") as handle:
             rows.extend(csv.DictReader(handle))
     return paths, rows
+
+
+def read_bin_summary_rows():
+    paths = sorted(LAYER_BATCHES_DIR.glob("split_summary_layer_*.csv"))
+    if not paths:
+        raise FileNotFoundError(f"No split-summary layer files found in {LAYER_BATCHES_DIR}")
+
+    rows = []
+    fieldnames = None
+    for path in paths:
+        with path.open(newline="") as handle:
+            reader = csv.DictReader(handle)
+            if fieldnames is None:
+                fieldnames = reader.fieldnames
+            elif reader.fieldnames != fieldnames:
+                raise ValueError(f"Inconsistent split-summary columns in {path}")
+            rows.extend(reader)
+
+    separation_rank = {label: index for index, label in enumerate(SEPARATION_ORDER)}
+    rows.sort(
+        key=lambda row: (
+            row["model"],
+            int(row["layer"]),
+            separation_rank[row["sequence_separation_bin"]],
+        )
+    )
+    return paths, fieldnames, rows
 
 
 def reconstruct_per_protein_rows(source_rows):
@@ -306,8 +335,6 @@ def write_markdown_summary(paths, layer_rows):
         [
             "# Sequence-separation-gated probe aggregate summary",
             "",
-            f"Generated: {datetime.now().astimezone().isoformat(timespec='seconds')}",
-            "",
             "## Held-out metrics",
             "",
             markdown_table(test_rows),
@@ -333,8 +360,59 @@ def write_markdown_summary(paths, layer_rows):
     (RESULTS_DIR / "aggregate_summary.md").write_text(content)
 
 
+def metric_matrix(rows, field, title, units=""):
+    selected = {
+        (int(row["layer"]), row["sequence_separation_bin"]): parse_float(row[field])
+        for row in rows
+        if row["model"] == GATED_MODEL
+    }
+    layers = sorted({layer for layer, _label in selected})
+    suffix = f" ({units})" if units else ""
+    lines = [
+        f"### {title}{suffix}",
+        "",
+        "| Layer | " + " | ".join(SEPARATION_ORDER) + " |",
+        "|---:|" + "---:|" * len(SEPARATION_ORDER),
+    ]
+    for layer in layers:
+        values = [selected[(layer, label)] for label in SEPARATION_ORDER]
+        lines.append(
+            f"| {layer} | " + " | ".join(f"{value:.4f}" for value in values) + " |"
+        )
+    return "\n".join(lines)
+
+
+def write_sequence_separation_markdown(paths, rows):
+    sections = [
+        "# Gated-probe metrics by layer and sequence separation",
+        "",
+        "All tables report held-out metrics for "
+        "`base256_gated_by_sequence_separation`. MAE and RMSE are pair-pooled "
+        "within each separation bin; mean per-protein R² gives every held-out "
+        "protein equal weight.",
+        "",
+        metric_matrix(rows, "test_mean_per_protein_r2", "Mean per-protein R²"),
+        "",
+        metric_matrix(rows, "test_pair_weighted_r2", "Pooled R²"),
+        "",
+        metric_matrix(rows, "test_pair_weighted_mae", "Pooled MAE", "Å"),
+        "",
+        metric_matrix(rows, "test_pair_weighted_rmse", "Pooled RMSE", "Å"),
+        "",
+        metric_matrix(rows, "test_mean_bias", "Mean per-protein bias", "Å"),
+        "",
+        "The combined CSV also contains training metrics and the "
+        "sequence-separation-only baseline.",
+        "",
+        f"Source files: {len(paths)} `split_summary_layer_XX.csv` files.",
+        "",
+    ]
+    (RESULTS_DIR / "sequence_separation_summary.md").write_text("\n".join(sections))
+
+
 def main():
     paths, source_rows = read_source_rows()
+    bin_paths, bin_fieldnames, bin_rows = read_bin_summary_rows()
     per_protein_rows, additive = reconstruct_per_protein_rows(source_rows)
     layer_rows = summarize_layers(per_protein_rows, additive)
 
@@ -349,9 +427,16 @@ def main():
         layer_rows,
     )
     write_markdown_summary(paths, layer_rows)
+    write_csv(
+        RESULTS_DIR / "sequence_separation_summary.csv",
+        bin_fieldnames,
+        bin_rows,
+    )
+    write_sequence_separation_markdown(bin_paths, bin_rows)
 
     print(f"Wrote {len(per_protein_rows)} per-protein aggregate rows")
     print(f"Wrote {len(layer_rows)} layer/split aggregate rows")
+    print(f"Wrote {len(bin_rows)} layer/separation summary rows")
     print(f"Output directory: {RESULTS_DIR}")
 
 

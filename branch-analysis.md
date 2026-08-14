@@ -1356,4 +1356,5 @@ a sequence-separation-only baseline using 100 training proteins.
 ## Session: 2026-08-14 — Gated-probe aggregate metrics
 
 Added whole-protein and whole-layer summaries that correctly recombine the six
-sequence-separation gates from additive error and target moments.
+sequence-separation gates from additive error and target moments, plus readable
+layer-by-separation metric matrices.

@@ -1,7 +1,5 @@
 # Sequence-separation-gated probe aggregate summary
 
-Generated: 2026-08-14T12:50:22+05:30
-
 ## Held-out metrics
 
 | Model | Layer | Mean protein R² | Median protein R² | Pooled R² | Mean protein MAE (Å) | Pooled MAE (Å) | Pooled RMSE (Å) |
