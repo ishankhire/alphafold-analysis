@@ -7,6 +7,7 @@ not required to adopt it immediately.
 """
 
 import os
+from itertools import combinations_with_replacement
 from pathlib import Path
 
 import numpy as np
@@ -36,6 +37,17 @@ STANDARD_AAS = [
     "VAL",
 ]
 AA_TO_INDEX = {aa: idx for idx, aa in enumerate(STANDARD_AAS)}
+STANDARD_AA_PAIR_LABELS = tuple(
+    f"{aa_left}-{aa_right}"
+    for aa_left, aa_right in combinations_with_replacement(sorted(STANDARD_AAS), 2)
+)
+AA_PAIR_TO_CODE = {label: code for code, label in enumerate(STANDARD_AA_PAIR_LABELS)}
+AA_INDEX_PAIR_TO_CODE = np.full((len(STANDARD_AAS), len(STANDARD_AAS)), -1, dtype=np.int16)
+for _aa_i, _index_i in AA_TO_INDEX.items():
+    for _aa_j, _index_j in AA_TO_INDEX.items():
+        AA_INDEX_PAIR_TO_CODE[_index_i, _index_j] = AA_PAIR_TO_CODE[
+            "-".join(sorted((_aa_i, _aa_j)))
+        ]
 
 TRIANGLE_VIOLATION_TOLERANCE = 1e-12
 TRIANGLE_VIOLATION_KEYS = [
@@ -137,6 +149,24 @@ def build_sorted_aa_pair_indices(residues, pair_i, pair_j):
             aa_second[idx] = right_idx
 
     return aa_first, aa_second
+
+
+def build_unordered_aa_pair_codes(residues, pair_i, pair_j):
+    """Encode canonical unordered residue pairs with stable codes; invalid pairs are -1."""
+    residue_codes = np.asarray(
+        [AA_TO_INDEX.get(record[1], -1) for record in residues], dtype=np.int16
+    )
+    pair_i = np.asarray(pair_i, dtype=np.int64)
+    pair_j = np.asarray(pair_j, dtype=np.int64)
+    if pair_i.shape != pair_j.shape:
+        raise ValueError("pair_i and pair_j must have identical shapes")
+
+    codes = np.full(pair_i.shape, -1, dtype=np.int16)
+    left = residue_codes[pair_i]
+    right = residue_codes[pair_j]
+    valid = (left >= 0) & (right >= 0)
+    codes[valid] = AA_INDEX_PAIR_TO_CODE[left[valid], right[valid]]
+    return codes
 
 
 def classical_mds(distance_matrix, n_dims=3):
@@ -326,10 +356,14 @@ def make_failed_geometry_row(fold_idx, layer, protein_id, split, n_residues, per
 
 
 __all__ = [
+    "AA_INDEX_PAIR_TO_CODE",
+    "AA_PAIR_TO_CODE",
     "AA_TO_INDEX",
+    "STANDARD_AA_PAIR_LABELS",
     "STANDARD_AAS",
     "analyze_protein_geometry",
     "build_sorted_aa_pair_indices",
+    "build_unordered_aa_pair_codes",
     "classical_mds",
     "compute_distance_matrix",
     "compute_tm_score",

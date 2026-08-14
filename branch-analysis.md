@@ -1358,3 +1358,9 @@ a sequence-separation-only baseline using 100 training proteins.
 Added whole-protein and whole-layer summaries that correctly recombine the six
 sequence-separation gates from additive error and target moments, plus readable
 layer-by-separation metric matrices.
+
+## Session: 2026-08-14 — Gated linear distance probe suite
+
+Added reproducible sequence-, AA-pair-, and joint-gated float64 OLS probes,
+true-distance statistics, restartable Delta arrays, strict aggregation, and a
+separate deterministic smoke workflow.
