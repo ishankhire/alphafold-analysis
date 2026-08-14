@@ -90,7 +90,6 @@ class SyntheticSuiteIntegrationTest(unittest.TestCase):
             with (
                 mock.patch.dict(os.environ, {common.RUN_MODE_ENV: "smoke"}),
                 mock.patch.object(aggregate, "suite_root", return_value=root),
-                mock.patch.object(aggregate, "consolidated_root", return_value=destination),
             ):
                 aggregate.main()
 

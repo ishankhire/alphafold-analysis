@@ -1374,3 +1374,4 @@ separate deterministic smoke workflow.
 - Made audit replay scale-aware at nine significant digits for extreme negative
   R-squared values.
 - Kept consolidated production outputs under `$CSV_ROOT` for flat Delta runs.
+- Made the aggregator derive its destination directly from its working root.

@@ -40,6 +40,10 @@ class CategoryAndMappingTests(unittest.TestCase):
                     common.consolidated_root("smoke"),
                     Path(directory) / "gated_linear_probes_smoke" / "consolidated",
                 )
+                self.assertEqual(
+                    aggregate.aggregation_destination(common.suite_root("production")),
+                    Path(directory) / "gated_linear_probes" / "consolidated",
+                )
 
     def test_standard_aa_pairs_are_stable_and_complete(self):
         self.assertEqual(len(helpers.STANDARD_AA_PAIR_LABELS), 210)

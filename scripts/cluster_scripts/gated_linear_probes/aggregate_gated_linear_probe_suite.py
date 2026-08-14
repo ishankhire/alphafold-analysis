@@ -24,7 +24,6 @@ from gated_linear_probe_common import (  # noqa: E402
     atomic_write_csv,
     atomic_write_text,
     configured_layers,
-    consolidated_root,
     expected_gates,
     feature_names,
     gate_slug,
@@ -53,6 +52,11 @@ METRIC_KEY = [
 ]
 AUDIT_REPLAY_ABS_TOL = 1e-8
 AUDIT_REPLAY_REL_TOL = 1e-9
+
+
+def aggregation_destination(working_root):
+    """Keep publication beside cluster task outputs, independent of repo layout."""
+    return Path(working_root) / "consolidated"
 
 
 def _assert_close(actual, expected, label):
@@ -256,7 +260,7 @@ def _publish_analysis(destination, analysis_name, metric_rows, status_rows, per_
 def main():
     mode = run_mode()
     root = suite_root(mode)
-    destination = consolidated_root(mode)
+    destination = aggregation_destination(root)
     log(f"Aggregating {root} -> {destination}")
     preparation_files = []
     for filename in ("run_manifest.json", "split_assignments.csv", "skipped_proteins.csv", "excluded_pairs_summary.csv"):
