@@ -1352,3 +1352,8 @@ per-protein layer-47 standardized coefficient profiles.
 
 Added a six-layer array comparing sequence-separation-gated base256 probes with
 a sequence-separation-only baseline using 100 training proteins.
+
+## Session: 2026-08-14 — Gated-probe aggregate metrics
+
+Added whole-protein and whole-layer summaries that correctly recombine the six
+sequence-separation gates from additive error and target moments.
