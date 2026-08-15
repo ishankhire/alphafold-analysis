@@ -1,0 +1,154 @@
+metric,model,layer,value,n_proteins,evaluation,selected_config,source_file
+mean_per_protein_r2,Shared OLS,0,0.49377,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,1,0.498399,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,2,0.493127,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,3,0.486644,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,4,0.485251,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,5,0.486589,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,6,0.503784,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,7,0.521133,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,8,0.559151,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,9,0.587074,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,10,0.611417,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,11,0.630746,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,12,0.647951,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,13,0.718714,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,14,0.728509,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,15,0.761498,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,16,0.794463,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,17,0.81478,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,18,0.830584,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,19,0.831831,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,20,0.843495,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,21,0.840746,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,22,0.848664,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,23,0.848908,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,24,0.854483,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,25,0.855408,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,26,0.847522,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,27,0.840835,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,28,0.834829,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,29,0.835028,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,30,0.831085,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,31,0.832958,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,32,0.846237,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,33,0.846637,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,34,0.851786,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,35,0.878482,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,36,0.884114,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,37,0.889264,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,38,0.891679,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,39,0.895392,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,40,0.894188,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,41,0.899826,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,42,0.91106,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,43,0.922631,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,44,0.940613,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,45,0.939878,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,46,0.939269,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Shared OLS,47,0.935641,111,held-out proteins,,delta_files/general_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,0,0.719533,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,1,0.718444,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,2,0.720689,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,3,0.723769,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,4,0.727928,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,5,0.731873,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,6,0.738944,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,7,0.753986,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,8,0.78419,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,9,0.803157,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,10,0.81903,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,11,0.834342,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,12,0.849668,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,13,0.889077,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,14,0.895886,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,15,0.91324,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,16,0.932428,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,17,0.94091,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,18,0.948807,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,19,0.949883,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,20,0.953539,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,21,0.953497,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,22,0.956494,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,23,0.956128,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,24,0.957532,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,25,0.95869,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,26,0.956898,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,27,0.956426,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,28,0.955064,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,29,0.953622,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,30,0.951765,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,31,0.953556,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,32,0.956112,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,33,0.957581,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,34,0.959871,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,35,0.967495,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,36,0.970626,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,37,0.973096,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,38,0.973278,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,39,0.975767,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,40,0.976544,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,41,0.978634,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,42,0.980795,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,43,0.984354,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,44,0.987506,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,45,0.987566,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,46,0.98689,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Per-protein OLS,47,0.984946,552,in-sample protein-specific fits,,delta_files/per_protein_base256_combined/geometry_summary.csv
+mean_per_protein_r2,Sequence-gated OLS,0,0.55253456698796,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Sequence-gated OLS,10,0.6632726171779082,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Sequence-gated OLS,20,0.872539639723605,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Sequence-gated OLS,30,0.8711596773422914,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Sequence-gated OLS,40,0.9295818462491036,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Sequence-gated OLS,47,0.9574307553257132,111,held-out proteins; six anchor layers,,delta_files/consolidated/gated_probe_visualizations/whole_protein_comparison_metrics.csv
+mean_per_protein_r2,Shared XGBoost,0,0.5710633905405741,111,held-out proteins; validation-selected; 128 symmetrized features; different protein split,S4,delta_files/xgboost_hyperparameter_search/shared/search/layer_00/search_summary.csv
+mean_per_protein_r2,Shared XGBoost,23,0.9233481160523276,111,held-out proteins; validation-selected; 128 symmetrized features; different protein split,S1,delta_files/xgboost_hyperparameter_search/shared/search/layer_23/search_summary.csv
+mean_per_protein_r2,Shared XGBoost,47,0.9814223057636292,111,held-out proteins; validation-selected; 128 symmetrized features; different protein split,S1,delta_files/xgboost_hyperparameter_search/shared/search/layer_47/search_summary.csv
+mean_per_protein_r2,Sequence separation only,0,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,1,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,2,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,3,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,4,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,5,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,6,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,7,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,8,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,9,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,10,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,11,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,12,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,13,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,14,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,15,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,16,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,17,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,18,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,19,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,20,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,21,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,22,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,23,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,24,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,25,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,26,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,27,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,28,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,29,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,30,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,31,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,32,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,33,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,34,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,35,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,36,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,37,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,38,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,39,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,40,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,41,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,42,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,43,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,44,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,45,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,46,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv
+mean_per_protein_r2,Sequence separation only,47,0.107842,111,held-out proteins; old 100-training-protein diagnostic,,delta_files/diagnostics/diagnostic_sequence_separation_gated_probes/aggregate_layer_summary.csv

@@ -1391,3 +1391,8 @@ parallel Delta workflow targets a sub-25-minute elapsed runtime.
 
 Restored the final corrected XGBoost search/diagnostic code and the saved
 layer-0/23/47 search artifacts and logs from the archive branch.
+
+## Session: 2026-08-15 — First-draft publication trajectories
+
+Added reproducible R², TM-score, short-range MAE, MDS top-3 fraction, and
+helix AUROC/recall figures with companion plot-data CSVs.
