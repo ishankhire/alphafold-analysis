@@ -1,0 +1,23 @@
+[2026-08-03T05:57:04-05:00] job starting on cn095.delta.ncsa.illinois.edu
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_074334.txt
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_074636.txt
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_074954.txt
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_075315.txt
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_075629.txt
+[2026-08-03T05:57:09-05:00] Removed obsolete output: /u/ikhire/csv_files/xgboost_hyperparameter_search/shared/search/layer_23/summary_20260802_075952.txt
+[2026-08-03T05:57:09-05:00] Shared XGBoost search task 1: layer 23
+[2026-08-03T05:57:09-05:00] Output root: /u/ikhire/csv_files/xgboost_hyperparameter_search
+[2026-08-03T05:59:33-05:00] Materializing the nested 10k/protein fit matrix and uncapped validation matrix
+[2026-08-03T06:00:45-05:00] Fitting S0: depth=4, eta=0.05, min_child_weight=5
+[2026-08-03T06:03:57-05:00] Checkpointed S0; validation mean protein R2=0.896902
+[2026-08-03T06:03:57-05:00] Fitting S1: depth=4, eta=0.1, min_child_weight=5
+[2026-08-03T06:06:43-05:00] Checkpointed S1; validation mean protein R2=0.902252
+[2026-08-03T06:06:43-05:00] Fitting S2: depth=5, eta=0.05, min_child_weight=10
+[2026-08-03T06:09:35-05:00] Checkpointed S2; validation mean protein R2=0.891703
+[2026-08-03T06:09:35-05:00] Fitting S3: depth=6, eta=0.05, min_child_weight=10
+[2026-08-03T06:12:44-05:00] Checkpointed S3; validation mean protein R2=0.892572
+[2026-08-03T06:12:44-05:00] Fitting S4: depth=6, eta=0.1, min_child_weight=10
+[2026-08-03T06:15:42-05:00] Checkpointed S4; validation mean protein R2=0.898870
+[2026-08-03T06:15:42-05:00] Fitting S5: depth=7, eta=0.05, min_child_weight=20
+[2026-08-03T06:18:47-05:00] Checkpointed S5; validation mean protein R2=0.881951
+[2026-08-03T06:18:47-05:00] Shared layer 23 search complete

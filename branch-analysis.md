@@ -1386,3 +1386,8 @@ for consolidated A1/A2/A4 results and the general base256 probe.
 Added a sparse six-layer replay of the sequence-gated coefficients for only
 helix offsets and beta-sheet controls, reusing frozen DSSP annotations so the
 parallel Delta workflow targets a sub-25-minute elapsed runtime.
+
+## Session: 2026-08-15 — Recover XGBoost history
+
+Restored the final corrected XGBoost search/diagnostic code and the saved
+layer-0/23/47 search artifacts and logs from the archive branch.
