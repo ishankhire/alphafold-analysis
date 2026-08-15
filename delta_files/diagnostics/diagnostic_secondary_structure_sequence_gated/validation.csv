@@ -1,0 +1,6 @@
+category,metric,layer,value,threshold,status,details
+input,frozen_split_parity,all,552,552,pass,"protein IDs, source, split, and residue counts match the DSSP reference"
+input,test_annotation_caches,all,111,111,pass,all held-out proteins have frozen annotation caches
+input,fitted_sequence_gates,all,36,36,pass,all raw-scale coefficient vectors loaded
+reference_calibration,true_matrix_auroc,all,0.973369674324855,0.95,pass,split=train; inherited from reference validation
+reference_calibration,true_matrix_auroc,all,0.970483521964463,0.95,pass,split=test; inherited from reference validation

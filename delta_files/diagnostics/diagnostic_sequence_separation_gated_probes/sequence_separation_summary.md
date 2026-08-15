@@ -57,6 +57,6 @@ All tables report held-out metrics for `base256_gated_by_sequence_separation`. M
 | 40 | -0.0006 | -0.0052 | -0.0027 | -0.0118 | 0.0705 | 0.1271 |
 | 47 | -0.0007 | -0.0110 | 0.0080 | 0.0130 | 0.0354 | 0.0701 |
 
-The combined CSV contains the gated representation model's training and held-out metrics.
+The combined CSV also contains training metrics and the sequence-separation-only baseline.
 
 Source files: 6 `split_summary_layer_XX.csv` files.

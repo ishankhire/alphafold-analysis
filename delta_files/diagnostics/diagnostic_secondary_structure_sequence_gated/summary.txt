@@ -1,0 +1,24 @@
+Sequence-gated secondary-structure diagnostic
+=============================================
+
+Generated: 2026-08-14T12:36:34-05:00
+Coefficients: analysis_1_sequence_gated (six sequence-separation gates)
+Layers: 0, 10, 20, 30, 40, 47
+Evaluation: frozen held-out test proteins
+Decode scope: helix offset and beta-sheet partner/control pairs only
+No sequence-separation, distance, or amino-acid-pair subgroup tables are produced.
+
+Held-out layer summary:
+  layer 00: helix/strand AUROC=0.9243; helix score=1.7229; strand score=-1.0339; sheet random margin=15.026 A; register +/-1 margin=4.816 A
+  layer 10: helix/strand AUROC=0.9805; helix score=2.5564; strand score=-1.9725; sheet random margin=16.202 A; register +/-1 margin=1.379 A
+  layer 20: helix/strand AUROC=0.9797; helix score=2.5890; strand score=-2.0030; sheet random margin=13.835 A; register +/-1 margin=0.070 A
+  layer 30: helix/strand AUROC=0.9815; helix score=2.6229; strand score=-1.9759; sheet random margin=15.474 A; register +/-1 margin=1.937 A
+  layer 40: helix/strand AUROC=0.9838; helix score=2.6259; strand score=-1.9969; sheet random margin=15.531 A; register +/-1 margin=1.467 A
+  layer 47: helix/strand AUROC=0.9818; helix score=2.6187; strand score=-1.9652; sheet random margin=15.135 A; register +/-1 margin=-1.051 A
+
+Interpretation safeguards:
+- Every decoded pair uses the coefficient vector for its own sequence-separation bin.
+- Helix and sheet calibration/controls are frozen from the original diagnostic.
+- Negative decoded distances are retained and counted over the sparse analysis pairs.
+
+Runtime for consolidation: 4.7s

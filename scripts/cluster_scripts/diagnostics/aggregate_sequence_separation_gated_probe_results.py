@@ -401,8 +401,8 @@ def write_sequence_separation_markdown(paths, rows):
         "",
         metric_matrix(rows, "test_mean_bias", "Mean per-protein bias", "Å"),
         "",
-        "The combined CSV contains the gated representation model's training "
-        "and held-out metrics.",
+        "The combined CSV also contains training metrics and the "
+        "sequence-separation-only baseline.",
         "",
         f"Source files: {len(paths)} `split_summary_layer_XX.csv` files.",
         "",
@@ -413,7 +413,6 @@ def write_sequence_separation_markdown(paths, rows):
 def main():
     paths, source_rows = read_source_rows()
     bin_paths, bin_fieldnames, bin_rows = read_bin_summary_rows()
-    gated_bin_rows = [row for row in bin_rows if row["model"] == GATED_MODEL]
     per_protein_rows, additive = reconstruct_per_protein_rows(source_rows)
     layer_rows = summarize_layers(per_protein_rows, additive)
 
@@ -431,13 +430,13 @@ def main():
     write_csv(
         RESULTS_DIR / "sequence_separation_summary.csv",
         bin_fieldnames,
-        gated_bin_rows,
+        bin_rows,
     )
-    write_sequence_separation_markdown(bin_paths, gated_bin_rows)
+    write_sequence_separation_markdown(bin_paths, bin_rows)
 
     print(f"Wrote {len(per_protein_rows)} per-protein aggregate rows")
     print(f"Wrote {len(layer_rows)} layer/split aggregate rows")
-    print(f"Wrote {len(gated_bin_rows)} layer/separation summary rows")
+    print(f"Wrote {len(bin_rows)} layer/separation summary rows")
     print(f"Output directory: {RESULTS_DIR}")
 
 
