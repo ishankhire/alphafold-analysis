@@ -1396,3 +1396,8 @@ layer-0/23/47 search artifacts and logs from the archive branch.
 
 Added reproducible R², TM-score, short-range MAE, MDS top-3 fraction, and
 helix AUROC/recall figures with companion plot-data CSVs.
+
+## Session: 2026-08-16 — Initial repository cleanup
+
+Removed explicitly retired local/cluster code and generated clutter, archived
+the MDS reference renders, and replaced stale cluster PDFs with live Delta docs.

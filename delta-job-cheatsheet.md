@@ -2,9 +2,9 @@
 
 Short reference for the Delta cluster, focused on checking running jobs, seeing full job names, and inspecting output/log files.
 
-Based on:
-- `proteins/llm_reference/delta_slurm_guide.pdf`
-- `proteins/llm_reference/slurm_guidelines.pdf`
+References:
+- [Live NCSA Delta user documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/)
+- `docs/cluster/slurm_array_notes.md`
 
 ## See My Jobs
 

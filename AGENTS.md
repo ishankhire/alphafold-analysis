@@ -27,10 +27,12 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 - `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
 - `datasets.md` — combined CAMEO+ECOD dataset paths, counts, and TM-score filtered protein IDs
-- `proteins/multi_protein_results/` — aggregated multi-protein outputs created inside the repo at runtime
-- `proteins/llm_reference/` — **reference PDFs for cluster usage** (see Cluster section below)
+- `delta_files/` — saved Delta outputs and the current canonical result families
+- `proteins/multi_protein_results/` — legacy local/dev outputs; do not add new result families here
+- `docs/cluster/` — concise local Delta operating notes and links to live documentation
+- `not_relevant_miscellaneous/mds_structures/` — archived MDS/Chimera reference renders
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
-- `scripts/multi_protein/` — local/dev analysis scripts and regression variants
+- `scripts/multi_protein/` — local aggregation, post-processing, and analysis scripts
 
 ## Data Essentials
 
@@ -38,17 +40,15 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 - Treat CAMEO and ECOD proteins as one analysis dataset. The source label is only for resolving different Delta input file layouts.
 - Current filtered set size: 154 CAMEO proteins + 400 ECOD proteins = 554 unique proteins.
 - **Local data root:** when working from the `protein` workspace, local per-protein inputs, when present, live in the sibling directory `../protein_data/`
-- **Outputs:** per-protein CSVs and plots still live beside each protein under `../protein_data/<id>/`, while aggregated multi-protein outputs stay under `proteins/multi_protein_results/`
+- **Outputs:** current copied cluster results live under `delta_files/`. Historical local/dev outputs remain under `proteins/multi_protein_results/` pending cleanup; do not use that directory for new result families.
 
 ## Cluster Setup
 
 Cluster scripts are currently written for the **Delta** SLURM cluster. The main Delta sbatch files in `scripts/cluster_scripts/` are `delta_regression_job.sbatch` and `delta_per_protein_regression_job.sbatch`. They use `module load python`, `srun`, and `--account=bekh-delta-cpu`.
 
-**Reference documentation** lives in `proteins/llm_reference/`:
-- `delta_slurm_guide.pdf` — Delta cluster SLURM specifics
-- `slurm_guidelines.pdf` — general SLURM guidelines
-
-Always consult these PDFs when writing or modifying sbatch files or cluster scripts.
+Before writing or modifying sbatch files or cluster scripts, consult:
+- `docs/cluster/slurm_array_notes.md` for the repository's array conventions;
+- the live [NCSA Delta user documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/) for current partitions, limits, modules, and filesystem behavior.
 
 **IMPORTANT:** When moving, renaming, or creating cluster Python scripts, always verify that every sbatch file in `scripts/cluster_scripts/` references the correct Python script filename. A mismatch will cause silent job failures on the cluster.
 
@@ -88,7 +88,9 @@ Those roots cover the CAMEO layout only. New or modified combined-dataset analys
 
 **PDB-based regression scripts** use inline PDB parsing (no lib/ imports for coordinate extraction). They extract CA coordinates directly from predicted PDB files.
 
-**Visualizations:** All plots saved to `proteins/<id>/visualizations/` or `proteins/multi_protein_results/visualizations/`.
+**Visualizations:** Save current aggregate plots beside their result family under
+`delta_files/<analysis>/analysis/` or under `delta_files/publication_plots/`.
+Treat plots under `proteins/multi_protein_results/` as legacy local/dev outputs.
 
 **Regression output schema:** Unless a task explicitly requests another layout,
 follow the file organization and column style in

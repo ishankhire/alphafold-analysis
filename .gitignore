@@ -1,6 +1,11 @@
 # Virtual environment
 .venv/
 
+# Local tool state
+.cache/
+.mplconfig/
+.claude/settings.local.json
+
 # macOS
 .DS_Store
 
