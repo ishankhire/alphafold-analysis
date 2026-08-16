@@ -29,7 +29,10 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 - `datasets.md` — combined CAMEO+ECOD dataset paths, counts, and TM-score filtered protein IDs
 - `delta_files/` — saved Delta outputs and the current canonical result families
 - `docs/cluster/` — concise local Delta operating notes and links to live documentation
+- `docs/plans/` — experiment and implementation plans
 - `not_relevant_miscellaneous/mds_structures/` — archived MDS/Chimera reference renders
+- `not_relevant_miscellaneous/miscellaneous_results/` — archived supporting and legacy results
+- `not_relevant_miscellaneous/miscellaneous_scripts/` — archived scripts; not active cluster entrypoints
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
 - `scripts/multi_protein/` — local aggregation, post-processing, and analysis scripts
 
@@ -43,10 +46,15 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 
 ## Cluster Setup
 
-Cluster scripts are currently written for the **Delta** SLURM cluster. The main Delta sbatch files in `scripts/cluster_scripts/` are `delta_regression_job.sbatch` and `delta_per_protein_regression_job.sbatch`. They use `module load python`, `srun`, and `--account=bekh-delta-cpu`.
+Cluster scripts are currently written for the **Delta** SLURM cluster. Current
+launchers are colocated with their workflows under `generalized_model_ecod/`,
+`per_protein_scripts/`, `gated_linear_probes/`, `diagnostics/`, and
+`xgboost_search/`. They use `module load python`, `srun`, and the Delta account
+configured in each launcher.
 
 Before writing or modifying sbatch files or cluster scripts, consult:
 - `docs/cluster/slurm_array_notes.md` for the repository's array conventions;
+- `docs/cluster/delta-job-cheatsheet.md` for common monitoring commands;
 - the live [NCSA Delta user documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/) for current partitions, limits, modules, and filesystem behavior.
 
 **IMPORTANT:** When moving, renaming, or creating cluster Python scripts, always verify that every sbatch file in `scripts/cluster_scripts/` references the correct Python script filename. A mismatch will cause silent job failures on the cluster.

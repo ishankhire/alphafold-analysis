@@ -57,7 +57,7 @@ Principal files are `interaction_type_summary.csv` with one row per
 interaction type, layer, model variant, and split; and
 `interaction_type_per_protein.csv` with one row per protein, interaction type,
 layer, and model variant. The detailed version of this experiment is in
-`scripts/plans/pair_interaction_classification_probe_plan.md`.
+`docs/plans/pair_interaction_classification_probe_plan.md`.
 
 ## Experiment 2: Three-residue context predicts distance corrections
 

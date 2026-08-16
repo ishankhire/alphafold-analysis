@@ -1406,3 +1406,8 @@ the MDS reference renders, and replaced stale cluster PDFs with live Delta docs.
 
 Removed the retired result tree and obsolete local analysis scripts, while
 keeping the MDS-to-PDB exporter and routing active local outputs to `delta_files/`.
+
+## Session: 2026-08-16 — Archive miscellaneous workflows
+
+Archived old generalized-model scripts and supporting results, moved plans into
+`docs/`, and removed redundant test outputs and empty legacy directories.
