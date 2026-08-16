@@ -48,7 +48,9 @@ DEFAULT_CAMEO_PDB_ROOT = Path("/work/hdd/bekh/thayes/openfold_reps_outputs_sm")
 DEFAULT_ECOD_PDB_ROOT = Path(
     "/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm"
 )
-DEFAULT_OUTPUT_ROOT = PROJECT_ROOT / "proteins" / "multi_protein_results" / "diagnostics" / "dssp_smoke_test"
+DEFAULT_OUTPUT_ROOT = (
+    PROJECT_ROOT / "delta_files" / "diagnostics" / "dssp_smoke_test"
+)
 
 HELIX_CODES = frozenset(("H", "G", "I"))
 BETA_CODES = frozenset(("E", "B"))

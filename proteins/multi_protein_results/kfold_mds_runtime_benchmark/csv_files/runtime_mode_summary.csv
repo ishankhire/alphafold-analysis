@@ -1,4 +1,0 @@
-mode,total_seconds,mean_seconds_per_fold_layer,n_fold_layer_runs,feature_build_train_total,feature_build_test_total,assemble_train_from_cache_total,assemble_test_from_cache_total,cache_build_layer_total,scale_fit_transform_train_total,scale_transform_test_total,regression_fit_total,predict_train_total,predict_test_total,geometry_total,percent_of_reference
-baseline,168.024960,1.166840,144,15.090279,8.007999,0.000000,0.000000,0.000000,23.166749,3.500089,83.646862,2.604529,0.571785,29.976765,
-layer_cache,149.001394,1.034732,144,0.000000,0.000000,1.409918,0.972014,6.623050,22.888480,2.393660,82.757472,2.259635,0.643397,28.055446,
-cache_only_savings,19.023566,,,,,,,,,,,,,,11.321869

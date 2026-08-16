@@ -1,6 +1,0 @@
-protein_id,split,size_bin,n_residues,n_pairs,target_variance,pair_block_dir,pdb_source_path
-6tf4_A,train,0,67,2211,96.868453,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6tf4_A/pair_blocks,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6tf4_A/predicted_pdb/6tf4_A_model_1_ptm_unrelaxed.pdb
-6wmk_A,train,0,69,2346,38.798622,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6wmk_A/pair_blocks,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6wmk_A/predicted_pdb/6wmk_A_model_1_ptm_unrelaxed.pdb
-6wqc_A,train,3,294,43071,135.249986,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6wqc_A/pair_blocks,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6wqc_A/predicted_pdb/6wqc_A_model_1_ptm_unrelaxed.pdb
-6xqj_A,train,2,234,27261,209.488178,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6xqj_A/pair_blocks,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6xqj_A/predicted_pdb/6xqj_A_model_1_ptm_unrelaxed.pdb
-6z01_A,train,4,539,144991,232.435003,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6z01_A/pair_blocks,/Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein_data/6z01_A/predicted_pdb/6z01_A_model_1_ptm_unrelaxed.pdb

@@ -83,7 +83,7 @@ LOCAL_PDB_ROOT = (
     else SCRIPT_DIR / "protein_data"
 )
 LOCAL_OUTPUT_PARENT = (
-    PROJECT_ROOT / "proteins" / "multi_protein_results" / "diagnostics"
+    PROJECT_ROOT / "delta_files" / "diagnostics"
 )
 
 CAMEO_PDB_ROOT = Path("/work/hdd/bekh/thayes/openfold_reps_outputs_sm")

@@ -1,2 +1,0 @@
-comparison,max_abs_metric_delta,max_abs_intercept_delta,max_abs_coef_delta,max_abs_pred_delta,mean_abs_pred_delta,passed
-baseline_vs_layer_cache,0.000000,0.000000,0.000000,0.000000,0.000000,True

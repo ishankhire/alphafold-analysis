@@ -134,13 +134,13 @@ signal is more than residue identity or distance.
 Write aggregate outputs under:
 
 ```text
-proteins/multi_protein_results/pair_interaction_classification/
+delta_files/pair_interaction_classification/
 ```
 
 Write annotation outputs under:
 
 ```text
-proteins/multi_protein_results/pair_interaction_classification/annotations/
+delta_files/pair_interaction_classification/annotations/
 ```
 
 The intended files are:

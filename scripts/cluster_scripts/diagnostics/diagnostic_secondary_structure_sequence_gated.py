@@ -47,7 +47,7 @@ LOCAL_SUITE_DIR = PROJECT_ROOT / "delta_files" / "consolidated"
 LOCAL_REFERENCE_DIR = (
     PROJECT_ROOT / "delta_files" / "diagnostics" / "diagnostic_secondary_structure_prediction"
 )
-LOCAL_OUTPUT_PARENT = PROJECT_ROOT / "proteins" / "multi_protein_results" / "diagnostics"
+LOCAL_OUTPUT_PARENT = PROJECT_ROOT / "delta_files" / "diagnostics"
 
 MANIFEST_FIELDS = [
     "analysis_name", "variant", "feature_dim", "layers", "analysis_split",

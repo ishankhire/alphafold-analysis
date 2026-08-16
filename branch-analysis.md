@@ -1401,3 +1401,8 @@ helix AUROC/recall figures with companion plot-data CSVs.
 
 Removed explicitly retired local/cluster code and generated clutter, archived
 the MDS reference renders, and replaced stale cluster PDFs with live Delta docs.
+
+## Session: 2026-08-16 — Remove legacy multi-protein outputs
+
+Removed the retired result tree and obsolete local analysis scripts, while
+keeping the MDS-to-PDB exporter and routing active local outputs to `delta_files/`.

@@ -50,7 +50,7 @@ separation. Report pair-pooled and mean-per-protein AUROC and average
 precision. Save aggregate results under:
 
 ```text
-proteins/multi_protein_results/pair_interaction_classification/
+delta_files/pair_interaction_classification/
 ```
 
 Principal files are `interaction_type_summary.csv` with one row per
@@ -97,7 +97,7 @@ interchangeable features.
 Save outputs under:
 
 ```text
-proteins/multi_protein_results/triangle_context_distance_delta/
+delta_files/triangle_context_distance_delta/
 ```
 
 Intended files are:
@@ -141,7 +141,7 @@ to revise the relationship between residues `i` and `j`?
 Save outputs under:
 
 ```text
-proteins/multi_protein_results/causal_triangle_interventions/
+delta_files/causal_triangle_interventions/
 ```
 
 Intended files are:

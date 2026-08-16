@@ -1,5 +1,0 @@
-n,pearson_p,pearson_r,pearson_r_count,pearson_r_fraction_positive,pearson_r_mean,pearson_r_median,pearson_r_std,relation,scope,spearman_p,spearman_r,spearman_r_count,spearman_r_fraction_positive,spearman_r_mean,spearman_r_median,spearman_r_std
-6000,0.000000,0.416343,,,,,,triangle_violation_fraction_vs_tm_score_pooled,pooled,0.000000,0.484755,,,,,
-6000,0.000000,0.232677,,,,,,triangle_violation_fraction_vs_per_protein_r2_pooled,pooled,0.000000,0.359585,,,,,
-,,,480,0.945833,0.648931,0.692591,0.273409,triangle_violation_fraction_vs_tm_score_slice,within_slice,,,480,0.947917,0.632495,0.700000,0.280384
-,,,480,0.939583,0.557105,0.657797,0.336598,triangle_violation_fraction_vs_per_protein_r2_slice,within_slice,,,480,0.918750,0.559053,0.698496,0.351027

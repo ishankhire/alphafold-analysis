@@ -1,5 +1,0 @@
-protein_id,n_resolved,n_entity,rmsd_angstrom,tm_score,mean_deviation_angstrom,median_deviation_angstrom,max_deviation_angstrom,dist_matrix_mae,dist_matrix_max_error,dist_matrix_pearson_r
-7b3a_A,276,280,0.8033,0.9837,0.6711,0.5643,3.3658,0.4497,3.6031,0.998610
-6tf4_A,57,67,1.6858,0.8086,1.2644,0.9439,6.6561,0.8668,6.8701,0.974932
-6wmk_A,65,69,0.6335,0.9541,0.5391,0.4524,1.7377,0.3246,1.9131,0.997002
-6wqc_A,293,294,2.9123,0.8481,2.5293,2.2055,6.8925,1.5143,10.9735,0.986633

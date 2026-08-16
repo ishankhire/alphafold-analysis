@@ -28,7 +28,6 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 - `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
 - `datasets.md` — combined CAMEO+ECOD dataset paths, counts, and TM-score filtered protein IDs
 - `delta_files/` — saved Delta outputs and the current canonical result families
-- `proteins/multi_protein_results/` — legacy local/dev outputs; do not add new result families here
 - `docs/cluster/` — concise local Delta operating notes and links to live documentation
 - `not_relevant_miscellaneous/mds_structures/` — archived MDS/Chimera reference renders
 - `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
@@ -40,7 +39,7 @@ Analysis of AlphaFold pair representations across 48 layers for multiple protein
 - Treat CAMEO and ECOD proteins as one analysis dataset. The source label is only for resolving different Delta input file layouts.
 - Current filtered set size: 154 CAMEO proteins + 400 ECOD proteins = 554 unique proteins.
 - **Local data root:** when working from the `protein` workspace, local per-protein inputs, when present, live in the sibling directory `../protein_data/`
-- **Outputs:** current copied cluster results live under `delta_files/`. Historical local/dev outputs remain under `proteins/multi_protein_results/` pending cleanup; do not use that directory for new result families.
+- **Outputs:** current copied cluster results and local diagnostic outputs live under `delta_files/`. Do not recreate the retired `proteins/multi_protein_results/` tree.
 
 ## Cluster Setup
 
@@ -90,7 +89,6 @@ Those roots cover the CAMEO layout only. New or modified combined-dataset analys
 
 **Visualizations:** Save current aggregate plots beside their result family under
 `delta_files/<analysis>/analysis/` or under `delta_files/publication_plots/`.
-Treat plots under `proteins/multi_protein_results/` as legacy local/dev outputs.
 
 **Regression output schema:** Unless a task explicitly requests another layout,
 follow the file organization and column style in

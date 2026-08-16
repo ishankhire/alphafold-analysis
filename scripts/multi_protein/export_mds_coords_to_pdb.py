@@ -6,11 +6,11 @@ Convert reconstructed residue coordinates from a CSV into PyMOL-friendly
 CA-trace PDB files.
 
 By default this reads:
-    proteins/multi_protein_results/mds_reconstruction/csv_files/
+    delta_files/mds_reconstruction/csv_files/
         mds_reconstructed_coords_layer47.csv
 
 and writes:
-    proteins/multi_protein_results/mds_reconstruction/pdb_files/
+    delta_files/mds_reconstruction/pdb_files/
         mds_reconstructed_coords_layer47/
             <protein_id>_mds_reconstructed_ca.pdb
             <protein_id>_reference_ca.pdb
@@ -31,16 +31,14 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_INPUT_CSV = (
     PROJECT_ROOT
-    / "proteins"
-    / "multi_protein_results"
+    / "delta_files"
     / "mds_reconstruction"
     / "csv_files"
     / "mds_reconstructed_coords_layer47.csv"
 )
 DEFAULT_OUTPUT_PARENT = (
     PROJECT_ROOT
-    / "proteins"
-    / "multi_protein_results"
+    / "delta_files"
     / "mds_reconstruction"
     / "pdb_files"
 )
@@ -91,7 +89,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Directory where PDB files will be written. Defaults to "
-            "proteins/multi_protein_results/mds_reconstruction/pdb_files/<input_csv_stem>/"
+            "delta_files/mds_reconstruction/pdb_files/<input_csv_stem>/"
         ),
     )
     return parser.parse_args()
