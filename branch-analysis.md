@@ -1411,3 +1411,8 @@ keeping the MDS-to-PDB exporter and routing active local outputs to `delta_files
 
 Archived old generalized-model scripts and supporting results, moved plans into
 `docs/`, and removed redundant test outputs and empty legacy directories.
+
+## Session: 2026-08-16 — Regression methodology standard
+
+Added a canonical paper protocol for shared, per-protein, gated, and XGBoost
+distance probes plus a code-and-results audit of current methodology gaps.
