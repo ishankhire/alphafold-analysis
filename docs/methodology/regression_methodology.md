@@ -247,6 +247,13 @@ condition number. A rank-deficient or severely ill-conditioned solution may be
 retained diagnostically but must be flagged rather than presented as an
 unqualified stable OLS result.
 
+Linear OLS fits use a dense, rank-revealing `float64` least-squares solve,
+currently scikit-learn `LinearRegression` backed by SciPy `lstsq`; primary fits
+must not explicitly form normal equations. Loading mode, temporary `float32`
+caches, chunk boundaries, and copy behavior are implementation details provided
+they preserve the selected rows, weights, fitted scaler, and final `float64`
+objective. Predictions are evaluated without clipping or other post-processing.
+
 ## Per-protein linear models
 
 For each eligible protein and layer, create one deterministic 80/20 split of
