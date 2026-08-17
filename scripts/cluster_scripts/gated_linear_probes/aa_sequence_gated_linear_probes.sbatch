@@ -8,7 +8,7 @@
 #SBATCH --mem=96g
 #SBATCH --time=24:00:00
 #SBATCH --constraint="scratch"
-#SBATCH --array=0-35%6
+#SBATCH --array=0-287%6
 #SBATCH -o slurm-%A_%a.out
 #SBATCH -e slurm-%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL

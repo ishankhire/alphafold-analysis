@@ -1437,3 +1437,9 @@ conditional baselines, and limited timing and OLS diagnostics to cheap fields.
 Added a frozen canonical protein split plus tested shared protocol, metric,
 coverage, subgroup, geometry-summary, schema, and atomic-output helpers without
 changing existing regression runners.
+
+## Session: 2026-08-17 — Canonical gated OLS suite
+
+Migrated all three gated families to the frozen development/test protocol,
+recombined canonical outputs, replayable shards, complete-coverage geometry,
+and restartable 48-layer Delta arrays with explicit joint partial coverage.
