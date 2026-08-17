@@ -15,10 +15,10 @@ The protocol currently covers:
   cross-product; and
 - one XGBoost model shared across proteins.
 
-The exact reporting tables, output columns, uncertainty estimates, and
-geometry-reconstruction outputs will be specified separately. Until then, this
-document fixes what is fitted, which observations are used, and what kind of
-generalization each analysis measures.
+The common output files, metric definitions, geometry calculations, and
+storage policy are specified in `regression_outputs.md`. This document fixes
+what is fitted, which observations are used, and what kind of generalization
+each analysis measures.
 
 ## Scientific interpretation
 

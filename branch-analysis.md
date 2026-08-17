@@ -1421,3 +1421,8 @@ distance probes plus a code-and-results audit of current methodology gaps.
 
 Replaced mandatory 48-layer cohort prevalidation with stable runtime-checked
 membership and allowed clearly labeled all-pair per-protein summaries.
+
+## Session: 2026-08-17 — Regression output standard
+
+Defined compact common regression, subgroup, geometry, model-artifact, and
+runtime outputs and audited the current principal result families.

@@ -8,8 +8,8 @@ families with `regression_methodology.md`. It is a code-and-artifact audit as of
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
 
-This audit does not evaluate the final output-column schema, uncertainty
-intervals, or publication table design, which remain to be specified.
+Output schemas and output-specific implementation gaps are assessed separately
+in `regression_output_audit.md`.
 
 Status labels:
 
@@ -376,5 +376,5 @@ differ from continuous distance regression.
 - [ ] Centralize dataset and split construction in one importable module.
 - [ ] Add configuration/version manifests and digests to every principal family.
 - [ ] Label exploratory diagnostics and historical result families clearly.
-- [ ] Define the common reporting schema, uncertainty estimates, and downstream
-  geometry protocol in follow-up methodology sections.
+- [ ] Implement the common reporting and geometry contract defined in
+  `regression_outputs.md`.
