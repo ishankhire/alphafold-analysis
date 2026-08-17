@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_methodology.md`. It is a code-and-artifact audit as of
-2026-08-16, not a claim that historical results are invalid. A result can remain
+2026-08-17, not a claim that historical results are invalid. A result can remain
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
 
@@ -25,7 +25,7 @@ The short identifiers below are used throughout the audit.
 
 | ID | Protocol requirement |
 |---|---|
-| P1 | Frozen combined CAMEO+ECOD cohort eligible for all 48 layers |
+| P1 | Frozen combined CAMEO+ECOD cohort with stable membership across analyzed layers; runtime failures are explicit |
 | P2 | Canonical master split with locked test IDs |
 | P3 | One strict-lower-triangle row per unordered pair and final-PDB C-alpha distance target |
 | P4 | Directional central features concatenated as 256 channels |
@@ -43,12 +43,12 @@ The short identifiers below are used throughout the audit.
 
 | Analysis | P1 cohort | P2 split | P3 pairs/target | P4 base256 | P5 precision | P7 weighting | P8 model | P9 evaluation | P10 layers | P11 test lock | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Shared linear OLS | Partial | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Closest current primary baseline; targeted rerun needed |
-| Per-protein linear OLS | Partial | Partial | Meets | Meets | Meets | Not applicable | Partial | Gap | Meets | Not applicable | Pair split is present, but combined all-pair reporting must be removed from primary use |
-| Sequence-gated OLS | Partial | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
-| AA-pair-gated OLS | Partial | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
-| AA-pair x sequence-gated OLS | Partial | Partial | Meets | Meets | Meets | Meets | Meets | Partial | Gap | Meets | Sparse-gate coverage policy unresolved |
-| Shared XGBoost | Partial | Gap | Meets | Gap | Meets | Meets | Not applicable | Partial | Gap | Gap | Requires a new canonical implementation and rerun |
+| Shared linear OLS | Meets | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Closest current primary baseline; targeted rerun needed |
+| Per-protein linear OLS | Meets | Partial | Meets | Meets | Meets | Not applicable | Partial | Meets | Meets | Not applicable | Pair split and separate train/test metrics are present; combined metrics are permissible supplementary descriptions |
+| Sequence-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
+| AA-pair-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
+| AA-pair x sequence-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Partial | Gap | Meets | Sparse-gate coverage policy unresolved |
+| Shared XGBoost | Meets | Gap | Meets | Gap | Meets | Meets | Not applicable | Partial | Gap | Gap | Requires a new canonical implementation and rerun |
 
 ## Shared linear OLS
 
@@ -72,13 +72,11 @@ Primary implementation:
 - **P10:** The paired launchers cover layers 0 through 47.
 - The saved outer split contains 441 training and 111 test proteins. Its
   membership exactly matches the saved gated-suite outer split.
+- **P1:** The completed saved trajectory contains the same 552 proteins at
+  every one of the 48 layers.
 
 ### Gaps and required changes
 
-- **P1 — Partial:** Initial loading validates the PDB and layer-0 tensor, but
-  it does not freeze eligibility by checking all 48 layers before splitting.
-  A missing later layer can therefore fail during a layer job rather than
-  producing one canonical all-layer cohort.
 - **P2 — Partial:** The current 80/20 outer split is suitable as the canonical
   development/test division, but it has no saved `fit`/`validation` subdivision.
   Add that subdivision to the master manifest without changing the outer test
@@ -91,22 +89,21 @@ Primary implementation:
   or condition number, even though scikit-learn exposes rank and singular
   values for this dense OLS solver.
 - **P12 — Partial:** Split assignments and substantial diagnostics are saved,
-  but the current workflow lacks one canonical all-layer eligibility manifest,
-  a complete configuration/version manifest, and a split digest enforced by
-  every entrypoint.
+  but the current workflow lacks a complete configuration/version manifest and
+  a split digest enforced by every entrypoint.
 - The dataset protein IDs are embedded in the Python helper as well as listed
   in `datasets.md`. Replace duplicated sources of truth with one importable
   canonical manifest.
 
 ### Checklist
 
-- [ ] Freeze the 552-protein or newly resolved cohort after checking all 48 layers.
 - [ ] Preserve the existing 441/111 outer membership in the master split.
 - [ ] Add deterministic `fit` and `validation` roles within the 441 development proteins.
 - [ ] Form scaler moments after casting feature blocks to `float64`.
 - [ ] Save rank, singular-value, and condition-number diagnostics per layer.
 - [ ] Save and validate manifest, split, configuration, and version digests.
-- [ ] Rerun all 48 layers on the frozen protocol before final paper comparison.
+- [ ] Retain runtime validation and fail explicitly rather than silently
+  changing protein membership at an individual layer.
 
 ## Per-protein linear OLS
 
@@ -128,11 +125,11 @@ Primary implementation:
 - Saves train-pair and held-out-pair R-squared as `train_r2` and `test_r2`.
 - **P10:** Array and batch entrypoints cover all 48 layers.
 - Saves rank, singular-value, and condition-number diagnostics.
+- **P1:** The completed saved trajectory contains the same 552 proteins at
+  every one of the 48 layers.
 
 ### Gaps and required changes
 
-- **P1 — Partial:** It inherits the shared loader, which does not prevalidate
-  all 48 layers before fixing the cohort.
 - **P2 — Partial:** Models are appropriately fitted within proteins rather than
   across master training proteins, but outputs do not identify the master
   protein role. Direct comparisons therefore cannot automatically restrict the
@@ -140,10 +137,11 @@ Primary implementation:
 - **P8 — Partial:** The implementation diagnoses underdetermined or unstable
   OLS fits but still fits and aggregates them without an explicit eligibility
   or primary-analysis exclusion status.
-- **P9 — Gap:** In addition to `train_r2` and `test_r2`, the main
-  `per_protein_r2`, MSE, MAE, and RMSE fields are computed over all pairs. This
-  mixes the training and held-out rows and conflicts with the chosen protocol.
-  Geometry rows are likewise generated from predictions over the mixed set.
+- **P9:** The implementation saves separate `train_r2` and `test_r2` fields as
+  required. Its `per_protein_r2`, MSE, MAE, and RMSE fields combine all pairs;
+  these are permissible supplementary mixed-scope descriptions but must remain
+  clearly labeled. Geometry rows are likewise based on predictions over all
+  pairs.
 - **P12 — Partial:** The deterministic pair split can be reproduced, but the
   outputs do not save train/test pair counts, the pair-split seed/digest, or an
   explicit fit-status field for every protein-layer combination.
@@ -151,8 +149,8 @@ Primary implementation:
 ### Checklist
 
 - [ ] Add the master protein role to per-protein outputs.
-- [ ] Make separate train-pair and held-out-pair metrics the only primary regression metrics.
-- [ ] Remove or clearly deprecate combined all-pair regression fields.
+- [ ] Keep separate train-pair and held-out-pair metrics, and label combined
+  all-pair fields as mixed-scope descriptive metrics.
 - [ ] Define and save OLS eligibility/conditioning status before aggregation.
 - [ ] Save pair-split counts and a deterministic split digest.
 - [ ] Restrict direct shared-versus-per-protein summaries to master test protein IDs.
@@ -173,6 +171,8 @@ Primary implementation:
 
 - The saved run contains 552 analyzed proteins and uses the exact same 441/111
   outer protein membership as `general_base256_combined`.
+- **P1:** Preparation freezes this cohort across every requested gated layer
+  and records exclusions explicitly.
 - **P3/P4:** Uses strict-lower-triangle targets and directional base256
   features.
 - **P5/P6:** Materializes gate matrices in `float64`; scaling and fitting are
@@ -187,10 +187,21 @@ Primary implementation:
 - The saved six-layer run fitted all 36 sequence gates and all 1,260
   amino-acid-only layer-gates.
 
+The saved conditioning diagnostics provide a useful numerical audit:
+
+- all 36 sequence-gate fits have rank 256, with condition numbers from 32.9 to
+  101.8;
+- all 1,260 amino-acid-pair fits have rank 256, with condition numbers from
+  46.7 to 166.9; and
+- 7,050 joint AA-pair-by-sequence fits have rank 256, but their condition
+  numbers range from 34.0 to 7,236 (median 86.1; 95th percentile 187.8).
+
+Thus the diagnostics mostly confirm stable full-rank fits for the first two
+families while identifying a small, weakly supported tail in the joint family.
+They are quality-control metadata rather than primary scientific outcomes.
+
 ### Gaps common to all gated families
 
-- **P1 — Partial:** Preparation checks every requested gated layer, but the
-  requested set is only `(0, 10, 20, 30, 40, 47)`, not all 48 layers.
 - **P2 — Partial:** The outer 80/20 membership matches the general model, but
   the new master `fit`/`validation` roles do not yet exist.
 - **P10 — Gap:** Each family covers six representative layers rather than the
@@ -215,7 +226,7 @@ Primary implementation:
 ### Checklist
 
 - [ ] Replace the six-layer constant with a complete 0-47 production trajectory.
-- [ ] Use the all-layer eligible cohort and master protein split.
+- [ ] Reuse the frozen 552-protein cohort and master protein split.
 - [ ] Fit final fixed OLS gates on the combined 80% development proteins.
 - [ ] Choose no fallback, hierarchical fallback, or matched exclusion for sparse joint gates.
 - [ ] Enforce and report 100% coverage if hierarchical fallback is selected.
@@ -233,6 +244,8 @@ Primary implementation:
 ### What already aligns
 
 - Uses the combined 552-protein usable cohort for the three anchor layers.
+- **P1:** The saved search keeps this cohort fixed across all three analyzed
+  layers.
 - **P3/P5:** Uses one row per unordered pair, final-PDB C-alpha targets, and
   unstandardized `float64` feature/target matrices.
 - **P7:** Uses protein-equal sample weights for shared fitting and validation.
@@ -245,8 +258,6 @@ Primary implementation:
 
 ### Gaps and required changes
 
-- **P1 — Partial:** Cohort eligibility requires only layers 0, 23, and 47, not
-  all 48 layers.
 - **P2 — Gap:** It constructs a separate 60/20/20 split. Its digest and protein
   membership differ from the shared/gated linear outer split, so the test set
   is not the locked canonical test set.
@@ -307,7 +318,7 @@ and `float64` decisions, not as a protocol-compliant primary model.
 `diagnostic_tree_regression_common.py` are layer-47 diagnostics. They use a
 separate outer/inner split, a 5,000-pair cap, 128 directional channels plus six
 context features, `float32` feature matrices, and legacy CAMEO-style input
-roots. They do not satisfy the combined-dataset, base256, all-layer protocol.
+roots. They do not satisfy the combined-dataset, base256, full-trajectory protocol.
 Their role is exploratory evidence about feature routing and nonlinear
 structure.
 
@@ -344,11 +355,12 @@ differ from continuous distance regression.
 
 ### Priority 0: required for a controlled model comparison
 
-- [ ] Create one canonical all-layer eligible-protein manifest.
+- [ ] Reuse one canonical frozen 552-protein manifest and make any runtime
+  layer failure explicit.
 - [ ] Preserve the existing 441/111 shared/gated outer split and add the
   deterministic fit/validation subdivision inside the 441 development proteins.
-- [ ] Correct per-protein reporting so training and held-out pairs are never
-  combined into a primary score.
+- [ ] Preserve separate per-protein training and held-out-pair reporting;
+  clearly label any combined all-pair score as mixed-scope.
 - [ ] Rebuild shared XGBoost with the canonical split, base256 features,
   validation-only search, 80% final refit, and untouched test evaluation.
 

@@ -1416,3 +1416,8 @@ Archived old generalized-model scripts and supporting results, moved plans into
 
 Added a canonical paper protocol for shared, per-protein, gated, and XGBoost
 distance probes plus a code-and-results audit of current methodology gaps.
+
+## Session: 2026-08-17 — Refine regression protocol
+
+Replaced mandatory 48-layer cohort prevalidation with stable runtime-checked
+membership and allowed clearly labeled all-pair per-protein summaries.

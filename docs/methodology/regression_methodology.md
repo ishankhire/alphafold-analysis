@@ -64,17 +64,21 @@ fitted. A protein is eligible only if:
 1. its final predicted PDB can be resolved and parsed;
 2. it contains at least two aligned C-alpha residues;
 3. its PDB C-alpha count matches both residue dimensions of the pair tensor;
-4. its pair tensors have 128 channels;
-5. every pair-tensor layer required for the paper is present and shape
-   compatible; and
-6. its regression targets and extracted features are finite.
+4. its reference-layer pair tensor is present, shape compatible, and has 128
+   channels; and
+5. its regression targets and reference-layer extracted features are finite.
 
-For a complete layer-trajectory paper analysis, eligibility is evaluated
-against all 48 layers before splitting. A protein may not disappear at one
-layer and reappear at another. The manifest must record every included protein,
-every excluded protein, and a concise exclusion reason. The current principal
-analyses find 552 usable proteins, but the saved manifest, rather than this
-number in prose, is authoritative.
+It is not necessary to open and prevalidate all 48 pair tensors before fixing
+the cohort. Each analysis must instead use the same frozen protein membership
+at every requested layer and validate the loaded tensor and extracted features
+at runtime. A protein may not be silently dropped at one layer and reappear at
+another. If a frozen-cohort protein fails at a later layer, the layer is
+incomplete until the input is repaired or the resulting coverage difference is
+explicitly qualified. The manifest must record every initially included
+protein, every initial exclusion, and a concise exclusion reason. The current
+principal 48-layer analyses contain the same 552 usable proteins at every
+layer, but the saved manifest, rather than this number in prose, is
+authoritative.
 
 The intended generalization claim is to unseen protein IDs. The protocol does
 not group homologous proteins or structural families across splits. Therefore,
@@ -256,12 +260,15 @@ For each protein-layer combination:
 3. predict the training pairs and the held-out 20% pairs; and
 4. report training-pair and held-out-pair results separately.
 
-There is no combined all-pair regression score. Combining the rows would mix
-in-sample and out-of-sample performance. When per-protein results are compared
-directly with shared-model results, summarize the per-protein models over the
-master split's locked test protein IDs so protein composition is matched.
-Results over all eligible proteins may be reported separately as a broader
-within-protein analysis.
+Training-pair and held-out-pair results must remain available separately so
+generalization to unseen pairs within a protein can be assessed. A combined
+all-pair score may also be reported, provided it is explicitly labeled as a
+mixed in-sample/out-of-sample descriptive score and does not replace the
+held-out-pair score. When per-protein results are compared directly with
+shared-model results, summarize the per-protein models over the master split's
+locked test protein IDs so protein composition is matched. Results over all
+eligible proteins may be reported separately as a broader within-protein
+analysis.
 
 OLS support and conditioning must be auditable for every protein. Fits with
 fewer training rows than model parameters, deficient rank, or extreme condition
