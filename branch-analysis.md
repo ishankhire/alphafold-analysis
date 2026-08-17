@@ -1463,4 +1463,5 @@ MaxRSS guidance.
 
 Moved the shared XGBoost anchor-layer search and cap sweep to the frozen master
 protein split and canonical directional base256 features, leaving per-protein
-XGBoost behavior unchanged and explicitly on hold.
+XGBoost behavior unchanged and explicitly on hold. Right-sized both shared
+XGBoost launchers to the recommended initial 64 GiB request.
