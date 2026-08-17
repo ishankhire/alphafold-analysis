@@ -1431,3 +1431,9 @@ runtime outputs and audited the current principal result families.
 
 Dropped per-protein sequence-bin and uncertainty outputs, added global plus
 conditional baselines, and limited timing and OLS diagnostics to cheap fields.
+
+## Session: 2026-08-17 — Add shared regression contract helpers
+
+Added a frozen canonical protein split plus tested shared protocol, metric,
+coverage, subgroup, geometry-summary, schema, and atomic-output helpers without
+changing existing regression runners.
