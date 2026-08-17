@@ -72,32 +72,25 @@ script directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
 
 ### Memory and SU efficiency
 
-Delta CPU charges are based on reserved resources, using the larger of the CPU
-or memory-derived charge, rather than actual CPU utilization. Large memory
-requests can therefore dominate SU usage even for jobs using only a few cores.
+Delta charges CPU jobs by the larger of reserved CPU or memory-derived usage,
+so large memory requests can dominate SUs regardless of CPU utilization.
 
-A recent gated sequence-probe run retained a layer-wide feature cache plus raw,
-standardized, sample-weighted, and train/test copies of dense matrices. MaxRSS
-was about 93 GiB per task, and a 192 GB request made six tasks cost about 375
-SUs despite only about 6.4 hours of measured CPU work. A bounded-memory design
-targeting roughly 16 GB would cost about 31 SUs at the same runtime.
+A gated sequence-probe run retained a layer-wide cache and several dense matrix
+copies, reaching about 93 GiB MaxRSS. Its 192 GB request made six tasks cost
+about 375 SUs; a roughly 16 GB streaming design would cost about 31 SUs at the
+same runtime.
 
 For future large regressions:
 
-- Prefer bounded-memory streaming or chunked algorithms when materialized
-  matrices or concurrent copies create a large working set. For OLS, use a
-  stable approach such as chunked TSQR, preserve the canonical objective, and
-  validate numerical parity.
-- Fuse passes across categories when practical, process one protein or bounded
-  chunk at a time, and retain compact statistics rather than pair-level arrays.
-- Before launching a full array, run a representative high-memory task, inspect
-  completed-job MaxRSS and elapsed time, and estimate its Delta charge. Size
-  memory from representative completed runs with reasonable headroom; failed or
-  partial runs may not have reached their eventual peak.
-- Do not assume a larger memory request improves runtime. It is a reservation
-  and limit; excessive headroom raises charges and may increase queue time.
-- Keep a dense materialized design only when methodologically necessary, and
-  document and right-size its memory requirement.
+- Prefer streaming or chunking over full materialization: process bounded
+  protein/row chunks, fuse category passes, and retain compact statistics. For
+  OLS, preserve the canonical objective with a stable method such as chunked
+  TSQR and validate numerical parity.
+- Before a full array, run a representative high-memory task and use its
+  completed-job MaxRSS and elapsed time to estimate a right-sized request and
+  charge. Partial runs may not have reached peak memory.
+- Extra memory does not normally improve runtime. Keep dense materialization
+  only when necessary, and document and right-size it.
 
 ### Launcher requirements
 
