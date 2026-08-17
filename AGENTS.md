@@ -72,25 +72,9 @@ script directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
 
 ### Memory and SU efficiency
 
-Delta charges CPU jobs by the larger of reserved CPU or memory-derived usage,
-so large memory requests can dominate SUs regardless of CPU utilization.
-
-A gated sequence-probe run retained a layer-wide cache and several dense matrix
-copies, reaching about 93 GiB MaxRSS. Its 192 GB request made six tasks cost
-about 375 SUs; a roughly 16 GB streaming design would cost about 31 SUs at the
-same runtime.
-
-For future large regressions:
-
-- Prefer streaming or chunking over full materialization: process bounded
-  protein/row chunks, fuse category passes, and retain compact statistics. For
-  OLS, preserve the canonical objective with a stable method such as chunked
-  TSQR and validate numerical parity.
-- Before a full array, run a representative high-memory task and use its
-  completed-job MaxRSS and elapsed time to estimate a right-sized request and
-  charge. Partial runs may not have reached peak memory.
-- Extra memory does not normally improve runtime. Keep dense materialization
-  only when necessary, and document and right-size it.
+Do not use or request excessive memory. Preserve the existing regression
+pipeline and right-size memory requests from comparable completed-job MaxRSS
+with reasonable headroom, since Delta charges can be memory-derived.
 
 ### Launcher requirements
 
@@ -114,8 +98,7 @@ For future large regressions:
   matrices, AA-pair indexing, and geometry utilities. Diagnostics must add the
   parent cluster-script directory to `sys.path` before importing it.
 - For hot pair-block extraction, plain `np.load(...)` with preallocated writes
-  has been faster than `mmap_mode="r"` plus repeated concatenation. This does not
-  override the bounded-memory requirement for large aggregate workflows.
+  has been faster than `mmap_mode="r"` plus repeated concatenation.
 - Default to fixed repo-relative configuration. Add CLI arguments only for
   genuine environment, reproducibility, or input/output variability.
 
