@@ -27,24 +27,24 @@ Status labels are:
 | O2 | All-protein, long-format `per_protein.csv` with common metrics and coverage |
 | O3 | Compact authoritative `pooled_metrics.csv` without duplicated mean-per-protein fields |
 | O4 | Locked-test pooled metrics by sequence separation, AA pair, and spatial distance |
-| O5 | Gated whole-protein recombination plus compressed per-protein sequence-bin detail |
-| O6 | Compact training-derived baseline metrics; no redundant skill columns |
+| O5 | Gated whole-protein recombination without required per-gate or per-protein-bin expansions |
+| O6 | Compact global and model-conditional baseline metrics; no redundant skill columns |
 | O7 | Per-protein geometry and compact derived geometry summary |
 | O8 | Geometry requires complete pair coverage; exclusions remain explicit |
 | O9 | Replayable coefficients or boosters stored without avoidable CSV expansion |
 | O10 | Per-fitted-unit status and OLS/XGBoost diagnostics |
-| O11 | Brief layer/task timing |
+| O11 | Brief per-layer timing |
 | O12 | Validated layer shards and consolidated canonical outputs |
 
 ## Summary by principal model family
 
-| Analysis | O1 provenance | O2 per protein | O3 pooled | O4 subgroups | O5 gated detail | O7/O8 geometry | O9 artifacts | O10 status | O11 timing | Overall disposition |
+| Analysis | O1 provenance | O2 per protein | O3 pooled | O4 subgroups | O5 gated recombination | O7/O8 geometry | O9 artifacts | O10 status | O11 timing | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Shared linear OLS | Partial | Partial | Partial | Gap | Not applicable | Meets | Meets | Partial | Partial | Strongest current output family; schema normalization and subgroup output remain |
 | Per-protein linear OLS | Partial | Partial | Gap | Gap | Not applicable | Meets | Partial | Partial | Partial | Core metrics and geometry exist, but pooled/subgroup outputs and compact coefficient storage are missing |
-| Sequence-gated OLS | Meets | Gap | Partial | Partial | Partial | Gap | Meets | Meets | Partial | Detailed gate output exists, but canonical whole-protein and geometry outputs do not |
-| AA-pair-gated OLS | Meets | Gap | Partial | Partial | Partial | Gap | Partial | Meets | Partial | Same recombination gaps; coefficient CSV will become large at 48 layers |
-| AA-pair x sequence-gated OLS | Meets | Gap | Partial | Partial | Partial | Gap | Meets | Meets | Partial | Coverage is tracked, but whole-protein and explicit geometry-exclusion outputs are missing |
+| Sequence-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Meets | Meets | Partial | Detailed gate output exists, but canonical whole-protein and geometry outputs do not |
+| AA-pair-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Partial | Meets | Partial | Same recombination gaps; coefficient CSV will become large at 48 layers |
+| AA-pair x sequence-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Meets | Meets | Partial | Coverage is tracked, but whole-protein and explicit geometry-exclusion outputs are missing |
 | Shared XGBoost | Partial | Gap | Gap | Gap | Not applicable | Gap | Partial | Partial | Partial | Current saved artifacts are search outputs, not a canonical final refitted model family |
 
 ## Shared linear OLS
@@ -84,11 +84,11 @@ Primary implementation and saved family:
   per split.
 - **O4 — Gap:** Category accuracy exists only in separate diagnostics and not
   as canonical all-layer outputs with the fixed category definitions.
-- **O10 — Partial:** Shared OLS does not save rank, singular values, condition
-  number, or a model-status row per layer.
+- **O10 — Partial:** Shared OLS does not save the rank and singular values
+  already exposed by its fitted solver, a derived condition number, or a
+  model-status row per layer. No additional SVD is required.
 - **O11 — Partial:** Total elapsed seconds are present in the split summary and
-  detailed stdout, but there is no small common runtime table with major stage
-  timings.
+  detailed stdout, but there is no small common per-layer runtime table.
 - The exact triangle values are already reconciled into `geometry_metrics.csv`.
   The separate `exact_triangle_metrics/` copy is therefore redundant for a new
   canonical run.
@@ -144,7 +144,7 @@ Primary implementation and saved family:
 - **O10 — Partial:** Numerical diagnostics are embedded in `per_protein.csv`;
   add explicit fit/support status so unstable or failed units remain auditable.
 - **O11 — Partial:** Per-protein elapsed seconds exist, but the desired final
-  output is a small layer/task timing table rather than thousands of timing
+  output is a small per-layer timing table rather than thousands of timing
   values mixed into scientific metrics.
 - The separate exact-triangle tree duplicates metrics that have already been
   merged into the canonical geometry table.
@@ -156,7 +156,7 @@ Primary implementation and saved family:
 - [ ] Add the three locked-test subgroup outputs, using held-out pairs.
 - [ ] Replace the 647 MB coefficient CSV with indexed NPZ shards.
 - [ ] Add explicit prediction/fit status, coverage, and master protein role.
-- [ ] Consolidate timing to one row per layer/task.
+- [ ] Consolidate timing to one row per layer.
 
 ## Gated shared linear OLS suite
 
@@ -187,7 +187,8 @@ Primary implementation and saved families:
 
 - **O2/O5 — Gap:** No result family has a canonical main `per_protein.csv` that
   recombines the piecewise predictions into one whole-protein row. The existing
-  compressed table is gate-level, test-only detail.
+  compressed table is gate-level, test-only detail and is not a required final
+  output.
 - **O3 — Partial:** Whole-test pooled metrics are reconstructed later into
   `gated_probe_visualizations/whole_protein_comparison_metrics.csv`; they should
   instead be native canonical outputs for both development and test proteins.
@@ -197,17 +198,17 @@ Primary implementation and saved families:
 - **O4 — Partial:** Category metrics exist, but schemas and category coverage
   differ by gated family. The final piecewise prediction from every model must
   be evaluated in all three common category systems, using test proteins only.
-- **O5 — Partial:** The existing compressed per-gate tables can become very
-  large: the six-layer test-only joint table is about 28 MB compressed. The
-  canonical supplementary expansion should be by the six sequence bins, not by
-  all 1,260 joint routing gates, and should include all proteins.
-- **O6 — Partial:** The current baseline is correctly training-derived, but it
-  is repeated across many output scopes along with derivable skill scores.
-  Retain baseline metrics only in compact whole-model pooled output.
+- The existing compressed per-gate tables can become very large: the six-layer
+  test-only joint table is about 28 MB compressed. Neither this expansion nor a
+  replacement per-protein sequence-bin table is required for final runs.
+- **O6 — Partial:** The current gate-conditional baseline is correctly
+  training-derived, but it is repeated across many output scopes along with
+  derivable skill scores. Retain it only in compact whole-model pooled output
+  and add the common global development-mean baseline.
 - **O7 — Gap:** None of the gated result families saves MDS or triangle geometry
   outputs.
 - **O11 — Partial:** Per-gate elapsed time is available, but one compact
-  per-layer/task runtime output is still needed.
+  per-layer runtime output is still needed.
 
 ### Sequence-gated-specific notes
 
@@ -252,7 +253,6 @@ Primary implementation and saved families:
 - [ ] Replace the current wide gate-summary metric block with the lean common
   metric schema.
 - [ ] Produce all three test subgroup files for every gated family.
-- [ ] Save all-protein `per_protein_by_sequence_separation.csv.gz`.
 - [ ] Add full-coverage-only geometry and explicit incomplete-coverage rows.
 - [ ] Move AA-gated coefficients to indexed compressed shards for 48 layers.
 - [ ] Add compact per-layer runtime output.
@@ -303,30 +303,30 @@ Primary implementation and saved family:
 
 ## Baselines and true-distance statistics
 
-The gated-suite intercept baseline predicts a training-derived mean distance;
-it is not a random predictor. It is scientifically useful as a minimal sanity
-check, but the current gate summaries repeat more baseline-derived columns than
-the paper needs.
+The final contract includes two controls in `pooled_metrics.csv`: a common
+global development-mean predictor and, where applicable, a conditional
+predictor based on gate identity or a protein's training-pair mean. The latter
+is not featureless and must be labeled separately. Current gated outputs have
+the conditional control but still need the common global baseline.
 
-The final contract retains baseline $R^2$, MAE, RMSE, and bias only in
-`pooled_metrics.csv`. Skill ratios are derived later. True-distance means,
-medians, variances, and category support belong in
-`analysis_3_true_distance_statistics` and should not be copied into every model
-family.
+Retain baseline $R^2$, MAE, RMSE, and bias only in `pooled_metrics.csv`. Skill
+ratios are derived later. True-distance means, medians, variances, and category
+support belong in `analysis_3_true_distance_statistics` and should not be
+copied into every model family.
 
 ## Publication-level analyses not emitted by model scripts
 
 The following should be produced once by common downstream analysis code:
 
 - mean-per-protein layer trajectories from `per_protein.csv`;
-- protein-bootstrap 95% confidence intervals;
 - paired per-protein differences between model variants on identical test IDs;
-- geometry distribution summaries and confidence intervals;
-- final tables and plot-data CSVs; and
+- final layer-wise geometry and regression tables and plot-data CSVs; and
 - baseline skill ratios if a figure or table actually uses them.
 
-This avoids slightly different confidence-interval, filtering, and averaging
-logic being embedded in every regression script.
+Bootstrap intervals and uncertainty bands are deferred and are not part of the
+current implementation contract. This keeps filtering and averaging logic out
+of individual regression scripts while preserving the core inputs needed for
+later analyses.
 
 ## Prioritized remediation order
 
@@ -347,6 +347,7 @@ logic being embedded in every regression script.
 ### Priority 2: compactness and provenance
 
 - [ ] Add schema-versioned manifests, model-status tables, and brief runtimes.
-- [ ] Remove duplicated mean-per-protein, skill, MSE, true-statistic, and exact
-  triangle outputs from future canonical runs.
+- [ ] Remove duplicated mean-per-protein, skill, MSE, true-statistic, and
+  exact-triangle copies from future canonical runs while retaining the seven
+  canonical triangle statistics in `geometry_metrics.csv`.
 - [ ] Validate shards before declaring consolidated outputs complete.

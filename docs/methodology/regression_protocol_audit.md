@@ -85,9 +85,9 @@ Primary implementation:
   shared feature cache and stored targets are `float32`. More importantly,
   scaler second moments use `chunk * chunk` while `chunk` is still `float32`.
   Cast before multiplication to meet the numerical protocol exactly.
-- **P8 — Partial:** The fit does not save design rank, singular-value extrema,
-  or condition number, even though scikit-learn exposes rank and singular
-  values for this dense OLS solver.
+- **P8 — Partial:** The fit does not save the design rank and singular-value
+  extrema already exposed by scikit-learn or the condition number derived from
+  them. No additional SVD is required.
 - **P12 — Partial:** Split assignments and substantial diagnostics are saved,
   but the current workflow lacks a complete configuration/version manifest and
   a split digest enforced by every entrypoint.
@@ -100,7 +100,8 @@ Primary implementation:
 - [ ] Preserve the existing 441/111 outer membership in the master split.
 - [ ] Add deterministic `fit` and `validation` roles within the 441 development proteins.
 - [ ] Form scaler moments after casting feature blocks to `float64`.
-- [ ] Save rank, singular-value, and condition-number diagnostics per layer.
+- [ ] Save solver-exposed rank and singular-value diagnostics plus the derived
+  condition number per layer; do not run an additional SVD.
 - [ ] Save and validate manifest, split, configuration, and version digests.
 - [ ] Retain runtime validation and fail explicitly rather than silently
   changing protein membership at an individual layer.

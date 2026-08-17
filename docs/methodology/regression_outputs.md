@@ -12,8 +12,8 @@ The output design has three goals:
 
 1. make every model directly comparable at the protein, layer, and dataset-split
    levels;
-2. retain enough information for publication tables, uncertainty analyses, and
-   numerical auditing; and
+2. retain enough information for publication tables and numerical auditing;
+   and
 3. avoid storing pair-level predictions or repeatedly saving statistics that
    can be reconstructed exactly from smaller authoritative files.
 
@@ -49,10 +49,7 @@ final-model outputs.
     coefficients.csv or coefficient_shards/*.npz
     booster_layer_XX.json
     feature_importance.csv
-  supplementary/
-    per_protein_by_sequence_separation.csv.gz
   layer_shards/
-  summary.md
 ```
 
 Only applicable artifacts are required. Linear models have coefficients but no
@@ -189,7 +186,8 @@ evaluation scope with these columns:
 | Identity | `analysis_name`, `model_family`, `feature_dim`, `layer`, `protein_split`, `evaluation_scope` |
 | Support | `n_proteins`, `n_proteins_with_finite_r2`, `n_expected_pairs`, `n_evaluated_pairs`, `pair_coverage` |
 | Model metrics | `pooled_r2`, `pooled_mae`, `pooled_rmse`, `pooled_bias_pred_minus_true` |
-| Baseline | `baseline_type`, `baseline_pooled_r2`, `baseline_pooled_mae`, `baseline_pooled_rmse`, `baseline_pooled_bias_pred_minus_true` |
+| Global baseline | `global_baseline_type`, `global_baseline_pooled_r2`, `global_baseline_pooled_mae`, `global_baseline_pooled_rmse`, `global_baseline_pooled_bias_pred_minus_true` |
+| Conditional baseline | `conditional_baseline_type`, `conditional_baseline_pooled_r2`, `conditional_baseline_pooled_mae`, `conditional_baseline_pooled_rmse`, `conditional_baseline_pooled_bias_pred_minus_true` |
 
 This file is authoritative for pooled calculations. Pooled $R^2$ must not be
 calculated by averaging per-protein $R^2$, and pooled RMSE must not be
@@ -200,22 +198,34 @@ paper's main generalization claim uses the locked test row. Search-stage fit and
 validation metrics remain in the XGBoost search directory and are not mixed
 into the final-model output.
 
-## Intercept-only baselines
+## Global and conditional baselines
 
-The baseline is an intercept-only predictor estimated without test targets and
-with the same row weighting as the corresponding fitted model. In plain
-language, it predicts a training-derived weighted mean every time:
+Every model is evaluated against a common global intercept-only baseline. It
+predicts the protein-equal weighted mean distance estimated from the 80%
+development proteins, without using locked-test targets. This gives all model
+families the same featureless reference and catches gross metric or split
+errors. Its type is recorded as `global_development_mean`.
 
-- shared OLS and shared XGBoost use the protein-equal weighted development
-  mean distance;
-- a gated model uses the protein-equal weighted training mean for the relevant
-  fitted gate; and
-- per-protein OLS uses that protein's training-pair mean.
+Models whose fitting scope supplies useful non-representation information also
+receive a conditional baseline:
 
-This baseline is worth retaining because it demonstrates that a probe improves
-on a featureless predictor and catches gross metric or split errors. Baseline
-metrics belong only in the compact `pooled_metrics.csv`; they do not need to be
-repeated in every per-protein and subgroup table.
+- a gated model predicts the protein-equal weighted development mean for the
+  pair's sequence-separation, amino-acid-pair, or joint gate; and
+- per-protein OLS predicts that protein's 80% training-pair mean.
+
+The conditional baseline measures improvement over the model's routing or
+protein identity alone. It is not featureless and must not be described as the
+same control as the global baseline. Shared OLS and shared XGBoost have no
+distinct conditional baseline, so their conditional fields are `NaN` with
+`conditional_baseline_type=not_applicable`.
+
+Both baseline families are estimated only from their defined training
+population and use the same evaluation rows as the fitted model. Neither uses
+locked-test targets. The per-protein conditional baseline also excludes that
+protein's held-out pair targets. Development rows are in-sample descriptions,
+just as they are for the corresponding fitted models. Baseline metrics belong
+only in compact `pooled_metrics.csv`; they do not need to be repeated in every
+per-protein and subgroup table.
 
 MAE skill and RMSE skill are omitted because they are exactly
 `1 - model_error / baseline_error` and can be calculated when needed. Baseline
@@ -279,26 +289,13 @@ and protein count should therefore be emphasized when interpreting category
 accuracy. Cells with fewer than 100 pairs or fewer than five proteins are
 retained but marked in `support_status`.
 
-## Supplementary per-protein sequence-separation detail
-
-Each model also saves
-`supplementary/per_protein_by_sequence_separation.csv.gz`. It contains one row
-per protein, layer, and one of the six sequence-separation bins, using the same
-support and regression metric fields as `per_protein.csv` plus
-`sequence_bin`.
-
-This compressed table covers all proteins. It uses the model's primary pair
-scope: all expected pairs for shared and gated models, and held-out pairs for
-per-protein OLS. Per-protein-by-amino-acid-pair output is not required because
-the 210-fold expansion would be large and has no current paper use. The pooled
-amino-acid table retains the scientifically relevant comparison.
-
 ## Gated-model recombination and coverage
 
 The main gated `per_protein.csv` evaluates the final piecewise predictor after
 all gates have been recombined. It must not contain one main row per gate.
-Gate-level protein results belong only in the compressed supplementary table or
-in explicitly named diagnostic artifacts.
+Gate-level protein results may remain in explicitly named diagnostic artifacts,
+but neither per-gate nor per-protein-by-sequence-bin expansions are required
+canonical outputs.
 
 For sequence-only and amino-acid-only gating, every valid standard-residue pair
 is expected to receive a prediction. For joint AA-pair-by-sequence gating,
@@ -397,8 +394,8 @@ and geometry metric. It records:
 - `mean`, `std`, `median`, `q25`, and `q75` across included proteins; and
 - the metric name and units.
 
-Confidence intervals are produced later by the publication-analysis code so
-the bootstrap method and seed can be fixed once across all variants.
+Uncertainty intervals are not part of the current output contract. They can be
+added later by common publication-analysis code if the paper requires them.
 
 ## Coefficients and model artifacts
 
@@ -443,24 +440,28 @@ are:
 - training protein and pair counts; and
 - feature dimension.
 
-OLS rows additionally save design rank, largest and smallest singular values,
-and condition number. XGBoost rows save the selected configuration ID, final
-boosting rounds, training row cap, and random seed. Failed units remain present
-with explicit status fields.
+OLS rows save design rank and conditioning diagnostics when the fitted solver
+already exposes them. For the current dense scikit-learn OLS implementation,
+save its reported rank and singular-value extrema and derive the condition
+number from those values. Do not run an additional SVD or other matrix
+factorization solely to populate diagnostics. If a future solver does not
+expose them, retain the fit-status row, set the unavailable fields to `NaN`,
+and record that they were not available. XGBoost rows save the selected
+configuration ID, final boosting rounds, training row cap, and random seed.
+Failed units remain present with explicit status fields.
 
 ## Brief runtime output
 
-`runtime.csv` contains one row per layer or completed array task. It should stay
-small and include:
+`runtime.csv` contains one row per analysis and layer. It should stay small and
+include:
 
-- `analysis_name`, `layer`, task/shard identifier, and completion status;
+- `analysis_name`, `layer`, and completion status;
 - numbers of proteins and fitted/evaluated pairs;
-- feature preparation, fitting, prediction, geometry, and total elapsed
-  seconds; and
+- total `elapsed_seconds`; and
 - optional peak resident memory if it is already available from the process.
 
-Detailed timestamps remain in SLURM stdout. Per-protein timing CSVs are not
-required for final paper runs unless performance itself is being studied.
+Task, stage-level, and per-protein timing remain in SLURM stdout and are not
+required final outputs unless performance itself is being studied.
 
 ## Layer shards and consolidation
 
@@ -485,16 +486,16 @@ The core files support the following paper results without rerunning a model:
 - pooled test $R^2$, MAE, RMSE, and bias by layer;
 - mean-per-protein test metrics by layer;
 - paired protein-level differences between model variants;
-- protein-bootstrap confidence intervals using the locked test proteins;
 - accuracy trajectories by sequence separation, amino-acid pair, and spatial
   distance;
 - MDS reconstruction quality and distance-matrix validity by layer; and
 - coefficient trajectories and numerical-stability audits.
 
-For primary comparisons, report at least pooled and mean-per-protein test
-performance, test protein/pair counts, and coverage. Confidence intervals and
-paired comparisons should resample proteins, not individual residue pairs,
-because pairs within a protein are not independent.
+All 48 layers are saved and reported as trajectories; the output contract does
+not designate or save a primary layer. If a later paper table highlights a
+single layer, that reporting choice is made downstream and does not replace the
+complete layer-wise outputs. Report at least pooled and mean-per-protein test
+performance, test protein/pair counts, and coverage.
 
 ## Outputs intentionally not required
 
@@ -509,10 +510,10 @@ analysis needs them:
 - MAE/RMSE skill columns, because model and baseline errors are saved;
 - mean-per-protein summaries duplicated inside pooled output;
 - baseline columns repeated in every subgroup or protein row;
+- per-protein sequence-separation metric expansions;
 - per-protein amino-acid-pair metric expansions;
 - per-protein runtime files; and
-- publication confidence intervals computed independently inside each model
-  script.
+- bootstrap confidence intervals or uncertainty bands.
 
 These exclusions are storage and consistency choices, not prohibitions on later
 derived analyses.

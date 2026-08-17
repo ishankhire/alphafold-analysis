@@ -242,10 +242,14 @@ protein-equal objective and train-derived scaler. No ridge penalty, feature
 selection, pair cap, or target transformation is used. A separate model is
 fitted at every one of the 48 layers using an otherwise identical procedure.
 
-The implementation must save the design rank, singular-value extrema, and
-condition number. A rank-deficient or severely ill-conditioned solution may be
+When the fitted solver exposes them directly, the implementation saves design
+rank and singular-value extrema and derives the condition number. It must not
+run an additional SVD or other matrix factorization solely to populate these
+diagnostics. A rank-deficient or severely ill-conditioned solution may be
 retained diagnostically but must be flagged rather than presented as an
-unqualified stable OLS result.
+unqualified stable OLS result. A future solver that does not expose these
+quantities records them as unavailable rather than recomputing them at
+substantial cost.
 
 Linear OLS fits use a dense, rank-revealing `float64` least-squares solve,
 currently scikit-learn `LinearRegression` backed by SciPy `lstsq`; primary fits
@@ -277,9 +281,11 @@ locked test protein IDs so protein composition is matched. Results over all
 eligible proteins may be reported separately as a broader within-protein
 analysis.
 
-OLS support and conditioning must be auditable for every protein. Fits with
-fewer training rows than model parameters, deficient rank, or extreme condition
-number must be flagged and must not be silently pooled with stable fits.
+OLS support must be auditable for every protein. Solver-exposed rank and
+conditioning diagnostics are retained when available, without an additional
+factorization. Fits with fewer training rows than model parameters, deficient
+reported rank, or extreme reported condition number must be flagged and must
+not be silently pooled with stable fits.
 
 ## Gated shared linear models
 
@@ -320,7 +326,8 @@ excluded from amino-acid-dependent analyses and counted.
 The amino-acid-pair by sequence-separation model contains up to
 \(210\times6=1260\) gates per layer. A gate is eligible only when its training
 data contain at least 257 pair rows, at least five contributing proteins, and
-finite features and targets. Fitted gates retain rank and condition diagnostics.
+finite features and targets. Fitted gates retain solver-exposed rank and
+condition diagnostics without an additional diagnostic factorization.
 
 ### Unresolved sparse-gate coverage policy
 
@@ -405,7 +412,8 @@ Every paper regression must record or enforce:
 - model class, full configuration, random seeds, and library versions;
 - per-protein row counts and effective training weights;
 - finite-value, tensor-shape, residue-alignment, and split-disjointness checks;
-- OLS rank, singular values, condition number, and explicit failure status;
+- solver-exposed OLS rank, singular values, derived condition number, and
+  explicit failure status, without an additional diagnostic factorization;
 - XGBoost selection provenance and fixed final boosting rounds;
 - explicit prediction coverage for gated models;
 - timestamped per-layer timing and checkpointed outputs; and

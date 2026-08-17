@@ -1426,3 +1426,8 @@ membership and allowed clearly labeled all-pair per-protein summaries.
 
 Defined compact common regression, subgroup, geometry, model-artifact, and
 runtime outputs and audited the current principal result families.
+
+## Session: 2026-08-17 — Simplify regression output contract
+
+Dropped per-protein sequence-bin and uncertainty outputs, added global plus
+conditional baselines, and limited timing and OLS diagnostics to cheap fields.
