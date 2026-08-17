@@ -1443,3 +1443,8 @@ changing existing regression runners.
 Migrated all three gated families to the frozen development/test protocol,
 recombined canonical outputs, replayable shards, complete-coverage geometry,
 and restartable 48-layer Delta arrays with explicit joint partial coverage.
+
+## Session: 2026-08-17 — Agent regression and SU guidance
+
+Routed regression work through the canonical methodology and added streaming,
+MaxRSS-based sizing, and Delta memory-billing guidance.

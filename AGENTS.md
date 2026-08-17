@@ -1,146 +1,144 @@
 # AGENTS.md
 
-This file provides guidance to coding agents when working with code in this repository.
+Guidance for coding agents working in this repository.
 
-## Project Overview
+## Project overview
 
-Analysis of AlphaFold pair representations across 48 layers for multiple proteins. Uses PDB-predicted structures for distance-based regression probes. Investigates how pairwise residue features evolve through network depth.
+This repository analyzes AlphaFold/OpenFold pair representations across 48
+layers, primarily with distance-regression probes derived from predicted PDB
+structures.
 
-**Dependencies:** numpy, scipy, matplotlib, biopython, scikit-learn (no package manager — `pip install` manually).
+## Python environment
 
-## Python Environment
+- Use the local `./.venv` for scripts, tests, and import/parity checks.
+- Cluster launchers use `~/protein_venv`; treat that as the Delta runtime
+  convention.
+- Core dependencies are NumPy, SciPy, Matplotlib, Biopython, and scikit-learn.
 
-- A local project virtual environment exists at `./.venv`.
-- Use it for local Python scripts, tests, and import/parity checks that need `scikit-learn`, `biopython`, or other analysis dependencies:
-  ```bash
-  source .venv/bin/activate
-  ```
-- Many cluster sbatch files currently activate `~/protein_venv`. Treat that as the cluster/runtime convention, but for local validation in this repo prefer `./.venv` over the system Python.
+## Repository map
 
-## Numerical Precision
+- `datasets.md` — dataset membership, filtering, and local/Delta input layouts.
+- `docs/methodology/` — canonical regression protocol, output contract, and
+  implementation audits.
+- `docs/cluster/` — Delta operating notes and links to live documentation.
+- `docs/plans/` — experiment and implementation plans.
+- `scripts/cluster_scripts/` — cluster-ready Python and SLURM entrypoints.
+- `scripts/multi_protein/` — local aggregation and post-processing.
+- `delta_files/` — copied cluster results and current canonical result families.
+- `../protein_data/<id>_A/` — local per-protein inputs when available.
 
-- For dense linear regression, least-squares, PCA, SVD, and related matrix-based diagnostics on pair-block features, default to converting materialized feature matrices and regression targets to `float64` before scaling and fitting.
-- Treat `float32` as opt-in for this repo: use it only when the experiment is explicitly about float precision or when memory/performance tradeoffs are the point.
-- Reason: recent large all-row diagnostics in this repo showed that `float32` dense least-squares can become numerically pathological, while `float64` materially improves stability and performance.
+## Regression methodology
 
-## Key Directories
+Before designing or modifying any regression workflow, consult the relevant
+documents in `docs/methodology/`:
 
-- `../protein_data/<id>_A/` — local per-protein input data: `pair_blocks/`, `predicted_pdb/`, `csv_files/`, `visualizations/`
-- `datasets.md` — combined CAMEO+ECOD dataset paths, counts, and TM-score filtered protein IDs
-- `delta_files/` — saved Delta outputs and the current canonical result families
-- `docs/cluster/` — concise local Delta operating notes and links to live documentation
-- `docs/plans/` — experiment and implementation plans
-- `not_relevant_miscellaneous/mds_structures/` — archived MDS/Chimera reference renders
-- `not_relevant_miscellaneous/miscellaneous_results/` — archived supporting and legacy results
-- `not_relevant_miscellaneous/miscellaneous_scripts/` — archived scripts; not active cluster entrypoints
-- `scripts/cluster_scripts/` — all cluster-ready Python scripts and SLURM sbatch files
-- `scripts/multi_protein/` — local aggregation, post-processing, and analysis scripts
+- `regression_methodology.md` is the normative experimental protocol, including
+  cohort, split, feature, precision, weighting, fitting, and evaluation rules.
+- `regression_outputs.md` is the normative output and storage contract.
+- `regression_protocol_audit.md` records which implementations meet the
+  methodology and where reruns or decisions remain.
+- `regression_output_audit.md` records output coverage and remaining gaps.
 
-## Data Essentials
+Do not duplicate these rules in script-specific documentation. Historical
+scripts and results remain useful, but they are not automatically compliant
+with the current methodology or output contract.
 
-- The default analysis set is the combined TM-score > 0.7 CAMEO + ECOD protein pool documented in `datasets.md`.
-- Treat CAMEO and ECOD proteins as one analysis dataset. The source label is only for resolving different Delta input file layouts.
-- Current filtered set size: 154 CAMEO proteins + 400 ECOD proteins = 554 unique proteins.
-- **Local data root:** when working from the `protein` workspace, local per-protein inputs, when present, live in the sibling directory `../protein_data/`
-- **Outputs:** current copied cluster results and local diagnostic outputs live under `delta_files/`. Do not recreate the retired `proteins/multi_protein_results/` tree.
+## Data and outputs
 
-## Cluster Setup
+- The default analysis cohort is the combined TM-score > 0.7 CAMEO + ECOD pool
+  in `datasets.md`: 154 CAMEO plus 400 ECOD proteins, 554 unique proteins.
+- Treat CAMEO and ECOD as one analysis dataset. Use the source label only to
+  resolve their different input layouts unless an experiment explicitly asks
+  for a source comparison.
+- Current outputs belong under `delta_files/`; do not recreate the retired
+  `proteins/multi_protein_results/` tree.
 
-Cluster scripts are currently written for the **Delta** SLURM cluster. Current
-launchers are colocated with their workflows under `generalized_model_ecod/`,
-`per_protein_scripts/`, `gated_linear_probes/`, `diagnostics/`, and
-`xgboost_search/`. They use `module load python`, `srun`, and the Delta account
-configured in each launcher.
+## Delta cluster workflows
 
-Before writing or modifying sbatch files or cluster scripts, consult:
-- `docs/cluster/slurm_array_notes.md` for the repository's array conventions;
-- `docs/cluster/delta-job-cheatsheet.md` for common monitoring commands;
-- the live [NCSA Delta user documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/) for current partitions, limits, modules, and filesystem behavior.
+Launchers are colocated with their workflows under directories including
+`generalized_model_ecod/`, `per_protein_scripts/`, `gated_linear_probes/`,
+`diagnostics/`, and `xgboost_search/`.
 
-**IMPORTANT:** When moving, renaming, or creating cluster Python scripts, always verify that every sbatch file in `scripts/cluster_scripts/` references the correct Python script filename. A mismatch will cause silent job failures on the cluster.
+Before writing or modifying cluster scripts, consult:
 
-### Cluster repository and documentation conventions
+- `docs/cluster/slurm_array_notes.md`;
+- `docs/cluster/delta-job-cheatsheet.md`; and
+- the live [NCSA Delta documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/)
+  for current partitions, limits, accounting, modules, and filesystem behavior.
 
-- Cluster-ready Python scripts and sbatch launchers are normally run from the repository checkout, with submission from the relevant script directory so `SLURM_SUBMIT_DIR` resolves the entrypoint. Flat copies under a Delta working directory are supported only when a workflow explicitly requires them; copied scripts must retain their documented environment variables and any colocated/shared helper modules.
-- Keep script-specific usage notes concise and centralized in `datasets.md`, this file, `branch-analysis.md`, or a nearby diagnostics index. Do not create a separate README for every cluster script unless the workflow has substantial, standalone operational instructions that cannot reasonably live in shared documentation.
+When moving, renaming, or creating a cluster Python entrypoint, verify every
+sbatch reference under `scripts/cluster_scripts/`. Submit from the relevant
+script directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
 
-### Cluster script guidelines
+### Memory and SU efficiency
 
-- Request walltime and memory conservatively, leaving reasonable headroom without reserving substantially more than the job is expected to use. Scale requests to the number of proteins and layers processed by each individual job or array task. For reference, the `192g` request in `general_base256_train_test_layers_24_47.sbatch` supports a large combined-dataset run over roughly 500 proteins and many layers. Use observed runtime and peak memory from comparable jobs to refine future requests.
-- Save outputs after every completed layer so partial results survive timeouts or mid-run failures.
-- Add detailed timestamped time logging to stdout for monitoring, including per-layer timing and major stage timing where relevant.
-- Every new or modified sbatch file must include both notification directives:
+Delta CPU charges are based on reserved resources, using the larger of the CPU
+or memory-derived charge, rather than actual CPU utilization. Large memory
+requests can therefore dominate SU usage even for jobs using only a few cores.
+
+A recent gated sequence-probe run retained a layer-wide feature cache plus raw,
+standardized, sample-weighted, and train/test copies of dense matrices. MaxRSS
+was about 93 GiB per task, and a 192 GB request made six tasks cost about 375
+SUs despite only about 6.4 hours of measured CPU work. A bounded-memory design
+targeting roughly 16 GB would cost about 31 SUs at the same runtime.
+
+For future large regressions:
+
+- Prefer bounded-memory streaming or chunked algorithms when materialized
+  matrices or concurrent copies create a large working set. For OLS, use a
+  stable approach such as chunked TSQR, preserve the canonical objective, and
+  validate numerical parity.
+- Fuse passes across categories when practical, process one protein or bounded
+  chunk at a time, and retain compact statistics rather than pair-level arrays.
+- Before launching a full array, run a representative high-memory task, inspect
+  completed-job MaxRSS and elapsed time, and estimate its Delta charge. Size
+  memory from representative completed runs with reasonable headroom; failed or
+  partial runs may not have reached their eventual peak.
+- Do not assume a larger memory request improves runtime. It is a reservation
+  and limit; excessive headroom raises charges and may increase queue time.
+- Keep a dense materialized design only when methodologically necessary, and
+  document and right-size its memory requirement.
+
+### Launcher requirements
+
+- Request walltime and memory from observed comparable runs, leaving reasonable
+  headroom without substantially over-reserving.
+- Save outputs after every completed layer or similarly meaningful unit so
+  partial results survive timeouts.
+- Log timestamps and elapsed times for each major stage and layer.
+- Every new or modified sbatch file must include:
   `#SBATCH --mail-type=BEGIN,END,FAIL` and
   `#SBATCH --mail-user=ikhire3@gatech.edu`.
-- For sbatch files that need to call a Python script by path, follow the local convention:
-  `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and then `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
+- Resolve Python entrypoints with
+  `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and
+  `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
 
-### Cluster data paths
+## Implementation conventions
 
-Use `datasets.md` as the source of truth for dataset membership, TM-score filtering, and exact Delta pair-block/PDB input layouts.
+- Pair representations have shape `(R, R, 128)`.
+- Reuse `scripts/cluster_scripts/cluster_regression_helpers.py` for dataset
+  discovery, pair-block/PDB resolution, coordinate extraction, distance
+  matrices, AA-pair indexing, and geometry utilities. Diagnostics must add the
+  parent cluster-script directory to `sys.path` before importing it.
+- For hot pair-block extraction, plain `np.load(...)` with preallocated writes
+  has been faster than `mmap_mode="r"` plus repeated concatenation. This does not
+  override the bounded-memory requirement for large aggregate workflows.
+- Default to fixed repo-relative configuration. Add CLI arguments only for
+  genuine environment, reproducibility, or input/output variability.
 
-Many older CAMEO-only cluster scripts still read these environment variables from their sbatch files:
+## Planning and documentation
 
-| Env var | Delta value |
-|---------|-------------|
-| `PAIR_BLOCKS_ROOT` | `/work/hdd/bekh/thayes/openfold_reps` |
-| `PDB_ROOT` | `/work/hdd/bekh/thayes/openfold_reps_outputs_sm` |
-| `CSV_ROOT` | `$HOME/csv_files` |
+- Every implementation plan must name exact output directories and filenames,
+  row granularity, split/evaluation scope, and principal columns or fields.
+- Record important codebase changes very briefly in `branch-analysis.md`; omit
+  minor edits.
 
-Those roots cover the CAMEO layout only. New or modified combined-dataset analyses must resolve CAMEO and ECOD input paths separately, then merge the proteins before sampling, splitting, fitting, and reporting. Do not treat CAMEO and ECOD as separate analysis groups unless an experiment explicitly asks for that comparison.
+## Git workflow
 
-## Architecture Patterns
+After every significant change:
 
-**Pair representation shape:** Always `(R, R, C)` where R = entity sequence length and C = 128 channels.
-
-**PDB-based regression scripts** use inline PDB parsing (no lib/ imports for coordinate extraction). They extract CA coordinates directly from predicted PDB files.
-
-**Visualizations:** Save current aggregate plots beside their result family under
-`delta_files/<analysis>/analysis/` or under `delta_files/publication_plots/`.
-
-**Regression output schema:** Unless a task explicitly requests another layout,
-follow the file organization and column style in
-`delta_files/general_base256_combined/`. In particular, prefer separate
-`per_protein.csv` and aggregate summary CSVs with explicit split labels rather
-than combining unrelated row granularities.
-
-**Path resolution:** All scripts compute paths via `ROOT_DIR = os.path.dirname(...)` so they work regardless of working directory.
-
-**Shared cluster helper:** A reusable helper module now lives at `scripts/cluster_scripts/cluster_regression_helpers.py`.
-
-- Use this helper for future cluster scripts when you need stable shared utilities such as:
-  - `find_pdb_file`
-  - `get_pair_block_path`
-  - `discover_proteins`
-  - `extract_ca_coordinates`
-  - `compute_distance_matrix`
-  - `build_sorted_aa_pair_indices`
-  - geometry helpers such as `classical_mds`, `compute_tm_score`, and `analyze_protein_geometry`
-- Do not feel obligated to retrofit older scripts just to use this helper; it is intended mainly to reduce duplication in new cluster work.
-- For scripts under `scripts/cluster_scripts/diagnostics/`, add the parent `scripts/cluster_scripts` directory to `sys.path` before importing `cluster_regression_helpers`.
-- For hot per-layer pair-block extraction, prefer plain `np.load(...)` plus direct preallocated writes over `mmap_mode="r"` and repeated `np.concatenate(...)`; large fancy-index slices have been materially faster this way on cluster runs.
-
-## Script Configuration Policy
-
-- Default to fixed script configuration (repo-relative paths/constants in code).
-- Do not add CLI arguments unless they are necessary for multi-environment use, reproducibility control, or unavoidable input/output variability.
-
-## Planning Requirements
-
-- Every implementation plan must specify the exact intended outputs, including
-  output directories, filenames, row granularity, split/evaluation scope, and
-  principal columns or fields.
-
-## Change Log
-
-When making important changes to the codebase, record them in `branch-analysis.md`. This file serves as a scratchpad for reasoning about changes. Keep it focused: skip minor edits. It is very important to keep your descriptions super brief. I only want things that meaningfully alter the codebase, and even then, no need to be thorough with descriptions.
-
-## Git Workflow
-
-After every significant change, run:
-```
+```bash
 git add -A
 git commit -m "<descriptive message>"
 git push
 ```
-Commit frequently with clear messages. Push after each commit to keep the remote up to date.
