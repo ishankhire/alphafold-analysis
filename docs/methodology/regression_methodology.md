@@ -46,6 +46,9 @@ The model families answer distinct questions:
 The per-protein model is intentionally not a held-out-protein model. Its scores
 must not be interpreted as directly equivalent to the shared-model test scores.
 
+Per-protein XGBoost pair splits are currently on hold and are not part of this
+canonical protocol pending a separate methodological decision.
+
 ## Dataset and fixed analysis cohort
 
 The default dataset is the single combined pool defined in `datasets.md`:

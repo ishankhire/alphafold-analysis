@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 import numpy as np
-from sklearn.model_selection import StratifiedShuffleSplit
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 CLUSTER_DIR = SCRIPT_DIR.parent
@@ -37,6 +36,17 @@ from general_train_test_common import (  # noqa: E402
     resolve_pair_block_path,
     resolve_pdb_file,
 )
+from regression_protocol import (  # noqa: E402
+    DEVELOPMENT_SPLIT_SEED,
+    FEATURE_DIM,
+    FEATURE_NAMES,
+    MASTER_MANIFEST_DIGEST,
+    MASTER_MANIFEST_VERSION,
+    OUTER_SPLIT_SEED,
+    extract_directional_base256,
+    load_master_manifest,
+    strict_lower_triangle_indices,
+)
 
 
 ANCHOR_LAYERS = (0, 23, 47)
@@ -50,7 +60,9 @@ N_ESTIMATORS = 700
 EARLY_STOPPING_ROUNDS = 30
 SELECTION_TOLERANCE = 0.001
 EPS = 1e-12
-SHARED_VARIANT = "shared_xgboost_avg_symmetric_128"
+AVERAGED_SYMMETRIC_FEATURES = "avg_symmetric_128"
+DIRECTIONAL_BASE256_FEATURES = "directional_base256"
+SHARED_VARIANT = "shared_xgboost_base256"
 PER_PROTEIN_VARIANT = "per_protein_xgboost_avg_symmetric_128"
 SHARED_WEIGHTING_MODE = "protein_equal"
 PER_PROTEIN_WEIGHTING_MODE = "uniform_rows"
@@ -160,47 +172,61 @@ def assign_size_bins(records: Sequence[dict], n_bins: int = N_SIZE_BINS) -> None
         record["size_bin"] = min(n_bins - 1, rank * n_bins // len(ordered))
 
 
-def _stratified_partition(records: Sequence[dict], fractions: tuple[float, float, float], seed: int) -> dict[str, list[dict]]:
-    if not records:
-        raise ValueError("Cannot split an empty protein set.")
-    if not np.allclose(fractions, (0.6, 0.2, 0.2)):
-        raise ValueError(f"Only the locked 60/20/20 split is supported; got {fractions}.")
-    ordered = sorted(records, key=lambda r: str(r["protein_id"]))
-    labels = np.asarray([int(r["size_bin"]) for r in ordered], dtype=np.int64)
-    unique, counts = np.unique(labels, return_counts=True)
-    if unique.size != N_SIZE_BINS or int(np.min(counts)) < 3:
-        raise ValueError(f"All five size bins need at least three proteins; observed {dict(zip(unique, counts))}.")
-    indices = np.arange(len(ordered), dtype=np.int64)
-    first = StratifiedShuffleSplit(n_splits=1, test_size=0.4, random_state=seed)
-    fit_idx, remainder_idx = next(first.split(indices, labels))
-    remainder_labels = labels[remainder_idx]
-    second = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=seed + 1)
-    validation_local, test_local = next(second.split(remainder_idx, remainder_labels))
-    validation_idx = remainder_idx[validation_local]
-    test_idx = remainder_idx[test_local]
-    result = {
-        "fit": [ordered[int(i)] for i in fit_idx],
-        "validation": [ordered[int(i)] for i in validation_idx],
-        "test": [ordered[int(i)] for i in test_idx],
+def build_shared_split(records: Sequence[dict]):
+    """Apply the frozen canonical fit/validation/test roles to loaded records."""
+    manifest_entries = load_master_manifest()
+    eligible_entries = {
+        entry.protein_id: entry for entry in manifest_entries if entry.eligible
     }
-    for split_records in result.values():
-        split_records.sort(key=lambda r: r["protein_id"])
-    return result
+    record_by_id = {str(record["protein_id"]): record for record in records}
+    if len(record_by_id) != len(records):
+        raise ValueError("Loaded shared XGBoost records contain duplicate protein IDs.")
+    missing = sorted(set(eligible_entries) - set(record_by_id))
+    unexpected = sorted(set(record_by_id) - set(eligible_entries))
+    if missing or unexpected:
+        raise RuntimeError(
+            "Loaded shared XGBoost cohort differs from the frozen canonical "
+            f"manifest (missing={missing}, unexpected={unexpected})."
+        )
 
+    parts = {role: [] for role in ("fit", "validation", "test")}
+    for protein_id, entry in eligible_entries.items():
+        record = record_by_id[protein_id]
+        observed = (
+            str(record.get("source", "")),
+            int(record["n_residues"]),
+            int(record["n_pairs"]),
+        )
+        expected = (entry.source, entry.n_residues, entry.n_pairs)
+        if observed != expected:
+            raise RuntimeError(
+                f"Loaded metadata for {protein_id} differs from the frozen "
+                f"manifest: observed={observed}, expected={expected}."
+            )
+        record["size_bin"] = int(entry.size_bin)
+        parts[entry.master_role].append(record)
+    for split_records in parts.values():
+        split_records.sort(key=lambda record: str(record["protein_id"]))
 
-def build_shared_split(records: Sequence[dict], seed: int = RANDOM_STATE):
-    """Return a deterministic, disjoint, size-stratified 60/20/20 split."""
-    parts = _stratified_partition(records, (0.6, 0.2, 0.2), seed)
     assignments = []
     for split_name, split_records in parts.items():
         for r in split_records:
             assignments.append({
+                "manifest_version": MASTER_MANIFEST_VERSION,
+                "master_manifest_digest": MASTER_MANIFEST_DIGEST,
                 "protein_id": r["protein_id"], "source": r.get("source", ""),
                 "n_residues": int(r["n_residues"]), "n_pairs": int(r["n_pairs"]),
                 "size_bin": int(r["size_bin"]),
-                "split": "train" if split_name == "fit" else split_name,
+                "split": split_name,
+                "protein_split": "test" if split_name == "test" else "development",
+                "outer_split_seed": OUTER_SPLIT_SEED,
+                "development_split_seed": DEVELOPMENT_SPLIT_SEED,
             })
-    if len({r["protein_id"] for r in assignments}) != len(records):
+    if (
+        len({r["protein_id"] for r in assignments}) != len(records)
+        or {name: len(group) for name, group in parts.items()}
+        != {"fit": 330, "validation": 111, "test": 111}
+    ):
         raise AssertionError("Shared split is not disjoint and exhaustive.")
     return parts, assignments
 
@@ -269,7 +295,33 @@ def averaged_symmetric_features(pair_block: np.ndarray, pair_i: np.ndarray, pair
     return features
 
 
-def load_pair_features(record: Mapping, layer: int, indices: np.ndarray | None = None) -> np.ndarray:
+def directional_base256_features(
+    pair_block: np.ndarray, pair_i: np.ndarray, pair_j: np.ndarray,
+) -> np.ndarray:
+    pair_i = np.asarray(pair_i, dtype=np.int64)
+    pair_j = np.asarray(pair_j, dtype=np.int64)
+    if pair_i.size and not np.all(pair_i > pair_j):
+        raise ValueError(
+            "Canonical directional base256 features require strict-lower-triangle "
+            "pair indices (i > j)."
+        )
+    return extract_directional_base256(pair_block, pair_i, pair_j)
+
+
+def feature_dimension(feature_mode: str) -> int:
+    if feature_mode == DIRECTIONAL_BASE256_FEATURES:
+        return FEATURE_DIM
+    if feature_mode == AVERAGED_SYMMETRIC_FEATURES:
+        return N_CHANNELS
+    raise ValueError(f"Unknown XGBoost feature mode: {feature_mode!r}")
+
+
+def load_pair_features(
+    record: Mapping,
+    layer: int,
+    indices: np.ndarray | None = None,
+    feature_mode: str = AVERAGED_SYMMETRIC_FEATURES,
+) -> np.ndarray:
     path = resolve_pair_block_path(Path(record["protein_dir"]), str(record["protein_id"]), int(layer))
     if not path.exists():
         raise FileNotFoundError(f"Required layer {layer} pair block is missing for {record['protein_id']}: {path}")
@@ -278,12 +330,20 @@ def load_pair_features(record: Mapping, layer: int, indices: np.ndarray | None =
     pair_j = np.asarray(record["pair_j"])
     if indices is not None:
         pair_i, pair_j = pair_i[indices], pair_j[indices]
-    features = averaged_symmetric_features(pb, pair_i, pair_j)
+    if feature_mode == DIRECTIONAL_BASE256_FEATURES:
+        features = directional_base256_features(pb, pair_i, pair_j)
+    elif feature_mode == AVERAGED_SYMMETRIC_FEATURES:
+        features = averaged_symmetric_features(pb, pair_i, pair_j)
+    else:
+        raise ValueError(f"Unknown XGBoost feature mode: {feature_mode!r}")
     del pb
     return features
 
 
-def load_combined_records(require_layers: Sequence[int] = ANCHOR_LAYERS):
+def load_combined_records(
+    require_layers: Sequence[int] = ANCHOR_LAYERS,
+    pair_order: str = "upper",
+):
     records, skipped = [], []
     manifest = build_dataset_protein_manifest()
     for entry in manifest:
@@ -306,7 +366,12 @@ def load_combined_records(require_layers: Sequence[int] = ANCHOR_LAYERS):
             if shape != (coords.shape[0], coords.shape[0], N_CHANNELS):
                 skipped.append({"protein_id": protein_id, "source": entry["source"], "reason": f"PDB/pair-block shape mismatch: {coords.shape[0]} CA vs {shape}"})
                 continue
-            pair_i, pair_j = np.triu_indices(coords.shape[0], k=1)
+            if pair_order == "lower":
+                pair_i, pair_j = strict_lower_triangle_indices(coords.shape[0])
+            elif pair_order == "upper":
+                pair_i, pair_j = np.triu_indices(coords.shape[0], k=1)
+            else:
+                raise ValueError(f"Unknown pair ordering: {pair_order!r}")
             y = np.asarray(compute_distance_matrix(coords)[pair_i, pair_j], dtype=np.float64)
             records.append({
                 **entry, "pdb_path": pdb_path, "coordinates": coords,
@@ -332,7 +397,13 @@ def select_per_protein_manifest(records: Sequence[dict], seed: int = RANDOM_STAT
     return sorted(selected, key=lambda r: (int(r["size_bin"]), r["protein_id"]))
 
 
-def materialize_records(records: Sequence[dict], layer: int, cap: int | None = None, split_name: str | None = None):
+def materialize_records(
+    records: Sequence[dict],
+    layer: int,
+    cap: int | None = None,
+    split_name: str | None = None,
+    feature_mode: str = AVERAGED_SYMMETRIC_FEATURES,
+):
     chunks_x, chunks_y, row_ids, offsets = [], [], [], []
     start = 0
     elapsed = 0.0
@@ -343,7 +414,7 @@ def materialize_records(records: Sequence[dict], layer: int, cap: int | None = N
             base_indices = record["pair_splits"][split_name]
         indices = nested_sample_indices(base_indices, record["protein_id"], cap) if cap is not None else base_indices
         tick = time.perf_counter()
-        x = load_pair_features(record, layer, indices)
+        x = load_pair_features(record, layer, indices, feature_mode)
         elapsed += time.perf_counter() - tick
         y = np.asarray(record["y"][indices], dtype=np.float64)
         end = start + y.size
@@ -352,11 +423,19 @@ def materialize_records(records: Sequence[dict], layer: int, cap: int | None = N
         chunks_y.append(y)
         row_ids.extend([record["protein_id"]] * y.size)
         start = end
-    x_all = np.concatenate(chunks_x, axis=0) if chunks_x else np.empty((0, N_CHANNELS), dtype=np.float64)
+    expected_feature_dim = feature_dimension(feature_mode)
+    x_all = np.concatenate(chunks_x, axis=0) if chunks_x else np.empty((0, expected_feature_dim), dtype=np.float64)
     y_all = np.concatenate(chunks_y) if chunks_y else np.empty(0, dtype=np.float64)
-    if x_all.dtype != np.float64 or x_all.shape[1] != N_CHANNELS:
-        raise AssertionError("Materialized XGBoost features must be unstandardized float64 (n,128).")
-    return {"x": x_all, "y": y_all, "protein_ids": row_ids, "offsets": offsets, "materialization_seconds": elapsed}
+    if x_all.dtype != np.float64 or x_all.shape[1] != expected_feature_dim:
+        raise AssertionError(
+            "Materialized XGBoost features must be unstandardized float64 "
+            f"with width {expected_feature_dim}."
+        )
+    return {
+        "x": x_all, "y": y_all, "protein_ids": row_ids, "offsets": offsets,
+        "feature_dim": expected_feature_dim,
+        "materialization_seconds": elapsed,
+    }
 
 
 def r2_score(y_true, y_pred) -> float:
@@ -425,11 +504,12 @@ def regression_output_row(
     split_name: str,
     evaluation_scope: str,
     metadata: Mapping | None = None,
+    feature_dim: int = N_CHANNELS,
 ) -> dict:
     metrics = metric_row(y_true, predictions)
     return {
         **dict(metadata or {}),
-        "feature_dim": N_CHANNELS,
+        "feature_dim": int(feature_dim),
         "split": "train" if split_name == "fit" else split_name,
         "evaluation_scope": evaluation_scope,
         "source": record["source"],
@@ -449,7 +529,10 @@ def regression_output_row(
 
 
 def split_summary_row(
-    rows: Sequence[Mapping], pooled: PooledStats, metadata: Mapping | None = None,
+    rows: Sequence[Mapping],
+    pooled: PooledStats,
+    metadata: Mapping | None = None,
+    feature_dim: int = N_CHANNELS,
 ) -> dict:
     if not rows:
         raise ValueError("Cannot summarize an empty regression split.")
@@ -460,7 +543,7 @@ def split_summary_row(
     pooled_metrics = pooled.metrics()
     return {
         **dict(metadata or {}),
-        "feature_dim": N_CHANNELS,
+        "feature_dim": int(feature_dim),
         "split": rows[0]["split"],
         "n_proteins": len(rows),
         "n_pairs": pooled.n,
@@ -492,8 +575,11 @@ def summarize_prediction_bundle(
         pooled.update(y, pred)
         rows.append(regression_output_row(
             record, y, pred, split_name, evaluation_scope, metadata,
+            int(bundle.get("feature_dim", N_CHANNELS)),
         ))
-    return rows, split_summary_row(rows, pooled, metadata)
+    return rows, split_summary_row(
+        rows, pooled, metadata, int(bundle.get("feature_dim", N_CHANNELS))
+    )
 
 
 def require_xgboost():
@@ -544,13 +630,34 @@ def fit_xgboost(
     }
 
 
-def importance_rows(model, metadata: Mapping) -> list[dict]:
+def importance_rows(
+    model,
+    metadata: Mapping,
+    feature_mode: str = AVERAGED_SYMMETRIC_FEATURES,
+) -> list[dict]:
     rows = []
     booster = model.get_booster()
+    if feature_mode == DIRECTIONAL_BASE256_FEATURES:
+        feature_names = FEATURE_NAMES
+    elif feature_mode == AVERAGED_SYMMETRIC_FEATURES:
+        feature_names = tuple(
+            f"avg_symmetric_ch_{channel}" for channel in range(N_CHANNELS)
+        )
+    else:
+        raise ValueError(f"Unknown XGBoost feature mode: {feature_mode!r}")
     for importance_type in ("gain", "weight", "cover"):
         values = booster.get_score(importance_type=importance_type)
-        for channel in range(N_CHANNELS):
-            rows.append({**metadata, "importance_type": importance_type, "channel": channel, "feature_name": f"avg_symmetric_ch_{channel}", "importance": float(values.get(f"f{channel}", 0.0))})
+        for feature_index, feature_name in enumerate(feature_names):
+            row = {
+                **metadata,
+                "importance_type": importance_type,
+                "channel": feature_index,
+                "feature_name": feature_name,
+                "importance": float(values.get(f"f{feature_index}", 0.0)),
+            }
+            if feature_mode == DIRECTIONAL_BASE256_FEATURES:
+                row["feature_index"] = feature_index
+            rows.append(row)
     return rows
 
 
@@ -681,6 +788,7 @@ def evaluate_model_records(
     split_name: str,
     evaluation_scope: str,
     metadata: Mapping | None = None,
+    feature_mode: str = AVERAGED_SYMMETRIC_FEATURES,
 ):
     """Stream full proteins through feature loading, prediction, and metrics."""
     metadata = dict(metadata or {})
@@ -693,7 +801,7 @@ def evaluate_model_records(
     }
     for record in records:
         tick = time.perf_counter()
-        x = load_pair_features(record, layer)
+        x = load_pair_features(record, layer, feature_mode=feature_mode)
         times["materialization_seconds"] += time.perf_counter() - tick
         tick = time.perf_counter()
         pred = np.asarray(model.predict(x), dtype=np.float64)
@@ -709,10 +817,16 @@ def evaluate_model_records(
             split_name,
             evaluation_scope,
             {**metadata, "layer": layer},
+            feature_dimension(feature_mode),
         ))
         times["metric_seconds"] += time.perf_counter() - tick
         del pred
-    return rows, split_summary_row(rows, pooled, {**metadata, "layer": layer}), times
+    return rows, split_summary_row(
+        rows,
+        pooled,
+        {**metadata, "layer": layer},
+        feature_dimension(feature_mode),
+    ), times
 
 
 def require_non_degenerate_iterations(

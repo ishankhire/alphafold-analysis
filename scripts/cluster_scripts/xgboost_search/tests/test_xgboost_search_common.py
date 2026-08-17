@@ -14,8 +14,9 @@ if str(PACKAGE_DIR) not in sys.path:
 
 from xgboost_search_common import (  # noqa: E402
     ANCHOR_LAYERS, PER_PROTEIN_WEIGHTING_MODE, SHARED_WEIGHTING_MODE,
-    PooledStats, averaged_symmetric_features, build_shared_split, fit_xgboost,
-    load_complete_search, map_search_task,
+    PooledStats, averaged_symmetric_features, build_shared_split,
+    directional_base256_features, fit_xgboost, load_complete_search,
+    load_master_manifest, map_search_task,
     map_shared_winner_task, map_winner_layer_task, nested_sample_indices,
     pair_split_indices, protein_equal_weights, r2_score,
     require_non_degenerate_iterations, select_winner,
@@ -37,14 +38,33 @@ class FeatureTests(unittest.TestCase):
         self.assertEqual(actual.dtype, np.float64)
         np.testing.assert_allclose(actual, expected)
 
+    def test_directional_base256_features_preserve_canonical_order(self):
+        pair_block = np.arange(5 * 5 * 128, dtype=np.float32).reshape(5, 5, 128)
+        pair_i, pair_j = np.tril_indices(5, k=-1)
+        actual = directional_base256_features(pair_block, pair_i, pair_j)
+        expected = np.concatenate(
+            [pair_block[pair_i, pair_j], pair_block[pair_j, pair_i]], axis=1
+        ).astype(np.float64)
+        self.assertEqual(actual.shape, (10, 256))
+        self.assertEqual(actual.dtype, np.float64)
+        np.testing.assert_array_equal(actual, expected)
+        with self.assertRaisesRegex(ValueError, "strict-lower-triangle"):
+            directional_base256_features(pair_block, pair_j, pair_i)
+
 
 class SplitAndSamplingTests(unittest.TestCase):
     @staticmethod
     def records():
         return [
-            {"protein_id": f"p{size_bin}_{i:02d}", "source": "synthetic", "n_residues": 20 + i,
-             "n_pairs": 100 + i, "size_bin": size_bin}
-            for size_bin in range(5) for i in range(10)
+            {
+                "protein_id": entry.protein_id,
+                "source": entry.source,
+                "n_residues": entry.n_residues,
+                "n_pairs": entry.n_pairs,
+                "size_bin": entry.size_bin,
+            }
+            for entry in load_master_manifest()
+            if entry.eligible
         ]
 
     def test_shared_split_is_deterministic_disjoint_stratified_exhaustive(self):
@@ -53,10 +73,18 @@ class SplitAndSamplingTests(unittest.TestCase):
         self.assertEqual(assignments_a, assignments_b)
         ids = [{r["protein_id"] for r in split_a[name]} for name in ("fit", "validation", "test")]
         self.assertFalse(ids[0] & ids[1] or ids[0] & ids[2] or ids[1] & ids[2])
-        self.assertEqual(len(set.union(*ids)), 50)
-        for split_name, expected_per_bin in (("fit", 6), ("validation", 2), ("test", 2)):
-            counts = [sum(r["size_bin"] == b for r in split_a[split_name]) for b in range(5)]
-            self.assertEqual(counts, [expected_per_bin] * 5)
+        self.assertEqual(len(set.union(*ids)), 552)
+        self.assertEqual(
+            [len(split_a[name]) for name in ("fit", "validation", "test")],
+            [330, 111, 111],
+        )
+        self.assertEqual({row["split"] for row in assignments_a}, {
+            "fit", "validation", "test",
+        })
+
+    def test_shared_split_rejects_incomplete_cohort(self):
+        with self.assertRaisesRegex(RuntimeError, "frozen canonical manifest"):
+            build_shared_split(self.records()[:-1])
 
     def test_pair_split_is_deterministic_disjoint_exhaustive_and_layer_independent(self):
         split_a = pair_split_indices(103, "protein-A")

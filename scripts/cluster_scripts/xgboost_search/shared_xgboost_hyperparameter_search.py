@@ -9,8 +9,9 @@ from pathlib import Path
 import numpy as np
 
 from xgboost_search_common import (
-    ANCHOR_LAYERS, EARLY_STOPPING_ROUNDS, FIXED_XGBOOST_PARAMETERS, N_CHANNELS, N_ESTIMATORS,
-    SEARCH_CAP, SHARED_CONFIGS, SHARED_WEIGHTING_MODE, build_shared_split, cleanup_bundle,
+    ANCHOR_LAYERS, DIRECTIONAL_BASE256_FEATURES, EARLY_STOPPING_ROUNDS,
+    FEATURE_DIM, FIXED_XGBOOST_PARAMETERS, N_ESTIMATORS, SEARCH_CAP,
+    SHARED_CONFIGS, SHARED_WEIGHTING_MODE, build_shared_split, cleanup_bundle,
     evaluate_model_records, fit_xgboost, load_combined_records, log,
     map_search_task, materialize_records, n_jobs_from_environment,
     output_root, remove_obsolete_outputs, shared_search_dir, split_digest,
@@ -28,7 +29,7 @@ def run(task_id: int) -> None:
     log(f"Shared XGBoost search task {task_id}: layer {layer}")
     log(f"Output root: {output_root()}")
 
-    records, skipped = load_combined_records(ANCHOR_LAYERS)
+    records, skipped = load_combined_records(ANCHOR_LAYERS, pair_order="lower")
     split, assignments = build_shared_split(records)
     digest = split_digest(assignments)
     write_csv(layer_dir / "split_assignments.csv", assignments)
@@ -37,8 +38,8 @@ def run(task_id: int) -> None:
     metadata = {
         "pipeline": "shared_search", "layer": layer, "task_id": task_id,
         "anchor_layers": list(ANCHOR_LAYERS), "split_digest": digest,
-        "feature_definition": "float64 0.5*(pair_block[i,j,:]+pair_block[j,i,:])",
-        "feature_count": N_CHANNELS, "standardized": False,
+        "feature_definition": "float64 [pair_block[i,j,:] | pair_block[j,i,:]], i>j",
+        "feature_count": FEATURE_DIM, "standardized": False,
         "fit_cap_per_protein": SEARCH_CAP, "n_estimators": N_ESTIMATORS,
         "early_stopping_rounds": EARLY_STOPPING_ROUNDS,
         "fixed_xgboost_parameters": FIXED_XGBOOST_PARAMETERS,
@@ -50,8 +51,14 @@ def run(task_id: int) -> None:
     write_json(layer_dir / "search_metadata.json", metadata)
 
     log("Materializing the nested 10k/protein fit matrix and uncapped validation matrix")
-    fit_bundle = materialize_records(split["fit"], layer, cap=SEARCH_CAP)
-    validation_bundle = materialize_records(split["validation"], layer)
+    fit_bundle = materialize_records(
+        split["fit"], layer, cap=SEARCH_CAP,
+        feature_mode=DIRECTIONAL_BASE256_FEATURES,
+    )
+    validation_bundle = materialize_records(
+        split["validation"], layer,
+        feature_mode=DIRECTIONAL_BASE256_FEATURES,
+    )
     matrix_materialization_seconds = fit_bundle["materialization_seconds"] + validation_bundle["materialization_seconds"]
     rows = []
     for config in SHARED_CONFIGS:
@@ -85,6 +92,7 @@ def run(task_id: int) -> None:
 
         _, test_metrics, test_times = evaluate_model_records(
             model, split["test"], layer, "test", "full_protein_pairs",
+            feature_mode=DIRECTIONAL_BASE256_FEATURES,
         )
         row = {
             **config, "layer": layer,

@@ -1458,3 +1458,9 @@ Added MaxRSS-based memory recommendations for the final regression workflows.
 Marked the migrated gated OLS code as canonical while retaining the pending
 Delta rerun explicitly, and right-sized its six launch stages from the recorded
 MaxRSS guidance.
+
+## Session: 2026-08-18 — Align shared XGBoost search inputs
+
+Moved the shared XGBoost anchor-layer search and cap sweep to the frozen master
+protein split and canonical directional base256 features, leaving per-protein
+XGBoost behavior unchanged and explicitly on hold.

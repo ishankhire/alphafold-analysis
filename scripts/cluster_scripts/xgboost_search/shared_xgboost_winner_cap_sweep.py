@@ -10,6 +10,7 @@ import numpy as np
 
 from xgboost_search_common import (
     ANCHOR_LAYERS,
+    DIRECTIONAL_BASE256_FEATURES,
     SHARED_VARIANT,
     SHARED_CONFIGS,
     SHARED_WEIGHTING_MODE,
@@ -68,7 +69,7 @@ def run(task_id: int) -> None:
                 "This task derived a different shared winner than canonical task 0."
             )
 
-    records, skipped = load_combined_records(ANCHOR_LAYERS)
+    records, skipped = load_combined_records(ANCHOR_LAYERS, pair_order="lower")
     split, assignments = build_shared_split(records)
     observed_digest = split_digest(assignments)
     if observed_digest != expected_digest:
@@ -96,8 +97,14 @@ def run(task_id: int) -> None:
         f"Training fresh {selected['config_id']} booster (cap={cap_label}) "
         "with validation early stopping"
     )
-    fit_bundle = materialize_records(split["fit"], layer, cap=cap)
-    validation_bundle = materialize_records(split["validation"], layer)
+    fit_bundle = materialize_records(
+        split["fit"], layer, cap=cap,
+        feature_mode=DIRECTIONAL_BASE256_FEATURES,
+    )
+    validation_bundle = materialize_records(
+        split["validation"], layer,
+        feature_mode=DIRECTIONAL_BASE256_FEATURES,
+    )
     model, fit_info = fit_xgboost(
         selected,
         fit_bundle,
@@ -114,7 +121,7 @@ def run(task_id: int) -> None:
     }
     write_csv(
         task_dir / "channel_importance.csv",
-        importance_rows(model, identity),
+        importance_rows(model, identity, DIRECTIONAL_BASE256_FEATURES),
     )
 
     regression_rows, split_summaries = [], []
@@ -161,6 +168,7 @@ def run(task_id: int) -> None:
         "test",
         "full_protein_pairs",
         identity,
+        DIRECTIONAL_BASE256_FEATURES,
     )
     regression_rows.extend(rows)
     split_summaries.append(aggregate)
