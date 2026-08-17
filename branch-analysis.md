@@ -1448,3 +1448,7 @@ and restartable 48-layer Delta arrays with explicit joint partial coverage.
 
 Routed regression work through the canonical methodology and added streaming,
 MaxRSS-based sizing, and Delta memory-billing guidance.
+
+## Session: 2026-08-18 — SBATCH memory guidance
+
+Added MaxRSS-based memory recommendations for the final regression workflows.
