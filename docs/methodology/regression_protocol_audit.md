@@ -4,9 +4,13 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_methodology.md`. It is a code-and-artifact audit as of
-2026-08-17, not a claim that historical results are invalid. A result can remain
+2026-08-18, not a claim that historical results are invalid. A result can remain
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
+
+The summary table assesses the active implementation. Its disposition column
+and the family-specific text separately identify whether canonical production
+artifacts have actually been generated and audited.
 
 Output schemas and output-specific implementation gaps are assessed separately
 in `regression_output_audit.md`.
@@ -45,9 +49,9 @@ The short identifiers below are used throughout the audit.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Shared linear OLS | Meets | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Closest current primary baseline; targeted rerun needed |
 | Per-protein linear OLS | Meets | Partial | Meets | Meets | Meets | Not applicable | Partial | Meets | Meets | Not applicable | Pair split and separate train/test metrics are present; combined metrics are permissible supplementary descriptions |
-| Sequence-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
-| AA-pair-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Meets | Gap | Meets | Strong six-layer exploratory result; extend to 48 layers and master split |
-| AA-pair x sequence-gated OLS | Meets | Partial | Meets | Meets | Meets | Meets | Meets | Partial | Gap | Meets | Sparse-gate coverage policy unresolved |
+| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
+| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
+| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback implementation complete; 48-layer production rerun pending |
 | Shared XGBoost | Meets | Gap | Meets | Gap | Meets | Meets | Not applicable | Partial | Gap | Gap | Requires a new canonical implementation and rerun |
 
 ## Shared linear OLS
@@ -166,29 +170,47 @@ Primary implementation:
 - `scripts/cluster_scripts/gated_linear_probes/sequence_gated_linear_probes.py`
 - `scripts/cluster_scripts/gated_linear_probes/aa_pair_gated_linear_probes.py`
 - `scripts/cluster_scripts/gated_linear_probes/aa_sequence_gated_linear_probes.py`
-- saved family: `delta_files/consolidated/`
+- `scripts/cluster_scripts/gated_linear_probes/consolidate_joint_gated_layer.py`
+- `scripts/cluster_scripts/gated_linear_probes/aggregate_gated_linear_probe_suite.py`
+- historical saved family: `delta_files/consolidated/`
 
-### What already aligns
+### Active canonical implementation
 
-- The saved run contains 552 analyzed proteins and uses the exact same 441/111
-  outer protein membership as `general_base256_combined`.
-- **P1:** Preparation freezes this cohort across every requested gated layer
-  and records exclusions explicitly.
-- **P3/P4:** Uses strict-lower-triangle targets and directional base256
-  features.
-- **P5/P6:** Materializes gate matrices in `float64`; scaling and fitting are
-  train-only and `float64`.
-- **P7:** Gives each contributing training protein equal total weight within a
-  gate.
-- **P8:** Uses OLS and saves gate eligibility, rank, singular values, condition
-  number, and explicit failure flags.
-- **P9:** Evaluates training and held-out proteins separately.
-- **P11/P12:** Gate definitions are fixed, manifests and configuration/split
-  digests are saved, and failures and exclusions are explicit.
-- The saved six-layer run fitted all 36 sequence gates and all 1,260
-  amino-acid-only layer-gates.
+- **P1/P2:** Preparation imports and verifies the frozen 554-entry canonical
+  manifest and split digest, uses all 552 eligible proteins in production, and
+  preserves the 330 `fit`, 111 `validation`, and 111 locked `test` roles. A
+  later-layer input failure leaves the task/layer incomplete rather than
+  changing cohort membership. Smoke mode selects a deterministic subset of
+  those frozen roles without creating a new split.
+- **P3/P4:** Pair indices and directional base256 extraction come from
+  `regression_protocol.py`, giving one strict-lower-triangle target row and
+  ordered `[Z_ij | Z_ji]` features per unordered pair.
+- **P5/P6:** The temporary feature cache is explicitly labeled `float32`, but
+  every gate matrix, target, scaler moment, weight, loss, and OLS fit is
+  materialized in `float64`. Gate-specific scalers use only the combined
+  development fitting population and are replayed unchanged for locked test
+  proteins.
+- **P7:** `protein_equal_weights` and `ProteinEqualFeatureMoments` implement
+  equal total weight per contributing development protein within every gate.
+- **P8:** The fixed eligibility rules remain at 257 training rows and five
+  contributing proteins. Fitted scikit-learn OLS models retain solver-exposed
+  rank, singular extrema, derived condition number, and stability flags without
+  an additional diagnostic factorization.
+- **P9/P11:** Fixed models are fitted on `fit + validation`; recombined
+  development and locked-test results are evaluated separately. No gate,
+  feature, layer, or tuning choice uses test outcomes.
+- **P10:** Production task mappings and launchers cover layers 0 through 47;
+  smoke mode covers layer 0 only.
+- **P12:** Preparation, task, layer-shard, and final run manifests enforce the
+  canonical split and family-configuration digests, record versions and feature
+  order, checkpoint completed gates/layers, and retain explicit failed units.
+- **P13:** The joint model uses the selected no-fallback policy. Unsupported
+  gates remain unpredicted, and recombined rows report exact partial coverage.
 
-The saved conditioning diagnostics provide a useful numerical audit:
+### Historical evidence and remaining run action
+
+The existing six-layer saved family predates the canonical migration. Its
+conditioning diagnostics remain useful historical evidence:
 
 - all 36 sequence-gate fits have rank 256, with condition numbers from 32.9 to
   101.8;
@@ -201,37 +223,19 @@ Thus the diagnostics mostly confirm stable full-rank fits for the first two
 families while identifying a small, weakly supported tail in the joint family.
 They are quality-control metadata rather than primary scientific outcomes.
 
-### Gaps common to all gated families
-
-- **P2 — Partial:** The outer 80/20 membership matches the general model, but
-  the new master `fit`/`validation` roles do not yet exist.
-- **P10 — Gap:** Each family covers six representative layers rather than the
-  complete trajectory.
-- The preparation manifest labels numerical precision as `float64` while also
-  using a temporary `float32` feature cache. This is acceptable under the new
-  protocol because materialized gate matrices are converted before statistics
-  and fitting, but the manifest should describe both storage and fitting
-  precision explicitly.
-
-### Joint-gate-specific gap
-
-- **P13 — Pending decision/Partial:** The saved joint run requested 7,560
-  layer-gate fits. It fitted 7,050 and marked 510
-  `insufficient_train_rows`. Unsupported test pairs have no joint-gate
-  prediction. Current recombined metrics therefore cover about 99.9% rather
-  than exactly the same pair population as the global and sequence-gated
-  models.
-- Until a fallback or matched-exclusion policy is chosen, joint whole-protein
-  scores must retain their coverage qualification.
+The migrated implementation has no remaining gated-methodology code gap. A new
+Delta production run is still required before the saved artifacts can be
+described as a completed canonical 48-layer result family. The historical
+joint counts above must not be assumed to be the new run's support counts.
 
 ### Checklist
 
-- [ ] Replace the six-layer constant with a complete 0-47 production trajectory.
-- [ ] Reuse the frozen 552-protein cohort and master protein split.
-- [ ] Fit final fixed OLS gates on the combined 80% development proteins.
-- [ ] Choose no fallback, hierarchical fallback, or matched exclusion for sparse joint gates.
-- [ ] Enforce and report 100% coverage if hierarchical fallback is selected.
-- [ ] Keep exact support and failure counts under every policy.
+- [x] Replace the six-layer constant with a complete 0-47 production trajectory.
+- [x] Reuse the frozen 552-protein cohort and canonical master split.
+- [x] Fit final fixed OLS gates on the combined 80% development proteins.
+- [x] Use no fallback for sparse joint gates and report exact partial coverage.
+- [x] Keep exact support and failure counts for every requested gate.
+- [ ] Complete the Delta production rerun and audit the resulting 48-layer artifacts.
 
 ## Shared XGBoost
 
@@ -367,9 +371,10 @@ differ from continuous distance regression.
 
 ### Priority 1: required for complete trajectories
 
-- [ ] Extend all three gated OLS families from six layers to all 48.
+- [x] Extend all three gated OLS implementations from six layers to all 48
+  (production rerun pending).
 - [ ] Extend selected shared XGBoost from three anchor layers to all 48.
-- [ ] Resolve sparse joint-gate prediction coverage.
+- [x] Resolve sparse joint-gate handling with explicit no-fallback partial coverage.
 - [ ] Make shared-linear scaler moments fully `float64`.
 
 ### Priority 2: provenance and presentation hardening

@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64g
+#SBATCH --mem=16g
 #SBATCH --time=08:00:00
 #SBATCH --constraint="scratch"
 #SBATCH --array=0-47%8

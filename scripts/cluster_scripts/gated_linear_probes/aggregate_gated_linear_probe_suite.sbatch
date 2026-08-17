@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32g
+#SBATCH --mem=8g
 #SBATCH --time=08:00:00
 #SBATCH --constraint="scratch"
 #SBATCH -o slurm-%j.out

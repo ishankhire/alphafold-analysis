@@ -4,8 +4,12 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_outputs.md`. It is an artifact-and-code audit as of
-2026-08-17. Historical files remain useful, but they do not automatically meet
+2026-08-18. Historical files remain useful, but they do not automatically meet
 the final paper output contract.
+
+The summary table assesses the active implementation. Its disposition column
+and the family-specific text separately identify whether canonical production
+artifacts have actually been generated and audited.
 
 The audit assesses whether a result family saves the information needed for
 consistent comparison. It does not require historical filenames to be renamed
@@ -13,10 +17,11 @@ before their results can be inspected.
 
 Status labels are:
 
-- **Meets:** the saved family already provides the required output.
+- **Meets:** the active implementation provides the required output; the
+  disposition states separately when a production rerun is pending.
 - **Partial:** the main information exists but its scope, schema, or storage
   differs materially.
-- **Gap:** the output is absent.
+- **Gap:** the active implementation does not provide the output.
 - **Not applicable:** the requirement does not apply to that model family.
 
 ## Output protocol checklist
@@ -42,9 +47,9 @@ Status labels are:
 |---|---|---|---|---|---|---|---|---|---|---|
 | Shared linear OLS | Partial | Partial | Partial | Gap | Not applicable | Meets | Meets | Partial | Partial | Strongest current output family; schema normalization and subgroup output remain |
 | Per-protein linear OLS | Partial | Partial | Gap | Gap | Not applicable | Meets | Partial | Partial | Partial | Core metrics and geometry exist, but pooled/subgroup outputs and compact coefficient storage are missing |
-| Sequence-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Meets | Meets | Partial | Detailed gate output exists, but canonical whole-protein and geometry outputs do not |
-| AA-pair-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Partial | Meets | Partial | Same recombination gaps; coefficient CSV will become large at 48 layers |
-| AA-pair x sequence-gated OLS | Meets | Gap | Partial | Partial | Gap | Gap | Meets | Meets | Partial | Coverage is tracked, but whole-protein and explicit geometry-exclusion outputs are missing |
+| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
+| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
+| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback outputs complete in code; 48-layer production rerun pending |
 | Shared XGBoost | Partial | Gap | Gap | Gap | Not applicable | Gap | Partial | Partial | Partial | Current saved artifacts are search outputs, not a canonical final refitted model family |
 
 ## Shared linear OLS
@@ -163,99 +168,70 @@ Primary implementation and saved family:
 Primary implementation and saved families:
 
 - `scripts/cluster_scripts/gated_linear_probes/gated_linear_probe_common.py`
-- `delta_files/consolidated/analysis_1_sequence_gated/`
-- `delta_files/consolidated/analysis_2_aa_pair_gated/`
-- `delta_files/consolidated/analysis_4_aa_sequence_gated/`
+- `scripts/cluster_scripts/gated_linear_probes/consolidate_joint_gated_layer.py`
+- `scripts/cluster_scripts/gated_linear_probes/aggregate_gated_linear_probe_suite.py`
+- intended production root: `$CSV_ROOT/gated_linear_probes/consolidated/`
+- historical saved root: `delta_files/consolidated/`
 
-### What already aligns
+### Active canonical implementation
 
-- **O1/O10:** The suite has a run manifest, split/configuration digests,
-  `gate_status.csv`, support counts, explicit failures, OLS rank/singular-value
-  diagnostics, and elapsed time per fitted gate.
-- `gate_summary.csv` saves pooled $R^2$, MAE, and RMSE separately for train
-  and held-out proteins at each routing gate.
-- Existing subgroup files evaluate held-out predictions by relevant sequence,
-  amino-acid, and spatial-distance categories.
-- Compressed `test_per_protein_gate_metrics.csv.gz` retains detailed per-gate
-  protein results.
-- Sequence-gated coefficients are compact. The joint model already uses the
-  preferred compressed NPZ-shard-plus-index design.
-- The joint analysis retains 510 `insufficient_train_rows` statuses instead of
-  silently omitting those requested gates.
+- **O1:** Each final family writes a schema-versioned `run_manifest.json` with
+  protocol, frozen-split, prepared-cohort, family-configuration, feature-order,
+  version, and code-revision provenance. Preparation and task manifests retain
+  explicit input and fit failures.
+- **O2/O5:** Each layer recombines every routed gate prediction into one
+  all-pairs vector per protein. `per_protein.csv` contains one canonical
+  whole-protein row per protein-layer with expected/evaluated counts, coverage,
+  and prediction status; it does not expand proteins by gate or sequence bin.
+- **O3/O6:** `pooled_metrics.csv` contains separate development and locked-test
+  rows for the recombined predictor. Global and gate-conditional development
+  baselines are evaluated on exactly the model's finite rows. MSE, skill ratios,
+  and mean-per-protein duplicates are not emitted.
+- **O4:** All three families evaluate the same locked-test piecewise predictions
+  in the canonical sequence-separation, amino-acid-pair, and spatial-distance
+  subgroup schemas.
+- **O7/O8:** `geometry_metrics.csv` retains every protein-layer attempt, and
+  `geometry_summary.csv` summarizes complete rows only. Any missing joint-gate
+  prediction yields `geometry_status=incomplete_pair_coverage`, an explicit
+  reason, and `NaN` geometry metrics; no imputation or fallback is used.
+- **O9:** All families use compressed coefficient NPZ shards plus
+  `model_artifacts/coefficient_index.csv`. Shards retain standardized and raw
+  coefficients and intercepts plus feature means/scales for exact replay.
+- **O10:** `model_status.csv` has one row per requested layer-gate, including
+  unsupported gates, support counts, fit flags, and solver-exposed OLS
+  diagnostics without an additional SVD.
+- **O11:** `runtime.csv` has one compact row per analysis-layer; detailed gate
+  and stage timing remains in timestamped stdout.
+- **O12:** Sequence and AA workers checkpoint canonical layer shards directly.
+  Six joint task fragments are recombined by a separate per-layer array. Final
+  aggregation verifies schemas, hashes, configuration/split digests, layer
+  coverage, primary-key uniqueness, and exact row counts before publishing the
+  top-level tables.
+- The canonical path does not emit legacy gate summaries, large per-protein by
+  gate files, `summary.md`, bootstrap tables, detailed timing CSVs, redundant
+  MSE/skill fields, or duplicate triangle samples.
 
-### Common gaps and changes
+### Historical evidence and remaining run action
 
-- **O2/O5 — Gap:** No result family has a canonical main `per_protein.csv` that
-  recombines the piecewise predictions into one whole-protein row. The existing
-  compressed table is gate-level, test-only detail and is not a required final
-  output.
-- **O3 — Partial:** Whole-test pooled metrics are reconstructed later into
-  `gated_probe_visualizations/whole_protein_comparison_metrics.csv`; they should
-  instead be native canonical outputs for both development and test proteins.
-- `gate_summary.csv` duplicates target mean, median, variance, standard
-  deviation, mean-per-protein metrics, baseline metrics, and four skill
-  columns. Most of these can be removed from the final pooled schema.
-- **O4 — Partial:** Category metrics exist, but schemas and category coverage
-  differ by gated family. The final piecewise prediction from every model must
-  be evaluated in all three common category systems, using test proteins only.
-- The existing compressed per-gate tables can become very large: the six-layer
-  test-only joint table is about 28 MB compressed. Neither this expansion nor a
-  replacement per-protein sequence-bin table is required for final runs.
-- **O6 — Partial:** The current gate-conditional baseline is correctly
-  training-derived, but it is repeated across many output scopes along with
-  derivable skill scores. Retain it only in compact whole-model pooled output
-  and add the common global development-mean baseline.
-- **O7 — Gap:** None of the gated result families saves MDS or triangle geometry
-  outputs.
-- **O11 — Partial:** Per-gate elapsed time is available, but one compact
-  per-layer runtime output is still needed.
-
-### Sequence-gated-specific notes
-
-- All 36 saved gate fits succeeded.
-- `gate_summary.csv` is small, and the coefficient CSV is appropriately
-  readable.
-- The present `subgroup_by_amino_acid_pair.csv` is about 6 MB for six layers;
-  an all-48-layer common subgroup file remains reasonable and does not need a
-  per-protein AA expansion.
-
-### Amino-acid-gated-specific notes
-
-- All 1,260 saved gate fits succeeded.
-- The six-layer coefficient CSV is already about 28 MB. At 48 layers it would
-  grow by roughly eightfold, so indexed compressed arrays are preferable for
-  the final run.
-- Sequence-separation and spatial-distance subgroup outputs exist, but the
-  common marginal AA-pair output should also evaluate the recombined model in
-  the unified schema.
-
-### Joint-gated-specific notes
-
-- **O8 — Gap:** The saved regression summaries qualify pair coverage, but there
-  is no per-protein whole-model coverage row and no geometry-exclusion table.
-- The current `delta_files/consolidated/excluded_pairs_summary.csv` contains
-  only its header. It records preparation-time pair exclusions and does not
-  account for prediction-time pairs routed to an unfitted sparse joint gate.
-- Whole-protein regression metrics may use the covered subset as requested,
-  with the exact coverage reported.
-- Geometry must not use the covered subset as if it were a complete distance
-  matrix. Every incomplete protein-layer combination should remain in
-  `geometry_metrics.csv` with `geometry_status=incomplete_pair_coverage` and
-  `NaN` geometry values.
-- The current coefficient NPZ shards and `coefficient_index.csv` are the model
-  to reuse for other large coefficient families.
+The current `delta_files/consolidated/` family remains the historical six-layer
+output described by the earlier audit. It is not rewritten in place and does
+not demonstrate that the new 48-layer production run has completed. There is
+no remaining gated-output implementation gap, but the Delta run and subsequent
+artifact audit are still required before the canonical result family is
+complete in storage.
 
 ### Checklist
 
-- [ ] Produce all-protein recombined `per_protein.csv` for each gated family.
-- [ ] Produce native whole-model `pooled_metrics.csv` rather than relying on a
+- [x] Produce all-protein recombined `per_protein.csv` for each gated family.
+- [x] Produce native whole-model `pooled_metrics.csv` rather than relying on a
   visualization postprocessor.
-- [ ] Replace the current wide gate-summary metric block with the lean common
+- [x] Replace the current wide gate-summary metric block with the lean common
   metric schema.
-- [ ] Produce all three test subgroup files for every gated family.
-- [ ] Add full-coverage-only geometry and explicit incomplete-coverage rows.
-- [ ] Move AA-gated coefficients to indexed compressed shards for 48 layers.
-- [ ] Add compact per-layer runtime output.
+- [x] Produce all three test subgroup files for every gated family.
+- [x] Add full-coverage-only geometry and explicit incomplete-coverage rows.
+- [x] Move gated coefficients to indexed compressed shards for 48 layers.
+- [x] Add compact per-layer runtime output.
+- [ ] Complete the Delta production rerun and audit the consolidated artifacts.
 
 ## Shared XGBoost
 
@@ -306,8 +282,9 @@ Primary implementation and saved family:
 The final contract includes two controls in `pooled_metrics.csv`: a common
 global development-mean predictor and, where applicable, a conditional
 predictor based on gate identity or a protein's training-pair mean. The latter
-is not featureless and must be labeled separately. Current gated outputs have
-the conditional control but still need the common global baseline.
+is not featureless and must be labeled separately. The migrated gated
+implementation writes both controls only in its compact pooled output; the
+historical six-layer saved family still predates this layout.
 
 Retain baseline $R^2$, MAE, RMSE, and bias only in `pooled_metrics.csv`. Skill
 ratios are derived later. True-distance means, medians, variances, and category
@@ -335,12 +312,12 @@ later analyses.
 - [ ] Implement one common metric/schema writer used by all final regressions.
 - [ ] Emit authoritative `per_protein.csv` and `pooled_metrics.csv` everywhere.
 - [ ] Emit the three locked-test subgroup tables everywhere.
-- [ ] Add gated whole-protein recombination and exact coverage fields.
+- [x] Add gated whole-protein recombination and exact coverage fields.
 
 ### Priority 1: geometry and replayability
 
 - [ ] Run the common geometry function for every final model.
-- [ ] Exclude incomplete joint-gated matrices explicitly rather than imputing.
+- [x] Exclude incomplete joint-gated matrices explicitly rather than imputing.
 - [ ] Standardize coefficient/model storage and migrate large families to NPZ
   shards plus indexes.
 

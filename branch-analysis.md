@@ -1452,3 +1452,9 @@ MaxRSS-based sizing, and Delta memory-billing guidance.
 ## Session: 2026-08-18 — SBATCH memory guidance
 
 Added MaxRSS-based memory recommendations for the final regression workflows.
+
+## Session: 2026-08-18 — Close gated regression audit gaps
+
+Marked the migrated gated OLS code as canonical while retaining the pending
+Delta rerun explicitly, and right-sized its six launch stages from the recorded
+MaxRSS guidance.
