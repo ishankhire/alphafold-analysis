@@ -1507,3 +1507,12 @@ must live under `scripts/cluster_scripts/` rather than `scripts/multi_protein/`.
 Documented the canonical flat `$HOME/openfold_interpretability_canonical`
 script deployment, its sole `regression_protocol_data/` subdirectory, and the
 separate `$HOME/csv_files` output root.
+
+## Session: 2026-08-18 — Secondary-structure model comparison
+
+Implemented the restartable DSSP-based 48-layer comparison of sequence-gated
+OLS, shared OLS, per-protein OLS, and final shared XGBoost, with canonical
+artifact/split validation, sparse shared-pair replay, matched held-out
+sensitivity, strict consolidation, trajectories, plots, Delta launchers, and
+focused regression tests. Production execution and result transfer remain
+pending until all four source result families are complete.
