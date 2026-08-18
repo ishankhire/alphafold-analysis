@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -69,6 +70,56 @@ class Layer47CoefficientClusteringTests(unittest.TestCase):
                 paths = self.write_inputs(Path(directory), **kwargs)
                 with self.assertRaises(ValueError):
                     load_layer47_coefficients(*paths)
+
+    def test_loader_reads_canonical_npz_index(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            protein_ids = ["000000001", "000000002", "cameo_A", "cameo_B"]
+            metadata_path = root / "per_protein.csv"
+            pd.DataFrame([
+                {
+                    "layer": 47,
+                    "protein_id": protein_id,
+                    "source": "ecod" if protein_id.isdigit() else "cameo",
+                    "n_residues": 80 + index,
+                    "size_bin": index,
+                    "evaluation_scope": "all_pairs",
+                }
+                for index, protein_id in enumerate(protein_ids)
+            ]).to_csv(metadata_path, index=False)
+            category_path = root / "categories.csv"
+            pd.DataFrame(columns=["prot", "category"]).to_csv(category_path, index=False)
+            shard_relative = "model_artifacts/coefficient_shards/layer_47.npz"
+            shard_path = root / shard_relative
+            shard_path.parent.mkdir(parents=True)
+            matrix = np.arange(len(protein_ids) * N_FEATURES, dtype=np.float64).reshape(
+                len(protein_ids), N_FEATURES,
+            )
+            np.savez_compressed(
+                shard_path,
+                coefficient_standardized=matrix,
+                protein_id=np.asarray(protein_ids),
+                feature_names=np.asarray([f"feature_{index}" for index in range(N_FEATURES)]),
+            )
+            digest = hashlib.sha256(shard_path.read_bytes()).hexdigest()
+            index_path = root / "model_artifacts" / "coefficient_index.csv"
+            pd.DataFrame([
+                {
+                    "layer": 47,
+                    "protein_id": protein_id,
+                    "shard_path": shard_relative,
+                    "array_row": index,
+                    "fit_status": "fitted",
+                    "file_sha256": digest,
+                }
+                for index, protein_id in enumerate(protein_ids)
+            ]).to_csv(index_path, index=False)
+            loaded, metadata, names = load_layer47_coefficients(
+                index_path, metadata_path, category_path,
+            )
+        np.testing.assert_array_equal(loaded, matrix)
+        self.assertEqual(metadata["protein_id"].tolist(), protein_ids)
+        self.assertEqual(names[-1], f"feature_{N_FEATURES - 1}")
 
     def test_normalization_rejects_zero_vector(self) -> None:
         matrix = np.ones((3, N_FEATURES), dtype=np.float64)

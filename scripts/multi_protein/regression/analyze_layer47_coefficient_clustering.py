@@ -9,6 +9,7 @@ standardized-coefficient analysis is retained as a magnitude-sensitive check.
 from __future__ import annotations
 
 import os
+import hashlib
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -38,7 +39,7 @@ N_STABILITY_REPEATS = 25
 STABILITY_SUBSAMPLE_FRACTION = 0.80
 
 INPUT_DIR = PROJECT_ROOT / "delta_files" / "per_protein_base256_combined"
-COEFFICIENT_PATH = INPUT_DIR / "coefficients.csv"
+COEFFICIENT_PATH = INPUT_DIR / "model_artifacts" / "coefficient_index.csv"
 PER_PROTEIN_PATH = INPUT_DIR / "per_protein.csv"
 CATEGORY_PATH = PROJECT_ROOT / "ecod_protein_categories.csv"
 OUTPUT_DIR = INPUT_DIR / "layer47_coefficient_clustering"
@@ -99,28 +100,97 @@ def load_layer47_coefficients(
     category_path: Path = CATEGORY_PATH,
 ) -> tuple[np.ndarray, pd.DataFrame, list[str]]:
     """Load a validated protein-by-feature layer-47 coefficient matrix."""
-    metadata = pd.read_csv(
-        per_protein_path,
-        usecols=["layer", "protein_id", "source", "n_residues", "size_bin"],
-        dtype={"protein_id": str},
-    )
+    metadata = pd.read_csv(per_protein_path, dtype={"protein_id": str})
     require_columns(
         per_protein_path,
         metadata,
-        {"layer", "protein_id", "source", "n_residues", "size_bin"},
+        {"layer", "protein_id", "source", "n_residues"},
     )
+    if "evaluation_scope" in metadata:
+        metadata = metadata.loc[metadata["evaluation_scope"].eq("all_pairs")].copy()
     metadata = metadata.loc[metadata["layer"].eq(LAYER)].copy()
     if metadata.empty:
         raise ValueError(f"{per_protein_path} contains no layer-{LAYER} rows")
     if metadata["protein_id"].duplicated().any():
         raise ValueError(f"{per_protein_path} has duplicate layer-{LAYER} protein rows")
 
+    if "size_bin" not in metadata:
+        cluster_dir = PROJECT_ROOT / "scripts" / "cluster_scripts"
+        import sys
+        if str(cluster_dir) not in sys.path:
+            sys.path.insert(0, str(cluster_dir))
+        from regression_protocol import load_master_manifest
+        size_bins = {
+            entry.protein_id: entry.size_bin
+            for entry in load_master_manifest()
+            if entry.eligible
+        }
+        metadata["size_bin"] = metadata["protein_id"].map(size_bins)
+        if metadata["size_bin"].isna().any():
+            raise ValueError("Canonical metadata contains proteins absent from the master manifest")
+
+    header = pd.read_csv(coefficient_path, nrows=0).columns
+    if "feature_index" not in header:
+        index = pd.read_csv(coefficient_path, dtype={"protein_id": str})
+        require_columns(
+            coefficient_path,
+            index,
+            {"layer", "protein_id", "shard_path", "array_row", "fit_status", "file_sha256"},
+        )
+        index = index.loc[index["layer"].eq(LAYER)].copy()
+        if index.empty or index["protein_id"].duplicated().any():
+            raise ValueError(f"{coefficient_path} lacks a unique layer-{LAYER} coefficient index")
+        shard_paths = index["shard_path"].unique()
+        digests = index["file_sha256"].unique()
+        if len(shard_paths) != 1 or len(digests) != 1:
+            raise ValueError("Layer-47 coefficient index must reference one consistently hashed shard")
+        result_root = coefficient_path.parents[1]
+        shard_path = result_root / str(shard_paths[0])
+        observed_digest = hashlib.sha256(shard_path.read_bytes()).hexdigest()
+        if observed_digest != str(digests[0]):
+            raise ValueError(f"Coefficient shard digest mismatch for {shard_path}")
+        with np.load(shard_path) as archive:
+            coefficients_array = np.asarray(archive["coefficient_standardized"], dtype=np.float64)
+            archive_ids = np.asarray(archive["protein_id"]).astype(str)
+            feature_names = np.asarray(archive["feature_names"]).astype(str).tolist()
+        rows = index["array_row"].astype(int).to_numpy()
+        if np.any(rows < 0) or np.any(rows >= len(archive_ids)):
+            raise ValueError("Coefficient index contains out-of-range array rows")
+        if not np.array_equal(archive_ids[rows], index["protein_id"].astype(str).to_numpy()):
+            raise ValueError("Coefficient index protein IDs do not match the NPZ shard")
+        matrix = coefficients_array[rows]
+        coefficient_ids = index["protein_id"].astype(str).tolist()
+        wide = pd.DataFrame(matrix, index=coefficient_ids).sort_index()
+        wide.index.name = "protein_id"
+        matrix = wide.to_numpy(dtype=np.float64)
+    else:
+        matrix, wide, feature_names = _load_legacy_coefficient_csv(coefficient_path)
+
+    metadata_ids = set(metadata["protein_id"])
+    coefficient_ids = set(wide.index.astype(str))
+    if metadata_ids != coefficient_ids:
+        missing_coefficients = sorted(metadata_ids.difference(coefficient_ids))
+        missing_metadata = sorted(coefficient_ids.difference(metadata_ids))
+        raise ValueError(
+            "Layer-47 protein sets differ between inputs: "
+            f"missing coefficients={missing_coefficients[:5]}, "
+            f"missing metadata={missing_metadata[:5]}"
+        )
+    if matrix.shape != (len(metadata), N_FEATURES) or len(feature_names) != N_FEATURES:
+        raise ValueError(f"Unexpected layer-47 coefficient matrix shape: {matrix.shape}")
+    if not np.isfinite(matrix).all():
+        raise ValueError("Layer-47 coefficient matrix contains non-finite values")
+    metadata = metadata.set_index("protein_id").loc[wide.index].reset_index()
+    metadata = metadata.merge(load_categories(category_path), on="protein_id", how="left")
+    return matrix, metadata, feature_names
+
+
+def _load_legacy_coefficient_csv(
+    coefficient_path: Path,
+) -> tuple[np.ndarray, pd.DataFrame, list[str]]:
+    """Retain read compatibility for already-copied historical coefficient CSVs."""
     columns = [
-        "layer",
-        "protein_id",
-        "feature_index",
-        "feature_name",
-        "coefficient_standardized",
+        "layer", "protein_id", "feature_index", "feature_name", "coefficient_standardized",
     ]
     chunks: list[pd.DataFrame] = []
     for chunk in pd.read_csv(
@@ -156,17 +226,6 @@ def load_layer47_coefficients(
             f"{invalid_counts.index.tolist()[:5]}"
         )
 
-    metadata_ids = set(metadata["protein_id"])
-    coefficient_ids = set(coefficients["protein_id"])
-    if metadata_ids != coefficient_ids:
-        missing_coefficients = sorted(metadata_ids.difference(coefficient_ids))
-        missing_metadata = sorted(coefficient_ids.difference(metadata_ids))
-        raise ValueError(
-            "Layer-47 protein sets differ between inputs: "
-            f"missing coefficients={missing_coefficients[:5]}, "
-            f"missing metadata={missing_metadata[:5]}"
-        )
-
     feature_names_by_index = (
         coefficients[["feature_index", "feature_name"]]
         .drop_duplicates()
@@ -184,14 +243,12 @@ def load_layer47_coefficients(
         values="coefficient_standardized",
     ).sort_index()
     matrix = wide.to_numpy(dtype=np.float64)
-    if matrix.shape != (len(metadata), N_FEATURES):
+    if matrix.ndim != 2 or matrix.shape[1] != N_FEATURES:
         raise ValueError(f"Unexpected layer-47 coefficient matrix shape: {matrix.shape}")
     if not np.isfinite(matrix).all():
         raise ValueError("Layer-47 coefficient matrix contains non-finite values")
 
-    metadata = metadata.set_index("protein_id").loc[wide.index].reset_index()
-    metadata = metadata.merge(load_categories(category_path), on="protein_id", how="left")
-    return matrix, metadata, feature_names
+    return matrix, wide, feature_names
 
 
 def build_representations(matrix: np.ndarray) -> dict[str, np.ndarray]:

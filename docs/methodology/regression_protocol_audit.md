@@ -48,7 +48,7 @@ The short identifiers below are used throughout the audit.
 | Analysis | P1 cohort | P2 split | P3 pairs/target | P4 base256 | P5 precision | P7 weighting | P8 model | P9 evaluation | P10 layers | P11 test lock | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | Shared linear OLS | Meets | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Closest current primary baseline; targeted rerun needed |
-| Per-protein linear OLS | Meets | Partial | Meets | Meets | Meets | Not applicable | Partial | Meets | Meets | Not applicable | Pair split and separate train/test metrics are present; combined metrics are permissible supplementary descriptions |
+| Per-protein linear OLS | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Not applicable | Canonical implementation complete; 48-layer production rerun pending |
 | Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
 | AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
 | AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback implementation complete; 48-layer production rerun pending |
@@ -120,46 +120,43 @@ Primary implementation:
 
 ### What already aligns
 
-- **P3/P4/P5:** Uses all strict-lower-triangle pairs, directional base256
-  features, and materializes the protein-layer feature matrix and target in
-  `float64`.
-- **P6:** Calculates the scaler from each protein's training pairs only.
-- Uses a deterministic protein-ID-derived 80/20 pair split that is reused at
-  every layer.
-- Fits OLS with an intercept-equivalent centered-target implementation.
-- Saves train-pair and held-out-pair R-squared as `train_r2` and `test_r2`.
-- **P10:** Array and batch entrypoints cover all 48 layers.
-- Saves rank, singular-value, and condition-number diagnostics.
-- **P1:** The completed saved trajectory contains the same 552 proteins at
-  every one of the 48 layers.
+- **P1/P2:** Loads and validates the frozen 552-protein manifest, attaches the
+  canonical master role and development/test label, and retains explicit
+  protein-layer failures rather than silently changing membership.
+- **P3/P4/P5/P6:** Uses all strict-lower-triangle pairs, directional base256
+  `float64` features and targets, and a scaler estimated from training pairs
+  only.
+- Uses the canonical protein-ID-derived 80/20 pair split at every layer and
+  records per-protein counts, seed, and split digest.
+- **P8:** Fits intercept-enabled dense OLS and saves solver-exposed rank,
+  singular extrema, condition number, and explicit underdetermined,
+  rank-deficient, or ill-conditioned flags. Flagged fitted units are included
+  in aggregates under the manifest-recorded `include_with_flags` policy.
+- **P9:** Saves distinct long-format `train_pairs`, `heldout_pairs`, and clearly
+  mixed-scope `all_pairs` rows. Geometry is explicitly all-pairs.
+- **P10/P12:** The array and legacy batch entrypoints cover all 48 layers;
+  canonical layer manifests retain split/configuration digests, versions, code
+  revision, failure status, and replayable model provenance.
+- Direct shared-versus-per-protein analysis now filters to locked test protein
+  IDs.
 
-### Gaps and required changes
+### Remaining production action
 
-- **P2 — Partial:** Models are appropriately fitted within proteins rather than
-  across master training proteins, but outputs do not identify the master
-  protein role. Direct comparisons therefore cannot automatically restrict the
-  summary to the shared model's locked test proteins.
-- **P8 — Partial:** The implementation diagnoses underdetermined or unstable
-  OLS fits but still fits and aggregates them without an explicit eligibility
-  or primary-analysis exclusion status.
-- **P9:** The implementation saves separate `train_r2` and `test_r2` fields as
-  required. Its `per_protein_r2`, MSE, MAE, and RMSE fields combine all pairs;
-  these are permissible supplementary mixed-scope descriptions but must remain
-  clearly labeled. Geometry rows are likewise based on predictions over all
-  pairs.
-- **P12 — Partial:** The deterministic pair split can be reproduced, but the
-  outputs do not save train/test pair counts, the pair-split seed/digest, or an
-  explicit fit-status field for every protein-layer combination.
+The active implementation is protocol-complete, but the current copied
+`delta_files/per_protein_base256_combined/` artifacts predate this migration.
+They remain historical evidence until the 48-layer Delta rerun and canonical
+consolidation finish.
 
 ### Checklist
 
-- [ ] Add the master protein role to per-protein outputs.
-- [ ] Keep separate train-pair and held-out-pair metrics, and label combined
+- [x] Add the master protein role to per-protein outputs.
+- [x] Keep separate train-pair and held-out-pair metrics, and label combined
   all-pair fields as mixed-scope descriptive metrics.
-- [ ] Define and save OLS eligibility/conditioning status before aggregation.
-- [ ] Save pair-split counts and a deterministic split digest.
-- [ ] Restrict direct shared-versus-per-protein summaries to master test protein IDs.
-- [ ] Decide separately how geometry reconstruction should treat training-pair predictions.
+- [x] Define and save OLS eligibility/conditioning status before aggregation.
+- [x] Save pair-split counts and a deterministic split digest.
+- [x] Restrict direct shared-versus-per-protein summaries to master test protein IDs.
+- [x] Label geometry reconstruction as using all training and held-out predictions.
+- [ ] Complete the Delta production rerun and audit the consolidated artifacts.
 
 ## Gated shared linear OLS suite
 

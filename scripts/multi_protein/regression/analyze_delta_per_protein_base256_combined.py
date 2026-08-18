@@ -31,7 +31,7 @@ OUT_DIR = PER_PROTEIN_DIR / "analysis"
 PREFIX = "per_protein_base256_combined"
 EXPECTED_LAYERS = tuple(range(48))
 FEATURE_DIM = 256
-R2_COLUMN = "test_r2"
+R2_COLUMN = "r2"
 R2_LABEL = "Held-out pair R$^2$"
 
 ORANGE = "#f58518"
@@ -106,21 +106,24 @@ def load_per_protein_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
     per_protein_path = PER_PROTEIN_DIR / "per_protein.csv"
     geometry_path = PER_PROTEIN_DIR / "geometry_metrics.csv"
 
-    per_protein = pd.read_csv(per_protein_path)
+    all_scopes = pd.read_csv(per_protein_path)
     geometry = pd.read_csv(geometry_path)
 
     require_columns(
         per_protein_path,
-        per_protein,
+        all_scopes,
         {
+            "analysis_name",
+            "model_family",
             "layer",
             "source",
             "protein_id",
             "n_residues",
             "feature_dim",
-            "per_protein_r2",
-            "train_r2",
-            "test_r2",
+            "protein_split",
+            "evaluation_scope",
+            "prediction_status",
+            "r2",
         },
     )
     require_columns(
@@ -132,16 +135,34 @@ def load_per_protein_inputs() -> tuple[pd.DataFrame, pd.DataFrame]:
             "protein_id",
             "n_residues",
             "feature_dim",
-            "per_protein_r2",
-            "train_r2",
-            "test_r2",
+            "protein_split",
+            "evaluation_scope",
+            "geometry_status",
             "tm_score",
             "frac_top3_eigenvalues",
             "n_negative_eigenvalues",
-            "neg_eigenvalue_fraction",
-            *TRIANGLE_COLUMNS,
+            "negative_eigenvalue_fraction",
+            *[column for column in TRIANGLE_COLUMNS if column != "triangle_no_violation_fraction"],
         },
     )
+
+    all_scopes = all_scopes.loc[all_scopes["protein_split"].eq("test")].copy()
+    per_protein = all_scopes.loc[
+        all_scopes["evaluation_scope"].eq("heldout_pairs")
+    ].copy()
+    geometry = geometry.loc[geometry["protein_split"].eq("test")].copy()
+    scope_r2 = (
+        all_scopes.pivot(index=["layer", "protein_id"], columns="evaluation_scope", values="r2")
+        .rename(columns={
+            "train_pairs": "train_r2",
+            "heldout_pairs": "test_r2",
+            "all_pairs": "per_protein_r2",
+        })
+        .reset_index()
+    )
+    geometry = geometry.merge(scope_r2, on=["layer", "protein_id"], how="left", validate="one_to_one")
+    geometry["neg_eigenvalue_fraction"] = geometry["negative_eigenvalue_fraction"]
+    geometry["triangle_no_violation_fraction"] = 1.0 - geometry["triangle_violation_fraction"]
 
     for path, df in [(per_protein_path, per_protein), (geometry_path, geometry)]:
         require_layers(path, df)
@@ -578,17 +599,17 @@ Layer highlights:
 - Highest mean top-3 eigenvalue fraction: layer {best_top3_layer} ({best_top3_value:.4f})
 
 Triangle inequality metrics (exact):
-The triangle columns in `geometry_metrics.csv` / `geometry_summary.csv` are the exact per-triangle metrics sourced from `exact_triangle_metrics/exact_triangle_metrics.csv`, replacing the earlier min-indirect-path triangle fields. For every protein and layer, all C(n_residues, 3) unordered residue triples are enumerated from the reconstructed predicted distance matrix. A triple is a violation when `(longest side) - (sum of the two shorter sides)` exceeds 1e-12 A; that difference is the violation magnitude. Fields:
+The canonical `geometry_metrics.csv` computes the exact per-triangle metrics directly from each complete all-pair prediction. For every protein and layer, all C(n_residues, 3) unordered residue triples are enumerated from the reconstructed predicted distance matrix. A triple is a violation when `(longest side) - (sum of the two shorter sides)` exceeds 1e-12 A; that difference is the violation magnitude. Fields:
 - `triangle_violation_fraction`: fraction of triples that violate the inequality.
-- `triangle_no_violation_fraction`: 1 - `triangle_violation_fraction`.
+- `triangle_no_violation_fraction`: derived here as 1 - `triangle_violation_fraction`; it is not duplicated in the canonical model output.
 - `triangle_violation_0_5_fraction` / `_5_10_fraction` / `_10_plus_fraction`: violating triples binned by magnitude in Angstrom; the three bins sum to `triangle_violation_fraction`.
 - `triangle_mean_violation`: sum of violation magnitudes divided by all triples (not just violating ones).
 - `triangle_max_violation`: largest single violation magnitude.
 
 These are per-protein aggregates; individual `(i, j, k)` triples are not stored.
 
-Comparison caveat:
-The comparison plot uses `per_protein_base256_combined` held-out residue-pair R^2 means and `general_base256_combined` held-out/test protein means. The per-protein run fits one model per protein on deterministic 80/20 train pairs, predicts all pairs for geometry, and reports `per_protein_r2` as all-pair R^2 from that train-fit model.
+Comparison scope:
+The comparison plot uses `per_protein_base256_combined` held-out-pair R^2 and all-pair geometry only for proteins in the canonical locked test split, matching the protein composition of `general_base256_combined`. The broader all-protein within-protein results remain available in the canonical source CSVs.
 
 Generated artifacts:
 {artifact_lines}

@@ -1465,3 +1465,10 @@ Moved the shared XGBoost anchor-layer search and cap sweep to the frozen master
 protein split and canonical directional base256 features, leaving per-protein
 XGBoost behavior unchanged and explicitly on hold. Right-sized both shared
 XGBoost launchers to the recommended initial 64 GiB request.
+
+## Session: 2026-08-18 — Canonical per-protein base256 OLS
+
+Migrated per-protein OLS to the frozen cohort and deterministic 80/20 pair
+split, canonical train/held-out/all-pair outputs, pooled baselines, locked-test
+subgroups, explicit fit status, compact coefficient shards, and validated
+48-layer consolidation. The production Delta rerun remains pending.

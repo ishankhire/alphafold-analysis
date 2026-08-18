@@ -46,7 +46,7 @@ Status labels are:
 | Analysis | O1 provenance | O2 per protein | O3 pooled | O4 subgroups | O5 gated recombination | O7/O8 geometry | O9 artifacts | O10 status | O11 timing | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Shared linear OLS | Partial | Partial | Partial | Gap | Not applicable | Meets | Meets | Partial | Partial | Strongest current output family; schema normalization and subgroup output remain |
-| Per-protein linear OLS | Partial | Partial | Gap | Gap | Not applicable | Meets | Partial | Partial | Partial | Core metrics and geometry exist, but pooled/subgroup outputs and compact coefficient storage are missing |
+| Per-protein linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback outputs complete in code; 48-layer production rerun pending |
@@ -119,49 +119,40 @@ Primary implementation and saved family:
 
 ### What already aligns
 
-- The saved `per_protein.csv` covers all 552 proteins and all 48 layers.
-- It includes all-pair regression metrics plus rank, singular-value, condition,
-  and timing diagnostics.
-- The active implementation now defines `train_r2` and `test_r2` fields, uses a
-  deterministic within-protein 80/20 pair split, and predicts all pairs for
-  geometry.
-- `geometry_metrics.csv` and `geometry_summary.csv` cover every protein and
-  layer with the same strong geometry schema as the shared model.
-- Coefficients exist for every protein-layer fit.
+- **O1/O12:** Layer shards and final aggregation validate the schema, frozen
+  split, pair-split/configuration digests, versions, code revision, hashes,
+  primary keys, expected row counts, and explicit failures before publishing a
+  schema-versioned run manifest.
+- **O2:** `per_protein.csv` uses the common long schema with three pair scopes,
+  master development/test labels, status, coverage, and the four core metrics.
+- **O3/O6:** `pooled_metrics.csv` has development/test rows for every scope plus
+  the global development-training mean and per-protein training-mean baseline.
+- **O4:** All three canonical subgroup files evaluate held-out pairs from
+  locked-test proteins only.
+- **O7/O8:** Canonical all-pair geometry rows and compact long-format summaries
+  retain explicit coverage and failure status.
+- **O9:** One compressed coefficient/scaler NPZ per layer plus a hashed compact
+  index replaces the approximately 647 MB repeated coefficient CSV.
+- **O10/O11:** One model-status row per protein-layer holds OLS support and
+  diagnostics, while runtime is reduced to one row per layer.
+- The canonical workflow does not emit redundant MSE, summary text,
+  per-protein timings, or duplicate exact-triangle artifacts.
 
-### Gaps and changes
+### Remaining production action
 
-- **O1 — Partial:** There is no final run manifest tying the pair-split rule,
-  master protein roles, configuration, and library versions to a schema
-  version.
-- **O2 — Partial:** The currently copied `per_protein.csv` predates the active
-  train/test-pair fields and contains only combined all-pair metrics. The next
-  run should save long-format `train_pairs`, `heldout_pairs`, and `all_pairs`
-  rows, with master development/test protein roles and coverage.
-- **O3 — Gap:** There is no authoritative pooled regression CSV. Text summaries
-  and geometry summaries do not replace pooled $R^2$, MAE, RMSE, bias, and
-  baseline metrics for each evaluation scope.
-- **O4 — Gap:** No canonical test-protein subgroup files exist.
-- **O9 — Partial:** `coefficients.csv` is about 647 MB because protein and model
-  metadata are repeated for every coefficient. This is the clearest current
-  example of avoidable output bloat. Use NPZ coefficient shards plus a compact
-  index instead.
-- **O10 — Partial:** Numerical diagnostics are embedded in `per_protein.csv`;
-  add explicit fit/support status so unstable or failed units remain auditable.
-- **O11 — Partial:** Per-protein elapsed seconds exist, but the desired final
-  output is a small per-layer timing table rather than thousands of timing
-  values mixed into scientific metrics.
-- The separate exact-triangle tree duplicates metrics that have already been
-  merged into the canonical geometry table.
+The active output implementation is complete. The currently copied result
+family remains the historical pre-migration output and is not rewritten in
+place; a new 48-layer Delta run and artifact audit are still required.
 
 ### Checklist
 
-- [ ] Rerun or regenerate the common long-format pair-scope table.
-- [ ] Add pooled metrics for train, held-out, and all-pair scopes.
-- [ ] Add the three locked-test subgroup outputs, using held-out pairs.
-- [ ] Replace the 647 MB coefficient CSV with indexed NPZ shards.
-- [ ] Add explicit prediction/fit status, coverage, and master protein role.
-- [ ] Consolidate timing to one row per layer.
+- [x] Emit the common long-format pair-scope table in canonical layer shards.
+- [x] Add pooled metrics for train, held-out, and all-pair scopes.
+- [x] Add the three locked-test subgroup outputs, using held-out pairs.
+- [x] Replace the repeated coefficient CSV with indexed NPZ shards.
+- [x] Add explicit prediction/fit status, coverage, and master protein role.
+- [x] Consolidate timing to one row per layer.
+- [ ] Complete the Delta production rerun and audit the consolidated artifacts.
 
 ## Gated shared linear OLS suite
 
