@@ -1,5 +1,14 @@
 # Branch Analysis
 
+## Session: 2026-08-18 — Paper figure catalog plan
+
+Added a content-first plan for 20 separately numbered main figures and 30
+supplemental figures covering model comparisons, geometry consistency,
+sequence separation, all 210 amino-acid pairs, ECOD categories, protein-length
+effects, and secondary-structure emergence. The plan distinguishes ready,
+local-derived, running, and new-computation figures and defines their intended
+analysis outputs.
+
 ## Session: 2026-08-18 — Canonical shared-OLS coefficient replay
 
 Added a non-fitting 48-layer Delta workflow that replays the historical
