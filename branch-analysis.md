@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-18 — Interpret generated main paper figures
+
+Added a concise results narrative for generated main Figures 1--9 and 11--18,
+covering the five probe variants, evaluation-scope caveats, figure-specific
+findings, and the combined scientific interpretation.
+
 ## Session: 2026-08-18 — Generate paper figure catalog items 1–9 and 11–18
 
 Added a reproducible local workflow that derives the catalog tables and writes
