@@ -323,6 +323,24 @@ def _pair_split_row(root, entry):
     return row
 
 
+def validate_xgboost_model_status(rows):
+    required = ("layer", "fit_status", "selected_configuration_id", "final_boosting_rounds", "training_row_cap")
+    _require_fields(rows, required, "shared XGBoost model_status.csv")
+    layers = [int(row["layer"]) for row in rows]
+    statuses = {row["fit_status"] for row in rows}
+    configurations = {row["selected_configuration_id"] for row in rows}
+    rounds = {int(float(row["final_boosting_rounds"])) for row in rows}
+    caps = {int(float(row["training_row_cap"])) for row in rows}
+    if (len(rows) != len(LAYERS) or Counter(layers) != Counter(LAYERS)
+            or statuses != {"complete"} or configurations != {"S4"}
+            or rounds != {700} or caps != {5000}):
+        raise ValueError(
+            "Shared XGBoost model_status is not the frozen final model: "
+            f"rows={len(rows)}, layers={sorted(set(layers))}, statuses={sorted(statuses)}, "
+            f"configurations={sorted(configurations)}, rounds={sorted(rounds)}, caps={sorted(caps)}"
+        )
+
+
 def validate_model_inputs(roots, test_entries, artifact_rows):
     validations = []
     test_ids = [e.protein_id for e in test_entries]
@@ -344,11 +362,7 @@ def validate_model_inputs(roots, test_entries, artifact_rows):
             if source_path.is_file():
                 artifact_rows.append({"model_family":family,"layer":"","protein_id":"","artifact_role":role,"artifact_path":str(source_path),"array_row":"","fit_status":"","sha256":sha256_file(source_path),"validation_status":"valid","details":"producer index/status"})
     xgb_status = read_csv(roots["shared_xgboost"] / "model_status.csv")
-    if ({int(r["layer"]) for r in xgb_status if r["fit_status"].startswith("fitted")} != set(LAYERS)
-            or {r["selected_configuration_id"] for r in xgb_status} != {"S4"}
-            or {int(float(r["final_boosting_rounds"])) for r in xgb_status} != {700}
-            or {int(float(r["training_row_cap"])) for r in xgb_status} != {5000}):
-        raise ValueError("Shared XGBoost model_status is not the frozen S4/700-round/5000-cap final model")
+    validate_xgboost_model_status(xgb_status)
     split_paths = [roots["shared_global_ols"] / f"split_assignments_{suffix}.csv" for suffix in ("0-23", "24-47")]
     split_tables = [read_csv(path) for path in split_paths]
     for path, rows in zip(split_paths, split_tables):

@@ -74,6 +74,15 @@ class ModelComparisonTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "xgboost is required"):
                 m.load_xgboost(Path("unused"), 0)
 
+    def test_final_xgboost_complete_status_is_accepted(self):
+        rows = [{"layer":layer,"fit_status":"complete","selected_configuration_id":"S4","final_boosting_rounds":"700","training_row_cap":"5000"} for layer in range(48)]
+        m.validate_xgboost_model_status(rows)
+
+    def test_final_xgboost_status_rejects_incomplete_layer(self):
+        rows = [{"layer":layer,"fit_status":"complete","selected_configuration_id":"S4","final_boosting_rounds":"700","training_row_cap":"5000"} for layer in range(47)]
+        with self.assertRaisesRegex(ValueError, "rows=47"):
+            m.validate_xgboost_model_status(rows)
+
     def test_canonical_feature_direction(self):
         block=np.zeros((3,3,128),dtype=np.float32); block[2,0]=1; block[0,2]=2
         x,hi,lo=m.sparse_features(block,[(0,2)])
