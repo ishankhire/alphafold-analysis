@@ -1,5 +1,15 @@
 # Branch Analysis
 
+## Session: 2026-08-18 — Generate paper figure catalog items 1–9 and 11–18
+
+Added a reproducible local workflow that derives the catalog tables and writes
+PNG/PDF main-paper figures for items 1–9 and 11–18 from the five canonical
+probe families. Consolidated triangle catalog items 5 and 6 into one six-panel
+figure covering total violation fraction, conditional and maximum magnitude,
+and the 0–5, 5–10, and 10+ Å violation fractions. Added source-digested figure
+provenance, paired-protein uncertainty summaries, AA-pair timing/gain tables,
+and ECOD category, architecture, and protein-length analyses.
+
 ## Session: 2026-08-18 — Paper figure catalog plan
 
 Added a content-first plan for 20 separately numbered main figures and 30
