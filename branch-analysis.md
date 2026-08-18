@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-08-18 — Canonical shared-OLS coefficient replay
+
+Added a non-fitting 48-layer Delta workflow that replays the historical
+`general_base256_combined` raw coefficients into canonical regression,
+subgroup, geometry, provenance, status, runtime, and model-artifact outputs.
+The workflow uses validated layer shards and strict aggregation while retaining
+explicit historical split, precision, and unavailable-conditioning caveats.
+
 ## Session: 2026-08-13 — Secondary-structure emergence diagnostic
 
 Added a staged DSSP/calibration, six-layer replay array, and consolidation

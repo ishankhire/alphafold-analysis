@@ -45,7 +45,7 @@ Status labels are:
 
 | Analysis | O1 provenance | O2 per protein | O3 pooled | O4 subgroups | O5 gated recombination | O7/O8 geometry | O9 artifacts | O10 status | O11 timing | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Shared linear OLS | Partial | Partial | Partial | Gap | Not applicable | Meets | Meets | Partial | Partial | Strongest current output family; schema normalization and subgroup output remain |
+| Shared linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Partial | Meets | Canonical coefficient-replay output implementation complete; unavailable historical fit diagnostics remain explicit and the 48-layer production replay is pending |
 | Per-protein linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
@@ -57,7 +57,10 @@ Status labels are:
 Primary implementation and saved family:
 
 - `scripts/cluster_scripts/generalized_model_ecod/general_train_test_common.py`
+- `scripts/cluster_scripts/generalized_model_ecod/general_base256_coefficient_replay_common.py`
+- `scripts/cluster_scripts/generalized_model_ecod/aggregate_general_base256_coefficient_replay.py`
 - `delta_files/general_base256_combined/`
+- pending canonical Delta family: `$CSV_ROOT/general_base256_combined_canonical/`
 
 ### What already aligns
 
@@ -75,40 +78,50 @@ Primary implementation and saved family:
   coefficients for every layer.
 - Layer-batch files are saved and consolidate to the expected 48 layers.
 
-### Gaps and changes
+### Active canonical replay implementation
 
-- **O1 — Partial:** The result family has split assignments and summaries but
-  lacks one final schema-versioned run manifest with library versions and a
-  configuration digest.
-- **O2 — Partial:** Rename metric fields to the common schema, add
-  `n_expected_pairs`, `n_evaluated_pairs`, `pair_coverage`, and
-  `prediction_status`, and omit redundant MSE in the next canonical run.
-- **O3 — Partial:** `split_summary.csv` is close to `pooled_metrics.csv`, but it
-  duplicates mean-per-protein $R^2$, lacks baseline metrics and explicit
-  coverage, and uses train/test-specific wide column names rather than one row
-  per split.
-- **O4 — Gap:** Category accuracy exists only in separate diagnostics and not
-  as canonical all-layer outputs with the fixed category definitions.
-- **O10 — Partial:** Shared OLS does not save the rank and singular values
-  already exposed by its fitted solver, a derived condition number, or a
-  model-status row per layer. No additional SVD is required.
-- **O11 — Partial:** Total elapsed seconds are present in the split summary and
-  detailed stdout, but there is no small common per-layer runtime table.
-- The exact triangle values are already reconciled into `geometry_metrics.csv`.
-  The separate `exact_triangle_metrics/` copy is therefore redundant for a new
-  canonical run.
-- The six large pair/triangle sample CSVs under
-  `triangle_violation_samples_test/` total roughly 256 MB and are not required
-  by the canonical output contract.
+- **O1/O12:** A non-fitting 48-layer array replays the saved raw-scale
+  coefficients into checksum-bearing canonical shards. The strict aggregator
+  validates source hashes, frozen outer-split membership, schemas, primary
+  keys, row counts, coverage, pooled reconstruction, deterministic coefficient
+  replay, and agreement with the historical metrics before publishing a
+  versioned manifest.
+- **O2/O3/O6:** Every layer emits all-protein common-schema rows and separate
+  development/test pooled metrics with the common protein-equal development
+  mean baseline. Redundant MSE and mean-per-protein summary fields are omitted.
+- **O4:** The same replayed predictions produce all fixed sequence-separation,
+  amino-acid-pair, and spatial-distance subgroup rows for locked-test proteins.
+- **O7/O8:** Geometry is recomputed from complete replay predictions and saved
+  in authoritative per-protein plus compact long-summary form. Any geometry or
+  coverage failure prevents layer completion.
+- **O9/O11:** The small shared coefficient family is normalized under
+  `model_artifacts/coefficients.csv`, and runtime is one row per layer.
+- **O10 — Partial by provenance:** Each layer has an explicit
+  `historical_fit_replayed` model-status row, but rank and singular-value
+  diagnostics cannot be recovered from the six-decimal coefficient artifact.
+  They remain `NaN` with an unavailable-historical-fit flag; the replay does
+  not perform the extra SVD prohibited solely for output backfilling.
+- The run manifest discloses the historical P2, P5, and P8 deviations and the
+  six-decimal coefficient serialization rather than claiming full methodology
+  compliance. Exact-triangle duplicates and sampled-triangle files are not
+  regenerated.
+
+### Remaining production action
+
+The output migration is complete in code, but `$CSV_ROOT/general_base256_combined_canonical/`
+has not yet completed and been copied back under `delta_files/`. Run a one-layer
+pilot, right-size from MaxRSS, complete all 48 shards, and audit the consolidated
+family before treating it as the stored canonical result.
 
 ### Checklist
 
-- [ ] Emit common-schema `per_protein.csv` and `pooled_metrics.csv`.
-- [ ] Add all three locked-test subgroup files for all 48 layers.
-- [ ] Add `model_status.csv`, `runtime.csv`, and a schema-versioned manifest.
-- [ ] Keep the existing geometry metrics while adding coverage/status fields.
-- [ ] Stop producing duplicate exact-triangle and sampled-triangle files in the
+- [x] Emit common-schema `per_protein.csv` and `pooled_metrics.csv`.
+- [x] Add all three locked-test subgroup files for all 48 layers.
+- [x] Add `model_status.csv`, `runtime.csv`, and a schema-versioned manifest.
+- [x] Recompute canonical geometry with explicit coverage/status fields.
+- [x] Stop producing duplicate exact-triangle and sampled-triangle files in the
   final result family unless a specific diagnostic requests them.
+- [ ] Complete the Delta production replay and audit the stored final family.
 
 ## Per-protein linear OLS
 
