@@ -1472,3 +1472,10 @@ Migrated per-protein OLS to the frozen cohort and deterministic 80/20 pair
 split, canonical train/held-out/all-pair outputs, pooled baselines, locked-test
 subgroups, explicit fit status, compact coefficient shards, and validated
 48-layer consolidation. The production Delta rerun remains pending.
+
+## Session: 2026-08-18 — Plan final shared XGBoost trajectory
+
+Specified the canonical S4/5k/700 shared-XGBoost 80%-refit workflow, including
+validation-only selection provenance, 48 restartable layer shards, all common
+regression/subgroup/geometry outputs, native boosters, strict consolidation,
+and explicit disclosure of the historical locked-test exposure.
