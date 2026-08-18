@@ -138,14 +138,23 @@ def read_csv(path):
         return list(csv.DictReader(handle))
 
 
+def project_or_flat_root():
+    """Return the repository root locally or the flat deployment directory on Delta."""
+    return geometry.find_project_root(HERE)
+
+
 def output_root():
     if os.environ.get("SECONDARY_STRUCTURE_OUTPUT_DIR"):
         return Path(os.environ["SECONDARY_STRUCTURE_OUTPUT_DIR"]).expanduser()
-    return Path(os.environ.get("CSV_ROOT", str(HERE.parents[2] / "delta_files"))).expanduser() / ANALYSIS_NAME
+    base = project_or_flat_root()
+    local_default = base / "delta_files" if base != HERE else HERE / "delta_files"
+    return Path(os.environ.get("CSV_ROOT", str(local_default))).expanduser() / ANALYSIS_NAME
 
 
 def input_roots():
-    csv_root = Path(os.environ.get("CSV_ROOT", str(HERE.parents[2] / "delta_files"))).expanduser()
+    base = project_or_flat_root()
+    local_default = base / "delta_files" if base != HERE else HERE / "delta_files"
+    csv_root = Path(os.environ.get("CSV_ROOT", str(local_default))).expanduser()
     return {
         "shared_global_ols": Path(os.environ.get("SHARED_GLOBAL_OLS_ROOT", csv_root / "general_base256_combined")),
         "sequence_gated_ols": Path(os.environ.get("SEQUENCE_GATED_OLS_ROOT", csv_root / "gated_linear_probes/consolidated/analysis_1_sequence_gated")),
@@ -294,7 +303,8 @@ def route_sequence_predictions(features, hi, lo, chains, models):
 
 def _dataset_records():
     records = {r["protein_id"]: dict(r) for r in build_dataset_protein_manifest()}
-    local = HERE.parents[3] / "protein_data"
+    base = project_or_flat_root()
+    local = base.parent / "protein_data" if base != HERE else HERE / "protein_data"
     for protein_id, row in records.items():
         local_dir = local / f"{protein_id}_A"
         if local_dir.exists(): row["protein_dir"] = local_dir

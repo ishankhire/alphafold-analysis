@@ -140,5 +140,13 @@ class ModelComparisonTests(unittest.TestCase):
         row=m.summarize("shared_global_ols",0,m.SCOPES[0],[{"n_decoded_structure_pairs":0,"n_negative_predictions":0}],[],[],[])
         self.assertEqual(row["n_helix_residues"],0); self.assertTrue(math.isnan(row["helix_strand_auroc"])); self.assertEqual(row["n_helix_segments_eligible"],0)
 
+    def test_shallow_flat_deployment_paths_do_not_index_missing_parents(self):
+        flat = Path("/u/user/openfold_interpretability_canonical")
+        with mock.patch.object(m, "HERE", flat), mock.patch.object(m, "build_dataset_protein_manifest", return_value=[]), mock.patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(m.project_or_flat_root(), flat)
+            self.assertEqual(m.output_root(), flat/"delta_files"/m.ANALYSIS_NAME)
+            self.assertEqual(m.input_roots()["shared_global_ols"], flat/"delta_files/general_base256_combined")
+            self.assertEqual(m._dataset_records(), {})
+
 
 if __name__ == "__main__": unittest.main()
