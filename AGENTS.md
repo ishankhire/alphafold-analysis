@@ -59,6 +59,9 @@ Launchers are colocated with their workflows under directories including
 `generalized_model_ecod/`, `per_protein_scripts/`, `gated_linear_probes/`,
 `diagnostics/`, and `xgboost_search/`.
 
+On Delta, deploy all analysis scripts to and run them from
+`$HOME/openfold_interpretability_canonical`.
+
 Before writing or modifying cluster scripts, consult:
 
 - `docs/cluster/slurm_array_notes.md`;
