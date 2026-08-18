@@ -1479,3 +1479,9 @@ Specified the canonical S4/5k/700 shared-XGBoost 80%-refit workflow, including
 validation-only selection provenance, 48 restartable layer shards, all common
 regression/subgroup/geometry outputs, native boosters, strict consolidation,
 and explicit disclosure of the historical locked-test exposure.
+
+## Session: 2026-08-18 — Colocate per-protein cluster aggregation
+
+Moved the canonical per-protein base256 shard aggregator into its cluster
+workflow, added a Delta launcher, and clarified that all cluster entrypoints
+must live under `scripts/cluster_scripts/` rather than `scripts/multi_protein/`.

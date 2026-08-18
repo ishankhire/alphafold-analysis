@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -52,7 +53,8 @@ from regression_protocol import (  # noqa: E402
 )
 
 
-INPUT_DIR = ROOT_DIR / "delta_files" / ANALYSIS_NAME
+OUTPUT_PARENT = Path(os.environ.get("CSV_ROOT", ROOT_DIR / "delta_files"))
+INPUT_DIR = OUTPUT_PARENT / ANALYSIS_NAME
 EXPECTED_PROTEINS = 552
 EXPECTED_LAYERS = tuple(LAYERS)
 

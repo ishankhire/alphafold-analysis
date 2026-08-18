@@ -13,13 +13,14 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[4]
 CLUSTER_DIR = ROOT / "scripts" / "cluster_scripts"
 PER_DIR = CLUSTER_DIR / "per_protein_scripts"
-AGGREGATION_DIR = ROOT / "scripts" / "multi_protein" / "regression"
 for path in (CLUSTER_DIR,):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
 from scripts.cluster_scripts.per_protein_scripts import per_protein_base256_common as common
-from scripts.multi_protein.regression import aggregate_per_protein_base256_combined_shards as aggregate
+from scripts.cluster_scripts.per_protein_scripts import (
+    aggregate_per_protein_base256_combined_shards as aggregate,
+)
 import regression_output_helpers as outputs
 import regression_protocol as protocol
 

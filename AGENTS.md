@@ -22,8 +22,8 @@ structures.
   implementation audits.
 - `docs/cluster/` — Delta operating notes and links to live documentation.
 - `docs/plans/` — experiment and implementation plans.
-- `scripts/cluster_scripts/` — cluster-ready Python and SLURM entrypoints.
-- `scripts/multi_protein/` — local aggregation and post-processing.
+- `scripts/cluster_scripts/` — all cluster-ready Python and SLURM entrypoints.
+- `scripts/multi_protein/` — local-only analysis and post-processing.
 - `delta_files/` — copied cluster results and current canonical result families.
 - `../protein_data/<id>_A/` — local per-protein inputs when available.
 
@@ -61,6 +61,11 @@ Launchers are colocated with their workflows under directories including
 
 On Delta, deploy all analysis scripts to and run them from
 `$HOME/openfold_interpretability_canonical`.
+
+Every script intended to run on the cluster, including aggregation and
+post-processing entrypoints, must live under `scripts/cluster_scripts/` and
+never under `scripts/multi_protein/`. Keep `scripts/multi_protein/` for scripts
+that are explicitly intended to run locally.
 
 Before writing or modifying cluster scripts, consult:
 
