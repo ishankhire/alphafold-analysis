@@ -1493,3 +1493,9 @@ and artifact copy remain pending.
 Moved the canonical per-protein base256 shard aggregator into its cluster
 workflow, added a Delta launcher, and clarified that all cluster entrypoints
 must live under `scripts/cluster_scripts/` rather than `scripts/multi_protein/`.
+
+## Session: 2026-08-18 — Document flat Delta deployment
+
+Documented the canonical flat `$HOME/openfold_interpretability_canonical`
+script deployment, its sole `regression_protocol_data/` subdirectory, and the
+separate `$HOME/csv_files` output root.

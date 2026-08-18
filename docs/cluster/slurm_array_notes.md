@@ -5,6 +5,41 @@ for current partitions, accounts, module setup, filesystem constraints, and
 storage behavior. Use upstream Slurm/SchedMD documentation for generic Slurm
 syntax when the Delta guide does not show an example.
 
+## Repository deployment layout on Delta
+
+The canonical Delta deployment uses a flat script directory and a separate
+output directory:
+
+```text
+$HOME/
+├── openfold_interpretability_canonical/
+│   ├── <all cluster Python entrypoints and shared Python helpers>
+│   ├── <all cluster sbatch launchers and colocated configuration files>
+│   └── regression_protocol_data/
+│       └── regression_master_split_v1.csv
+└── csv_files/
+    └── <analysis result families>
+```
+
+The subdirectories under the repository's `scripts/cluster_scripts/` tree are
+for source organization only. When deploying to Delta, copy their cluster-run
+files directly into `$HOME/openfold_interpretability_canonical/`. The sole
+required deployment subdirectory is `regression_protocol_data/`, because
+`regression_protocol.py` resolves the frozen split manifest relative to itself.
+
+Submit jobs from the flat script directory so both older relative-path
+launchers and launchers based on `SLURM_SUBMIT_DIR` resolve the same files:
+
+```bash
+cd "$HOME/openfold_interpretability_canonical"
+sbatch <launcher>.sbatch
+```
+
+Cluster launchers should set `CSV_ROOT=$HOME/csv_files` (or an explicitly
+documented analysis-specific child path). Python entrypoints should use that
+environment variable for cluster outputs rather than infer a repository tree
+from `__file__`.
+
 ## Arrays
 
 `#SBATCH --array=0-47%12` creates 48 tasks with task IDs `0` through `47`, with
