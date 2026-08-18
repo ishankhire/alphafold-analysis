@@ -12,7 +12,7 @@ from xgboost_search_common import (
     ANCHOR_LAYERS, DIRECTIONAL_BASE256_FEATURES, EARLY_STOPPING_ROUNDS,
     FEATURE_DIM, FIXED_XGBOOST_PARAMETERS, N_ESTIMATORS, SEARCH_CAP,
     SHARED_CONFIGS, SHARED_WEIGHTING_MODE, build_shared_split, cleanup_bundle,
-    evaluate_model_records, fit_xgboost, load_combined_records, log,
+    fit_xgboost, load_combined_records, log,
     map_search_task, materialize_records, n_jobs_from_environment,
     output_root, remove_obsolete_outputs, shared_search_dir, split_digest,
     summarize_prediction_bundle,
@@ -29,8 +29,12 @@ def run(task_id: int) -> None:
     log(f"Shared XGBoost search task {task_id}: layer {layer}")
     log(f"Output root: {output_root()}")
 
-    records, skipped = load_combined_records(ANCHOR_LAYERS, pair_order="lower")
-    split, assignments = build_shared_split(records)
+    records, skipped = load_combined_records(
+        ANCHOR_LAYERS, pair_order="lower", master_roles=("fit", "validation"),
+    )
+    split, assignments = build_shared_split(
+        records, required_roles=("fit", "validation"),
+    )
     digest = split_digest(assignments)
     write_csv(layer_dir / "split_assignments.csv", assignments)
     write_csv(layer_dir / "skipped_proteins.csv", skipped, ["protein_id", "source", "reason"])
@@ -90,33 +94,23 @@ def run(task_id: int) -> None:
         validation_metric_seconds = time.perf_counter() - tick
         del validation_pred
 
-        _, test_metrics, test_times = evaluate_model_records(
-            model, split["test"], layer, "test", "full_protein_pairs",
-            feature_mode=DIRECTIONAL_BASE256_FEATURES,
-        )
         row = {
             **config, "layer": layer,
             "train_mean_per_protein_r2": train_metrics["per_protein_r2_mean"],
             "train_pooled_r2": train_metrics["pair_weighted_r2"],
             "validation_mean_per_protein_r2": validation_metrics["per_protein_r2_mean"],
             "validation_pooled_r2": validation_metrics["pair_weighted_r2"],
-            "test_mean_per_protein_r2": test_metrics["per_protein_r2_mean"],
-            "test_pooled_r2": test_metrics["pair_weighted_r2"],
             "best_iteration": fit_info["best_iteration"],
             "best_validation_rmse": fit_info["best_validation_rmse"],
             "n_train_rows": int(fit_bundle["y"].size),
             "n_train_proteins": len(split["fit"]),
             "n_validation_rows": int(validation_bundle["y"].size),
             "n_validation_proteins": len(split["validation"]),
-            "n_test_rows": int(test_metrics["n_pairs"]),
-            "n_test_proteins": len(split["test"]),
             "feature_materialization_seconds": matrix_materialization_seconds,
             "fit_seconds": fit_info["fit_seconds"],
             "train_prediction_seconds": train_prediction_seconds,
             "validation_prediction_seconds": validation_prediction_seconds,
-            "test_materialization_seconds": test_times["materialization_seconds"],
-            "test_prediction_seconds": test_times["prediction_seconds"],
-            "metric_seconds": train_metric_seconds + validation_metric_seconds + test_times["metric_seconds"],
+            "metric_seconds": train_metric_seconds + validation_metric_seconds,
             "total_elapsed_seconds": matrix_materialization_seconds + time.perf_counter() - config_start,
             "split_digest": digest,
         }

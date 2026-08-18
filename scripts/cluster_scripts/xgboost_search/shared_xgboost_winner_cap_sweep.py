@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train/evaluate the selected shared configuration for one layer/cap task."""
+"""Validation-only cap sensitivity for the selected shared configuration."""
 
 import gc
 import json
@@ -16,7 +16,6 @@ from xgboost_search_common import (
     SHARED_WEIGHTING_MODE,
     build_shared_split,
     cleanup_bundle,
-    evaluate_model_records,
     fit_xgboost,
     importance_rows,
     load_combined_records,
@@ -43,7 +42,7 @@ def run(task_id: int) -> None:
     task_dir = shared_winner_dir() / f"layer_{layer:02d}" / f"cap_{cap_label}"
     task_dir.mkdir(parents=True, exist_ok=True)
     task_start = time.perf_counter()
-    log(f"Shared winner task {task_id}: layer={layer}, cap={cap_label}")
+    log(f"Shared validation cap-sensitivity task {task_id}: layer={layer}, cap={cap_label}")
 
     # Validate all search artifacts before importing XGBoost or loading matrices.
     search_rows, expected_digest = load_complete_search(
@@ -69,8 +68,12 @@ def run(task_id: int) -> None:
                 "This task derived a different shared winner than canonical task 0."
             )
 
-    records, skipped = load_combined_records(ANCHOR_LAYERS, pair_order="lower")
-    split, assignments = build_shared_split(records)
+    records, skipped = load_combined_records(
+        ANCHOR_LAYERS, pair_order="lower", master_roles=("fit", "validation"),
+    )
+    split, assignments = build_shared_split(
+        records, required_roles=("fit", "validation"),
+    )
     observed_digest = split_digest(assignments)
     if observed_digest != expected_digest:
         raise RuntimeError(
@@ -161,20 +164,6 @@ def run(task_id: int) -> None:
     split_summaries.append(aggregate)
     del validation_pred
 
-    rows, aggregate, test_times = evaluate_model_records(
-        model,
-        split["test"],
-        layer,
-        "test",
-        "full_protein_pairs",
-        identity,
-        DIRECTIONAL_BASE256_FEATURES,
-    )
-    regression_rows.extend(rows)
-    split_summaries.append(aggregate)
-    for key, value in test_times.items():
-        evaluation_times[f"test_{key}"] = value
-
     if len(regression_rows) != len(records):
         raise RuntimeError(
             f"Expected one selected-model regression row for each of "
@@ -192,8 +181,6 @@ def run(task_id: int) -> None:
         "n_train_proteins": len(split["fit"]),
         "n_validation_rows": int(validation_bundle["y"].size),
         "n_validation_proteins": len(split["validation"]),
-        "n_test_rows": int(sum(row["n_pairs"] for row in rows)),
-        "n_test_proteins": len(split["test"]),
         "train_feature_materialization_seconds": fit_bundle[
             "materialization_seconds"
         ],
@@ -217,7 +204,6 @@ def run(task_id: int) -> None:
         "weighting_mode": SHARED_WEIGHTING_MODE,
         "training_evaluation_scope": "sampled_training_rows",
         "validation_evaluation_scope": "full_protein_pairs",
-        "test_evaluation_scope": "full_protein_pairs",
         "kept_early_stopped_60_percent_training_model": True,
         "refit_on_train_plus_validation": False,
         "geometry_computed": False,
@@ -225,7 +211,7 @@ def run(task_id: int) -> None:
     })
     write_summary(
         task_dir / "summary.txt",
-        f"Shared XGBoost winner evaluation — layer {layer}, cap {cap_label}",
+        f"Shared XGBoost validation cap sensitivity — layer {layer}, cap {cap_label}",
         [
             f"Selected configuration: {selected['config_id']}",
             f"Best iteration: {fit_info['best_iteration']}",
@@ -233,6 +219,7 @@ def run(task_id: int) -> None:
             f"Training rows: {fit_bundle['y'].size}",
             f"Per-protein regression rows: {len(regression_rows)}",
             "Geometry computed: no",
+            "Locked-test access: prohibited",
             f"Split digest: {observed_digest}",
             f"Total elapsed seconds: {timing['total_elapsed_seconds']:.3f}",
         ],

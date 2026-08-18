@@ -365,7 +365,7 @@ canonical 256 directional features. Use protein-equal sample weights. Do not
 append protein size, sequence separation, or other context features to the
 primary model.
 
-Training is computationally capped at a deterministic maximum of 10,000 pairs
+Training is computationally capped at a deterministic maximum of 5,000 pairs
 per fitting protein. A protein with fewer pairs contributes all of them. The
 sample is fixed by protein ID and pair indices, reused across layers and
 candidate configurations, and drawn without using target distance. Validation
@@ -376,19 +376,29 @@ The development procedure is:
 1. fit candidate configurations on the 60% `fit` proteins;
 2. use only the 20% validation proteins for early stopping and configuration
    selection;
-3. select one common hyperparameter configuration using prespecified anchor
-   layers, so model capacity does not change opportunistically through depth;
-4. determine each layer's boosting-round count using the same fixed validation
-   rule;
-5. freeze the configuration and per-layer boosting-round counts;
+3. select the common `S4` configuration using the equal-anchor-layer average
+   of validation mean per-protein R-squared, with validation MAE and RMSE as
+   consistency checks;
+4. freeze 700 boosting rounds at every layer; the three 5k anchor runs reached
+   zero-indexed iteration 699, so this is a validated compute boundary rather
+   than evidence that early stopping found a performance plateau;
+5. freeze the configuration, cap, and common boosting-round count;
 6. fit fresh models on the combined 80% development proteins; and
 7. evaluate the locked 20% test proteins once.
 
 The search code must not calculate or expose candidate test metrics. Test
 results are generated only after the selection artifacts have been finalized.
-The final paper trajectory covers all 48 layers. The 10,000-row cap is an
-accepted model-specific computational constraint; no matched sampled linear
-control is required by this protocol.
+The historical copied anchor search and cap sweep did expose test results; this
+cannot be undone and must remain disclosed. The frozen decision artifact marks
+that exposure while recording that neither training nor test metrics selected
+the final specification. A literal never-inspected-test claim would require a
+new external holdout rather than reassignment of this canonical split.
+
+The final 80% refit has no early stopping and receives no validation or test
+evaluation set. The final paper trajectory covers all 48 layers. The 5,000-row
+cap is an accepted model-specific computational constraint selected using the
+validation criteria above; no matched sampled linear control is required by
+this protocol.
 
 ## Layer comparisons and selection
 

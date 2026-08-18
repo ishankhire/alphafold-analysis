@@ -50,7 +50,7 @@ Status labels are:
 | Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 | AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback outputs complete in code; 48-layer production rerun pending |
-| Shared XGBoost | Partial | Gap | Gap | Gap | Not applicable | Gap | Partial | Partial | Partial | Current saved artifacts are search outputs, not a canonical final refitted model family |
+| Shared XGBoost | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
 
 ## Shared linear OLS
 
@@ -229,44 +229,38 @@ complete in storage.
 Primary implementation and saved family:
 
 - `scripts/cluster_scripts/xgboost_search/`
-- `delta_files/xgboost_hyperparameter_search/shared/`
+- historical selection outputs: `delta_files/xgboost_hyperparameter_search/shared/`
+- pending canonical output: `delta_files/shared_xgboost_base256_combined/`
 
-### What already aligns
+### Active implementation status
 
-- Search artifacts save configurations, split assignments and digests, skipped
-  proteins, validation results, best iterations, and detailed timing.
-- The selected-model implementation can save a native `booster.json`, channel
-  importance, per-protein regression rows, split summaries, timing, and run
-  metadata.
-- Per-protein and pooled metric helpers already use a schema close to the shared
-  linear output.
+- **O1/O12:** The final runner writes checksum-bearing canonical layer shards;
+  the non-fitting aggregator rejects missing, failed, duplicate,
+  digest-inconsistent, schema-invalid, or incomplete shards before publishing
+  a complete schema-versioned run manifest.
+- **O2/O3/O6:** Every layer produces all-protein canonical per-protein rows and
+  separate development/test pooled model and global-baseline metrics.
+- **O4:** Each layer emits all six sequence, 210 amino-acid-pair, and five
+  true-distance locked-test subgroup rows, retaining sparse support cells.
+- **O7/O8:** Complete all-pair predictions feed per-protein geometry and the 28
+  layer/split/metric summary rows.
+- **O9:** Each layer immediately checkpoints a native JSON booster, emits all
+  256 gain/split-count rows including zeroes, and saves a deterministic replay
+  batch verified again during consolidation.
+- **O10/O11:** Each layer emits one fixed-S4/5k/700 status row and one compact
+  runtime/MaxRSS row.
 
-### Gaps and changes
-
-- The copied result family currently contains search outputs only. No saved
-  canonical selected-model `per_protein.csv`, pooled output, geometry output,
-  or booster is present.
-- The existing selected-model code describes an early-stopped 60%-fit model and
-  explicitly records that it was not refitted on the combined 80%. It is not
-  the final model required by `regression_methodology.md`.
-- **O2/O3:** The eventual 80%-refitted model needs all-protein per-protein rows
-  and development/test pooled metrics using the common schema.
-- **O4:** All three subgroup outputs are absent.
-- **O7/O8:** Geometry is explicitly marked as not computed.
-- **O9:** Native booster saving is correct. The final run should save one JSON
-  booster per layer; gain/split importance is optional supplementary output.
-- **O10:** Final boosting rounds and selected configuration belong in
-  `model_status.csv`, separately from the exploratory search table.
-- **O11:** Existing detailed timings can be reduced to the common per-layer
-  runtime schema for final outputs while the logs retain fine detail.
+The code and local tests now meet the output contract. No final production
+artifacts have yet been copied under `delta_files/shared_xgboost_base256_combined/`;
+the 48-layer Delta run and independent artifact audit remain pending.
 
 ### Checklist
 
-- [ ] Complete the canonical 80%-refit implementation first.
-- [ ] Save final booster, manifest, status, and common per-protein/pooled files
-  for all 48 layers.
-- [ ] Add test subgroup and full per-protein geometry outputs.
-- [ ] Keep search results separate from final-model paper outputs.
+- [x] Complete the canonical 80%-refit implementation.
+- [x] Implement final boosters, manifests, status, and common outputs for all 48 layers.
+- [x] Add test subgroup and full per-protein geometry outputs.
+- [x] Keep historical search/sensitivity outputs separate from the final family.
+- [ ] Complete the Delta production rerun and audit the stored final family.
 
 ## Baselines and true-distance statistics
 

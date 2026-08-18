@@ -52,7 +52,7 @@ The short identifiers below are used throughout the audit.
 | Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
 | AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
 | AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback implementation complete; 48-layer production rerun pending |
-| Shared XGBoost | Meets | Gap | Meets | Gap | Meets | Meets | Not applicable | Partial | Gap | Gap | Requires a new canonical implementation and rerun |
+| Shared XGBoost | Meets | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Canonical implementation complete; historical test exposure disclosed; 48-layer production rerun pending |
 
 ## Shared linear OLS
 
@@ -241,55 +241,49 @@ Primary implementation:
 - `scripts/cluster_scripts/xgboost_search/xgboost_search_common.py`
 - `scripts/cluster_scripts/xgboost_search/shared_xgboost_hyperparameter_search.py`
 - `scripts/cluster_scripts/xgboost_search/shared_xgboost_winner_cap_sweep.py`
-- saved family: `delta_files/xgboost_hyperparameter_search/shared/`
+- `scripts/cluster_scripts/xgboost_search/shared_xgboost_final_common.py`
+- `scripts/cluster_scripts/xgboost_search/shared_xgboost_final_layer.py`
+- `scripts/cluster_scripts/xgboost_search/aggregate_shared_xgboost_final.py`
+- historical selection family: `delta_files/xgboost_hyperparameter_search/shared/`
+- pending final family: `delta_files/shared_xgboost_base256_combined/`
 
-### What already aligns
+### Active implementation status
 
-- Uses the combined 552-protein usable cohort for the three anchor layers.
-- **P1:** The saved search keeps this cohort fixed across all three analyzed
-  layers.
-- **P3/P5:** Uses one row per unordered pair, final-PDB C-alpha targets, and
-  unstandardized `float64` feature/target matrices.
-- **P7:** Uses protein-equal sample weights for shared fitting and validation.
-- Uses deterministic, nested per-protein sampling and includes the accepted
-  10,000-row cap.
-- Hyperparameter winner selection is based on validation mean per-protein
-  R-squared and uses a recorded deterministic tie-break procedure.
-- Saves split digests, configurations, run metadata, and skipped-protein
-  information.
+- **P1/P2:** The runner enforces the frozen 552-protein cohort, the canonical
+  330/111/111 master roles, and explicit layer failure rather than silent
+  membership changes.
+- **P3/P4/P5:** Every observation is a strict-lower-triangle C-alpha-distance
+  row with ordered directional base256 features, and all model inputs, targets,
+  weights, predictions, baselines, and metric accumulation are `float64`.
+- **P7:** Each of the 441 development proteins has total fitting weight one
+  after its deterministic protein-ID-derived 5k cap.
+- **P9/P10:** A fresh fixed S4 model is fit on `fit + validation` for exactly
+  700 rounds at each of all 48 independently required layers. Development and
+  locked-test all-pair outputs remain distinct.
+- **P11:** Current search and cap-sensitivity code loads only `fit` and
+  `validation` roles and rejects search schemas containing test fields. The
+  final runner validates frozen selection, fits the booster, and only then
+  opens test records. The older copied artifacts did expose the canonical test
+  IDs; this historical limitation is explicit in the frozen provenance and
+  prevents a claim that the test set was never inspected.
+- **P12:** Configuration, master-manifest, split-assignment, sample-policy,
+  code, input, artifact, replay, and version information is saved and checked;
+  failures are written explicitly and incomplete shards cannot consolidate.
 
-### Gaps and required changes
-
-- **P2 — Gap:** It constructs a separate 60/20/20 split. Its digest and protein
-  membership differ from the shared/gated linear outer split, so the test set
-  is not the locked canonical test set.
-- **P4 — Gap:** It averages the two directions into 128 features. The protocol
-  requires their ordered concatenation into 256 features.
-- **P9 — Partial:** Search fits distinguish fit, validation, and test proteins,
-  but the selected model remains an early-stopped 60%-fit model. It is not
-  freshly refitted on the combined 80% development proteins.
-- **P10 — Gap:** Only anchor layers 0, 23, and 47 are implemented and saved.
-- **P11 — Gap:** Although test columns are not used by the selection function,
-  `shared_xgboost_hyperparameter_search.py` calculates and writes test metrics
-  for every candidate configuration. The locked test set is therefore exposed
-  during search.
-- **P12 — Partial:** The search records substantial configuration and split
-  provenance, but its metadata does not record Python, NumPy, or XGBoost
-  versions.
-- The current selected-model sweep varies caps across 5k, 10k, and 20k. The
-  canonical paper model should identify 10k as its fixed cap; other caps remain
-  sensitivity analyses.
+Local compilation, focused tests, and launcher syntax checks cover the active
+implementation. The 48-layer Delta production rerun is still pending, so the
+final artifact family is not yet complete in storage.
 
 ### Checklist
 
-- [ ] Reuse the canonical master `fit`, `validation`, and `test` protein roles.
-- [ ] Switch the primary feature matrix from averaged 128 to concatenated 256.
-- [ ] Freeze one configuration using validation results only.
-- [ ] Stop computing candidate test metrics during search.
-- [ ] Save validation-derived boosting rounds for every layer.
-- [ ] Refit each final layer model on the combined 80% development proteins.
-- [ ] Evaluate the locked test proteins only after selection artifacts are frozen.
-- [ ] Run and save the final selected model at all 48 layers with the fixed 10k cap.
+- [x] Reuse the canonical master `fit`, `validation`, and `test` protein roles.
+- [x] Use ordered directional base256 features for the final model.
+- [x] Freeze S4/5k/700 from validation-only decision tables.
+- [x] Prevent search and cap-sensitivity code from loading or reporting test data.
+- [x] Refit each final layer model on the combined 80% development proteins.
+- [x] Evaluate test records only after selection validation and final fitting.
+- [x] Require the final selected model at all 48 layers in code and aggregation.
+- [ ] Complete the Delta production rerun and audit the final stored family.
 
 ## Other regression and diagnostic analyses
 
@@ -363,14 +357,16 @@ differ from continuous distance regression.
   deterministic fit/validation subdivision inside the 441 development proteins.
 - [ ] Preserve separate per-protein training and held-out-pair reporting;
   clearly label any combined all-pair score as mixed-scope.
-- [ ] Rebuild shared XGBoost with the canonical split, base256 features,
-  validation-only search, 80% final refit, and untouched test evaluation.
+- [x] Rebuild shared XGBoost with the canonical split, base256 features,
+  validation-only search, and 80% final refit; historical test exposure remains
+  disclosed and a never-inspected-test claim is unavailable.
 
 ### Priority 1: required for complete trajectories
 
 - [x] Extend all three gated OLS implementations from six layers to all 48
   (production rerun pending).
-- [ ] Extend selected shared XGBoost from three anchor layers to all 48.
+- [x] Extend selected shared XGBoost from three anchor layers to all 48 in code
+  (production rerun pending).
 - [x] Resolve sparse joint-gate handling with explicit no-fallback partial coverage.
 - [ ] Make shared-linear scaler moments fully `float64`.
 

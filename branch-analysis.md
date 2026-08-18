@@ -1480,6 +1480,14 @@ validation-only selection provenance, 48 restartable layer shards, all common
 regression/subgroup/geometry outputs, native boosters, strict consolidation,
 and explicit disclosure of the historical locked-test exposure.
 
+## Session: 2026-08-18 — Implement final shared XGBoost trajectory
+
+Added the frozen validation-only S4/5k/700 decision artifact, development-only
+search and cap-sensitivity paths, restartable 48-layer final fits, canonical
+streamed metrics and geometry, native-booster replay checks, strict shard
+consolidation, Delta launchers, and focused tests. The production Delta rerun
+and artifact copy remain pending.
+
 ## Session: 2026-08-18 — Colocate per-protein cluster aggregation
 
 Moved the canonical per-protein base256 shard aggregator into its cluster

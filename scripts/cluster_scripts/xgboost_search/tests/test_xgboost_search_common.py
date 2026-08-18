@@ -278,8 +278,7 @@ class ArtifactValidationTests(unittest.TestCase):
             writer = csv.DictWriter(handle, fieldnames=[
                 "config_id", "train_mean_per_protein_r2", "train_pooled_r2",
                 "validation_mean_per_protein_r2", "validation_pooled_r2",
-                "test_mean_per_protein_r2", "test_pooled_r2", "fit_seconds",
-                "split_digest",
+                "fit_seconds", "split_digest",
             ])
             writer.writeheader()
             if include_row:
@@ -288,8 +287,7 @@ class ArtifactValidationTests(unittest.TestCase):
                     "train_pooled_r2": 0.3,
                     "validation_mean_per_protein_r2": 0.2,
                     "validation_pooled_r2": 0.2,
-                    "test_mean_per_protein_r2": 0.1,
-                    "test_pooled_r2": 0.1, "fit_seconds": 1,
+                    "fit_seconds": 1,
                     "split_digest": digest,
                 })
         (layer_dir / "search_metadata.json").write_text(json.dumps({"layer": layer, "split_digest": digest, "status": "complete"}))
@@ -319,6 +317,22 @@ class ArtifactValidationTests(unittest.TestCase):
                 load_complete_search(
                     root, self.CONFIGS, PER_PROTEIN_WEIGHTING_MODE
                 )
+
+    def test_search_loader_rejects_any_locked_test_column(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for layer in ANCHOR_LAYERS:
+                self.write_layer(root, layer, "same")
+                path = root / f"layer_{layer:02d}" / "search_summary.csv"
+                with path.open() as handle:
+                    rows = list(csv.DictReader(handle))
+                with path.open("w", newline="") as handle:
+                    fields = list(rows[0]) + ["test_pooled_r2"]
+                    writer = csv.DictWriter(handle, fieldnames=fields)
+                    writer.writeheader()
+                    writer.writerow({**rows[0], "test_pooled_r2": 0.1})
+            with self.assertRaisesRegex(RuntimeError, "exposes locked-test fields"):
+                load_complete_search(root, self.CONFIGS)
 
 
 if __name__ == "__main__":

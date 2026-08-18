@@ -172,11 +172,19 @@ def assign_size_bins(records: Sequence[dict], n_bins: int = N_SIZE_BINS) -> None
         record["size_bin"] = min(n_bins - 1, rank * n_bins // len(ordered))
 
 
-def build_shared_split(records: Sequence[dict]):
-    """Apply the frozen canonical fit/validation/test roles to loaded records."""
+def build_shared_split(
+    records: Sequence[dict],
+    required_roles: Sequence[str] = ("fit", "validation", "test"),
+):
+    """Apply selected frozen canonical roles to loaded records.
+
+    Search and sensitivity callers pass only ``fit`` and ``validation`` so
+    those entrypoints cannot accidentally load locked-test records.
+    """
     manifest_entries = load_master_manifest()
     eligible_entries = {
-        entry.protein_id: entry for entry in manifest_entries if entry.eligible
+        entry.protein_id: entry for entry in manifest_entries
+        if entry.eligible and entry.master_role in set(required_roles)
     }
     record_by_id = {str(record["protein_id"]): record for record in records}
     if len(record_by_id) != len(records):
@@ -189,7 +197,10 @@ def build_shared_split(records: Sequence[dict]):
             f"manifest (missing={missing}, unexpected={unexpected})."
         )
 
-    parts = {role: [] for role in ("fit", "validation", "test")}
+    unknown_roles = set(required_roles) - {"fit", "validation", "test"}
+    if unknown_roles:
+        raise ValueError(f"Unknown canonical master roles: {sorted(unknown_roles)}")
+    parts = {role: [] for role in required_roles}
     for protein_id, entry in eligible_entries.items():
         record = record_by_id[protein_id]
         observed = (
@@ -204,6 +215,8 @@ def build_shared_split(records: Sequence[dict]):
                 f"manifest: observed={observed}, expected={expected}."
             )
         record["size_bin"] = int(entry.size_bin)
+        record["master_role"] = entry.master_role
+        record["protein_split"] = entry.protein_split
         parts[entry.master_role].append(record)
     for split_records in parts.values():
         split_records.sort(key=lambda record: str(record["protein_id"]))
@@ -222,10 +235,11 @@ def build_shared_split(records: Sequence[dict]):
                 "outer_split_seed": OUTER_SPLIT_SEED,
                 "development_split_seed": DEVELOPMENT_SPLIT_SEED,
             })
+    expected_counts = {"fit": 330, "validation": 111, "test": 111}
     if (
         len({r["protein_id"] for r in assignments}) != len(records)
         or {name: len(group) for name, group in parts.items()}
-        != {"fit": 330, "validation": 111, "test": 111}
+        != {role: expected_counts[role] for role in required_roles}
     ):
         raise AssertionError("Shared split is not disjoint and exhaustive.")
     return parts, assignments
@@ -253,6 +267,22 @@ def nested_sample_indices(indices: np.ndarray, protein_id: str, cap: int | None,
     order = np.random.default_rng(stable_seed(seed, "nested_fit", protein_id)).permutation(indices.size)
     take = indices.size if cap is None else min(int(cap), indices.size)
     return indices[order[:take]]
+
+
+def capped_pair_indices(
+    n_pairs: int,
+    protein_id: str,
+    cap: int = 5000,
+    seed: int = RANDOM_STATE,
+) -> np.ndarray:
+    """Select stable canonical pair positions independent of layer and values."""
+    if n_pairs < 1:
+        raise ValueError("n_pairs must be positive")
+    if cap < 1:
+        raise ValueError("cap must be positive")
+    return nested_sample_indices(
+        np.arange(int(n_pairs), dtype=np.int64), protein_id, int(cap), seed,
+    )
 
 
 def protein_equal_weights(protein_ids: Sequence[str]) -> np.ndarray:
@@ -343,11 +373,23 @@ def load_pair_features(
 def load_combined_records(
     require_layers: Sequence[int] = ANCHOR_LAYERS,
     pair_order: str = "upper",
+    master_roles: Sequence[str] = ("fit", "validation", "test"),
 ):
     records, skipped = [], []
+    role_by_id = {
+        entry.protein_id: entry.master_role
+        for entry in load_master_manifest()
+        if entry.eligible
+    }
+    requested_roles = set(master_roles)
+    unknown_roles = requested_roles - {"fit", "validation", "test"}
+    if unknown_roles:
+        raise ValueError(f"Unknown canonical master roles: {sorted(unknown_roles)}")
     manifest = build_dataset_protein_manifest()
     for entry in manifest:
         protein_id = entry["protein_id"]
+        if role_by_id.get(protein_id) not in requested_roles:
+            continue
         try:
             missing = [layer for layer in require_layers if not resolve_pair_block_path(entry["protein_dir"], protein_id, layer).exists()]
             if missing:
@@ -375,6 +417,7 @@ def load_combined_records(
             y = np.asarray(compute_distance_matrix(coords)[pair_i, pair_j], dtype=np.float64)
             records.append({
                 **entry, "pdb_path": pdb_path, "coordinates": coords,
+                "residues": ca["residues"],
                 "n_residues": int(coords.shape[0]), "pair_i": pair_i, "pair_j": pair_j,
                 "y": y, "n_pairs": int(y.size), "target_variance": float(np.var(y, dtype=np.float64)),
             })
@@ -706,8 +749,6 @@ def load_complete_search(
         "train_pooled_r2",
         "validation_mean_per_protein_r2",
         "validation_pooled_r2",
-        "test_mean_per_protein_r2",
-        "test_pooled_r2",
         "fit_seconds",
         "split_digest",
     }
@@ -715,6 +756,16 @@ def load_complete_search(
     for layer in ANCHOR_LAYERS:
         layer_dir = search_dir / f"layer_{layer:02d}"
         rows = read_csv(layer_dir / "search_summary.csv")
+        forbidden_columns = sorted(
+            column for column in (rows[0].keys() if rows else ())
+            if column.startswith("test_") or column == "n_test_rows"
+            or column == "n_test_proteins"
+        )
+        if forbidden_columns:
+            raise RuntimeError(
+                f"Search summary for layer {layer} exposes locked-test fields: "
+                f"{forbidden_columns}. Regenerate the development-only search."
+            )
         ids = [r.get("config_id", "") for r in rows]
         if len(rows) != len(configs) or set(ids) != expected_ids or len(ids) != len(set(ids)):
             raise RuntimeError(f"Incomplete search summary for layer {layer}: expected {sorted(expected_ids)}, observed {ids}.")
