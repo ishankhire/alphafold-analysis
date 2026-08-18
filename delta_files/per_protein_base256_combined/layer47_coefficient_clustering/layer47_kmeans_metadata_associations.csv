@@ -1,9 +1,0 @@
-representation,variable,evaluation_subset,n_proteins,n_groups,test,statistic,p_value,effect_name,effect_value
-direction,log1p_n_residues,all_proteins,552,2,kruskal_wallis,200.8463486,1.365028112e-45,eta_squared,0.3594719049
-direction,source,all_proteins,552,2,chi_square,94.75447666,2.155255275e-22,cramers_v,0.4143146879
-direction,size_bin,all_proteins,552,5,chi_square,207.0784207,1.129201637e-43,cramers_v,0.6124884215
-direction,ecod_category,annotated_ecod_only,398,4,chi_square,13.51078499,0.003652667825,cramers_v,0.1842462916
-magnitude_sensitive,log1p_n_residues,all_proteins,552,2,kruskal_wallis,125.904943,3.225702e-29,eta_squared,0.2471904023
-magnitude_sensitive,source,all_proteins,552,2,chi_square,113.6945405,1.520110617e-26,cramers_v,0.4538373834
-magnitude_sensitive,size_bin,all_proteins,552,5,chi_square,139.9639477,2.87318112e-29,cramers_v,0.503545307
-magnitude_sensitive,ecod_category,annotated_ecod_only,398,4,chi_square,8.23702102,0.04135894615,cramers_v,0.1438611578

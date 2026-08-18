@@ -1541,3 +1541,10 @@ artifact/split validation, sparse shared-pair replay, matched held-out
 sensitivity, strict consolidation, trajectories, plots, Delta launchers, and
 focused regression tests. Production execution and result transfer remain
 pending until all four source result families are complete.
+
+## Session: 2026-08-19 — Add repository README
+
+Added a concise repository guide linking the shared regression methodology,
+main result summary, analysis outputs, paper figures, and experiment plans, and
+excluded generated coefficient artifacts, compressed model shards, and outputs
+larger than 20 MB from Git.

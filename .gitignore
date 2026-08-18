@@ -15,13 +15,25 @@ __pycache__/
 
 # Large data files
 *.npy
+*.npz
 *.cif
 pca_projections/
 feature_magnitudes/
 linear_regression_csv_files/kfold_predicted_distances.csv
 delta_files/**/*predicted*
 
-# Local large CSV outputs (>=25 MB)
+# Generated coefficient artifacts
+delta_files/**/*coefficient*
+historical_outputs/**/*coefficient*
+not_relevant_miscellaneous/**/*coefficient*
+
+# Detailed generated result artifacts; keep compact summary tables instead
+delta_files/**/model_artifacts/
+delta_files/**/geometry_metrics.csv
+delta_files/**/per_protein.csv
+delta_files/**/model_status.csv
+
+# Local large outputs (>=20 MB)
 delta_files/diagnostic-files/diagnostic_linear_tree_csv_files/diagnostic_linear_tree_test_scatter_sample.csv
 delta_files/general_base256_avg_symmetric_montage10_mds_replay/csv_files/mds_reconstructed_coords.csv
 delta_files/next_layer_distance_delta_7b3a_A/next_layer_distance_delta_coefficients.csv
@@ -33,6 +45,23 @@ delta_files/per_protein_base256_combined/coefficients_layers20_29.csv
 delta_files/per_protein_base256_combined/coefficients_layers30_39.csv
 delta_files/per_protein_base256_combined/coefficients_layers40_47.csv
 delta_files/per_protein_files/per_protein_coefficients.csv
+
+# Historical large outputs (>=20 MB)
+historical_outputs/consolidated/analysis_2_aa_pair_gated/coefficients.csv
+historical_outputs/consolidated/analysis_4_aa_sequence_gated/subgroup_by_spatial_distance.csv
+historical_outputs/consolidated/analysis_4_aa_sequence_gated/test_per_protein_gate_metrics.csv.gz
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_00.csv
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_10.csv
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_20.csv
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_30.csv
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_40.csv
+historical_outputs/general_base256_combined/triangle_violation_samples_test/triangle_samples_layer_47.csv
+historical_outputs/per_protein_base256_combined/coefficients.csv
+historical_outputs/per_protein_base256_combined/coefficients_layers00_09.csv
+historical_outputs/per_protein_base256_combined/coefficients_layers10_19.csv
+historical_outputs/per_protein_base256_combined/coefficients_layers20_29.csv
+historical_outputs/per_protein_base256_combined/coefficients_layers30_39.csv
+historical_outputs/per_protein_base256_combined/coefficients_layers40_47.csv
 
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy

@@ -300,6 +300,15 @@ all-protein association between length and R2 L90, so length primarily shifts
 the early-to-middle refinement schedule rather than uniformly delaying every
 stage.
 
+## Figure 19: TO BE DONE
+
+This figure will be completed after the secondary structure prediction analysis completes.
+The secondary structure prediction analysis will look at by what layers alpha helices
+and beta sheets are accessible from the pair representation. The expected finding
+of this analysis is that the sequence-gated linear probe will be the only probe that is
+accurate at alpha helix prediction. This is because the MAE of all other models at
+sequence se
+
 ## Overall interpretation
 
 The pair representation contains substantial final-distance information even

@@ -1,0 +1,27 @@
+{
+  "analysis_name": "general_base256_combined",
+  "canonical_master_manifest_digest": "5561b786682d4408612c76d44c14ff6cf760291c2616159d3bea4cf13a149440",
+  "canonical_split_assignment_digest": "59865846507b7b90c1045ea18eab54d33c854a58c8cc4e3c362adf3a247f5404",
+  "coefficient_precision": "six digits after the decimal point in the historical CSV",
+  "coefficient_source_path": "/u/ikhire/csv_files/general_base256_combined/coefficients.csv",
+  "coefficient_source_sha256": "6c6fd282e9fae3369e55a68a87c8be55bbe75e0ecb9a43ed841c0c7fc78b1c1b",
+  "created_at": "2026-08-18T14:43:03.957586+00:00",
+  "fit_performed": false,
+  "historical_split_digest": "c11687862e4714eee2a1981d1609cc93d50d3e8d8cb404a3ff8bcbc227e19fb3",
+  "historical_split_source_path": "/u/ikhire/csv_files/general_base256_combined/split_assignments.csv",
+  "historical_split_source_sha256": "951c31a97622f76e4f6f70f22365e64c7e50e3d92a2261d7eece9d1d9d025e9d",
+  "known_methodology_deviations": [
+    "P2: original fit did not record the later fit/validation subdivision",
+    "P5: original scaler second moments were formed from float32 cached features",
+    "P8: original fit did not save solver-exposed rank or singular values"
+  ],
+  "legacy_metric_max_absolute_differences": {
+    "mean_per_protein_r2": 2.9192448474102406e-06,
+    "pooled_mae": 4.4644572514407344e-05,
+    "pooled_r2": 2.0251025939499456e-06,
+    "pooled_rmse": 2.236721516801765e-05
+  },
+  "model_family": "shared_ols",
+  "prediction_formula": "raw_intercept + directional_base256 @ raw_coefficients",
+  "source_directory": "/u/ikhire/csv_files/general_base256_combined"
+}
