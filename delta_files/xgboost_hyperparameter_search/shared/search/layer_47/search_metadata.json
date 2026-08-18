@@ -4,10 +4,10 @@
     23,
     47
   ],
-  "completed_at": "2026-08-03T06:18:51-05:00",
+  "completed_at": "2026-08-17T16:16:18-05:00",
   "early_stopping_rounds": 30,
-  "feature_count": 128,
-  "feature_definition": "float64 0.5*(pair_block[i,j,:]+pair_block[j,i,:])",
+  "feature_count": 256,
+  "feature_definition": "float64 [pair_block[i,j,:] | pair_block[j,i,:]], i>j",
   "fit_cap_per_protein": 10000,
   "fixed_xgboost_parameters": {
     "colsample_bytree": 0.8,
@@ -27,11 +27,11 @@
   "n_valid_proteins": 552,
   "pipeline": "shared_search",
   "selection_metric": "validation_mean_per_protein_r2",
-  "split_digest": "0107dbe9928ec83fc1accb02682a770008c5c5a059bceb285ce8431883a3a2b1",
+  "split_digest": "fc6f023c44305d991cef04b4f96dc9f7bc448ddc76a1df631b857fbd02a74c94",
   "standardized": false,
-  "started_at": "2026-08-03T05:59:33-05:00",
+  "started_at": "2026-08-17T15:42:36-05:00",
   "status": "complete",
-  "task_elapsed_seconds": 1304.710965229082,
+  "task_elapsed_seconds": 2277.7083959579977,
   "task_id": 2,
   "weighting_mode": "protein_equal"
 }

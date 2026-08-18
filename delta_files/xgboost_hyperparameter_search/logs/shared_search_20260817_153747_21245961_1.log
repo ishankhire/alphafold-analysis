@@ -1,0 +1,17 @@
+[2026-08-17T15:37:47-05:00] job starting on cn119.delta.ncsa.illinois.edu
+[2026-08-17T15:37:53-05:00] Shared XGBoost search task 1: layer 23
+[2026-08-17T15:37:53-05:00] Output root: /u/ikhire/csv_files/xgboost_hyperparameter_search
+[2026-08-17T15:42:36-05:00] Materializing the nested 10k/protein fit matrix and uncapped validation matrix
+[2026-08-17T15:45:12-05:00] Fitting S0: depth=4, eta=0.05, min_child_weight=5
+[2026-08-17T15:51:12-05:00] Checkpointed S0; validation mean protein R2=0.905272
+[2026-08-17T15:51:12-05:00] Fitting S1: depth=4, eta=0.1, min_child_weight=5
+[2026-08-17T15:57:31-05:00] Checkpointed S1; validation mean protein R2=0.910136
+[2026-08-17T15:57:31-05:00] Fitting S2: depth=5, eta=0.05, min_child_weight=10
+[2026-08-17T16:03:53-05:00] Checkpointed S2; validation mean protein R2=0.903187
+[2026-08-17T16:03:53-05:00] Fitting S3: depth=6, eta=0.05, min_child_weight=10
+[2026-08-17T16:10:41-05:00] Checkpointed S3; validation mean protein R2=0.905518
+[2026-08-17T16:10:41-05:00] Fitting S4: depth=6, eta=0.1, min_child_weight=10
+[2026-08-17T16:16:57-05:00] Checkpointed S4; validation mean protein R2=0.910777
+[2026-08-17T16:16:57-05:00] Fitting S5: depth=7, eta=0.05, min_child_weight=20
+[2026-08-17T16:23:01-05:00] Checkpointed S5; validation mean protein R2=0.893003
+[2026-08-17T16:23:01-05:00] Shared layer 23 search complete
