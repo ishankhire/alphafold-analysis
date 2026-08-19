@@ -645,7 +645,8 @@ def _pairwise(summary):
     for layer in LAYERS:
         for scope in SCOPES:
             for a,b in itertools.combinations(MODELS,2):
-                ra,rb=bykey[(a,str(layer),scope)]
+                ra=bykey[(a,str(layer),scope)]
+                rb=bykey[(b,str(layer),scope)]
                 for metric in sorted(set(ra)&set(rb)-identity):
                     try: va,vb=float(ra[metric]),float(rb[metric])
                     except (ValueError,TypeError): continue

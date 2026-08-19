@@ -148,5 +148,18 @@ class ModelComparisonTests(unittest.TestCase):
             self.assertEqual(m.input_roots()["shared_global_ols"], flat/"delta_files/general_base256_combined")
             self.assertEqual(m._dataset_records(), {})
 
+    def test_pairwise_differences_use_both_model_rows(self):
+        rows=[]
+        for layer in range(48):
+            for scope in m.SCOPES:
+                for model_index,model in enumerate(m.MODELS):
+                    rows.append({"analysis_name":m.ANALYSIS_NAME,"model_family":model,"layer":str(layer),"evaluation_scope":scope,"split":"test","n_helix_residues":"10","helix_strand_auroc":str(0.5+0.1*model_index)})
+        differences=m._pairwise(rows)
+        expected=48*len(m.SCOPES)*math.comb(len(m.MODELS),2)
+        self.assertEqual(len(differences),expected)
+        first=differences[0]
+        self.assertEqual((first["model_a"],first["model_b"]),(m.MODELS[0],m.MODELS[1]))
+        self.assertAlmostEqual(first["difference_b_minus_a"],0.1)
+
 
 if __name__ == "__main__": unittest.main()
