@@ -161,6 +161,12 @@ whether individual distances are predictable and whether all predictions can
 coexist as one geometry. The per-protein coordinates use the mixed all-pairs
 scope required for a complete matrix.
 
+Expanded phase plots for every exact-triangle metric and every true spatial-
+distance MAE bin are collected in the
+[decodability metric comparisons](paper_figures/decodability_metric_comparisons/README.md)
+subdirectory. Those plots also mark individual transitions where R2 improves
+while the plotted error worsens.
+
 ## Figure 9: MAE by sequence separation
 
 ![Sequence-separation MAE trajectories](paper_figures/main/main_figure_09_sequence_separation_mae.png)

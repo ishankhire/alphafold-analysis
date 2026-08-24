@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-08-24 — Expand decodability-versus-error phase plots
+
+Added reproducible Figure-8-style phase trajectories for all canonical exact-
+triangle metrics, conditional violation severity, and MAE in all five true
+spatial-distance bins. Kept the 14 PNG/PDF figure pairs in a dedicated paper-
+figure subdirectory and saved their exact points, transition directions,
+source-digested manifest, evaluation caveats, and concise interpretation.
+
 ## Session: 2026-08-24 — Triangle-violation subgroup analysis plan
 
 Added a four-model, 48-layer frozen-replay plan for exact triangle violations
