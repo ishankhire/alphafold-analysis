@@ -164,8 +164,8 @@ scope required for a complete matrix.
 Expanded phase plots for every exact-triangle metric and every true spatial-
 distance MAE bin are collected in the
 [decodability metric comparisons](paper_figures/decodability_metric_comparisons/README.md)
-subdirectory. Those plots also mark individual transitions where R2 improves
-while the plotted error worsens.
+subdirectory. Its accompanying transition table records layers where R2
+improves while the plotted error worsens.
 
 ## Figure 9: MAE by sequence separation
 

@@ -24,7 +24,6 @@ import pandas as pd
 OUTPUT_DIR = catalog.PAPER_DIR / "decodability_metric_comparisons"
 LAYERS = catalog.LAYERS
 SELECTED_LAYERS = {0, 10, 20, 30, 40, 47}
-CONFLICT_COLOR = "#B22222"
 
 TRIANGLE_METRICS = {
     "triangle_violation_fraction": {
@@ -211,7 +210,7 @@ def add_transition_directions(points: pd.DataFrame) -> pd.DataFrame:
 
 
 def model_handles() -> list[Line2D]:
-    handles = [
+    return [
         Line2D(
             [0],
             [0],
@@ -222,20 +221,6 @@ def model_handles() -> list[Line2D]:
         )
         for model in catalog.MODEL_ORDER
     ]
-    handles.append(
-        Line2D(
-            [0],
-            [0],
-            marker="o",
-            linestyle="none",
-            markerfacecolor="none",
-            markeredgecolor=CONFLICT_COLOR,
-            markeredgewidth=1.3,
-            markersize=7,
-            label="$R^2$ rises, plotted error rises",
-        )
-    )
-    return handles
 
 
 def plot_phase_axis(
@@ -267,16 +252,6 @@ def plot_phase_axis(
             s=20,
             edgecolors="none",
             zorder=3,
-        )
-        conflict = data[data["r2_up_comparison_worse"]]
-        axis.scatter(
-            conflict["r2_value"],
-            conflict["comparison_value"],
-            facecolors="none",
-            edgecolors=CONFLICT_COLOR,
-            linewidths=1.05,
-            s=48,
-            zorder=4,
         )
         if annotate:
             for row in data[data["layer"].isin(SELECTED_LAYERS)].itertuples():

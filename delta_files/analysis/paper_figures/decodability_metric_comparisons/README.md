@@ -5,10 +5,6 @@ with mean per-protein R2 on the x-axis and a second error or consistency metric
 on the y-axis. Movement toward the lower right means that distance decodability
 and the plotted metric improve together. Point color gives the Evoformer layer.
 
-A red outline marks the destination of a layer-to-layer transition where R2
-increases but the plotted error or violation metric also increases. This is a
-sign-only diagnostic: even a very small positive change receives an outline.
-
 ## Overview figures
 
 ![R2 versus triangle metrics](overview_r2_vs_triangle_metrics.png)
@@ -74,8 +70,7 @@ severity tends to improve strongly by the final layers.
 
 The exact plotted coordinates are in `comparison_points.csv`.
 `layer_transition_directions.csv` adds the two signed layer changes and the
-`r2_up_comparison_worse` indicator used for the red outlines. Regenerate all
-outputs with:
+`r2_up_comparison_worse` indicator. Regenerate all outputs with:
 
 ```bash
 .venv/bin/python scripts/multi_protein/generate_decodability_metric_comparisons.py
