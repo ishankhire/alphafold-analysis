@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-08-24 — Triangle-violation subgroup analysis plan
+
+Added a four-model, 48-layer frozen-replay plan for exact triangle violations
+stratified by reference RMS size, angle, area, and relative slack. Defined
+scale-normalized severity metrics, matched held-out-edge sensitivity, exact
+output schemas, and protein-length composition, stratification, adjustment,
+and weighting checks.
+
 ## Session: 2026-08-18 — Interpret generated main paper figures
 
 Added a concise results narrative for generated main Figures 1--9 and 11--18,
