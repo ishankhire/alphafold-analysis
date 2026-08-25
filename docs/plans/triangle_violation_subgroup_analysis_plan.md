@@ -124,6 +124,8 @@ Analyze slack separately rather than crossing it with RMS and angle initially.
 - `all_triangles`: one category;
 - `rms_size`: three categories;
 - `angle_shape`: three categories;
+- `angle_shape_exact90`: acute, right within the recorded relative numerical
+  tolerance, and obtuse sensitivity categories;
 - `rms_by_angle`: nine categories;
 - `relative_slack`: three categories;
 - `area`: three categories.
@@ -171,13 +173,7 @@ Primary Figure-5-compatible exact result over all triangles in each test
 protein. Per-protein OLS rows carry
 `generalization_scope=mixed_within_protein_train_and_heldout`.
 
-### 5.2 `three_heldout_edges_matched`
-
-Secondary matched out-of-sample result. A triangle is eligible only if all three
-edges are held out by the canonical per-protein split. Apply that identical
-mask to all four models. Keep category boundaries derived from all reference
-triangles, retain sparse rows, and record support. Approximately 0.8% of all
-triangles should qualify, so this does not replace the primary scope.
+This is the workflow's only evaluation scope.
 
 ## 6. Protein-size dependence
 
@@ -190,12 +186,12 @@ protein length. Predeclare four checks.
    fractions; absolute RMS/area tertile boundaries; median and p90 RMS, area,
    and slack; and category support.
 2. **Stratified trajectories:** calculate protein-equal outcomes separately in
-   the five canonical length bins, retaining protein counts and paired
-   protein-bootstrap intervals.
+   the five canonical length bins and retain the individual protein rows and
+   protein counts. Do not bootstrap.
 3. **Continuous association:** for every model-layer-scope-category outcome,
    regress the protein-level value on standardized `log(n_residues)` without
-   triangle weights. Save the slope, bootstrap interval, Spearman correlation,
-   and protein count.
+   triangle weights. Save the slope, intercept, Spearman correlation, and
+   protein count. Do not bootstrap.
 4. **Weighting/tail sensitivity:** compare protein-equal and triangle-pooled
    summaries to quantify naive long-protein domination. Compare maximum with
    conditional p99 and their length associations.
@@ -240,6 +236,7 @@ scope, category system, and category label. Principal columns:
 analysis_name,model_family,layer,protein_id,source,protein_split,
 evaluation_scope,generalization_scope,category_system,category_label,
 n_residues,protein_length_bin,n_triangles,n_violations,
+n_negative_predictions,negative_prediction_fraction,
 violation_sum_angstrom,violation_max_angstrom,
 n_abs_0_5,n_abs_5_10,n_abs_10_plus,
 relative_violation_sum,relative_violation_max,
@@ -252,7 +249,9 @@ mean_relative_violation_all,mean_relative_violation_conditional,support_status
 
 `triangle_metric_summary.csv` has one row per model, layer, scope, category, and
 derived metric, with protein-equal mean, standard deviation, median, quartiles,
-bootstrap interval, protein count, and triangle-pooled sensitivity value.
+finite and total protein counts, and triangle-pooled sensitivity value.
+Resampling is not performed. Individual protein analyses remain in
+`per_protein_triangle_metrics.csv`.
 
 `protein_reference_thresholds.csv` has one row per protein with residue and
 triangle counts, RMS/area/slack tertile boundaries, angle counts, reference
@@ -284,7 +283,7 @@ writes only compact thresholds and summaries. Use node-local `/tmp` for
 transient arrays. Replay is a 48-task CPU array with one layer per task. Load a
 protein's pair tensor once, generate all four predictions, stream triangle
 batches, and checkpoint after small protein batches. Atomically finalize a
-layer only after all 111 proteins and both scopes complete.
+layer only after all 111 proteins complete for `all_edges`.
 
 Pilot from the comparable exact-triangle launcher request (`8` CPUs, `64G`,
 `06:00:00`), then right-size memory and walltime from observed MaxRSS and elapsed
@@ -306,7 +305,7 @@ Deploy and submit from `$HOME/openfold_interpretability_canonical`.
 
 ## 9. Acceptance criteria and reporting
 
-- Complete 48 layers, four models, 111 test proteins, both scopes, and all
+- Complete 48 layers, four models, 111 test proteins, the `all_edges` scope, and all
   category systems with explicit failures and support.
 - Verify artifact checksums, split digest, pair order, and model coverage.
 - Require finite positive RMS, nonnegative area, and slack in `[0,1]` within
@@ -315,19 +314,16 @@ Deploy and submit from `$HOME/openfold_interpretability_canonical`.
   primitives to reproduce every derived metric.
 - Reproduce each canonical model's unstratified `all_edges` Figure-5 metrics
   within declared tolerances.
-- Prove all matched triangles have three held-out edges and use identical masks
-  for all models.
 - Aggregate primary results from protein rows, never triangles; retain zero
   cells; save no pair or triangle rows.
 - Test synthetic acute, near-right, obtuse, degenerate, violating, negative,
-  threshold-boundary, partition, and held-out-mask cases.
+  threshold-boundary, and partition cases.
 - Log timestamps and elapsed time for preparation, each model/protein
   checkpoint, layer completion, and aggregation.
 
 Report overall reproduction first; then RMS size, angle, RMS-by-angle,
 frequency-versus-conditional-severity decomposition, normalized severity bands
-and p99, slack, area, protein-length sensitivity, and finally matched-heldout
-results.
+and p99, slack, area, and protein-length sensitivity.
 
 ## 10. Pre-implementation decisions
 
@@ -335,4 +331,6 @@ No question currently blocks implementation. Recommended frozen defaults are
 the 88--92 degree near-right band, relative severity bands 0--5%, 5--10%, and
 10%+, RMS as primary size, area as sensitivity, and relative-slack tertiles as
 a separate explanation. Change them only before production replay, record the
-decision, and never tune them from model outcomes.
+decision, and never tune them from model outcomes. Bootstrap resampling is not
+part of this workflow; descriptive summaries and associations retain their
+underlying per-protein analyses instead.

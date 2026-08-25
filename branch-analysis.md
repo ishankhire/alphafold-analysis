@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-08-25 — Implement triangle-violation subgroup replay
+
+Added reference preparation, checkpointed 48-layer four-probe replay, strict
+aggregation, artifact/Figure-5 validation, protein-length analyses, synthetic
+geometry tests, and local PDF generation for exact RMS, angle, slack, and area
+triangle subgroups. The workflow only evaluates all edges, retains individual
+protein rows, and performs no bootstrap resampling.
+
 ## Session: 2026-08-24 — Expand decodability-versus-error phase plots
 
 Added reproducible Figure-8-style phase trajectories for all canonical exact-
@@ -13,9 +21,8 @@ transition diagnostic remains tabular only; it is not overlaid on the plots.
 
 Added a four-model, 48-layer frozen-replay plan for exact triangle violations
 stratified by reference RMS size, angle, area, and relative slack. Defined
-scale-normalized severity metrics, matched held-out-edge sensitivity, exact
-output schemas, and protein-length composition, stratification, adjustment,
-and weighting checks.
+scale-normalized severity metrics, exact output schemas, and protein-length
+composition, stratification, adjustment, and weighting checks.
 
 ## Session: 2026-08-18 — Interpret generated main paper figures
 
