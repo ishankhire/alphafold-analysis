@@ -1,5 +1,14 @@
 # Branch Analysis
 
+## Session: 2026-08-25 — Plot all triangle-violation subgroups
+
+Expanded the local triangle-subgroup analyzer into a source-validated figure
+suite under `delta_files/analysis/triangle_violation_subgroups/`. It now plots
+all 7 category systems, 21 labels, 13 absolute/relative metrics, 4 probe
+families, and 48 layers, plus length-quintile and continuous length-effect
+diagnostics. Added compact derived tables, source/artifact hashes, and a
+generated results narrative with evaluation-scope caveats.
+
 ## Session: 2026-08-25 — Implement triangle-violation subgroup replay
 
 Added reference preparation, checkpointed 48-layer four-probe replay, strict
