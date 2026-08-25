@@ -92,10 +92,23 @@ reasonable headroom, measure the first representative task, and update
 existing regression pipeline while right-sizing, since Delta charges can be
 memory-derived.
 
+### Walltime and scheduling efficiency
+
+Before adding or changing **any** SBATCH walltime request, consult
+`docs/plans/suggested_sbatch_walltime.md` and use its workflow-specific
+measurement when one exists. Normally target 1.5–2x the maximum elapsed time
+of representative successful tasks. Do not size from failed, cancelled,
+cached, restart-skipped, smoke, or no-op runs. When the exact workflow is
+unmeasured, estimate from the closest completed workflow and account for
+differences in cohort size, feature width, layers, folds, models, and sequential
+stages. Measure the first representative task and update the shared walltime
+guide before broad submission. Avoid excessive limits because Slurm schedules
+against requested walltime and shorter accurate jobs can backfill sooner.
+
 ### Launcher requirements
 
-- Request walltime and memory from observed comparable runs, leaving reasonable
-  headroom without substantially over-reserving.
+- Request walltime and memory from the shared MaxRSS and elapsed-time guides,
+  leaving reasonable headroom without substantially over-reserving.
 - Save outputs after every completed layer or similarly meaningful unit so
   partial results survive timeouts.
 - Log timestamps and elapsed times for each major stage and layer.

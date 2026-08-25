@@ -1580,3 +1580,9 @@ larger than 20 MB from Git.
 Recorded the triangle-violation subgroup replay's 6.15 GiB peak, reduced its
 request from 64 GiB to 8 GiB, and made the shared memory guide mandatory for
 all new or modified SBATCH allocations with a default 1.5–2x MaxRSS target.
+
+## Session: 2026-08-25 — Add SBATCH walltime guidance
+
+Added measured elapsed-time references and a default 1.5–2x walltime policy,
+required the shared guide for all launcher changes, and right-sized the
+triangle-violation subgroup replay from six hours to 80 minutes.
