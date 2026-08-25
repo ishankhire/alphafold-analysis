@@ -266,7 +266,7 @@ protein-category rows for paired model differences.
 Add:
 
 ```text
-scripts/cluster_scripts/diagnostics/
+scripts/cluster_scripts/triangle_violation_subgroups/
   prepare_triangle_violation_reference.py
   prepare_triangle_violation_reference.sbatch
   triangle_violation_subgroup_replay.py
