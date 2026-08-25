@@ -80,9 +80,17 @@ script directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
 
 ### Memory and SU efficiency
 
-Do not use or request excessive memory. Preserve the existing regression
-pipeline and right-size memory requests from comparable completed-job MaxRSS
-with reasonable headroom, since Delta charges can be memory-derived.
+Do not use or request excessive memory. Before adding or changing **any** SBATCH
+memory request, consult `docs/plans/suggested_sbatch_memory.md` and use its
+workflow-specific measurement when one exists. Normally target only 1.5–2x the
+observed peak MaxRSS; requests above 2x require a concrete, documented reason.
+When the exact workflow has no measurement, estimate its peak from the closest
+completed jobs, accounting for cohort size, feature width and dtype, dense
+matrix materialization, and per-task concurrency. Start from that estimate with
+reasonable headroom, measure the first representative task, and update
+`docs/plans/suggested_sbatch_memory.md` before broad submission. Preserve the
+existing regression pipeline while right-sizing, since Delta charges can be
+memory-derived.
 
 ### Launcher requirements
 

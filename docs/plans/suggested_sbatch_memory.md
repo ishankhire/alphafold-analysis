@@ -1,11 +1,11 @@
 # Suggested SBATCH memory
 
 These are per-job or per-array-task recommendations for the likely final
-implementations. Observed MaxRSS values come from the 2026 Delta accounting
-export in `delta_files/delta_usage_export_2026.tar.gz`; they are converted to
-GiB. Because Delta can derive SU charges from requested memory, use the smallest
-request that retains reasonable headroom and recheck MaxRSS after the first
-canonical run.
+implementations. Observed MaxRSS values come from Delta accounting, including
+the 2026 export in `delta_files/delta_usage_export_2026.tar.gz` and subsequent
+`sacct` measurements; they are converted to GiB. Because Delta can derive SU
+charges from requested memory, use the smallest request that retains reasonable
+headroom and recheck MaxRSS after the first canonical run.
 
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
@@ -18,6 +18,7 @@ canonical run.
 | Joint-gate per-layer consolidation | Not yet measured | `16g` initially | This recombines six completed prediction fragments for one layer. Start conservatively, then right-size from its first MaxRSS. |
 | Gated final aggregation | 2.86 GiB | `8g` | Maximum across the completed and retried aggregation jobs. |
 | Per-protein OLS, `per_protein_base256_common.py` | 7.98 GiB | `12g` | The completed base256 layer jobs reached the current 8 GiB request, leaving effectively no headroom. |
+| Triangle-violation subgroup replay, `triangle_violation_subgroup_replay.py` | 6.15 GiB | `8g` | Maximum across 21 successful array tasks (layers 0–20) from Delta job `21445976`; the tasks had consistent memory use, so 8 GiB provides sufficient workflow-specific headroom. |
 
 The canonical paper XGBoost model is the shared 256-feature model. If the
 exploratory per-protein XGBoost workflow is retained and also changed from 128

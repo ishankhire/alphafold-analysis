@@ -1574,3 +1574,9 @@ Added a concise repository guide linking the shared regression methodology,
 main result summary, analysis outputs, paper figures, and experiment plans, and
 excluded generated coefficient artifacts, compressed model shards, and outputs
 larger than 20 MB from Git.
+
+## Session: 2026-08-25 — Tighten SBATCH memory sizing
+
+Recorded the triangle-violation subgroup replay's 6.15 GiB peak, reduced its
+request from 64 GiB to 8 GiB, and made the shared memory guide mandatory for
+all new or modified SBATCH allocations with a default 1.5–2x MaxRSS target.
