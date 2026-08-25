@@ -340,7 +340,7 @@ def load_artifacts(layer: int, protein_ids: Sequence[str]):
         "TRIANGLE_SHARED_OLS_ROOT", "general_base256_combined_canonical"
     )
     per_root = configured_artifact_root(
-        "TRIANGLE_PER_PROTEIN_OLS_ROOT", "per_protein_base256_combined_canonical"
+        "TRIANGLE_PER_PROTEIN_OLS_ROOT", "per_protein_base256_combined"
     )
     xgb_root = configured_artifact_root(
         "TRIANGLE_XGBOOST_ROOT", "shared_xgboost_base256_combined"

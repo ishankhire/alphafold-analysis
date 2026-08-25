@@ -6,7 +6,9 @@ Added reference preparation, checkpointed 48-layer four-probe replay, strict
 aggregation, artifact/Figure-5 validation, protein-length analyses, synthetic
 geometry tests, and local PDF generation for exact RMS, angle, slack, and area
 triangle subgroups. The workflow only evaluates all edges, retains individual
-protein rows, and performs no bootstrap resampling.
+protein rows, and performs no bootstrap resampling. Its Delta replay resolves
+the per-protein artifacts from their producer-native
+`$CSV_ROOT/per_protein_base256_combined` directory.
 
 ## Session: 2026-08-24 — Expand decodability-versus-error phase plots
 

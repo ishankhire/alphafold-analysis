@@ -19,6 +19,7 @@ module load python
 source ~/protein_venv/bin/activate
 
 export CSV_ROOT=$HOME/csv_files
+export TRIANGLE_PER_PROTEIN_OLS_ROOT=$CSV_ROOT/per_protein_base256_combined
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK
