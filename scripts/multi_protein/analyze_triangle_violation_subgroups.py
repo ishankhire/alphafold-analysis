@@ -112,6 +112,19 @@ LENGTH_BIN_LABELS = {
     "length_bin_4": "Length quintile 4",
     "length_bin_5": "Length quintile 5 (longest)",
 }
+FOCUSED_METRICS = (
+    (
+        "violation_fraction",
+        "Triangle-inequality violation fraction",
+        "Fraction of triangles",
+    ),
+    (
+        "mean_relative_violation_all",
+        "Normalized mean triangle violation",
+        "Mean relative violation per triangle",
+    ),
+)
+FOCUSED_CATEGORY_SYSTEMS = ("rms_size", "area", "relative_slack", "angle_shape")
 XTICKS = (0, 10, 20, 30, 40, 47)
 
 
@@ -234,7 +247,17 @@ def save_figure(
     records: list[dict[str, object]] = []
     for extension in ("png", "pdf"):
         path = destination / f"{stem}.{extension}"
-        figure.savefig(path)
+        if extension == "pdf":
+            figure.savefig(
+                path,
+                metadata={
+                    "Creator": "analyze_triangle_violation_subgroups.py",
+                    "CreationDate": None,
+                    "ModDate": None,
+                },
+            )
+        else:
+            figure.savefig(path)
         records.append(
             {
                 **metadata,
@@ -361,6 +384,143 @@ def plot_category_family(
         f"{system}_{family}_diagnostics",
         {"figure_kind": "category_trajectory", "category_system": system, "metric_family": family},
     )
+
+
+def plot_focused_all_triangles(
+    summary: pd.DataFrame,
+    output_root: Path,
+) -> list[dict[str, object]]:
+    """Plot the two retained main metrics with models overlaid."""
+    figure, axes = plt.subplots(1, 2, figsize=(12.2, 4.8), sharex=True, squeeze=False)
+    selected = summary[summary["category_system"].eq("all_triangles")]
+    for axis, (metric, title, ylabel) in zip(axes.flat, FOCUSED_METRICS):
+        metric_data = selected[selected["metric"].eq(metric)]
+        for model in MODEL_ORDER:
+            model_label, color, linestyle = MODEL_SPECS[model]
+            values = metric_data[metric_data["analysis_name"].eq(model)].sort_values("layer")
+            axis.plot(
+                values["layer"],
+                values["protein_equal_mean"],
+                color=color,
+                linestyle=linestyle,
+                linewidth=2.0,
+                label=model_label,
+            )
+        axis.set(title=title, xlabel="Evoformer layer", ylabel=ylabel, xlim=(0, 47))
+        axis.set_xticks(XTICKS)
+        axis.set_ylim(bottom=0)
+    axes[0, 0].legend(handles=model_handles(), loc="best")
+    figure.suptitle("All triangles: key consistency metrics across layers", y=1.01)
+    figure.tight_layout()
+    return save_figure(
+        figure,
+        output_root,
+        "focused_main_figures",
+        "figure_01_all_triangles_key_metrics",
+        {
+            "figure_kind": "focused_main",
+            "category_system": "all_triangles",
+            "metric_family": "focused_key_metrics",
+        },
+    )
+
+
+def plot_focused_category_system(
+    summary: pd.DataFrame,
+    system: str,
+    figure_number: int,
+    output_root: Path,
+) -> list[dict[str, object]]:
+    """Plot categories as lines with model columns and metric rows."""
+    system_title, labels = CATEGORY_SPECS[system]
+    colors = category_colors(labels)
+    figure, axes = plt.subplots(
+        len(FOCUSED_METRICS),
+        len(MODEL_ORDER),
+        figsize=(4.0 * len(MODEL_ORDER), 3.65 * len(FOCUSED_METRICS)),
+        sharex=True,
+        sharey="row",
+        squeeze=False,
+    )
+    selected = summary[summary["category_system"].eq(system)]
+    for row_index, (metric, metric_title, ylabel) in enumerate(FOCUSED_METRICS):
+        metric_data = selected[selected["metric"].eq(metric)]
+        for column_index, model in enumerate(MODEL_ORDER):
+            axis = axes[row_index, column_index]
+            model_data = metric_data[metric_data["analysis_name"].eq(model)]
+            for label in labels:
+                values = model_data[model_data["category_label"].eq(label)].sort_values("layer")
+                axis.plot(
+                    values["layer"],
+                    values["protein_equal_mean"],
+                    color=colors[label],
+                    linewidth=1.9,
+                )
+            axis.set(xlim=(0, 47), xticks=XTICKS)
+            axis.set_ylim(bottom=0)
+            if row_index == 0:
+                axis.set_title(MODEL_SPECS[model][0])
+            if row_index == len(FOCUSED_METRICS) - 1:
+                axis.set_xlabel("Evoformer layer")
+            if column_index == 0:
+                axis.set_ylabel(f"{metric_title}\n({ylabel})")
+    legend = [
+        Line2D([0], [0], color=colors[label], linewidth=2.2, label=display_category(label))
+        for label in labels
+    ]
+    figure.legend(handles=legend, loc="outside lower center", ncol=len(labels), frameon=False)
+    figure.suptitle(f"{system_title}: key triangle-consistency metrics", y=1.01)
+    figure.tight_layout(rect=(0, 0.07, 1, 0.99))
+    return save_figure(
+        figure,
+        output_root,
+        "focused_main_figures",
+        f"figure_{figure_number:02d}_{system}_key_metrics",
+        {
+            "figure_kind": "focused_main",
+            "category_system": system,
+            "metric_family": "focused_key_metrics",
+        },
+    )
+
+
+def write_focused_readme(output_root: Path) -> None:
+    lines = [
+        "# Focused triangle-violation main figures",
+        "",
+        (
+            "This five-figure set retains only the triangle-inequality violation fraction and "
+            "the normalized mean triangle violation (`mean_relative_violation_all`). The latter "
+            "is averaged over all triangles, so nonviolating triangles contribute zero."
+        ),
+        "",
+        "## Layout",
+        "",
+        (
+            "`figure_01_all_triangles_key_metrics` overlays the four models in one panel per "
+            "metric. Figures 02–05 use columns for models, rows for metrics, and colored lines "
+            "for the three categories. Axes are shared across model columns within each metric "
+            "row, allowing direct category and model comparisons without rescaling."
+        ),
+        "",
+        "| Figure | Categories |",
+        "|---|---|",
+        "| 01 | All triangles |",
+        "| 02 | RMS size: small, medium, large |",
+        "| 03 | Area: low, medium, high |",
+        "| 04 | Relative slack: low, medium, high |",
+        "| 05 | Largest-angle shape: clearly acute, near right, clearly obtuse |",
+        "",
+        (
+            "All values are protein-equal means over the same 111 proteins, use the canonical "
+            "`all_edges` evaluation scope, and cover Evoformer layers 0–47. Category membership "
+            "is fixed from final-PDB reference geometry."
+        ),
+        "",
+    ]
+    destination = output_root / "focused_main_figures" / "README.md"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text("\n".join(lines))
 
 
 def plot_length_bin_family(
@@ -524,8 +684,9 @@ def write_report(
         ),
         "",
         (
-            f"There are {figure_count // 2} distinct figures, each saved as both PDF and PNG. "
-            "The `absolute` figures reproduce the Figure-5-style violation fraction, absolute "
+            f"There are {figure_count // 2 - 5} comprehensive diagnostic figures plus 5 focused "
+            "main figures, each saved as both PDF and PNG. The `absolute` figures reproduce the "
+            "Figure-5-style violation fraction, absolute "
             "burden/severity, and 0–5/5–10/10+ Å panels. The `relative` figures add all seven "
             "scale-normalized metrics. In subgroup matrices, rows are models, columns are "
             "metrics, and colored lines are reference categories."
@@ -626,6 +787,7 @@ def write_report(
             "## Files and caveats",
             "",
             "- `category_trajectories/` contains the complete category-system figure suite.",
+            "- `focused_main_figures/` contains the five reduced figures using only violation fraction and normalized mean triangle violation.",
             "- `length_diagnostics/` contains length-quintile trajectories and continuous length-effect slopes.",
             "- `trajectory_changes.csv` records layer-0/layer-47 values and trajectory extrema for every model/category/metric.",
             "- `paired_model_contrasts_layer47.csv` and `protein_length_effects_layer47.csv` retain compact final-layer sensitivity tables.",
@@ -679,6 +841,13 @@ def main() -> None:
         figure_records.extend(plot_length_bin_family(length_summary, family, output_root))
         figure_records.extend(plot_length_effect_family(effects, family, output_root))
 
+    figure_records.extend(plot_focused_all_triangles(summary, output_root))
+    for figure_number, system in enumerate(FOCUSED_CATEGORY_SYSTEMS, start=2):
+        figure_records.extend(
+            plot_focused_category_system(summary, system, figure_number, output_root)
+        )
+    write_focused_readme(output_root)
+
     changes = trajectory_changes(summary)
     changes.to_csv(output_root / "trajectory_changes.csv", index=False)
     contrasts[contrasts["layer"].eq(47)].to_csv(
@@ -699,6 +868,7 @@ def main() -> None:
         output_root / "protein_length_effects_layer47.csv",
         output_root / "figure_manifest.csv",
         output_root / "README.md",
+        output_root / "focused_main_figures" / "README.md",
     ]
     generation_summary = {
         "analysis_name": "triangle_violation_subgroup_trajectories",

@@ -1,5 +1,12 @@
 # Branch Analysis
 
+## Session: 2026-08-25 — Focus triangle-subgroup main figures
+
+Added a five-figure focused main set retaining only violation fraction and
+normalized mean triangle violation. The four subgroup figures use model
+columns, metric rows, category trajectories within panels, and shared row-wise
+y-axes so subgroup levels can be compared without rescaling.
+
 ## Session: 2026-08-25 — Plot all triangle-violation subgroups
 
 Expanded the local triangle-subgroup analyzer into a source-validated figure

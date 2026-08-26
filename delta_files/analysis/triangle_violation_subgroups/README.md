@@ -4,7 +4,7 @@
 
 This directory visualizes all 7 reference category systems, all 21 category labels, all 13 canonical violation metrics, all 4 frozen probe families, and all 48 Evoformer layers in `triangle_metric_summary.csv`. Values are protein-equal means over 111 analysis proteins; every trajectory uses the canonical `all_edges` scope. The category PDFs are the direct subgroup analogue of `main_figure_05_triangle_violation_diagnostics.pdf`.
 
-There are 18 distinct figures, each saved as both PDF and PNG. The `absolute` figures reproduce the Figure-5-style violation fraction, absolute burden/severity, and 0–5/5–10/10+ Å panels. The `relative` figures add all seven scale-normalized metrics. In subgroup matrices, rows are models, columns are metrics, and colored lines are reference categories.
+There are 18 comprehensive diagnostic figures plus 5 focused main figures, each saved as both PDF and PNG. The `absolute` figures reproduce the Figure-5-style violation fraction, absolute burden/severity, and 0–5/5–10/10+ Å panels. The `relative` figures add all seven scale-normalized metrics. In subgroup matrices, rows are models, columns are metrics, and colored lines are reference categories.
 
 ## Overall layer trajectories
 
@@ -62,6 +62,7 @@ The shared linear probe is the only model with a large layer-47 monotonic length
 ## Files and caveats
 
 - `category_trajectories/` contains the complete category-system figure suite.
+- `focused_main_figures/` contains the five reduced figures using only violation fraction and normalized mean triangle violation.
 - `length_diagnostics/` contains length-quintile trajectories and continuous length-effect slopes.
 - `trajectory_changes.csv` records layer-0/layer-47 values and trajectory extrema for every model/category/metric.
 - `paired_model_contrasts_layer47.csv` and `protein_length_effects_layer47.csv` retain compact final-layer sensitivity tables.
