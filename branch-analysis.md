@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-26 — Normalize decodability-consistency phase grids
+
+Added five 2×4 phase grids that compare per-model min–max-normalized R² with
+triangle violation fraction and normalized mean triangle violation across the
+four focused subgroup probe families and reference-geometry category systems.
+
 ## Session: 2026-08-25 — Focus triangle-subgroup main figures
 
 Added a five-figure focused main set retaining only violation fraction and

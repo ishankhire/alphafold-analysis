@@ -788,6 +788,7 @@ def write_report(
             "",
             "- `category_trajectories/` contains the complete category-system figure suite.",
             "- `focused_main_figures/` contains the five reduced figures using only violation fraction and normalized mean triangle violation.",
+            "- `focused_decodability_consistency/` contains five separately generated 2×4 phase grids relating per-model normalized R² to those two focused metrics.",
             "- `length_diagnostics/` contains length-quintile trajectories and continuous length-effect slopes.",
             "- `trajectory_changes.csv` records layer-0/layer-47 values and trajectory extrema for every model/category/metric.",
             "- `paired_model_contrasts_layer47.csv` and `protein_length_effects_layer47.csv` retain compact final-layer sensitivity tables.",
