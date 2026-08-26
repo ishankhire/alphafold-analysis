@@ -1,0 +1,132 @@
+{
+  "aggregation_unit": "protein",
+  "alignment_tolerance_layers": 2,
+  "alpha": 0.05,
+  "analysis_name": "triangle_metric_peak_trough_significance",
+  "artifact_sha256": {
+    "README.md": "70179ebe02161090c2993f4ec55537fd63067a3bb812e67c7df95b05ddc9c54e",
+    "alignment_comparisons.csv": "aa4ca088c6791bd6d13e755cc75cdbf2d1dbd4d3eaf31bb9dd211ffe2c999543",
+    "alignment_summary.csv": "1292fc9fef0d6e3b96e529cf59538523bd42097b6a6972de2b3b74a0baf9f7e7",
+    "all_layer_tests.csv": "1ef85b5518ca5079df68a01db9e73875bfe62bacbdb1dee575ad0f1730600672",
+    "annotated_trajectories/figure_01_all_triangles_peak_troughs.pdf": "77e8faa783c655f4c224c32406d6d4adb50f8e5882359640503a5d91c8cb28dd",
+    "annotated_trajectories/figure_01_all_triangles_peak_troughs.png": "f7a78452926a752e5f23009a98c927fc2aaf6fdb13ab95e806f0a99a43fa437e",
+    "annotated_trajectories/figure_02_rms_size_peak_troughs.pdf": "f591e23afe09104ae8af4a7d4a1579de4117102a70635125520af3adadb5439d",
+    "annotated_trajectories/figure_02_rms_size_peak_troughs.png": "e59e98a109a65032eed2d1970f36f6f4acb7cbc8f252ab0e76ea574b718c1ccc",
+    "annotated_trajectories/figure_03_area_peak_troughs.pdf": "1d27d979a45f7c36df368f8aeac01f472f890681227c9aba9c77e8a4797951e1",
+    "annotated_trajectories/figure_03_area_peak_troughs.png": "8f6553486f3dfc1d61a7f8b56be438e0df8a114d5d7c9a041abd4cfc22dace53",
+    "annotated_trajectories/figure_04_relative_slack_peak_troughs.pdf": "c1dda7f047703fa6d4818305eb5c3370c31f5c1935cb28660a328a0e59eec89a",
+    "annotated_trajectories/figure_04_relative_slack_peak_troughs.png": "cc5260fc173d5ffb046f3936bb34f85806ef83b2e1abc59ea000809043a29de4",
+    "annotated_trajectories/figure_05_angle_shape_peak_troughs.pdf": "0eb4c841b365f9c19a497b4038d0efc52e2af71a401bfa258abfca2be8c6e130",
+    "annotated_trajectories/figure_05_angle_shape_peak_troughs.png": "da61dd31256b984ff6391fa80b71a2dbe1f35039543013bd89ad1bb885fc0129",
+    "candidate_extrema.csv": "5770ef8cc6bdcf0261db1915570ef5112f9b0eb0ca068f8d4f529ad6a3ad0236",
+    "figure_manifest.csv": "3f4d56113ae5a5c9e8764f0f6f6fb7dc21a712330f618f67005d889834c9ccee",
+    "trajectory_summary.csv": "bbe4793941349ecad0edd31bedb4b3352782547636d7938e55f2bf5dd3c8ad83"
+  },
+  "bh_families": "separate_by_metric_across_all_models_categories_directions_layers",
+  "bh_family_size": 3952,
+  "bh_method": "Benjamini-Hochberg",
+  "candidate_counts": {
+    "mean_relative_violation_all": {
+      "peak": 112,
+      "trough": 68
+    },
+    "violation_fraction": {
+      "peak": 103,
+      "trough": 62
+    }
+  },
+  "category_systems": [
+    "all_triangles",
+    "rms_size",
+    "area",
+    "relative_slack",
+    "angle_shape"
+  ],
+  "directions": [
+    "peak",
+    "trough"
+  ],
+  "distinct_figures": 5,
+  "eligible_layers": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42
+  ],
+  "evaluation_scope": "all_edges",
+  "excluded_methods": [
+    "R2",
+    "bootstrap_resampling",
+    "individual_neighbor_t_tests"
+  ],
+  "generated_at": "2026-08-26T15:36:03.959574+00:00",
+  "input_path": "delta_files/triangle_violation_subgroups/per_protein_triangle_metrics.csv",
+  "metrics": [
+    "violation_fraction",
+    "mean_relative_violation_all"
+  ],
+  "models": [
+    "general_base256_combined",
+    "per_protein_base256_combined",
+    "shared_xgboost_base256_combined",
+    "analysis_1_sequence_gated"
+  ],
+  "n_all_layer_tests": 7904,
+  "n_input_rows": 277056,
+  "n_proteins": 111,
+  "n_shape_qualified_candidates": 345,
+  "n_supported_extrema": 219,
+  "n_trajectories": 52,
+  "output_root": "delta_files/analysis/triangle_violation_subgroups/peak_trough_significance",
+  "primary_metric": "mean_relative_violation_all",
+  "rendered_figure_files": 10,
+  "secondary_metric": "violation_fraction",
+  "source_sha256": {
+    "delta_files/triangle_violation_subgroups/per_protein_triangle_metrics.csv": "e0e37b5ffd7ceb3fe4382b0e26dde3a03fb47a738d81ca30d0892d0a3cd8d589"
+  },
+  "supported_counts": {
+    "mean_relative_violation_all": {
+      "peak": 88,
+      "trough": 24
+    },
+    "violation_fraction": {
+      "peak": 75,
+      "trough": 32
+    }
+  },
+  "window_layers_per_side": 5
+}

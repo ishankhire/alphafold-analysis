@@ -1608,3 +1608,11 @@ all new or modified SBATCH allocations with a default 1.5–2x MaxRSS target.
 Added measured elapsed-time references and a default 1.5–2x walltime policy,
 required the shared guide for all launcher changes, and right-sized the
 triangle-violation subgroup replay from six hours to 80 minutes.
+
+## Session: 2026-08-26 — Test triangle-metric peaks and troughs
+
+Added a local full-search paired t-test analysis for strict +/-5-layer extrema
+in the five focused triangle-consistency families. The generated tables and
+annotated figures apply outcome-specific Benjamini--Hochberg correction across
+all 3,952 predefined hypotheses and report raw and paired standardized effects,
+plus exact and +/-2-layer agreement across models and categories.
