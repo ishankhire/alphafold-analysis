@@ -34,6 +34,13 @@ delta_files/**/per_protein.csv
 delta_files/**/model_status.csv
 
 # Local large outputs (>=20 MB)
+delta_files/secondary_structure_prediction/bridge_pair_trajectories.csv.gz
+delta_files/secondary_structure_prediction/helix_residue_scores.csv.gz
+delta_files/triangle_violation_subgroups/length_bin_summary.csv
+delta_files/triangle_violation_subgroups/paired_model_contrasts.csv
+delta_files/triangle_violation_subgroups/per_protein_triangle_metrics.csv
+delta_files/triangle_violation_subgroups/protein_length_effects.csv
+delta_files/triangle_violation_subgroups/triangle_metric_summary.csv
 delta_files/diagnostic-files/diagnostic_linear_tree_csv_files/diagnostic_linear_tree_test_scatter_sample.csv
 delta_files/general_base256_avg_symmetric_montage10_mds_replay/csv_files/mds_reconstructed_coords.csv
 delta_files/next_layer_distance_delta_7b3a_A/next_layer_distance_delta_coefficients.csv
