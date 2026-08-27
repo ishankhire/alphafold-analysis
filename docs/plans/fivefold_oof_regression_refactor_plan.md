@@ -15,6 +15,15 @@ Codex may implement, test, document, commit, and push one stage at a time. Codex
 
 No new resource pilots will be required. Memory and walltime will be estimated from completed comparable workflows. This is an explicit project-level override of the usual `AGENTS.md` exact-workflow pilot rule and must be recorded in the resource documentation.
 
+## Decision Rationale for Implementation Handoff
+
+- Build a new CV workflow tree rather than rewrite the historical runners. This preserves reproducibility of the existing 80/20 results while allowing minimal, backward-compatible extraction of tested helpers.
+- Shared OLS, sequence-gated OLS, and XGBoost answer an unseen-protein question, so their held-out unit is the whole protein. Per-protein OLS answers a within-protein held-out-pair question, so its held-out unit is the residue pair; its outer-fold label is reporting metadata only.
+- Complete OOF predictions are concatenated before authoritative metrics and geometry are calculated. Do not average fold-level R² values or construct five separate MDS results for one protein-layer, and do not calculate geometry from training predictions.
+- Fixed XGBoost is a deliberate compute/interpretation tradeoff. The existing equal-anchor validation table selected S4 with mean per-protein R² `0.820963`, versus `0.819661` for runner-up S1, a difference of about `0.00130`. This supports treating nearby hyperparameter choices as similar, but it does not remove selection bias.
+- Consequently, do not add a new hyperparameter-selection script or inner CV loop in this project. The XGBoost production workflow consists of the fixed fold/layer runner, aggregation, and launch/replay machinery. A fully selection-independent XGBoost claim would require a separately approved nested-CV analysis or new external holdout.
+- The source of the frozen XGBoost decision is `delta_files/xgboost_hyperparameter_search/shared/winner_cap_sweep/cross_layer_selection_table.csv`; preserve that path and its digest in provenance rather than copying its values into a new selection artifact.
+
 ## Locked Experimental Protocol
 
 ### Outer protein folds
@@ -66,6 +75,12 @@ regression_5fold_v1/
     per_protein_pair_folds_v1.csv
     fold_digests.json
 ```
+
+Metadata granularity is compact and deterministic:
+
+- `regression_outer_folds_v1.csv` has one row per eligible protein, with at least `protein_id`, `source`, `n_residues`, `length_bin`, `outer_fold`, and the historical split role used to verify fold 0.
+- `per_protein_pair_folds_v1.csv` has one row per eligible protein, not one row per pair. It records `protein_id`, `n_residues`, `n_pairs`, the pair-fold algorithm/version and seed, five fold counts, and an assignment digest. Pair assignments must be regenerated exactly from canonical pair indices.
+- `fold_digests.json` records the protocol version, construction parameters, cohort digest, outer-fold digest, pair-fold manifest digest, and per-fold protein counts.
 
 Family roots are:
 
@@ -143,7 +158,7 @@ Retain every fold model for exact downstream replay:
 - Per-protein OLS: 132,480 compressed coefficient/scaler models.
 - XGBoost: 240 boosters.
 
-`replay_index.csv` maps each OOF prediction to the responsible fold artifact. This is a required interface for the separately planned triangle-subgroup refactor. Flag that dependency but do not plan or modify triangle-subgroup scripts here.
+`replay_index.csv` indexes retained model artifacts rather than individual pair predictions. It has one row per artifact with at least `model_family`, `layer`, nullable `outer_fold`, nullable `protein_id`, nullable `pair_fold`, nullable `sequence_gate`, `artifact_path`, `artifact_sha256`, configuration/scaler digests, and `status`. Pair-level responsibility is recovered by joining this compact index to the deterministic outer- or pair-fold manifest. Its expected row counts equal the model-retention counts above. This is a required interface for the separately planned triangle-subgroup refactor. Flag that dependency but do not plan or modify triangle-subgroup scripts here.
 
 Save compact standardized-coefficient fold stability for OLS and fold-summarized feature importance for XGBoost.
 
