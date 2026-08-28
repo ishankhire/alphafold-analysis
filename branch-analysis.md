@@ -1641,3 +1641,12 @@ exact OOF accumulation and pair assembly, complete-coverage geometry, strict
 v2 output builders, replay checksums, and corruption-aware atomic resume
 manifests. Synthetic protein- and pair-level integration tests cover the common
 engine; model-family runners and launchers remain for later stages.
+
+## Session: 2026-08-27 — Implement fivefold shared OLS
+
+Added the 240-task fold/layer shared base256 OLS runner, exact sufficient-
+statistic aggregator, replayable coefficient/scaler artifacts, cross-fold
+coefficient stability, complete OOF regression/subgroup/geometry outputs, and
+the locked 120 GiB/30-minute Delta launcher. Synthetic tests cover fitting,
+full fivefold consolidation, valid resume, and checksum-corruption rejection;
+deployment and production execution remain pending.

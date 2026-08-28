@@ -26,14 +26,15 @@ Status labels:
 Protocol 2.0 fivefold OOF is now canonical. All existing 80/20 runners and
 saved result families described below are reclassified as historical
 protocol-1.0 analyses. Stage 1 froze and validated the shared outer- and
-pair-fold metadata. Stage 2 added the common CV engine, but no v2 model-family
-runner or production result exists yet.
+pair-fold metadata. Stage 2 added the common CV engine. Stage 3 added the
+shared-linear family runner and aggregator; no v2 production result has been
+generated yet.
 
 ## Protocol-2.0 implementation status
 
 | Family | Frozen folds | V2 runner | Production artifacts | Disposition |
 |---|---|---|---|---|
-| Shared linear OLS | Meets | Common engine complete; family runner pending Stage 3 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Shared linear OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 3 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
 | Per-protein linear OLS | Meets | Common engine complete; family runner pending Stage 4 | Not generated | Historical single 80/20 pair split remains available; not the primary estimate |
 | Sequence-gated OLS | Meets | Common engine complete; family runner pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
 | Shared XGBoost | Meets | Common engine complete; family runner pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
@@ -51,7 +52,20 @@ protein-equal scalers, weights, and baselines, assembles disjoint pair-fold
 predictions, and merges OOF sufficient statistics with duplicate-protein and
 coverage checks. Synthetic shared-protein and within-protein-pair integration
 tests exercise those invariants. Model fitting remains intentionally absent
-until the family-specific stages.
+from the common engine and is supplied by family-specific stages.
+
+The Stage-3 shared OLS workflow is under
+`scripts/cluster_scripts/cross_validation/`. Each fold/layer task fits all
+pairs from the four training protein folds with a train-only protein-equal
+scaler and objective, streams the held-out fold through OOF regression,
+sequence/spatial subgroup, and geometry accumulators, retains the complete
+coefficient/scaler model, and checkpoints checksummed additive-v2 shards. The
+aggregator requires all 240 tasks for production, reconstructs authoritative
+complete-cohort metrics from sufficient statistics, emits five-model
+coefficient stability per layer, and rejects missing, duplicate, incomplete,
+resume-incompatible, or checksum-corrupted shards. Synthetic fivefold tests
+cover fitting, aggregation, replay, resume, and corruption handling. These
+tests establish implementation behavior, not a completed Delta production run.
 
 ## Protocol checklist for the historical implementation audit
 

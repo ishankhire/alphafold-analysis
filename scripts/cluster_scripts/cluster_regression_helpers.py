@@ -60,6 +60,15 @@ TRIANGLE_VIOLATION_KEYS = [
     "triangle_violation_10_plus_fraction",
 ]
 
+CAMEO_PAIR_BLOCKS_ROOT = Path("/work/hdd/bekh/thayes/openfold_reps")
+CAMEO_PDB_ROOT = Path("/work/hdd/bekh/thayes/openfold_reps_outputs_sm")
+ECOD_PAIR_BLOCKS_ROOT = Path(
+    "/work/hdd/bfna/thayes/ecod/experiments/representation_saves"
+)
+ECOD_PDB_ROOT = Path(
+    "/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm"
+)
+
 
 def _get_pdb_root():
     """Resolve the cluster PDB root lazily so imports work outside sbatch."""
@@ -81,6 +90,47 @@ def find_pdb_file(protein_id):
 def get_pair_block_path(protein_dir, protein_id, layer):
     """Return the path to a pair block .npy file."""
     return protein_dir / f"{protein_id}_pair_block_{layer}.npy"
+
+
+def resolve_combined_pair_block_path(protein_id, source, layer):
+    """Resolve one canonical combined-cohort pair tensor on Delta."""
+    protein_id = str(protein_id)
+    source = str(source)
+    if source == "cameo":
+        protein_dir = CAMEO_PAIR_BLOCKS_ROOT / protein_id
+    elif source == "ecod":
+        protein_dir = ECOD_PAIR_BLOCKS_ROOT / f"{protein_id}_save_layers_0_47"
+    else:
+        raise ValueError(f"Unknown combined-cohort source: {source!r}")
+    candidates = (
+        get_pair_block_path(protein_dir, protein_id, layer),
+        protein_dir / "pair_blocks" / f"{protein_id}_pair_block_{layer}.npy",
+    )
+    return next((path for path in candidates if path.is_file()), candidates[0])
+
+
+def resolve_combined_pdb_path(protein_id, source):
+    """Resolve one canonical combined-cohort predicted PDB on Delta."""
+    protein_id = str(protein_id)
+    source = str(source)
+    if source == "cameo":
+        pdb_root = CAMEO_PDB_ROOT
+        protein_dir = CAMEO_PAIR_BLOCKS_ROOT / protein_id
+    elif source == "ecod":
+        pdb_root = ECOD_PDB_ROOT
+        protein_dir = ECOD_PAIR_BLOCKS_ROOT / f"{protein_id}_save_layers_0_47"
+    else:
+        raise ValueError(f"Unknown combined-cohort source: {source!r}")
+    filename = f"{protein_id}_model_1_ptm_unrelaxed.pdb"
+    candidates = (
+        protein_dir / "predicted_pdb" / filename,
+        pdb_root
+        / f"my_outputs_align_{protein_id}_representations_load_from_saved_layer_47"
+        / "predictions"
+        / filename,
+        pdb_root / protein_id / "predicted_pdb" / filename,
+    )
+    return next((path for path in candidates if path.is_file()), candidates[1])
 
 
 def discover_proteins(pair_blocks_root):
@@ -372,6 +422,8 @@ __all__ = [
     "extract_ca_coordinates",
     "find_pdb_file",
     "get_pair_block_path",
+    "resolve_combined_pair_block_path",
+    "resolve_combined_pdb_path",
     "make_failed_geometry_row",
     "make_triangle_violation_metrics",
     "superimpose_structures",

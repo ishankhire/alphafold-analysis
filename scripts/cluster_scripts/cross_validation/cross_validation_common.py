@@ -1575,6 +1575,10 @@ class OOFSubgroupAccumulator:
         self.cells = [_SubgroupCell() for _ in labels]
         self._seen_proteins: set[str] = set()
 
+    @property
+    def protein_ids(self) -> tuple[str, ...]:
+        return tuple(sorted(self._seen_proteins))
+
     def update_protein(
         self,
         protein_id: str,
@@ -1602,6 +1606,73 @@ class OOFSubgroupAccumulator:
             if np.any(evaluated):
                 cell.protein_ids.add(protein)
                 cell.stats.update(y[evaluated], pred[evaluated])
+
+    def merge(self, other: "OOFSubgroupAccumulator") -> "OOFSubgroupAccumulator":
+        if (
+            self.category_scope != other.category_scope
+            or self.category_labels != other.category_labels
+        ):
+            raise ValueError("Cannot merge subgroup accumulators with different categories")
+        overlap = self._seen_proteins & other._seen_proteins
+        if overlap:
+            raise ValueError(f"Cannot merge duplicate subgroup proteins: {sorted(overlap)[:5]}")
+        self._seen_proteins.update(other._seen_proteins)
+        for destination, source in zip(self.cells, other.cells):
+            destination.stats.merge(source.stats)
+            destination.n_expected_pairs += source.n_expected_pairs
+            destination.protein_ids.update(source.protein_ids)
+        return self
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "category_scope": self.category_scope,
+            "category_labels": list(self.category_labels),
+            "seen_proteins": sorted(self._seen_proteins),
+            "cells": [
+                {
+                    "stats": cell.stats.to_payload(),
+                    "n_expected_pairs": int(cell.n_expected_pairs),
+                    "protein_ids": sorted(cell.protein_ids),
+                }
+                for cell in self.cells
+            ],
+        }
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> "OOFSubgroupAccumulator":
+        if set(payload) != {
+            "category_scope", "category_labels", "seen_proteins", "cells",
+        }:
+            raise ValueError("Unexpected subgroup-accumulator payload")
+        labels = payload["category_labels"]
+        cells = payload["cells"]
+        seen = payload["seen_proteins"]
+        if not isinstance(labels, list) or not isinstance(cells, list) or not isinstance(seen, list):
+            raise ValueError("Subgroup-accumulator payload lists are invalid")
+        result = cls(str(payload["category_scope"]), [str(label) for label in labels])
+        if len(cells) != len(result.cells):
+            raise ValueError("Subgroup-accumulator cell count is invalid")
+        result._seen_proteins = {str(protein_id) for protein_id in seen}
+        if len(result._seen_proteins) != len(seen) or any(not value for value in result._seen_proteins):
+            raise ValueError("Subgroup-accumulator seen proteins are invalid")
+        for destination, raw in zip(result.cells, cells):
+            if not isinstance(raw, Mapping) or set(raw) != {
+                "stats", "n_expected_pairs", "protein_ids",
+            }:
+                raise ValueError("Subgroup-accumulator cell payload is invalid")
+            proteins = raw["protein_ids"]
+            if not isinstance(proteins, list):
+                raise ValueError("Subgroup cell protein IDs must be a list")
+            destination.stats = RegressionSufficientStatistics.from_payload(raw["stats"])
+            destination.n_expected_pairs = int(raw["n_expected_pairs"])
+            destination.protein_ids = {str(protein_id) for protein_id in proteins}
+            if (
+                destination.n_expected_pairs < destination.stats.n
+                or len(destination.protein_ids) != len(proteins)
+                or not destination.protein_ids.issubset(result._seen_proteins)
+            ):
+                raise ValueError("Subgroup-accumulator cell support is invalid")
+        return result
 
     @staticmethod
     def _support_status(n_pairs: int, n_proteins: int) -> str:

@@ -276,6 +276,29 @@ class SyntheticCVIntegrationTests(unittest.TestCase):
 
 
 class OutputReplayAndCheckpointTests(unittest.TestCase):
+    def test_subgroup_accumulator_merge_and_serialization(self):
+        left = common.OOFSubgroupAccumulator("bins", ("a", "b"))
+        right = common.OOFSubgroupAccumulator("bins", ("a", "b"))
+        left.update_protein(
+            "p0", np.asarray([1.0, 2.0]), np.asarray([1.5, 2.5]),
+            np.asarray([0, 1], dtype=np.int16),
+        )
+        right.update_protein(
+            "p1", np.asarray([3.0, 4.0]), np.asarray([2.5, 4.5]),
+            np.asarray([0, 1], dtype=np.int16),
+        )
+        restored = common.OOFSubgroupAccumulator.from_payload(left.to_payload())
+        restored.merge(right)
+        rows = restored.rows(
+            analysis_name="probe", model_family="shared_ols", feature_dim=2,
+            layer=0, evaluation_design="protein_outer_5fold",
+            oof_prediction_scope="heldout_proteins_all_pairs",
+        )
+        self.assertEqual([row["n_evaluated_pairs"] for row in rows], [2, 2])
+        self.assertEqual([row["n_proteins"] for row in rows], [2, 2])
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            restored.merge(common.OOFSubgroupAccumulator.from_payload(left.to_payload()))
+
     def test_v2_writer_and_schema_are_additive(self):
         row = common.build_runtime_row(
             analysis_name="probe", model_family="shared_ols", task_id=0, outer_fold=0,

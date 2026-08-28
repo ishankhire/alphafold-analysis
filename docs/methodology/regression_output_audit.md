@@ -27,14 +27,14 @@ Status labels are:
 Output schema 2.0 is now canonical. Existing schema-1.0 80/20 families and the
 older 184-protein k-fold family are reclassified as historical and are not v2
 production outputs. Stage 1 generated only the three shared metadata files.
-Stage 2 added common v2 builders and validators; family result artifacts begin
-in later implementation stages.
+Stage 2 added common v2 builders and validators. Stage 3 added the shared OLS
+family writers, runner, and strict aggregator, but did not run them on Delta.
 
 ## Output-schema-2.0 implementation status
 
 | Family | Shared metadata | V2 writers/runners | V2 production family |
 |---|---|---|---|
-| Shared linear OLS | Meets | Common v2 writers complete; runner pending Stage 3 | Not generated |
+| Shared linear OLS | Meets | Meets in code; Stage-3 task shards, aggregation, replay index, and all applicable v2 tables implemented | Not generated |
 | Per-protein linear OLS | Meets | Common v2 writers complete; runner pending Stage 4 | Not generated |
 | Sequence-gated OLS | Meets | Common v2 writers complete; runner pending Stage 5 | Not generated |
 | Shared XGBoost | Meets | Common v2 writers complete; runner pending Stage 6 | Not generated |
@@ -52,6 +52,18 @@ resume. The existing schema-1.0 helper remains unchanged in behavior. Synthetic
 integration tests confirm that merged OOF statistics reproduce direct
 concatenation and that pair-level geometry is built once from exact-once OOF
 coverage. These code paths do not constitute a generated production family.
+
+The Stage-3 shared OLS implementation writes one atomic fold/layer shard with
+per-protein OOF rows, fold and training metrics, solver status, runtime,
+complete held-out geometry, subgroup sufficient statistics, and a compressed
+coefficient/scaler artifact. Its production aggregator requires all 48 layers
+and five folds, reconstructs pooled, fold-summary, stable-fit, complete-cohort
+subgroup, and geometry-summary tables, saves 256 standardized-coefficient
+stability rows per layer, and builds a 240-row checksummed replay index. Raw
+pair predictions are not stored. Synthetic tests exercise complete output
+assembly plus valid-resume and checksum-corruption rejection; production files
+remain absent until a separately authorized Delta run is completed and copied
+back.
 
 ## Historical output protocol checklist
 
