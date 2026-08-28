@@ -7,6 +7,25 @@ the 2026 export in `delta_files/delta_usage_export_2026.tar.gz` and subsequent
 charges from requested memory, use the smallest request that retains reasonable
 headroom and recheck MaxRSS after the first canonical run.
 
+## Fivefold OOF comparator-derived estimates
+
+The fivefold OOF refactor has an explicit project-level no-pilot decision. No
+new resource pilot is required before production submission. The requests below
+are planning estimates derived from completed same-family jobs plus conservative
+scaling, not measurements of the new workflows. This is the authorized override
+of the usual exact-workflow pilot rule in `AGENTS.md`; it does not authorize a
+deployment or submission during implementation.
+
+| Fivefold workflow | Comparator | Estimated `--mem` | Status |
+|---|---:|---:|---|
+| Shared OLS, one outer-fold/layer task | Historical shared OLS peak near 98 GiB | `120g` | Comparator-derived, not measured |
+| Per-protein OLS, five pair folds per layer | Historical one-split layer below 8 GiB | `12g` | Comparator-derived; loaded features are reused |
+| Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated peak 93.42 GiB | `120g` | Comparator-derived, not measured |
+| Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 peak near 6.4 GiB while evaluating all 552 proteins | `12g` | Comparator-derived; each v2 task evaluates one fold |
+
+After production completes, measured MaxRSS may replace these estimates, but a
+pre-production pilot is not a prerequisite for this project.
+
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
 | Shared OLS, `general_base256_combined` | 97.96 GiB | `120g` | Completed base256 jobs peaked at 97.96 GiB for layers 0–23 and 94.63 GiB for layers 24–47. |

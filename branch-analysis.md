@@ -1616,3 +1616,11 @@ in the five focused triangle-consistency families. The generated tables and
 annotated figures apply outcome-specific Benjamini--Hochberg correction across
 all 3,952 predefined hypotheses and report raw and paired standardized effects,
 plus exact and +/-2-layer agreement across models and categories.
+
+## Session: 2026-08-27 — Freeze fivefold OOF protocol metadata
+
+Promoted fivefold OOF evaluation to protocol/output version 2.0, preserved the
+80/20 runners as historical v1 workflows, and checked in deterministic outer-
+protein and within-protein pair-fold manifests with validated semantic digests.
+Recorded the locked comparator-derived no-pilot memory and walltime estimates;
+model runners remain for later refactor stages.

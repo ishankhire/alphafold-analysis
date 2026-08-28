@@ -7,12 +7,16 @@ distance regressions. It is a normative experimental protocol rather than a
 description of every historical script. Existing implementations are assessed
 against it in `regression_protocol_audit.md`.
 
+The current canonical protocol version is **2.0**. It uses fivefold
+out-of-fold (OOF) evaluation. Protocol 1.0 and its fixed 80/20 implementations
+remain reproducible historical analyses; they are not the primary paper
+performance estimate.
+
 The protocol currently covers:
 
 - one linear model shared across proteins;
 - one linear model fitted separately within each protein;
-- shared linear models gated by sequence separation, amino-acid pair, or their
-  cross-product; and
+- shared linear models gated by sequence separation; and
 - one XGBoost model shared across proteins.
 
 The common output files, metric definitions, geometry calculations, and
@@ -44,7 +48,7 @@ The model families answer distinct questions:
 | Shared XGBoost | Is transferable distance information accessible through nonlinear thresholds and feature interactions? | Unseen protein IDs |
 
 The per-protein model is intentionally not a held-out-protein model. Its scores
-must not be interpreted as directly equivalent to the shared-model test scores.
+must not be interpreted as directly equivalent to shared-model OOF scores.
 
 Per-protein XGBoost pair splits are currently on hold and are not part of this
 canonical protocol pending a separate methodological decision.
@@ -88,46 +92,28 @@ not group homologous proteins or structural families across splits. Therefore,
 results should not be described as generalization to unseen sequence or fold
 families.
 
-## Canonical master protein split
+## Canonical fivefold protein split
 
-Every shared model uses one versioned, deterministic master split. Construct it
-in two stages so the existing outer 80/20 split can remain the paper's final
-development/test division:
+Every shared model uses the checked-in `regression_outer_folds_v1.csv`
+manifest. It contains all 552 eligible proteins exactly once. The 111 proteins
+in the historical locked-test set are retained unchanged as fold 0. The other
+441 proteins are deterministically shuffled with seed 44 and stratified over
+the same five rank-based protein-length bins into folds 1 through 4. The
+manifest records source, residue and pair counts, length bin, outer fold, and
+historical role for every protein. Its semantic digest is shared by every model
+family.
 
-1. Split the eligible proteins into 80% development and 20% locked test,
-   stratified across five rank-based protein-length bins with random seed 42.
-2. Partition the development proteins into approximately 60% fitting and 20%
-   validation overall, using the same length-bin stratification and a separately
-   recorded deterministic seed.
+For outer fold `f` in `0,1,2,3,4`, shared OLS, sequence-gated OLS, and
+shared XGBoost fit on all proteins not assigned to `f` and predict all
+unordered pairs for every protein assigned to `f`. Each eligible protein is
+therefore evaluated exactly once per layer by each shared family.
+Fold-specific scalers, global baselines, and sequence-gate baselines use only
+the four training folds. No model is subsequently refitted on all proteins.
 
-The saved roles are `fit`, `validation`, and `test`. Exact integer counts are
-recorded in the split manifest because rounding depends on the final eligible
-cohort. Protein IDs must be disjoint and collectively exhaustive. The manifest
-must also record residue count, size bin, source, pair count, split seeds, and a
-content digest.
-
-The test proteins are locked. They must not be used to choose features, gates,
-hyperparameters, row caps, stopping rounds, or layers.
-
-### Use of the master split by fixed linear models
-
-Shared OLS and the shared gated OLS models have no tuned hyperparameters. Their
-final paper models are fitted on the union of the `fit` and `validation`
-proteins, i.e. the first 80%, and evaluated on the locked 20% test proteins.
-Training and test metrics are kept separate.
-
-### Use of the master split by XGBoost
-
-XGBoost uses the 60% `fit` proteins for candidate fitting and the 20%
-`validation` proteins for hyperparameter and boosting-round selection. Once all
-choices are frozen, a fresh final model is fitted on the union of `fit` and
-`validation`, using the selected hyperparameters and a fixed number of boosting
-rounds determined without the test set. That model is evaluated once on the
-same locked test proteins used by the linear models.
-
-This procedure gives every final shared model the same 80% fitting population
-and the same 20% test population while preserving a validation set for the
-nonlinear model.
+Fold 0 preserves historical membership for continuity, but it is not a newly
+untouched test set. Fivefold OOF metrics combine all five held-out folds and
+are the primary paper estimate. The historical `fit`, `validation`, and `test`
+roles remain provenance only and do not change protocol-2.0 fitting.
 
 ## Regression observations and targets
 
@@ -150,8 +136,8 @@ y_{ij}=\lVert c_i-c_j\rVert_2.
 \]
 
 Targets are absolute distances in Angstroms. They are not transformed,
-clipped, or standardized for fitting. Pair ordering, target ordering, and
-train/test pair assignments must remain identical across layers.
+clipped, or standardized for fitting. Pair ordering, target ordering, and fold
+assignments must remain identical across layers.
 
 Unless a model-specific computational cap is declared, all unordered pairs are
 used. Spatial distance may be used to form evaluation subgroups, but it must
@@ -200,7 +186,7 @@ For every OLS model:
 2. calculate those moments using the same protein-equal weighting used by the
    regression loss;
 3. replace a scale below `1e-12` with 1;
-4. reuse the fitted scaler without alteration for validation or test rows; and
+4. reuse the fitted scaler without alteration for held-out rows; and
 5. retain both standardized-space and raw-feature-space coefficients and
    intercepts.
 
@@ -229,8 +215,8 @@ quadratically with length. It is not identical to directly maximizing mean
 per-protein R-squared, which also normalizes each protein by target variance.
 
 Evaluation summaries may later include both protein-equal and pair-pooled
-views, but evaluation weights never change the fitted model after the test set
-has been opened.
+views, but evaluation weights never change a fitted model after its held-out
+fold has been opened.
 
 ## Shared linear model
 
@@ -240,10 +226,10 @@ At each layer, fit one ordinary least-squares model with an intercept:
 \hat y_{ij}=\beta_0 + x_{ij}^{\mathsf T}\beta.
 \]
 
-The model is fitted on all pairs from the 80% development proteins using the
-protein-equal objective and train-derived scaler. No ridge penalty, feature
-selection, pair cap, or target transformation is used. A separate model is
-fitted at every one of the 48 layers using an otherwise identical procedure.
+For each outer fold, the model is fitted on all pairs from the other four folds
+using the protein-equal objective and that fold's train-derived scaler. No
+ridge penalty, feature selection, pair cap, or target transformation is used.
+Five models are fitted at every one of the 48 layers.
 
 When the fitted solver exposes them directly, the implementation saves design
 rank and singular-value extrema and derives the condition number. It must not
@@ -263,26 +249,27 @@ objective. Predictions are evaluated without clipping or other post-processing.
 
 ## Per-protein linear models
 
-For each eligible protein and layer, create one deterministic 80/20 split of
-that protein's unordered residue pairs. The split must be fixed by protein ID
-and pair indices and reused at every layer.
+For each eligible protein, deterministically shuffle its canonical unordered
+pair indices using the frozen protein-ID-derived seed and divide them as evenly
+as possible into five pair folds. The checked-in compact
+`per_protein_pair_folds_v1.csv` records the algorithm, seed, five counts, and an
+assignment digest for exact regeneration; it does not expand to one row per
+pair. The split is reused at every layer.
 
 For each protein-layer combination:
 
-1. estimate the scaler from the 80% training pairs only;
+1. estimate a scaler from the four training pair folds only;
 2. fit one OLS model with an intercept on those training pairs;
-3. predict the training pairs and the held-out 20% pairs; and
-4. report training-pair and held-out-pair results separately.
+3. predict only the held-out pair fold; and
+4. repeat for all five folds and concatenate the five disjoint prediction
+   vectors in canonical pair order.
 
-Training-pair and held-out-pair results must remain available separately so
-generalization to unseen pairs within a protein can be assessed. A combined
-all-pair score may also be reported, provided it is explicitly labeled as a
-mixed in-sample/out-of-sample descriptive score and does not replace the
-held-out-pair score. When per-protein results are compared directly with
-shared-model results, summarize the per-protein models over the master split's
-locked test protein IDs so protein composition is matched. Results over all
-eligible proteins may be reported separately as a broader within-protein
-analysis.
+The complete OOF vector supplies one authoritative regression result and one
+geometry reconstruction per protein-layer. No pair receives more than one
+prediction, fold-level predictions are never averaged, and training
+predictions never enter OOF metrics or geometry. Compact fold-level training
+metrics remain diagnostic. The protein's outer-fold label is reporting
+metadata only and does not affect any within-protein fit.
 
 OLS support must be auditable for every protein. Solver-exposed rank and
 conditioning diagnostics are retained when available, without an additional
@@ -295,9 +282,9 @@ not be silently pooled with stable fits.
 A gated probe assigns each pair to a predefined category and fits an independent
 shared OLS model within each category. Gate definitions use sequence or residue
 metadata only; the target distance never determines which model is trained.
-Each gate uses the canonical 256 directional features, the 80% development
-proteins, a gate-specific train-only scaler, and protein-equal weighting among
-proteins that contribute to that gate.
+Each gate uses the canonical 256 directional features, four outer training
+folds, a gate- and fold-specific train-only scaler, and protein-equal weighting
+among proteins that contribute to that gate.
 
 ### Sequence-separation gates
 
@@ -316,15 +303,16 @@ are:
 Sequence separation is undefined across chains. Such pairs are explicitly
 flagged rather than assigned a separation from concatenated array indices.
 
-### Amino-acid-pair gates
+### Historical amino-acid-pair gates
 
-The 20 standard amino acids are paired as unordered combinations with
+Protocol 1.0 also evaluated amino-acid-pair and joint gates. The 20 standard
+amino acids are paired as unordered combinations with
 replacement, producing 210 gates. For example, `ALA-GLY` and `GLY-ALA` route
 to the same gate even though the underlying directional pair features remain
 ordered. Pairs containing a noncanonical or unmapped residue are explicitly
 excluded from amino-acid-dependent analyses and counted.
 
-### Joint gates
+### Historical joint gates
 
 The amino-acid-pair by sequence-separation model contains up to
 \(210\times6=1260\) gates per layer. A gate is eligible only when its training
@@ -352,7 +340,7 @@ Three defensible policies are possible:
    calculating a particular comparison. This preserves a pure joint model but
    changes the evaluation population.
 
-No option is yet part of the canonical protocol. Until one is selected, joint
+No option is part of protocol 2.0. Historical joint
 gate-level results remain valid with their support counts, but recombined
 whole-protein joint-model results must be labeled incomplete and include exact
 test-pair coverage. The sequence-only and amino-acid-only models do not
@@ -368,37 +356,24 @@ primary model.
 Training is computationally capped at a deterministic maximum of 5,000 pairs
 per fitting protein. A protein with fewer pairs contributes all of them. The
 sample is fixed by protein ID and pair indices, reused across layers and
-candidate configurations, and drawn without using target distance. Validation
-and test evaluation use all available unordered pairs.
+the fixed configuration, and drawn without using target distance. Held-out-fold
+evaluation uses all available unordered pairs.
 
-The development procedure is:
+The production configuration is frozen to S4, 5,000 sampled training rows per
+protein, and exactly 700 boosting rounds. One target- and layer-independent
+sample is generated per protein and reused whenever that protein belongs to an
+outer training set. Fold `f` uses model seed `42 + f`, no early stopping, and
+no `eval_set`. The held-out fold is not loaded for evaluation until its booster
+checkpoint exists.
 
-1. fit candidate configurations on the 60% `fit` proteins;
-2. use only the 20% validation proteins for early stopping and configuration
-   selection;
-3. select the common `S4` configuration using the equal-anchor-layer average
-   of validation mean per-protein R-squared, with validation MAE and RMSE as
-   consistency checks;
-4. freeze 700 boosting rounds at every layer; the three 5k anchor runs reached
-   zero-indexed iteration 699, so this is a validated compute boundary rather
-   than evidence that early stopping found a performance plateau;
-5. freeze the configuration, cap, and common boosting-round count;
-6. fit fresh models on the combined 80% development proteins; and
-7. evaluate the locked 20% test proteins once.
-
-The search code must not calculate or expose candidate test metrics. Test
-results are generated only after the selection artifacts have been finalized.
-The historical copied anchor search and cap sweep did expose test results; this
-cannot be undone and must remain disclosed. The frozen decision artifact marks
-that exposure while recording that neither training nor test metrics selected
-the final specification. A literal never-inspected-test claim would require a
-new external holdout rather than reassignment of this canonical split.
-
-The final 80% refit has no early stopping and receives no validation or test
-evaluation set. The final paper trajectory covers all 48 layers. The 5,000-row
-cap is an accepted model-specific computational constraint selected using the
-validation criteria above; no matched sampled linear control is required by
-this protocol.
+S4/5k/700 was selected through preliminary work on this same cohort. The source
+decision table is
+`delta_files/xgboost_hyperparameter_search/shared/winner_cap_sweep/cross_layer_selection_table.csv`;
+its path and digest must be retained in provenance. The preliminary artifacts
+also exposed the historical test proteins. Consequently, the fivefold estimate
+is neither nested nor fully selection-independent. No new selection script or
+inner CV loop is part of this protocol; a selection-independent claim would
+require a separately approved nested-CV analysis or external holdout.
 
 ## Layer comparisons and selection
 
@@ -407,18 +382,16 @@ procedure are applied independently at layers 0 through 47. A model family is
 not a complete layer-trajectory analysis if it covers only a selected subset.
 Sparse anchor-layer experiments may be retained as exploratory analyses.
 
-Test performance may be plotted across layers. The layer with the highest test
+OOF performance may be plotted across layers. The layer with the highest OOF
 score is a descriptive maximum, not a validation-selected confirmatory optimum.
-No downstream claim should imply that the best test layer was selected without
-test-set inspection unless it is subsequently evaluated on another untouched
-cohort.
+All 48 layers remain the reported trajectory.
 
 ## Reproducibility and implementation requirements
 
 Every paper regression must record or enforce:
 
 - the eligible-protein manifest and exclusion reasons;
-- the master protein split and its digest;
+- the frozen outer-fold and compact pair-fold manifests and their digests;
 - deterministic pair ordering and any pair-sampling or pair-split digest;
 - layers, feature names, feature order, target definition, and precision mode;
 - scaler provenance proving that only fitting observations were used;
@@ -446,7 +419,7 @@ A new regression may enter the primary comparison only after documenting:
 4. its training observations, weighting, loss, and sampling;
 5. its tunable hyperparameters and validation-only selection rule;
 6. its final refitting procedure;
-7. its test evaluation population and prediction coverage;
+7. its OOF evaluation population and prediction coverage;
 8. its layer coverage; and
 9. every intentional deviation from this protocol.
 

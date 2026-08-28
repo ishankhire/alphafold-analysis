@@ -25,6 +25,23 @@ from fitting into backfill windows.
 - For heterogeneous pipelines, size preparation, layer, and consolidation jobs
   separately rather than applying the slowest stage's limit to every stage.
 
+## Fivefold OOF comparator-derived estimates
+
+The fivefold OOF refactor has an explicit project-level no-pilot decision. The
+limits below are conservative estimates from completed same-family tasks, not
+new measurements. They override the usual exact-workflow pilot requirement for
+this project only; implementation does not deploy or submit jobs.
+
+| Fivefold workflow | Comparator basis | Estimated `--time` | Status |
+|---|---|---:|---|
+| Shared OLS, one outer-fold/layer task | Historical single-layer shared OLS completed well within 30 minutes | `00:30:00` | Comparator-derived, not measured |
+| Per-protein OLS, five pair folds per layer | Historical one-split layers used up to about 14 minutes; five fits reuse loaded features and geometry | `02:00:00` | Comparator-derived, not measured |
+| Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated maximum `01:37:20` | `03:00:00` | Comparator-derived, not measured |
+| Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 maximum near `00:16:06` while evaluating all proteins | `00:30:00` | Comparator-derived; v2 evaluates one fold |
+
+Measured production elapsed times may replace these estimates later, but a
+pre-production pilot is not required by this project's locked plan.
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much

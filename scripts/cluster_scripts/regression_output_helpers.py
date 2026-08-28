@@ -28,12 +28,15 @@ from regression_protocol import (
     LAYERS,
     MASTER_MANIFEST_DIGEST,
     MASTER_MANIFEST_VERSION,
-    PROTOCOL_VERSION,
+    HISTORICAL_PROTOCOL_VERSION as PROTOCOL_VERSION,
     canonical_json_bytes,
 )
 
 
+# The existing helpers and runners remain the historical additive-v1 contract.
+# Stage 2 will build the separate fivefold OOF writers against the v2 contract.
 OUTPUT_SCHEMA_VERSION = "1.0"
+FIVEFOLD_OUTPUT_SCHEMA_VERSION = "2.0"
 
 RUN_MANIFEST_FILENAME = "run_manifest.json"
 PER_PROTEIN_FILENAME = "per_protein.csv"
@@ -840,7 +843,8 @@ __all__ = [
     "COEFFICIENT_COLUMNS", "COEFFICIENT_INDEX_COLUMNS", "CSV_SCHEMAS",
     "FEATURE_IMPORTANCE_COLUMNS", "GEOMETRY_METRIC_NAMES", "GEOMETRY_METRIC_UNITS",
     "GEOMETRY_METRICS_COLUMNS", "GEOMETRY_SUMMARY_COLUMNS", "MODEL_STATUS_COLUMNS",
-    "OUTPUT_SCHEMA_VERSION", "PER_PROTEIN_COLUMNS", "POOLED_METRICS_COLUMNS",
+    "FIVEFOLD_OUTPUT_SCHEMA_VERSION", "OUTPUT_SCHEMA_VERSION", "PER_PROTEIN_COLUMNS",
+    "POOLED_METRICS_COLUMNS",
     "PooledComparisonAccumulator", "PooledRegressionAccumulator", "RUNTIME_COLUMNS",
     "RegressionStats", "SUBGROUP_METRICS_COLUMNS", "SubgroupAccumulator",
     "atomic_savez_compressed", "atomic_write_csv", "atomic_write_json",

@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_outputs.md`. It is an artifact-and-code audit as of
-2026-08-18. Historical files remain useful, but they do not automatically meet
+2026-08-27. Historical files remain useful, but they do not automatically meet
 the final paper output contract.
 
 The summary table assesses the active implementation. Its disposition column
@@ -24,7 +24,26 @@ Status labels are:
 - **Gap:** the active implementation does not provide the output.
 - **Not applicable:** the requirement does not apply to that model family.
 
-## Output protocol checklist
+Output schema 2.0 is now canonical. Existing schema-1.0 80/20 families and the
+older 184-protein k-fold family are reclassified as historical and are not v2
+production outputs. Stage 1 has generated only the three shared metadata files;
+v2 family outputs begin in later implementation stages.
+
+## Output-schema-2.0 implementation status
+
+| Family | Shared metadata | V2 writers/runners | V2 production family |
+|---|---|---|---|
+| Shared linear OLS | Meets | Pending Stages 2–3 | Not generated |
+| Per-protein linear OLS | Meets | Pending Stages 2 and 4 | Not generated |
+| Sequence-gated OLS | Meets | Pending Stages 2 and 5 | Not generated |
+| Shared XGBoost | Meets | Pending Stages 2 and 6 | Not generated |
+
+The only schema-2.0 artifacts currently checked in are
+`delta_files/regression_5fold_v1/metadata/regression_outer_folds_v1.csv`,
+`per_protein_pair_folds_v1.csv`, and `fold_digests.json`. They are metadata, not
+model results.
+
+## Historical output protocol checklist
 
 | ID | Output requirement |
 |---|---|
@@ -41,16 +60,16 @@ Status labels are:
 | O11 | Brief per-layer timing |
 | O12 | Validated layer shards and consolidated canonical outputs |
 
-## Summary by principal model family
+## Historical schema-1.0 summary by principal model family
 
 | Analysis | O1 provenance | O2 per protein | O3 pooled | O4 subgroups | O5 gated recombination | O7/O8 geometry | O9 artifacts | O10 status | O11 timing | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Shared linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Partial | Meets | Canonical coefficient-replay output implementation complete; unavailable historical fit diagnostics remain explicit and the 48-layer production replay is pending |
-| Per-protein linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
-| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
-| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
-| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback outputs complete in code; 48-layer production rerun pending |
-| Shared XGBoost | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Canonical output implementation complete; 48-layer production rerun pending |
+| Shared linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Partial | Meets | Historical v1 coefficient-replay implementation |
+| Per-protein linear OLS | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Historical v1 single-pair-split implementation |
+| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 80/20 implementation |
+| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 family; not in the primary v2 family set |
+| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 family; not in the primary v2 family set |
+| Shared XGBoost | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Meets | Historical v1 fixed-model implementation |
 
 ## Shared linear OLS
 
@@ -78,7 +97,7 @@ Primary implementation and saved family:
   coefficients for every layer.
 - Layer-batch files are saved and consolidate to the expected 48 layers.
 
-### Active canonical replay implementation
+### Historical v1 replay implementation
 
 - **O1/O12:** A non-fitting 48-layer array replays the saved raw-scale
   coefficients into checksum-bearing canonical shards. The strict aggregator
@@ -177,7 +196,7 @@ Primary implementation and saved families:
 - intended production root: `$CSV_ROOT/gated_linear_probes/consolidated/`
 - historical saved root: `delta_files/consolidated/`
 
-### Active canonical implementation
+### Historical v1 implementation
 
 - **O1:** Each final family writes a schema-versioned `run_manifest.json` with
   protocol, frozen-split, prepared-cohort, family-configuration, feature-order,
@@ -245,7 +264,7 @@ Primary implementation and saved family:
 - historical selection outputs: `delta_files/xgboost_hyperparameter_search/shared/`
 - pending canonical output: `delta_files/shared_xgboost_base256_combined/`
 
-### Active implementation status
+### Historical v1 implementation status
 
 - **O1/O12:** The final runner writes checksum-bearing canonical layer shards;
   the non-fitting aggregator rejects missing, failed, duplicate,
@@ -303,7 +322,7 @@ current implementation contract. This keeps filtering and averaging logic out
 of individual regression scripts while preserving the core inputs needed for
 later analyses.
 
-## Prioritized remediation order
+## Historical remediation list (superseded by the staged v2 refactor)
 
 ### Priority 0: common paper-comparison outputs
 

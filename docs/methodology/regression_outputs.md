@@ -8,6 +8,10 @@ variants. It complements `regression_methodology.md`: that document specifies
 how models are fitted, whereas this document specifies what every completed run
 must save.
 
+The current additive output-schema version is **2.0**, paired with fivefold OOF
+protocol 2.0. Existing schema-1.0 80/20 files are immutable historical outputs;
+their helpers retain the v1 identifier and remain operational.
+
 The output design has three goals:
 
 1. make every model directly comparable at the protein, layer, and dataset-split
@@ -32,31 +36,40 @@ diagnostic runs may live elsewhere, but they must not be confused with these
 final-model outputs.
 
 ```text
-<result_family>/
-  run_manifest.json
-  per_protein.csv
-  pooled_metrics.csv
-  model_status.csv
-  runtime.csv
-  geometry_metrics.csv
-  geometry_summary.csv
-  subgroup_metrics/
-    by_sequence_separation.csv
-    by_amino_acid_pair.csv
-    by_spatial_distance.csv
-  model_artifacts/
-    coefficient_index.csv
-    coefficients.csv or coefficient_shards/*.npz
-    booster_layer_XX.json
-    feature_importance.csv
-  layer_shards/
+regression_5fold_v1/
+  metadata/
+    regression_outer_folds_v1.csv
+    per_protein_pair_folds_v1.csv
+    fold_digests.json
+  <result_family>/
+    run_manifest.json
+    per_protein.csv
+    pooled_metrics.csv
+    fold_metrics.csv
+    fold_summary.csv
+    training_metrics.csv
+    stable_fit_metrics.csv
+    model_status.csv
+    runtime.csv
+    geometry_metrics.csv
+    geometry_summary.csv
+    model_stability.csv
+    subgroup_metrics/
+      by_sequence_separation.csv
+      by_spatial_distance.csv
+    model_artifacts/
+      replay_index.csv
+      coefficients or coefficient_shards/
+      boosters/
+      feature_importance.csv
+    layer_shards/
 ```
 
-Only applicable artifacts are required. Linear models have coefficients but no
-booster file; XGBoost has booster files but no linear coefficients. The run
-manifest must identify the output-schema version and the digest of the canonical
-protein split rather than copying independent split definitions into every
-result family.
+The four family directories are `shared_ols_base256/`,
+`per_protein_ols_base256/`, `sequence_gated_ols_base256/`, and
+`shared_xgboost_base256_fixed_s4/`. Only applicable artifacts are required.
+The run manifest identifies schema version 2.0, CV protocol version 2.0, and
+the shared cohort and fold digests rather than copying split definitions.
 
 ## Regression metric definitions
 
@@ -98,9 +111,11 @@ would add little beyond $R^2$, error metrics, and the category analyses.
 
 ## Core `per_protein.csv`
 
-Every regression produces one authoritative long-format `per_protein.csv`
-covering every eligible protein, not only test proteins. One row represents one
-analysis, layer, protein, and evaluation scope.
+Every regression produces one authoritative OOF `per_protein.csv` with exactly
+one row per analysis, layer, and eligible protein: 26,496 rows for a complete
+family. Shared families evaluate all pairs withheld by that protein's outer
+fold. Per-protein OLS evaluates the complete concatenated five-pair-fold OOF
+vector. Training rows are not included here.
 
 ### Identity and scope columns
 
@@ -112,14 +127,12 @@ analysis, layer, protein, and evaluation scope.
 | `layer` | Pair-representation layer |
 | `protein_id` | Canonical protein identifier |
 | `source` | Input-layout source, `cameo` or `ecod` |
-| `protein_split` | `development` or locked `test` in the final-model output |
-| `evaluation_scope` | Pair population evaluated in this row |
-| `prediction_status` | `complete`, `partial_coverage`, or an explicit failure status |
-
-Shared OLS, gated OLS, and final shared XGBoost normally use
-`evaluation_scope=all_pairs`. Joint AA-pair-by-sequence gated models may use
-that scope with coverage below one. Per-protein OLS uses three rows per
-protein-layer combination: `train_pairs`, `heldout_pairs`, and `all_pairs`.
+| `cv_protocol_version` | Fivefold protocol version, `2.0` |
+| `evaluation_design` | `protein_outer_5fold` or `within_protein_pair_5fold` |
+| `outer_fold` | Protein fold 0 through 4; reporting-only for per-protein OLS |
+| `evaluation_scope` | `oof_all_pairs` |
+| `oof_prediction_scope` | Held-out proteins or held-out pairs, explicitly named |
+| `prediction_status` | `complete` or an explicit failure/incomplete status |
 
 ### Support and coverage columns
 
@@ -132,10 +145,9 @@ protein-layer combination: `train_pairs`, `heldout_pairs`, and `all_pairs`.
 | `pair_coverage` | `n_evaluated_pairs / n_expected_pairs` |
 | `target_variance` | Population variance of true distances in the evaluated rows |
 
-The distinction between expected and evaluated pairs prevents an 80/20
-within-protein split from looking like a coverage failure. For example, a
-held-out-pair row can have 100% coverage even though its expected population is
-only 20% of all protein pairs.
+Every successful v2 row expects the protein's complete unordered-pair
+population. Sequence-gated OLS is complete only when every expected gate
+prediction is present; it has no fallback.
 
 ### Metric columns
 
@@ -154,22 +166,11 @@ precision to avoid visibly changing recomputed summaries.
 
 ### Mean-per-protein results
 
-Mean-per-protein metrics are derived by grouping `per_protein.csv` by analysis,
-layer, protein split, and evaluation scope and taking the arithmetic mean across
-proteins. $R^2$ averages must exclude undefined values and report the number
-of proteins with finite $R^2$. MAE and RMSE normally include every successfully
-evaluated protein.
-
-Therefore, mean-per-protein columns do not need to be repeated in the core
-pooled output. For historical k-fold outputs, a cross-validated mean must use
-only held-out/test rows. Averaging training and test rows together would count
-proteins multiple times and mix evaluation scopes.
-
-In the current `delta_files/baseline256_kfold/per_protein.csv`, each of the 184
-proteins has exactly one test row per layer across the five folds. Consequently,
-filtering to `split=test` and averaging `per_protein_r2`, `per_protein_mae`, or
-`per_protein_rmse` by layer directly gives the cross-validated
-mean-per-protein result.
+Mean-per-protein metrics are derived by grouping complete OOF rows by analysis
+and layer and taking the arithmetic mean across the 552 proteins. $R^2$
+averages exclude undefined values and report the finite count. Fold-specific
+means are derived by adding `outer_fold` to that grouping. Mean-per-protein
+columns are not repeated in `pooled_metrics.csv`.
 
 ## Core `pooled_metrics.csv`
 
@@ -178,12 +179,13 @@ proteins. They are pair-weighted and therefore give longer proteins more
 influence than a mean-per-protein statistic. Both views are scientifically
 useful and should be available for the paper.
 
-`pooled_metrics.csv` has one row per analysis, layer, protein split, and
-evaluation scope with these columns:
+`pooled_metrics.csv` has one authoritative complete-cohort OOF row per analysis
+and layer. It is calculated by merging OOF sufficient statistics across all
+five folds, never by averaging fold metrics.
 
 | Column group | Columns |
 |---|---|
-| Identity | `analysis_name`, `model_family`, `feature_dim`, `layer`, `protein_split`, `evaluation_scope` |
+| Identity | `analysis_name`, `model_family`, `feature_dim`, `layer`, `cv_protocol_version`, `evaluation_design`, `evaluation_scope`, `oof_prediction_scope` |
 | Support | `n_proteins`, `n_proteins_with_finite_r2`, `n_expected_pairs`, `n_evaluated_pairs`, `pair_coverage` |
 | Model metrics | `pooled_r2`, `pooled_mae`, `pooled_rmse`, `pooled_bias_pred_minus_true` |
 | Global baseline | `global_baseline_type`, `global_baseline_pooled_r2`, `global_baseline_pooled_mae`, `global_baseline_pooled_rmse`, `global_baseline_pooled_bias_pred_minus_true` |
@@ -193,25 +195,25 @@ This file is authoritative for pooled calculations. Pooled $R^2$ must not be
 calculated by averaging per-protein $R^2$, and pooled RMSE must not be
 calculated by averaging per-protein RMSE.
 
-Final shared models should report `development` and locked `test` rows. The
-paper's main generalization claim uses the locked test row. Search-stage fit and
-validation metrics remain in the XGBoost search directory and are not mixed
-into the final-model output.
+`fold_metrics.csv` contains five otherwise equivalent OOF rows per layer, one
+per outer fold. For per-protein OLS this is only a matched grouping by protein's
+outer-fold label. `fold_summary.csv` records the arithmetic mean and standard
+deviation across the five fold metrics. Those values are descriptive and are
+not confidence intervals.
 
 ## Global and conditional baselines
 
-Every model is evaluated against a common global intercept-only baseline. It
-predicts the protein-equal weighted mean distance estimated from the 80%
-development proteins, without using locked-test targets. This gives all model
-families the same featureless reference and catches gross metric or split
-errors. Its type is recorded as `global_development_mean`.
+Every fold model is evaluated against a global intercept-only baseline fitted
+on exactly that model's training observations. Its held-out predictions are
+concatenated in the same order as model OOF predictions before authoritative
+baseline metrics are calculated. Its type is `global_fold_training_mean`.
 
 Models whose fitting scope supplies useful non-representation information also
 receive a conditional baseline:
 
-- a gated model predicts the protein-equal weighted development mean for the
-  pair's sequence-separation, amino-acid-pair, or joint gate; and
-- per-protein OLS predicts that protein's 80% training-pair mean.
+- a gated model predicts the protein-equal weighted fold-training mean for the
+  pair's sequence-separation gate; and
+- per-protein OLS predicts that protein's four-pair-fold training mean.
 
 The conditional baseline measures improvement over the model's routing or
 protein identity alone. It is not featureless and must not be described as the
@@ -219,24 +221,33 @@ same control as the global baseline. Shared OLS and shared XGBoost have no
 distinct conditional baseline, so their conditional fields are `NaN` with
 `conditional_baseline_type=not_applicable`.
 
-Both baseline families are estimated only from their defined training
-population and use the same evaluation rows as the fitted model. Neither uses
-locked-test targets. The per-protein conditional baseline also excludes that
-protein's held-out pair targets. Development rows are in-sample descriptions,
-just as they are for the corresponding fitted models. Baseline metrics belong
-only in compact `pooled_metrics.csv`; they do not need to be repeated in every
-per-protein and subgroup table.
+Both baseline families use the same OOF evaluation rows as the fitted model and
+never access the contributing held-out targets. Baseline metrics belong only in
+compact `pooled_metrics.csv`; they are not repeated in every per-protein and
+subgroup table.
 
 MAE skill and RMSE skill are omitted because they are exactly
 `1 - model_error / baseline_error` and can be calculated when needed. Baseline
 $R^2$ may be negative on held-out data because the baseline mean is learned
 from training data rather than from the evaluated targets.
 
-## Test-set subgroup accuracy
+## Training diagnostics and stable-fit sensitivity
 
-Every final regression produces pooled test-set accuracy in three fixed
-category systems. These evaluate the same final piecewise prediction used for
-the whole protein; they do not fit new category-specific models.
+`training_metrics.csv` contains compact fold-level training R², MAE, RMSE,
+bias, support, and fit diagnostics. OLS rows cover all training pairs; XGBoost
+rows cover only sampled fitting rows. Training values are diagnostic and never
+enter OOF outputs. Training geometry and training subgroup tables are omitted.
+
+Primary OOF outputs retain finite predictions from OLS fits that are flagged
+by the current rank/conditioning policy and mark their status explicitly.
+`stable_fit_metrics.csv` provides the corresponding OOF sensitivity summaries
+restricted to rows for which every contributing OLS fit passed that policy.
+
+## OOF subgroup accuracy
+
+Every final regression produces pooled complete-cohort OOF accuracy in two
+fixed category systems. These evaluate the same OOF predictions used for the
+whole protein; they do not fit new category-specific models.
 
 ### Sequence separation
 
@@ -248,12 +259,6 @@ the whole protein; they do not fit new category-specific models.
 - `10-19`
 - `20-49`
 - `50+`
-
-### Amino-acid pair
-
-`subgroup_metrics/by_amino_acid_pair.csv` uses the 210 unordered pairs of the
-20 standard amino acids. Labels are alphabetically canonicalized, such as
-`ALA-ARG`, so residue order does not create duplicate categories.
 
 ### True spatial distance
 
@@ -270,18 +275,17 @@ prediction.
 
 ### Common subgroup schema
 
-All three files share this schema:
+Both files share this schema:
 
 | Column group | Columns |
 |---|---|
-| Identity | `analysis_name`, `model_family`, `feature_dim`, `layer`, `protein_split`, `evaluation_scope` |
+| Identity | `analysis_name`, `model_family`, `feature_dim`, `layer`, `cv_protocol_version`, `evaluation_design`, `evaluation_scope`, `oof_prediction_scope` |
 | Category | `category_scope`, `category_label` |
 | Support | `n_proteins`, `n_expected_pairs`, `n_evaluated_pairs`, `pair_coverage`, `support_status` |
 | Metrics | `pooled_r2`, `pooled_mae`, `pooled_rmse`, `pooled_bias_pred_minus_true` |
 
-These files contain locked-test-protein results only. For per-protein OLS, the
-canonical subgroup scope is held-out pairs from proteins whose master role is
-test. For shared models it is all pairs from locked test proteins.
+These files combine each pair's single held-out prediction across all 552
+proteins. Fold-specific subgroup rows are not required.
 
 Subgroup $R^2$ can become extremely negative when a category has almost no
 target variance, especially sequence separation 1. MAE, RMSE, bias, pair count,
@@ -297,24 +301,20 @@ Gate-level protein results may remain in explicitly named diagnostic artifacts,
 but neither per-gate nor per-protein-by-sequence-bin expansions are required
 canonical outputs.
 
-For sequence-only and amino-acid-only gating, every valid standard-residue pair
-is expected to receive a prediction. For joint AA-pair-by-sequence gating,
-sparse unfitted gates may leave pairs without predictions. The main regression
-metrics may be calculated on the predicted subset, but every row must report
-`n_expected_pairs`, `n_evaluated_pairs`, `pair_coverage`, and
-`prediction_status=partial_coverage` when appropriate. Missing pairs may never
-be treated as zero error.
+Every sequence-gated fold-layer requires all six valid fitted gates and exactly
+one prediction for every expected pair. A missing or invalid gate makes the
+fold-layer incomplete; there is no fallback and no partial primary metric.
 
 ## Per-protein geometry outputs
 
 Every final regression produces `geometry_metrics.csv`, one row per analysis,
-layer, and eligible protein. Geometry is calculated from the complete symmetric
-predicted distance matrix, using all unordered residue pairs. For per-protein
-OLS, this necessarily combines its training-pair and held-out-pair predictions;
-the output must be labeled `evaluation_scope=all_pairs`.
+layer, and eligible protein. Geometry is calculated once from the complete
+symmetric OOF predicted distance matrix. For per-protein OLS every matrix entry
+comes from the model that withheld that pair; training predictions are never
+used. The scope is `oof_all_pairs`.
 
-Geometry requires 100% prediction coverage. If even one pair is missing, as can
-happen for the joint gated probe, the protein-layer row remains in the CSV with
+Geometry requires 100% prediction coverage. If even one pair is missing, the
+protein-layer row remains in the CSV with
 `geometry_status=incomplete_pair_coverage`, an exclusion reason, and `NaN`
 geometry metrics. It is excluded from `geometry_summary.csv`. This is preferable
 to silently imputing distances or deleting the row.
@@ -378,17 +378,18 @@ result without producing hundreds of megabytes of intermediate CSVs.
 
 In addition to the metrics above, each row contains:
 
-- the standard analysis, layer, protein, source, and protein-split identifiers;
+- the standard analysis, layer, protein, source, outer-fold, CV-protocol, and
+  OOF-scope identifiers;
 - `n_residues`, `n_protein_pairs`, and `pair_coverage`;
-- `evaluation_scope=all_pairs`;
+- `evaluation_scope=oof_all_pairs`;
 - `geometry_status`; and
 - `geometry_exclusion_reason`.
 
 ### Derived `geometry_summary.csv`
 
 `geometry_metrics.csv` is authoritative. `geometry_summary.csv` is a compact
-long-format convenience table with one row per analysis, layer, protein split,
-and geometry metric. It records:
+long-format convenience table with one row per analysis, layer, and geometry
+metric across the complete OOF cohort. It records:
 
 - `n_proteins_attempted`, `n_proteins_included`, and `n_proteins_excluded`;
 - `mean`, `std`, `median`, `q25`, and `q75` across included proteins; and
@@ -406,34 +407,47 @@ sufficient for exact prediction replay. Standardized coefficients are the
 primary values for comparing feature use; raw-scale coefficients are useful for
 replay and interpretation in original feature units.
 
-For small families, such as one shared model per layer or six sequence gates
-per layer, `model_artifacts/coefficients.csv` may contain:
+For shared OLS and sequence-gated OLS,
+`model_artifacts/coefficients.csv` may contain:
 
 - analysis, layer, protein ID if applicable, and gate identifiers;
 - `feature_index` and `feature_name`;
 - `coefficient_standardized` and `coefficient_raw_scale`; and
 - standardized and raw intercept rows with `feature_index=-1`.
 
-Large families must not be expanded into enormous repeated CSV rows.
-Per-protein OLS, amino-acid-gated OLS, and joint-gated OLS should use compressed
-NPZ shards plus `coefficient_index.csv`. Each shard stores dense coefficient,
-intercept, feature-mean, and feature-scale arrays; the index records the model
-identity, shard path, array row, fit status, feature dimension, and file digest.
-Feature order is fixed in the run manifest.
+Per-protein OLS must not expand 132,480 models into repeated CSV rows. It uses
+compressed coefficient/scaler shards. Every linear artifact retains
+standardized and raw coefficients and intercepts plus feature means and scales.
+`model_stability.csv` stores compact standardized-coefficient summaries across
+folds rather than duplicating the raw model arrays.
 
 ### XGBoost
 
-XGBoost has no linear coefficients. Save one native JSON booster per final
-layer, the complete selected configuration, the validation-derived boosting
-round count, and the XGBoost version. A compact `feature_importance.csv` may
-store gain and split-count importance, but it is a descriptive model-specific
-artifact and must not be treated as directly comparable to OLS coefficients.
+XGBoost has no linear coefficients. Save one native JSON booster per outer
+fold and layer, the fixed S4/5k/700 configuration, selection-source path and
+digest, and XGBoost version. `feature_importance.csv` stores fold-summarized
+gain and split-count importance; it is descriptive and not directly comparable
+to OLS coefficients.
+
+### Required replay index
+
+`model_artifacts/replay_index.csv` has one row per retained artifact, not per
+pair prediction. Its required identity fields are `model_family`, `layer`,
+nullable `outer_fold`, nullable `protein_id`, nullable `pair_fold`, nullable
+`sequence_gate`, `artifact_path`, `artifact_sha256`, configuration and scaler
+digests, and `status`. Pair responsibility is recovered by joining this index
+to the deterministic outer- or pair-fold manifest.
+
+Expected complete row counts are 240 shared-OLS models, 1,440 sequence-gated
+models, 132,480 per-protein OLS models, and 240 XGBoost boosters. This is the
+stable interface for a separate triangle-subgroup replay project; v2 does not
+save raw pair predictions.
 
 ## `model_status.csv`
 
-One row represents one fitted model unit: a layer for a shared model, a
-protein-layer for per-protein OLS, or a layer-gate for gated OLS. Common fields
-are:
+One row represents one fitted fold model: outer-fold/layer for shared models,
+protein/pair-fold/layer for per-protein OLS, or
+outer-fold/layer/sequence-gate for gated OLS. Common fields are:
 
 - analysis and fitted-unit identifiers;
 - `fit_status` and `support_flags`;
@@ -452,7 +466,8 @@ Failed units remain present with explicit status fields.
 
 ## Brief runtime output
 
-`runtime.csv` contains one row per analysis and layer. It should stay small and
+`runtime.csv` contains one row per executed fold-layer task for shared models
+and one row per layer task for per-protein OLS. It should stay small and
 include:
 
 - `analysis_name`, `layer`, and completion status;
@@ -471,7 +486,7 @@ top-level files are authoritative and must be checked for:
 
 - expected layer coverage;
 - unique primary keys;
-- matching split and configuration digests;
+- matching cohort, outer-fold, pair-fold, and configuration digests;
 - expected protein and pair counts;
 - finite metrics where the status indicates success; and
 - exact agreement between consolidated row counts and shard row counts.
@@ -483,19 +498,20 @@ not be duplicated into one monolithic CSV.
 
 The core files support the following paper results without rerunning a model:
 
-- pooled test $R^2$, MAE, RMSE, and bias by layer;
-- mean-per-protein test metrics by layer;
+- complete-cohort OOF pooled $R^2$, MAE, RMSE, and bias by layer;
+- complete-cohort OOF mean-per-protein metrics by layer;
+- five-fold means and standard deviations as descriptive summaries;
 - paired protein-level differences between model variants;
-- accuracy trajectories by sequence separation, amino-acid pair, and spatial
-  distance;
+- OOF accuracy trajectories by sequence separation and spatial distance;
 - MDS reconstruction quality and distance-matrix validity by layer; and
 - coefficient trajectories and numerical-stability audits.
 
 All 48 layers are saved and reported as trajectories; the output contract does
 not designate or save a primary layer. If a later paper table highlights a
 single layer, that reporting choice is made downstream and does not replace the
-complete layer-wise outputs. Report at least pooled and mean-per-protein test
-performance, test protein/pair counts, and coverage.
+complete layer-wise outputs. Report at least pooled and mean-per-protein OOF
+performance, fold mean and standard deviation, protein/pair counts, and
+coverage. Do not report confidence intervals from this project.
 
 ## Outputs intentionally not required
 
@@ -512,6 +528,7 @@ analysis needs them:
 - baseline columns repeated in every subgroup or protein row;
 - per-protein sequence-separation metric expansions;
 - per-protein amino-acid-pair metric expansions;
+- amino-acid-gated, joint-gated, or amino-acid subgroup migrations from v1;
 - per-protein runtime files; and
 - bootstrap confidence intervals or uncertainty bands.
 

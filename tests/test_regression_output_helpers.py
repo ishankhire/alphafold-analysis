@@ -134,6 +134,10 @@ class SubgroupAndGeometryTests(unittest.TestCase):
 
 
 class SchemaAndWriterTests(unittest.TestCase):
+    def test_historical_and_fivefold_schema_versions_are_distinct(self):
+        self.assertEqual(outputs.OUTPUT_SCHEMA_VERSION, "1.0")
+        self.assertEqual(outputs.FIVEFOLD_OUTPUT_SCHEMA_VERSION, "2.0")
+
     def test_status_runtime_and_manifest_schemas(self):
         status = outputs.build_model_status_row(
             analysis_name="probe", model_family="shared_ols", feature_dim=256,

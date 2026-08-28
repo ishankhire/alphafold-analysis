@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_methodology.md`. It is a code-and-artifact audit as of
-2026-08-18, not a claim that historical results are invalid. A result can remain
+2026-08-27, not a claim that historical results are invalid. A result can remain
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
 
@@ -23,7 +23,26 @@ Status labels:
 - **Not applicable:** the requirement does not apply to that analysis.
 - **Pending decision:** the protocol itself is not yet settled.
 
-## Protocol checklist
+Protocol 2.0 fivefold OOF is now canonical. All existing 80/20 runners and
+saved result families described below are reclassified as historical
+protocol-1.0 analyses. Stage 1 has frozen and validated the shared outer- and
+pair-fold metadata, but no v2 model runner or production result exists yet.
+
+## Protocol-2.0 implementation status
+
+| Family | Frozen folds | V2 runner | Production artifacts | Disposition |
+|---|---|---|---|---|
+| Shared linear OLS | Meets | Pending Stage 3 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Per-protein linear OLS | Meets | Pending Stage 4 | Not generated | Historical single 80/20 pair split remains available; not the primary estimate |
+| Sequence-gated OLS | Meets | Pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Shared XGBoost | Meets | Pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
+
+The checked-in v2 metadata contains 552 eligible proteins, preserves the 111
+historical test proteins as fold 0, assigns all other proteins once across
+folds 1–4 with seed 44, and records exact fivefold pair-assignment digests for
+every protein. Stage 1 does not establish model-fitting compliance.
+
+## Protocol checklist for the historical implementation audit
 
 The short identifiers below are used throughout the audit.
 
@@ -43,16 +62,16 @@ The short identifiers below are used throughout the audit.
 | P12 | Saved manifests, split/configuration digests, versions, and explicit failures |
 | P13 | Complete or explicitly qualified prediction coverage for gated models |
 
-## Summary by principal model family
+## Historical protocol-1.0 summary by principal model family
 
 | Analysis | P1 cohort | P2 split | P3 pairs/target | P4 base256 | P5 precision | P7 weighting | P8 model | P9 evaluation | P10 layers | P11 test lock | Overall disposition |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Shared linear OLS | Meets | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Closest current primary baseline; targeted rerun needed |
-| Per-protein linear OLS | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Not applicable | Canonical implementation complete; 48-layer production rerun pending |
-| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
-| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical implementation complete; 48-layer production rerun pending |
-| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Canonical no-fallback implementation complete; 48-layer production rerun pending |
-| Shared XGBoost | Meets | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Canonical implementation complete; historical test exposure disclosed; 48-layer production rerun pending |
+| Shared linear OLS | Meets | Partial | Meets | Meets | Partial | Meets | Partial | Meets | Meets | Meets | Historical v1 80/20 baseline |
+| Per-protein linear OLS | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Not applicable | Historical v1 single-pair-split analysis |
+| Sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 80/20 gated analysis |
+| AA-pair-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 analysis; excluded from the primary v2 family set |
+| AA-pair x sequence-gated OLS | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Meets | Historical v1 analysis; excluded from the primary v2 family set |
+| Shared XGBoost | Meets | Meets | Meets | Meets | Meets | Meets | Not applicable | Meets | Meets | Meets | Historical v1 fixed-model analysis with disclosed test exposure |
 
 ## Shared linear OLS
 
@@ -171,7 +190,7 @@ Primary implementation:
 - `scripts/cluster_scripts/gated_linear_probes/aggregate_gated_linear_probe_suite.py`
 - historical saved family: `delta_files/consolidated/`
 
-### Active canonical implementation
+### Historical v1 implementation
 
 - **P1/P2:** Preparation imports and verifies the frozen 554-entry canonical
   manifest and split digest, uses all 552 eligible proteins in production, and
@@ -220,10 +239,9 @@ Thus the diagnostics mostly confirm stable full-rank fits for the first two
 families while identifying a small, weakly supported tail in the joint family.
 They are quality-control metadata rather than primary scientific outcomes.
 
-The migrated implementation has no remaining gated-methodology code gap. A new
-Delta production run is still required before the saved artifacts can be
-described as a completed canonical 48-layer result family. The historical
-joint counts above must not be assumed to be the new run's support counts.
+The migrated v1 implementation has no remaining v1 gated-methodology code gap,
+but it is not a protocol-2.0 runner. The historical joint counts above must not
+be assumed to describe any future v2 run.
 
 ### Checklist
 
@@ -247,7 +265,7 @@ Primary implementation:
 - historical selection family: `delta_files/xgboost_hyperparameter_search/shared/`
 - pending final family: `delta_files/shared_xgboost_base256_combined/`
 
-### Active implementation status
+### Historical v1 implementation status
 
 - **P1/P2:** The runner enforces the frozen 552-protein cohort, the canonical
   330/111/111 master roles, and explicit layer failure rather than silent
@@ -327,9 +345,11 @@ superseded by the full gated suite and should not supply primary paper numbers.
 ### K-fold result family
 
 `delta_files/baseline256_kfold/` is a historical stability analysis. The
-current protocol does not use k-fold cross-validation for primary performance
-estimation. It may support a coefficient-stability statement if its older
-cohort, features, and precision are disclosed.
+canonical protocol now also uses five folds, but this older artifact is not a
+protocol-2.0 result: it covers 184 proteins and predates the frozen 552-protein
+outer folds, canonical v2 precision/weighting rules, complete OOF outputs, and
+v2 provenance. It may support a coefficient-stability statement only when
+those differences are disclosed.
 
 ### Downstream analyses that are not new distance regressions
 
@@ -347,7 +367,7 @@ Salt-bridge prediction and other classification targets require separate
 classification methodology because their labels, sampling, loss, and metrics
 differ from continuous distance regression.
 
-## Prioritized remediation order
+## Historical remediation list (superseded by the staged v2 refactor)
 
 ### Priority 0: required for a controlled model comparison
 

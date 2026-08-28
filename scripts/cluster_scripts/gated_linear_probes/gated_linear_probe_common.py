@@ -55,7 +55,7 @@ from regression_protocol import (  # noqa: E402
     FLOAT_EPS,
     LAYERS,
     MASTER_MANIFEST_DIGEST,
-    PROTOCOL_VERSION,
+    HISTORICAL_PROTOCOL_VERSION as PROTOCOL_VERSION,
     SEQUENCE_BIN_LABELS,
     SPATIAL_DISTANCE_BIN_LABELS,
     ProteinEqualFeatureMoments,

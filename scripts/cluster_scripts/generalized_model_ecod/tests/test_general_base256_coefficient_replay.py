@@ -268,7 +268,7 @@ class ReplayAndOutputTests(unittest.TestCase):
                 tables,
                 invariants={
                     "output_schema_version": outputs.OUTPUT_SCHEMA_VERSION,
-                    "protocol_version": protocol.PROTOCOL_VERSION,
+                    "protocol_version": protocol.HISTORICAL_PROTOCOL_VERSION,
                     "master_manifest_digest": protocol.MASTER_MANIFEST_DIGEST,
                     "historical_split_digest": historical.semantic_digest,
                     "coefficient_source_sha256": coefficients.sha256,
@@ -291,7 +291,7 @@ class ReplayAndOutputTests(unittest.TestCase):
                 tables,
                 invariants={
                     "output_schema_version": outputs.OUTPUT_SCHEMA_VERSION,
-                    "protocol_version": protocol.PROTOCOL_VERSION,
+                    "protocol_version": protocol.HISTORICAL_PROTOCOL_VERSION,
                     "master_manifest_digest": protocol.MASTER_MANIFEST_DIGEST,
                     "historical_split_digest": historical.semantic_digest,
                     "coefficient_source_sha256": coefficients.sha256,
