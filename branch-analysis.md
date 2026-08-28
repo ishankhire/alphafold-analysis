@@ -1671,3 +1671,14 @@ single-CPU Delta launchers. Synthetic end-to-end tests cover cohort identity,
 numerical boundaries, chunk invariance, restart and corruption handling,
 incomplete-layer rejection, output contracts, and flat deployment; production
 execution remains pending.
+
+## Session: 2026-08-28 — Implement fivefold sequence-gated OLS
+
+Added the 240-task sequence-gated base256 OLS runner with six independent
+gate/fold train-only protein-equal scalers, fits, global and conditional
+baselines, all-or-nothing held-out recombination, complete OOF regression and
+geometry, 1,440 replayable coefficient/scaler models, strict consolidation,
+gate-wise coefficient stability, and the locked 120 GiB/three-hour Delta
+launcher. Synthetic tests cover gate isolation, scaling, weighting, complete
+coverage, replay, resume, and corruption rejection; deployment and production
+execution remain pending.

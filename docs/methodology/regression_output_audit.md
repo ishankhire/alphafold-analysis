@@ -29,8 +29,9 @@ older 184-protein k-fold family are reclassified as historical and are not v2
 production outputs. Stage 1 generated only the three shared metadata files.
 Stage 2 added common v2 builders and validators. Stage 3 added the shared OLS
 family writers, runner, and strict aggregator. Stage 4 added the per-protein
-OLS family writers, runner, and strict aggregator. Neither family has been run
-on Delta under protocol 2.0.
+OLS family writers, runner, and strict aggregator. Stage 5 added the
+sequence-gated OLS family writers, runner, and strict aggregator. None of these
+families has been run on Delta under protocol 2.0.
 
 ## Output-schema-2.0 implementation status
 
@@ -38,7 +39,7 @@ on Delta under protocol 2.0.
 |---|---|---|---|
 | Shared linear OLS | Meets | Meets in code; Stage-3 task shards, aggregation, replay index, and all applicable v2 tables implemented | Not generated |
 | Per-protein linear OLS | Meets | Meets in code; Stage-4 layer shards, aggregation, compressed model replay, and all applicable v2 tables implemented | Not generated |
-| Sequence-gated OLS | Meets | Common v2 writers complete; runner pending Stage 5 | Not generated |
+| Sequence-gated OLS | Meets | Meets in code; Stage-5 task shards, strict aggregation, six-gate replay index, and all applicable v2 tables implemented | Not generated |
 | Shared XGBoost | Meets | Common v2 writers complete; runner pending Stage 6 | Not generated |
 
 The only schema-2.0 artifacts currently checked in are
@@ -80,6 +81,19 @@ consolidation. Synthetic tests verify exact-once pair coverage, one geometry
 result per protein-layer, shared-shard replay, valid resume, and corruption
 rejection. No v2 per-protein production files exist until a separately
 authorized Delta run is completed and copied back.
+
+The Stage-5 sequence-gated OLS implementation writes one atomic fold/layer
+shard with recombined whole-protein OOF rows, one fold metric, six training and
+model-status rows, one runtime row, complete held-out geometry, subgroup
+sufficient statistics, and six compressed coefficient/scaler artifacts. Its
+all-or-nothing coverage contract rejects an invalid or missing gate rather than
+publishing partial primary metrics. The aggregator requires all 240 tasks for
+production, reconstructs complete-cohort model plus global and gate-conditional
+baseline metrics, emits six gate-specific 256-feature stability blocks per
+layer, and publishes a checksummed 1,440-row replay index. Synthetic tests
+exercise complete output assembly, gate isolation and coverage, valid resume,
+and checksum-corruption rejection. No v2 sequence-gated production files exist
+until a separately authorized Delta run is completed and copied back.
 
 ## Historical output protocol checklist
 

@@ -28,7 +28,8 @@ saved result families described below are reclassified as historical
 protocol-1.0 analyses. Stage 1 froze and validated the shared outer- and
 pair-fold metadata. Stage 2 added the common CV engine. Stage 3 added the
 shared-linear family runner and aggregator. Stage 4 added the per-protein OLS
-family runner and aggregator; no v2 production result has been generated yet.
+family runner and aggregator. Stage 5 added the sequence-gated OLS family
+runner and aggregator; no v2 production result has been generated yet.
 
 ## Protocol-2.0 implementation status
 
@@ -36,7 +37,7 @@ family runner and aggregator; no v2 production result has been generated yet.
 |---|---|---|---|---|
 | Shared linear OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 3 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
 | Per-protein linear OLS | Meets | Meets in code; 48-task runner and strict aggregator implemented in Stage 4 | Not generated | Ready for later deployment and production execution; historical single 80/20 pair split remains available |
-| Sequence-gated OLS | Meets | Common engine complete; family runner pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Sequence-gated OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 5 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
 | Shared XGBoost | Meets | Common engine complete; family runner pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
 
 The checked-in v2 metadata contains 552 eligible proteins, preserves the 111
@@ -81,6 +82,21 @@ outer-fold summaries without saving raw pair predictions. Synthetic tests
 cover exact-once pair coverage, train-only scaling, one-load behavior, compact
 replay, resume, and corruption rejection. Production execution remains
 pending.
+
+The Stage-5 sequence-gated OLS workflow is under the same cross-validation
+directory. Each fold/layer task fits all six fixed sequence-separation gates
+independently with gate-specific train-only float64 protein-equal scalers,
+objectives, and conditional baselines, then recombines exactly one held-out
+prediction per pair. Any unsupported gate, undefined sequence routing, missing
+model, nonfinite prediction, or incomplete pair coverage fails the shard with
+no fallback. Finite predictions from rank- or conditioning-flagged fits remain
+in the primary output with explicit status, while stable-only output requires
+all six contributing gate fits to pass. The strict aggregator requires all 240
+tasks for production, retains and indexes 1,440 gate/fold coefficient-scaler
+models, and emits gate-specific fivefold coefficient stability without saving
+raw pair predictions. Synthetic tests cover gate isolation, train-only scaling,
+protein-equal weighting, complete recombination, replay, resume, and corruption
+rejection. Production execution remains pending.
 
 ## Protocol checklist for the historical implementation audit
 
