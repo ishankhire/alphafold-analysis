@@ -1660,3 +1660,14 @@ shards with model-level replay indexing, strict consolidation, and the locked
 12 GiB/two-hour Delta launcher. Synthetic tests cover train-only scaling,
 one-load behavior, exact pair coverage, replay, resume, and corruption
 rejection; deployment and production execution remain pending.
+
+## Session: 2026-08-28 — Implement pair-representation triangle dominance
+
+Replaced the incomplete initial workflow with manifest-backed deterministic
+triangle sampling, chunked float64 four-variant layer reductions, explicit
+failure rows, hash-verified atomic checkpoints, strict 48-layer consolidation,
+protein-equal channel summaries, local trajectory/heatmap analysis, and
+single-CPU Delta launchers. Synthetic end-to-end tests cover cohort identity,
+numerical boundaries, chunk invariance, restart and corruption handling,
+incomplete-layer rejection, output contracts, and flat deployment; production
+execution remains pending.
