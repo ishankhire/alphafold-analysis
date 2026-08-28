@@ -1682,3 +1682,15 @@ gate-wise coefficient stability, and the locked 120 GiB/three-hour Delta
 launcher. Synthetic tests cover gate isolation, scaling, weighting, complete
 coverage, replay, resume, and corruption rejection; deployment and production
 execution remain pending.
+
+## Session: 2026-08-28 — Implement fivefold fixed shared XGBoost
+
+Added the 240-task fixed-S4 base256 XGBoost runner with deterministic reusable
+5k samples, protein-equal fitting weights, fold-specific seeds, exact 700-round
+fits, and a checksummed booster boundary before held-out inputs are opened. The
+strict aggregator publishes complete OOF regression, subgroup, geometry,
+fivefold feature-importance, and 240-booster replay outputs while retaining the
+non-nested selection and historical-test-exposure disclosures. Mocked tests
+cover the fixed configuration, sampling, fit controls, phase ordering, replay,
+resume, and corruption rejection; deployment and production execution remain
+pending.

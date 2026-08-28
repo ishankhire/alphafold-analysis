@@ -29,7 +29,8 @@ protocol-1.0 analyses. Stage 1 froze and validated the shared outer- and
 pair-fold metadata. Stage 2 added the common CV engine. Stage 3 added the
 shared-linear family runner and aggregator. Stage 4 added the per-protein OLS
 family runner and aggregator. Stage 5 added the sequence-gated OLS family
-runner and aggregator; no v2 production result has been generated yet.
+runner and aggregator. Stage 6 added the fixed shared-XGBoost family runner and
+aggregator; no v2 production result has been generated yet.
 
 ## Protocol-2.0 implementation status
 
@@ -38,7 +39,7 @@ runner and aggregator; no v2 production result has been generated yet.
 | Shared linear OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 3 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
 | Per-protein linear OLS | Meets | Meets in code; 48-task runner and strict aggregator implemented in Stage 4 | Not generated | Ready for later deployment and production execution; historical single 80/20 pair split remains available |
 | Sequence-gated OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 5 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
-| Shared XGBoost | Meets | Common engine complete; family runner pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
+| Shared XGBoost | Meets | Meets in code; 240-task fixed-S4 runner and strict aggregator implemented in Stage 6 | Not generated | Ready for later deployment and production execution; preliminary same-cohort selection and test exposure remain disclosed |
 
 The checked-in v2 metadata contains 552 eligible proteins, preserves the 111
 historical test proteins as fold 0, assigns all other proteins once across
@@ -97,6 +98,24 @@ models, and emits gate-specific fivefold coefficient stability without saving
 raw pair predictions. Synthetic tests cover gate isolation, train-only scaling,
 protein-equal weighting, complete recombination, replay, resume, and corruption
 rejection. Production execution remains pending.
+
+The Stage-6 shared-XGBoost workflow is under the same cross-validation
+directory. Its checked-in, self-checksummed configuration fixes S4, 5,000
+sampled fitting rows per protein, 700 rounds, and the original selection-table
+path and digest without adding a search or inner-CV workflow. Every protein's
+sample is deterministic, target- and layer-independent, and reused whenever
+that protein contributes to a training fold; sampled rows retain equal total
+weight per protein. Fold `f` uses seed `42 + f`, passes only sample weights to
+fit, and rejects any booster that does not contain exactly 700 rounds. A
+separate checksummed fit checkpoint is committed before the held-out fold's PDB
+or pair tensor is opened, and no early stopping or evaluation set is used. The
+strict aggregator requires all 240 tasks for production, reconstructs complete
+OOF regression, subgroup, and geometry outputs, retains and indexes all 240
+native JSON boosters, and summarizes gain and split-count importance across
+the five folds. Mocked-estimator tests cover frozen provenance, deterministic
+sampling and weighting, phase ordering, exact fit controls, complete output
+assembly, replay, resume, and corruption rejection while preserving an
+explicit Delta XGBoost dependency error. Production execution remains pending.
 
 ## Protocol checklist for the historical implementation audit
 

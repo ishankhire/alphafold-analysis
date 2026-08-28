@@ -30,8 +30,9 @@ production outputs. Stage 1 generated only the three shared metadata files.
 Stage 2 added common v2 builders and validators. Stage 3 added the shared OLS
 family writers, runner, and strict aggregator. Stage 4 added the per-protein
 OLS family writers, runner, and strict aggregator. Stage 5 added the
-sequence-gated OLS family writers, runner, and strict aggregator. None of these
-families has been run on Delta under protocol 2.0.
+sequence-gated OLS family writers, runner, and strict aggregator. Stage 6 added
+the fixed shared-XGBoost family writers, runner, and strict aggregator. None of
+these families has been run on Delta under protocol 2.0.
 
 ## Output-schema-2.0 implementation status
 
@@ -40,7 +41,7 @@ families has been run on Delta under protocol 2.0.
 | Shared linear OLS | Meets | Meets in code; Stage-3 task shards, aggregation, replay index, and all applicable v2 tables implemented | Not generated |
 | Per-protein linear OLS | Meets | Meets in code; Stage-4 layer shards, aggregation, compressed model replay, and all applicable v2 tables implemented | Not generated |
 | Sequence-gated OLS | Meets | Meets in code; Stage-5 task shards, strict aggregation, six-gate replay index, and all applicable v2 tables implemented | Not generated |
-| Shared XGBoost | Meets | Common v2 writers complete; runner pending Stage 6 | Not generated |
+| Shared XGBoost | Meets | Meets in code; Stage-6 task shards, strict aggregation, booster replay index, and all applicable v2 tables implemented | Not generated |
 
 The only schema-2.0 artifacts currently checked in are
 `delta_files/regression_5fold_v1/metadata/regression_outer_folds_v1.csv`,
@@ -93,6 +94,22 @@ baseline metrics, emits six gate-specific 256-feature stability blocks per
 layer, and publishes a checksummed 1,440-row replay index. Synthetic tests
 exercise complete output assembly, gate isolation and coverage, valid resume,
 and checksum-corruption rejection. No v2 sequence-gated production files exist
+until a separately authorized Delta run is completed and copied back.
+
+The Stage-6 fixed shared-XGBoost implementation writes one atomic fold/layer
+shard with held-out-protein OOF rows, one fold and sampled-training metric row,
+one model-status and runtime row, complete held-out geometry, subgroup
+sufficient statistics, a native JSON booster, and raw fold gain/split-count
+arrays. A separate checksummed fit checkpoint exists before held-out inputs are
+opened, while the final checkpoint covers all shard tables and artifacts. The
+aggregator requires all 240 tasks for production, reconstructs authoritative
+complete-cohort pooled and fold-summary outputs, emits fivefold-summarized
+feature importance, copies the self-checksummed fixed configuration, and
+publishes a checksummed 240-row booster replay index. The manifest retains the
+selection-source path and digest plus the non-nested, same-cohort-selection and
+historical-test-exposure disclosures. Mocked-estimator tests exercise exact
+round and fit controls, complete output assembly, replay, valid resume, and
+checksum-corruption rejection. No v2 shared-XGBoost production files exist
 until a separately authorized Delta run is completed and copied back.
 
 ## Historical output protocol checklist
