@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-08-27 — Plan pair-representation triangle dominance
+
+Added a no-training CAMEO pilot plan for four directional/absolute pair-channel
+triangle transformations across all 48 layers. It freezes 20,000 uniformly
+sampled residue triples per protein, L1-normalized clipped and signed margins,
+protein-equal and channel-level summaries, compact auditable outputs, and a
+production run without a separate timing-calibration job.
+
 ## Session: 2026-08-26 — Normalize decodability-consistency phase grids
 
 Added five 2×4 phase grids that compare per-model min–max-normalized R² with
