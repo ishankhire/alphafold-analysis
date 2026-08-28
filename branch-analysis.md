@@ -1624,3 +1624,12 @@ Promoted fivefold OOF evaluation to protocol/output version 2.0, preserved the
 protein and within-protein pair-fold manifests with validated semantic digests.
 Recorded the locked comparator-derived no-pilot memory and walltime estimates;
 model runners remain for later refactor stages.
+
+## Session: 2026-08-27 — Add the common fivefold OOF engine
+
+Added the isolated protocol-2.0 CV engine with frozen-fold/task loading,
+deterministic sampling, train-only protein-equal preprocessing and baselines,
+exact OOF accumulation and pair assembly, complete-coverage geometry, strict
+v2 output builders, replay checksums, and corruption-aware atomic resume
+manifests. Synthetic protein- and pair-level integration tests cover the common
+engine; model-family runners and launchers remain for later stages.

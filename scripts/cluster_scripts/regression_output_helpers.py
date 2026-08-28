@@ -34,7 +34,8 @@ from regression_protocol import (
 
 
 # The existing helpers and runners remain the historical additive-v1 contract.
-# Stage 2 will build the separate fivefold OOF writers against the v2 contract.
+# Fivefold v2 builders live separately under cross_validation/ so importing an
+# existing runner cannot silently change its output schema.
 OUTPUT_SCHEMA_VERSION = "1.0"
 FIVEFOLD_OUTPUT_SCHEMA_VERSION = "2.0"
 

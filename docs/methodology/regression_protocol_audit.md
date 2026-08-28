@@ -25,22 +25,33 @@ Status labels:
 
 Protocol 2.0 fivefold OOF is now canonical. All existing 80/20 runners and
 saved result families described below are reclassified as historical
-protocol-1.0 analyses. Stage 1 has frozen and validated the shared outer- and
-pair-fold metadata, but no v2 model runner or production result exists yet.
+protocol-1.0 analyses. Stage 1 froze and validated the shared outer- and
+pair-fold metadata. Stage 2 added the common CV engine, but no v2 model-family
+runner or production result exists yet.
 
 ## Protocol-2.0 implementation status
 
 | Family | Frozen folds | V2 runner | Production artifacts | Disposition |
 |---|---|---|---|---|
-| Shared linear OLS | Meets | Pending Stage 3 | Not generated | Historical 80/20 output remains available; not the primary estimate |
-| Per-protein linear OLS | Meets | Pending Stage 4 | Not generated | Historical single 80/20 pair split remains available; not the primary estimate |
-| Sequence-gated OLS | Meets | Pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
-| Shared XGBoost | Meets | Pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
+| Shared linear OLS | Meets | Common engine complete; family runner pending Stage 3 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Per-protein linear OLS | Meets | Common engine complete; family runner pending Stage 4 | Not generated | Historical single 80/20 pair split remains available; not the primary estimate |
+| Sequence-gated OLS | Meets | Common engine complete; family runner pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
+| Shared XGBoost | Meets | Common engine complete; family runner pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
 
 The checked-in v2 metadata contains 552 eligible proteins, preserves the 111
 historical test proteins as fold 0, assigns all other proteins once across
 folds 1–4 with seed 44, and records exact fivefold pair-assignment digests for
 every protein. Stage 1 does not establish model-fitting compliance.
+
+The Stage-2 engine is
+`scripts/cluster_scripts/cross_validation/cross_validation_common.py`. It
+loads and cross-validates the frozen folds, pins fold-major task mapping,
+provides target- and layer-independent sampling, constructs train-only
+protein-equal scalers, weights, and baselines, assembles disjoint pair-fold
+predictions, and merges OOF sufficient statistics with duplicate-protein and
+coverage checks. Synthetic shared-protein and within-protein-pair integration
+tests exercise those invariants. Model fitting remains intentionally absent
+until the family-specific stages.
 
 ## Protocol checklist for the historical implementation audit
 

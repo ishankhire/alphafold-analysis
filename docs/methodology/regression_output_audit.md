@@ -26,22 +26,32 @@ Status labels are:
 
 Output schema 2.0 is now canonical. Existing schema-1.0 80/20 families and the
 older 184-protein k-fold family are reclassified as historical and are not v2
-production outputs. Stage 1 has generated only the three shared metadata files;
-v2 family outputs begin in later implementation stages.
+production outputs. Stage 1 generated only the three shared metadata files.
+Stage 2 added common v2 builders and validators; family result artifacts begin
+in later implementation stages.
 
 ## Output-schema-2.0 implementation status
 
 | Family | Shared metadata | V2 writers/runners | V2 production family |
 |---|---|---|---|
-| Shared linear OLS | Meets | Pending Stages 2–3 | Not generated |
-| Per-protein linear OLS | Meets | Pending Stages 2 and 4 | Not generated |
-| Sequence-gated OLS | Meets | Pending Stages 2 and 5 | Not generated |
-| Shared XGBoost | Meets | Pending Stages 2 and 6 | Not generated |
+| Shared linear OLS | Meets | Common v2 writers complete; runner pending Stage 3 | Not generated |
+| Per-protein linear OLS | Meets | Common v2 writers complete; runner pending Stage 4 | Not generated |
+| Sequence-gated OLS | Meets | Common v2 writers complete; runner pending Stage 5 | Not generated |
+| Shared XGBoost | Meets | Common v2 writers complete; runner pending Stage 6 | Not generated |
 
 The only schema-2.0 artifacts currently checked in are
 `delta_files/regression_5fold_v1/metadata/regression_outer_folds_v1.csv`,
 `per_protein_pair_folds_v1.csv`, and `fold_digests.json`. They are metadata, not
 model results.
+
+The common Stage-2 writer defines strict additive schemas for every planned v2
+table, exact OOF pooled/fold builders, complete-coverage geometry, compact
+coefficient stability, checksummed replay-index rows, and atomic checkpoint
+manifests whose invariants, artifact sizes, and hashes are revalidated before
+resume. The existing schema-1.0 helper remains unchanged in behavior. Synthetic
+integration tests confirm that merged OOF statistics reproduce direct
+concatenation and that pair-level geometry is built once from exact-once OOF
+coverage. These code paths do not constitute a generated production family.
 
 ## Historical output protocol checklist
 
