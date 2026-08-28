@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_methodology.md`. It is a code-and-artifact audit as of
-2026-08-27, not a claim that historical results are invalid. A result can remain
+2026-08-28, not a claim that historical results are invalid. A result can remain
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
 
@@ -27,15 +27,15 @@ Protocol 2.0 fivefold OOF is now canonical. All existing 80/20 runners and
 saved result families described below are reclassified as historical
 protocol-1.0 analyses. Stage 1 froze and validated the shared outer- and
 pair-fold metadata. Stage 2 added the common CV engine. Stage 3 added the
-shared-linear family runner and aggregator; no v2 production result has been
-generated yet.
+shared-linear family runner and aggregator. Stage 4 added the per-protein OLS
+family runner and aggregator; no v2 production result has been generated yet.
 
 ## Protocol-2.0 implementation status
 
 | Family | Frozen folds | V2 runner | Production artifacts | Disposition |
 |---|---|---|---|---|
 | Shared linear OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 3 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
-| Per-protein linear OLS | Meets | Common engine complete; family runner pending Stage 4 | Not generated | Historical single 80/20 pair split remains available; not the primary estimate |
+| Per-protein linear OLS | Meets | Meets in code; 48-task runner and strict aggregator implemented in Stage 4 | Not generated | Ready for later deployment and production execution; historical single 80/20 pair split remains available |
 | Sequence-gated OLS | Meets | Common engine complete; family runner pending Stage 5 | Not generated | Historical 80/20 output remains available; not the primary estimate |
 | Shared XGBoost | Meets | Common engine complete; family runner pending Stage 6 | Not generated | Historical fixed-model output remains available; preliminary same-cohort selection and test exposure remain disclosed |
 
@@ -66,6 +66,21 @@ coefficient stability per layer, and rejects missing, duplicate, incomplete,
 resume-incompatible, or checksum-corrupted shards. Synthetic fivefold tests
 cover fitting, aggregation, replay, resume, and corruption handling. These
 tests establish implementation behavior, not a completed Delta production run.
+
+The Stage-4 per-protein OLS workflow is also under
+`scripts/cluster_scripts/cross_validation/`. Each layer task loads one
+protein-layer feature block at a time, regenerates and validates the frozen
+five pair folds, fits five train-only float64 OLS/scaler/baseline models, and
+assembles exactly one held-out prediction for every canonical pair. Regression,
+subgroup, and geometry outputs use the single complete OOF vector; the outer
+protein fold is reporting metadata only. A protein enters stable-only output
+only when all five contributing fits pass the rank/conditioning policy. The
+aggregator requires all 48 layers for production, retains 132,480 indexed
+models in compressed layer shards, and reconstructs pooled and matched
+outer-fold summaries without saving raw pair predictions. Synthetic tests
+cover exact-once pair coverage, train-only scaling, one-load behavior, compact
+replay, resume, and corruption rejection. Production execution remains
+pending.
 
 ## Protocol checklist for the historical implementation audit
 

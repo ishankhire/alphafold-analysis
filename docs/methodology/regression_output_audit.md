@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_outputs.md`. It is an artifact-and-code audit as of
-2026-08-27. Historical files remain useful, but they do not automatically meet
+2026-08-28. Historical files remain useful, but they do not automatically meet
 the final paper output contract.
 
 The summary table assesses the active implementation. Its disposition column
@@ -28,14 +28,16 @@ Output schema 2.0 is now canonical. Existing schema-1.0 80/20 families and the
 older 184-protein k-fold family are reclassified as historical and are not v2
 production outputs. Stage 1 generated only the three shared metadata files.
 Stage 2 added common v2 builders and validators. Stage 3 added the shared OLS
-family writers, runner, and strict aggregator, but did not run them on Delta.
+family writers, runner, and strict aggregator. Stage 4 added the per-protein
+OLS family writers, runner, and strict aggregator. Neither family has been run
+on Delta under protocol 2.0.
 
 ## Output-schema-2.0 implementation status
 
 | Family | Shared metadata | V2 writers/runners | V2 production family |
 |---|---|---|---|
 | Shared linear OLS | Meets | Meets in code; Stage-3 task shards, aggregation, replay index, and all applicable v2 tables implemented | Not generated |
-| Per-protein linear OLS | Meets | Common v2 writers complete; runner pending Stage 4 | Not generated |
+| Per-protein linear OLS | Meets | Meets in code; Stage-4 layer shards, aggregation, compressed model replay, and all applicable v2 tables implemented | Not generated |
 | Sequence-gated OLS | Meets | Common v2 writers complete; runner pending Stage 5 | Not generated |
 | Shared XGBoost | Meets | Common v2 writers complete; runner pending Stage 6 | Not generated |
 
@@ -64,6 +66,20 @@ pair predictions are not stored. Synthetic tests exercise complete output
 assembly plus valid-resume and checksum-corruption rejection; production files
 remain absent until a separately authorized Delta run is completed and copied
 back.
+
+The Stage-4 per-protein OLS implementation writes one atomic layer shard with
+552 authoritative complete-OOF protein rows, five matched outer-fold metric
+rows, 2,760 training/status rows, 552 geometry rows, complete-cohort subgroup
+statistics, and per-protein five-model coefficient stability. All 2,760
+coefficient/scaler models for a layer share one compressed NPZ shard indexed by
+unique protein/pair-fold responsibility; the final 132,480-row replay index
+checksums those 48 physical shards without expanding coefficients to CSV. The
+aggregator reconstructs pooled, fold-summary, stable-fit, subgroup, and
+geometry-summary outputs, and streams the large stability table during
+consolidation. Synthetic tests verify exact-once pair coverage, one geometry
+result per protein-layer, shared-shard replay, valid resume, and corruption
+rejection. No v2 per-protein production files exist until a separately
+authorized Delta run is completed and copied back.
 
 ## Historical output protocol checklist
 

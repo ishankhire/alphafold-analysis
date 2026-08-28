@@ -1650,3 +1650,13 @@ coefficient stability, complete OOF regression/subgroup/geometry outputs, and
 the locked 120 GiB/30-minute Delta launcher. Synthetic tests cover fitting,
 full fivefold consolidation, valid resume, and checksum-corruption rejection;
 deployment and production execution remain pending.
+
+## Session: 2026-08-28 — Implement fivefold per-protein OLS
+
+Added the 48-task per-protein base256 OLS runner with five deterministic
+train-only pair-fold fits per protein-layer, exact-once complete OOF regression
+and geometry, all-five-fit stability filtering, compressed layer coefficient
+shards with model-level replay indexing, strict consolidation, and the locked
+12 GiB/two-hour Delta launcher. Synthetic tests cover train-only scaling,
+one-load behavior, exact pair coverage, replay, resume, and corruption
+rejection; deployment and production execution remain pending.

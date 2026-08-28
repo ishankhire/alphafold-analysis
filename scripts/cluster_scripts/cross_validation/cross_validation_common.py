@@ -1856,6 +1856,7 @@ def build_replay_index_row(
     artifact_type: str,
     configuration_digest: str,
     scaler_digest: str,
+    artifact_sha256: str | None = None,
     status: str = "complete",
     outer_fold: int | None = None,
     protein_id: str = "",
@@ -1880,7 +1881,10 @@ def build_replay_index_row(
         "outer_fold": "" if outer_fold is None else int(outer_fold),
         "protein_id": str(protein_id), "pair_fold": "" if pair_fold is None else int(pair_fold),
         "sequence_gate": str(sequence_gate), "artifact_type": str(artifact_type),
-        "artifact_path": relative.as_posix(), "artifact_sha256": sha256_file(resolved),
+        "artifact_path": relative.as_posix(),
+        "artifact_sha256": (
+            sha256_file(resolved) if artifact_sha256 is None else str(artifact_sha256)
+        ),
         "configuration_digest": str(configuration_digest), "scaler_digest": str(scaler_digest),
         "status": str(status),
     }
@@ -1896,7 +1900,7 @@ def validate_replay_index(
     if expected_count is not None and len(rows) != int(expected_count):
         raise ValueError(f"Expected {expected_count} replay rows, observed {len(rows)}")
     responsibilities: set[tuple[object, ...]] = set()
-    artifact_paths: set[str] = set()
+    artifact_digests: dict[str, str] = {}
     root = Path(family_root)
     for index, row in enumerate(rows):
         if tuple(row) != REPLAY_INDEX_COLUMNS:
@@ -1905,9 +1909,6 @@ def validate_replay_index(
             raise ValueError("Replay row uses an unexpected index version")
         relative = _relative_artifact_path(str(row["artifact_path"]))
         path_key = relative.as_posix()
-        if path_key in artifact_paths:
-            raise ValueError(f"Replay artifact path is duplicated: {path_key}")
-        artifact_paths.add(path_key)
         responsibility = tuple(row[column] for column in (
             "model_family", "layer", "outer_fold", "protein_id", "pair_fold", "sequence_gate",
         ))
@@ -1915,7 +1916,12 @@ def validate_replay_index(
             raise ValueError(f"Replay responsibility is duplicated: {responsibility}")
         responsibilities.add(responsibility)
         resolved = _resolve_artifact_path(root, relative)
-        if not resolved.is_file() or sha256_file(resolved) != row["artifact_sha256"]:
+        if not resolved.is_file():
+            raise ValueError(f"Replay artifact is missing or checksum-mismatched: {resolved}")
+        if path_key not in artifact_digests:
+            artifact_digests[path_key] = sha256_file(resolved)
+        observed_digest = artifact_digests[path_key]
+        if observed_digest != row["artifact_sha256"]:
             raise ValueError(f"Replay artifact is missing or checksum-mismatched: {resolved}")
 
 
