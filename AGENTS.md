@@ -101,8 +101,7 @@ of representative successful tasks. Do not size from failed, cancelled,
 cached, restart-skipped, smoke, or no-op runs. When the exact workflow is
 unmeasured, estimate from the closest completed workflow and account for
 differences in cohort size, feature width, layers, folds, models, and sequential
-stages. Measure the first representative task and update the shared walltime
-guide before broad submission. Avoid excessive limits because Slurm schedules
+stages. Avoid excessive limits because Slurm schedules
 against requested walltime and shorter accurate jobs can backfill sooner.
 
 ### Launcher requirements
