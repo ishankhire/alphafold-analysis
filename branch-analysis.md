@@ -1694,3 +1694,14 @@ non-nested selection and historical-test-exposure disclosures. Mocked tests
 cover the fixed configuration, sampling, fit controls, phase ordering, replay,
 resume, and corruption rejection; deployment and production execution remain
 pending.
+
+## Session: 2026-08-29 — Release-harden fivefold OOF regression
+
+Added exact physical-shard inventory and duplicate-task enforcement across all
+four protocol-2.0 aggregators, exhaustively validated the 240-task fold/layer
+and 48-task layer mappings, and tested missing, incomplete, duplicate, and
+same-size checksum-corrupt shards for every family. Confirmed the locked
+comparator-derived resources, aligned launchers with current Delta filesystem
+constraints, and documented flat deployment, aggregation, and triangle replay.
+All active local regression suites passed; no files were deployed and no jobs
+were submitted.

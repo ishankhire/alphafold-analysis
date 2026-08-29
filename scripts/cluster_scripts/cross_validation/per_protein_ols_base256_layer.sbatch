@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=12g
 #SBATCH --time=02:00:00
-#SBATCH --constraint="scratch"
+#SBATCH --constraint="scratch&work"
 #SBATCH -o per_protein_ols_5fold_%A_%a.out
 #SBATCH -e per_protein_ols_5fold_%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL

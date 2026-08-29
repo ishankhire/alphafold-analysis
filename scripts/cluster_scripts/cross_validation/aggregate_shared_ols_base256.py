@@ -50,6 +50,7 @@ from cross_validation_common import (  # noqa: E402
     summarize_geometry_rows,
     validate_replay_index,
     validate_resume_checkpoint,
+    validate_shard_inventory,
     write_v2_csv,
 )
 from regression_output_helpers import atomic_write_json  # noqa: E402
@@ -330,6 +331,13 @@ def aggregate_shared_ols(
         map_fold_layer_task(fold_layer_task_id(fold, layer))
         for layer in requested_layers for fold in range(N_OUTER_FOLDS)
     ]
+    validate_shard_inventory(
+        destination,
+        expected_shards={
+            task_shard_path(destination, task).name: task.task_id for task in tasks
+        },
+        checkpoint_filename=TASK_CHECKPOINT_FILENAME,
+    )
     validated = {}
     for task in tasks:
         log(f"validating task {task.task_id} (fold {task.outer_fold}, layer {task.layer})")

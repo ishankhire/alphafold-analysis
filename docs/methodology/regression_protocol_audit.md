@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_methodology.md`. It is a code-and-artifact audit as of
-2026-08-28, not a claim that historical results are invalid. A result can remain
+2026-08-29, not a claim that historical results are invalid. A result can remain
 useful as exploratory evidence while requiring a rerun before entering the
 fully controlled paper comparison.
 
@@ -30,16 +30,18 @@ pair-fold metadata. Stage 2 added the common CV engine. Stage 3 added the
 shared-linear family runner and aggregator. Stage 4 added the per-protein OLS
 family runner and aggregator. Stage 5 added the sequence-gated OLS family
 runner and aggregator. Stage 6 added the fixed shared-XGBoost family runner and
-aggregator; no v2 production result has been generated yet.
+aggregator. Stage 7 release-hardened task and shard validation, ran the complete
+active local regression suite, and finalized Delta deployment and downstream
+replay documentation. No v2 production result has been generated yet.
 
 ## Protocol-2.0 implementation status
 
 | Family | Frozen folds | V2 runner | Production artifacts | Disposition |
 |---|---|---|---|---|
-| Shared linear OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 3 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
-| Per-protein linear OLS | Meets | Meets in code; 48-task runner and strict aggregator implemented in Stage 4 | Not generated | Ready for later deployment and production execution; historical single 80/20 pair split remains available |
-| Sequence-gated OLS | Meets | Meets in code; 240-task runner and strict aggregator implemented in Stage 5 | Not generated | Ready for later deployment and production execution; historical 80/20 output remains available |
-| Shared XGBoost | Meets | Meets in code; 240-task fixed-S4 runner and strict aggregator implemented in Stage 6 | Not generated | Ready for later deployment and production execution; preliminary same-cohort selection and test exposure remain disclosed |
+| Shared linear OLS | Meets | Meets in code; 240-task runner and release-hardened strict aggregator | Not generated | Production-ready in code; historical 80/20 output remains available |
+| Per-protein linear OLS | Meets | Meets in code; 48-task runner and release-hardened strict aggregator | Not generated | Production-ready in code; historical single 80/20 pair split remains available |
+| Sequence-gated OLS | Meets | Meets in code; 240-task runner and release-hardened strict aggregator | Not generated | Production-ready in code; historical 80/20 output remains available |
+| Shared XGBoost | Meets | Meets in code; 240-task fixed-S4 runner and release-hardened strict aggregator | Not generated | Production-ready in code; preliminary same-cohort selection and test exposure remain disclosed |
 
 The checked-in v2 metadata contains 552 eligible proteins, preserves the 111
 historical test proteins as fold 0, assigns all other proteins once across
@@ -116,6 +118,20 @@ the five folds. Mocked-estimator tests cover frozen provenance, deterministic
 sampling and weighting, phase ordering, exact fit controls, complete output
 assembly, replay, resume, and corruption rejection while preserving an
 explicit Delta XGBoost dependency error. Production execution remains pending.
+
+Stage 7 exhaustively enumerated the fold-major Cartesian mapping
+`5 outer folds x 48 layers = 240 tasks` and the per-protein `48`-layer mapping,
+including inverse and boundary checks. Every production aggregator now
+enumerates `layer_shards/` before reading results and requires exactly 240,
+48, 240, and 240 unique complete physical shards for shared OLS, per-protein
+OLS, sequence-gated OLS, and fixed XGBoost, respectively. Family integration
+tests demonstrate rejection of an absent shard, an incomplete checkpoint, an
+extra copy with a duplicate task identity, and same-size SHA-256 corruption.
+The complete active local regression suite passed 107 tests with one declared
+skip. Current Delta filesystem guidance was also applied by declaring both
+the locked `scratch` and `/work/hdd` `work` dependencies in every launcher.
+These checks establish production readiness in code only; no protocol-2.0
+model artifact has been generated or audited on Delta.
 
 ## Protocol checklist for the historical implementation audit
 

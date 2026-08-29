@@ -68,6 +68,34 @@ materialized as float64. Record negative predictions, fill a symmetric matrix,
 and clip negative distances to zero only for triangle calculations, matching
 Figure 5.
 
+### 2.1 Future protocol-2.0 OOF replay interface
+
+Stage 7 of the fivefold refactor documents the interface that a separately
+approved triangle-subgroup refactor will consume. It does not change this
+workflow's implemented historical-artifact inputs, scripts, 111-protein scope,
+or saved results.
+
+Protocol-2.0 families live under
+`$CSV_ROOT/regression_5fold_v1/<family>/`. A future consumer must read
+`run_manifest.json` and `model_artifacts/replay_index.csv`, resolve every
+`artifact_path` relative to the family root, require complete status, and
+verify artifact SHA-256 plus configuration and scaler digests before replay.
+Responsibility keys are:
+
+- `(layer, outer_fold)` for shared OLS and fixed shared XGBoost;
+- `(layer, outer_fold, sequence_gate)` for sequence-gated OLS; and
+- `(layer, protein_id, pair_fold)` for per-protein OLS.
+
+Shared-family proteins select the model for their frozen outer fold. Sequence
+gates use the canonical six-gate routing without fallback. Per-protein pair
+folds are regenerated from the compact checked-in manifest, and the matching
+identity is located inside the referenced compressed shard rather than inferred
+from CSV row order. Raw pair predictions are absent, so the consumer replays
+the canonical directional base256 features and assembles exactly one held-out
+prediction per protein pair before computing triangles. Exact deployment and
+consumer checks are in
+`scripts/cluster_scripts/cross_validation/README.md`.
+
 ## 3. Frozen reference categories
 
 For each unordered residue triple, calculate final-PDB side lengths and sort

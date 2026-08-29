@@ -40,6 +40,21 @@ documented analysis-specific child path). Python entrypoints should use that
 environment variable for cluster outputs rather than infer a repository tree
 from `__file__`.
 
+## Fivefold OOF regression deployment
+
+The protocol-2.0 regression arrays additionally require the three frozen fold
+metadata files under
+`$CSV_ROOT/regression_5fold_v1/metadata/` before any task starts. The master
+manifest remains beside `regression_protocol.py` under
+`regression_protocol_data/`. See the
+[fivefold OOF release runbook](../../scripts/cluster_scripts/cross_validation/README.md)
+for the exact flat deployment inventory, task maps, submission order,
+aggregation checks, and replay contract.
+
+These workers read pair tensors and PDBs from `/work/hdd`. In addition to the
+project's locked `scratch` constraint, their launchers declare Delta's current
+`work` filesystem dependency as `#SBATCH --constraint="scratch&work"`.
+
 ## Arrays
 
 `#SBATCH --array=0-47%12` creates 48 tasks with task IDs `0` through `47`, with

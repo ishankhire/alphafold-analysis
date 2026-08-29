@@ -4,7 +4,7 @@
 
 This document compares the active regression implementations and saved result
 families with `regression_outputs.md`. It is an artifact-and-code audit as of
-2026-08-28. Historical files remain useful, but they do not automatically meet
+2026-08-29. Historical files remain useful, but they do not automatically meet
 the final paper output contract.
 
 The summary table assesses the active implementation. Its disposition column
@@ -31,8 +31,10 @@ Stage 2 added common v2 builders and validators. Stage 3 added the shared OLS
 family writers, runner, and strict aggregator. Stage 4 added the per-protein
 OLS family writers, runner, and strict aggregator. Stage 5 added the
 sequence-gated OLS family writers, runner, and strict aggregator. Stage 6 added
-the fixed shared-XGBoost family writers, runner, and strict aggregator. None of
-these families has been run on Delta under protocol 2.0.
+the fixed shared-XGBoost family writers, runner, and strict aggregator. Stage 7
+added exact physical-shard inventory enforcement and release-level failure
+tests for every family. None of these families has been run on Delta under
+protocol 2.0.
 
 ## Output-schema-2.0 implementation status
 
@@ -111,6 +113,18 @@ historical-test-exposure disclosures. Mocked-estimator tests exercise exact
 round and fit controls, complete output assembly, replay, valid resume, and
 checksum-corruption rejection. No v2 shared-XGBoost production files exist
 until a separately authorized Delta run is completed and copied back.
+
+Stage 7 confirmed the production task and shard counts as 240 shared OLS, 48
+per-protein OLS, 240 sequence-gated OLS, and 240 fixed XGBoost. Aggregation no
+longer infers completeness solely from synthesized expected paths: it first
+requires an exact `layer_shards/` inventory with unique task identities, then
+performs the existing checkpoint, schema, coverage, reconstruction, artifact,
+and replay checks. Synthetic integration tests for every family now reject a
+missing shard, an incomplete completion marker, an extra duplicate shard, and
+a same-size checksum mismatch. Duplicate task IDs are also rejected when
+building final run manifests. All active local regression suites passed 107
+tests with one declared skip. This is an implementation audit, not evidence of
+a generated production family.
 
 ## Historical output protocol checklist
 

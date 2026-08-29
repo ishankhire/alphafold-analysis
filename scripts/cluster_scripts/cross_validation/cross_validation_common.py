@@ -241,6 +241,13 @@ class FoldLayerTask:
     layer: int
 
 
+def _normalized_task_layers(layers: Sequence[int]) -> tuple[int, ...]:
+    canonical_layers = tuple(int(layer) for layer in layers)
+    if not canonical_layers or len(set(canonical_layers)) != len(canonical_layers):
+        raise ValueError("Task mapping requires unique layers")
+    return canonical_layers
+
+
 def map_fold_layer_task(
     task_id: int,
     *,
@@ -248,11 +255,12 @@ def map_fold_layer_task(
     n_outer_folds: int = N_OUTER_FOLDS,
 ) -> FoldLayerTask:
     """Map a fold-major array ID to one outer-fold/layer task."""
-    canonical_layers = tuple(int(layer) for layer in layers)
-    if not canonical_layers or len(set(canonical_layers)) != len(canonical_layers):
-        raise ValueError("Task mapping requires unique layers")
+    canonical_layers = _normalized_task_layers(layers)
+    fold_count = int(n_outer_folds)
+    if fold_count < 1:
+        raise ValueError("Task mapping requires at least one outer fold")
     task = int(task_id)
-    n_tasks = int(n_outer_folds) * len(canonical_layers)
+    n_tasks = fold_count * len(canonical_layers)
     if task < 0 or task >= n_tasks:
         raise ValueError(f"Fold/layer task must be in 0..{n_tasks - 1}; got {task_id}")
     outer_fold, layer_offset = divmod(task, len(canonical_layers))
@@ -266,10 +274,13 @@ def fold_layer_task_id(
     layers: Sequence[int] = LAYERS,
     n_outer_folds: int = N_OUTER_FOLDS,
 ) -> int:
-    canonical_layers = tuple(int(value) for value in layers)
+    canonical_layers = _normalized_task_layers(layers)
+    fold_count = int(n_outer_folds)
+    if fold_count < 1:
+        raise ValueError("Task mapping requires at least one outer fold")
     fold = int(outer_fold)
-    if fold < 0 or fold >= int(n_outer_folds):
-        raise ValueError(f"outer_fold must be in 0..{int(n_outer_folds) - 1}")
+    if fold < 0 or fold >= fold_count:
+        raise ValueError(f"outer_fold must be in 0..{fold_count - 1}")
     try:
         layer_offset = canonical_layers.index(int(layer))
     except ValueError as exc:
@@ -278,7 +289,7 @@ def fold_layer_task_id(
 
 
 def map_layer_task(task_id: int, *, layers: Sequence[int] = LAYERS) -> int:
-    canonical_layers = tuple(int(layer) for layer in layers)
+    canonical_layers = _normalized_task_layers(layers)
     task = int(task_id)
     if task < 0 or task >= len(canonical_layers):
         raise ValueError(f"Layer task must be in 0..{len(canonical_layers) - 1}; got {task_id}")
@@ -2017,6 +2028,75 @@ def validate_resume_checkpoint(
     return manifest
 
 
+def validate_shard_inventory(
+    root: str | Path,
+    *,
+    expected_shards: Mapping[str, int],
+    checkpoint_filename: str,
+) -> None:
+    """Require one complete physical shard directory per expected task identity."""
+    expected = {str(name): int(task_id) for name, task_id in expected_shards.items()}
+    if not expected:
+        raise ValueError("Expected shard inventory cannot be empty")
+    if any(Path(name).name != name or name in {"", ".", ".."} for name in expected):
+        raise ValueError("Expected shard names must be immediate directory names")
+    if len(set(expected.values())) != len(expected):
+        raise ValueError("Expected shard inventory contains duplicate task identities")
+    if not str(checkpoint_filename) or Path(checkpoint_filename).name != checkpoint_filename:
+        raise ValueError("Checkpoint filename must be an immediate child name")
+
+    shard_root = Path(root) / "layer_shards"
+    if not shard_root.is_dir():
+        raise ValueError(f"Missing layer shard directory: {shard_root}")
+    observed_entries = {path.name: path for path in shard_root.iterdir()}
+    observed_names = set(observed_entries)
+    missing = sorted(set(expected) - observed_names)
+    unexpected = sorted(observed_names - set(expected))
+
+    identities: dict[int, str] = {}
+    for name, shard in sorted(observed_entries.items()):
+        if not shard.is_dir():
+            continue
+        checkpoint_path = shard / checkpoint_filename
+        if not checkpoint_path.is_file():
+            if name in expected:
+                raise ValueError(
+                    f"Shard {name} is incomplete: missing {checkpoint_filename}"
+                )
+            continue
+        try:
+            with checkpoint_path.open() as handle:
+                checkpoint = json.load(handle)
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ValueError(f"Shard {name} has an invalid completion checkpoint") from exc
+        if checkpoint.get("status") != "complete":
+            raise ValueError(f"Shard {name} is incomplete")
+        invariants = checkpoint.get("invariants")
+        if not isinstance(invariants, dict) or "task_id" not in invariants:
+            raise ValueError(f"Shard {name} checkpoint lacks a task identity")
+        try:
+            task_id = int(invariants["task_id"])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Shard {name} checkpoint has an invalid task identity") from exc
+        if task_id in identities:
+            raise ValueError(
+                "Duplicate physical shard task identity "
+                f"{task_id}: {identities[task_id]} and {name}"
+            )
+        identities[task_id] = name
+        if name in expected and task_id != expected[name]:
+            raise ValueError(
+                f"Shard {name} has task identity {task_id}; expected {expected[name]}"
+            )
+
+    if missing or unexpected or len(observed_entries) != len(expected):
+        raise ValueError(
+            "Shard inventory mismatch: "
+            f"expected={len(expected)}, observed={len(observed_entries)}, "
+            f"missing={missing[:5]}, unexpected={unexpected[:5]}"
+        )
+
+
 def write_v2_csv(
     path: str | Path,
     logical_filename: str,
@@ -2058,8 +2138,14 @@ def build_run_manifest(
     run_status: str = "complete",
     created_at: str | None = None,
 ) -> dict[str, object]:
-    requested = sorted({int(task_id) for task_id in requested_task_ids})
-    completed = sorted({int(task_id) for task_id in completed_task_ids})
+    requested_values = [int(task_id) for task_id in requested_task_ids]
+    completed_values = [int(task_id) for task_id in completed_task_ids]
+    if len(requested_values) != len(set(requested_values)):
+        raise ValueError("Requested task IDs contain duplicates")
+    if len(completed_values) != len(set(completed_values)):
+        raise ValueError("Completed task IDs contain duplicates")
+    requested = sorted(requested_values)
+    completed = sorted(completed_values)
     if not requested or not set(completed).issubset(requested):
         raise ValueError("Completed task IDs must be a subset of a nonempty request")
     if int(feature_dim) < 1 or int(feature_dim) > len(FEATURE_NAMES):
@@ -2121,5 +2207,6 @@ __all__ = [
     "fold_layer_task_id", "load_cv_folds", "map_fold_layer_task", "map_layer_task",
     "numeric_array_digest", "prepare_training_fold", "sampling_assignment_digest",
     "semantic_digest", "summarize_geometry_rows", "utc_now", "validate_replay_index",
-    "validate_resume_checkpoint", "write_v2_csv", "write_v2_npz",
+    "validate_resume_checkpoint", "validate_shard_inventory", "write_v2_csv",
+    "write_v2_npz",
 ]

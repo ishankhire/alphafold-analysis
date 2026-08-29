@@ -1,5 +1,6 @@
 import csv
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -141,7 +142,7 @@ class PerProteinOLSUnitTests(unittest.TestCase):
         launcher = (CV_DIR / "per_protein_ols_base256_layer.sbatch").read_text()
         required = (
             "#SBATCH --array=0-47%12", "#SBATCH --mem=12g",
-            "#SBATCH --time=02:00:00", "#SBATCH --constraint=\"scratch\"",
+            "#SBATCH --time=02:00:00", "#SBATCH --constraint=\"scratch&work\"",
             "#SBATCH --mail-type=BEGIN,END,FAIL",
             "#SBATCH --mail-user=ikhire3@gatech.edu",
             "SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}",
@@ -200,7 +201,45 @@ class PerProteinOLSIntegrationResumeCorruptionTests(unittest.TestCase):
             self.assertEqual(manifest["expected_replay_artifacts"], 25)
             self.assertFalse(manifest["raw_pair_predictions_saved"])
 
+            first_shard = per_protein.task_shard_path(root, 0)
+            saved_shard = root / "saved_missing_layer_00"
+            first_shard.rename(saved_shard)
+            with self.assertRaisesRegex(ValueError, "Shard inventory mismatch"):
+                aggregate.aggregate_per_protein_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            saved_shard.rename(first_shard)
+
+            checkpoint_path = first_shard / per_protein.TASK_CHECKPOINT_FILENAME
+            checkpoint_bytes = checkpoint_path.read_bytes()
+            checkpoint = json.loads(checkpoint_bytes)
+            checkpoint["status"] = "incomplete"
+            checkpoint_path.write_text(json.dumps(checkpoint))
+            with self.assertRaisesRegex(ValueError, "incomplete"):
+                aggregate.aggregate_per_protein_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            checkpoint_path.write_bytes(checkpoint_bytes)
+
+            duplicate_shard = first_shard.parent / "duplicate_layer_00"
+            shutil.copytree(first_shard, duplicate_shard)
+            with self.assertRaisesRegex(ValueError, "Duplicate physical shard"):
+                aggregate.aggregate_per_protein_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            shutil.rmtree(duplicate_shard)
+
             runtime_path = per_protein.task_shard_path(root, 0) / "runtime.csv"
+            runtime_bytes = runtime_path.read_bytes()
+            same_size_corruption = bytearray(runtime_bytes)
+            same_size_corruption[0] ^= 1
+            runtime_path.write_bytes(same_size_corruption)
+            with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                aggregate.aggregate_per_protein_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            runtime_path.write_bytes(runtime_bytes)
+
             runtime_path.write_text(runtime_path.read_text() + "corruption\n")
             with self.assertRaisesRegex(ValueError, "mismatch"):
                 per_protein.execute_layer_task(

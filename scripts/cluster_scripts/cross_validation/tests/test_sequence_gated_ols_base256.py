@@ -1,5 +1,6 @@
 import csv
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -256,7 +257,45 @@ class SequenceGatedOLSIntegrationResumeCorruptionTests(unittest.TestCase):
             self.assertEqual(manifest["expected_replay_artifacts"], 30)
             self.assertFalse(manifest["raw_pair_predictions_saved"])
 
+            first_shard = gated.task_shard_path(root, first)
+            saved_shard = root / "saved_missing_task_0"
+            first_shard.rename(saved_shard)
+            with self.assertRaisesRegex(ValueError, "Shard inventory mismatch"):
+                aggregate.aggregate_sequence_gated_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            saved_shard.rename(first_shard)
+
+            checkpoint_path = first_shard / gated.TASK_CHECKPOINT_FILENAME
+            checkpoint_bytes = checkpoint_path.read_bytes()
+            checkpoint = json.loads(checkpoint_bytes)
+            checkpoint["status"] = "incomplete"
+            checkpoint_path.write_text(json.dumps(checkpoint))
+            with self.assertRaisesRegex(ValueError, "incomplete"):
+                aggregate.aggregate_sequence_gated_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            checkpoint_path.write_bytes(checkpoint_bytes)
+
+            duplicate_shard = first_shard.parent / "duplicate_task_0"
+            shutil.copytree(first_shard, duplicate_shard)
+            with self.assertRaisesRegex(ValueError, "Duplicate physical shard"):
+                aggregate.aggregate_sequence_gated_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            shutil.rmtree(duplicate_shard)
+
             runtime_path = gated.task_shard_path(root, first) / "runtime.csv"
+            runtime_bytes = runtime_path.read_bytes()
+            same_size_corruption = bytearray(runtime_bytes)
+            same_size_corruption[0] ^= 1
+            runtime_path.write_bytes(same_size_corruption)
+            with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                aggregate.aggregate_sequence_gated_ols(
+                    root=root, fold_bundle=bundle, layers=(0,), allow_partial=True,
+                )
+            runtime_path.write_bytes(runtime_bytes)
+
             runtime_path.write_text(runtime_path.read_text() + "corruption\n")
             with self.assertRaisesRegex(ValueError, "mismatch"):
                 gated.execute_fold_layer_task(

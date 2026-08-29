@@ -23,6 +23,12 @@ deployment or submission during implementation.
 | Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated peak 93.42 GiB | `120g` | Comparator-derived, not measured |
 | Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 peak near 6.4 GiB while evaluating all 552 proteins | `12g` | Comparator-derived; each v2 task evaluates one fold |
 
+Stage 7 confirmed that the four checked-in launchers request exactly `120g`,
+`12g`, `120g`, and `12g`, respectively. It also confirmed their planned
+concurrency caps and current Delta `scratch&work` filesystem constraints. No
+new MaxRSS observation was produced, so every value in this table remains an
+estimate and the explicit no-pilot decision remains in force.
+
 After production completes, measured MaxRSS may replace these estimates, but a
 pre-production pilot is not a prerequisite for this project.
 

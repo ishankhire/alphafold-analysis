@@ -49,6 +49,7 @@ from cross_validation_common import (  # noqa: E402
     summarize_geometry_rows,
     validate_replay_index,
     validate_resume_checkpoint,
+    validate_shard_inventory,
     write_v2_csv,
     V2_CSV_SCHEMAS,
 )
@@ -439,6 +440,13 @@ def aggregate_per_protein_ols(
         raise ValueError("Aggregation layers must be canonical layers 0..47")
     if not allow_partial and set(requested_layers) != set(LAYERS):
         raise ValueError("Production per-protein OLS aggregation requires all 48 layers")
+    validate_shard_inventory(
+        destination,
+        expected_shards={
+            task_shard_path(destination, layer).name: layer for layer in requested_layers
+        },
+        checkpoint_filename=TASK_CHECKPOINT_FILENAME,
+    )
     validated = {}
     for layer in requested_layers:
         log(f"validating per-protein OLS layer {layer}")

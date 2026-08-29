@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=120g
 #SBATCH --time=00:30:00
-#SBATCH --constraint="scratch"
+#SBATCH --constraint="scratch&work"
 #SBATCH -o shared_ols_5fold_%A_%a.out
 #SBATCH -e shared_ols_5fold_%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL

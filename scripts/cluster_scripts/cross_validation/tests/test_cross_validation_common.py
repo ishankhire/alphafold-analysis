@@ -53,18 +53,41 @@ class FoldAndSamplingTests(unittest.TestCase):
                 len(bundle.training_protein_ids(fold)) + len(heldout[fold]), 552,
             )
 
-    def test_fold_major_task_mapping_round_trips(self):
+    def test_production_task_mappings_are_exhaustive_and_round_trip(self):
         self.assertEqual(common.map_fold_layer_task(0), common.FoldLayerTask(0, 0, 0))
         self.assertEqual(common.map_fold_layer_task(47), common.FoldLayerTask(47, 0, 47))
         self.assertEqual(common.map_fold_layer_task(48), common.FoldLayerTask(48, 1, 0))
         self.assertEqual(common.map_fold_layer_task(239), common.FoldLayerTask(239, 4, 47))
+        fold_tasks = tuple(common.map_fold_layer_task(task_id) for task_id in range(240))
+        self.assertEqual(len(fold_tasks), 240)
+        self.assertEqual(
+            {(task.outer_fold, task.layer) for task in fold_tasks},
+            {(fold, layer) for fold in range(5) for layer in range(48)},
+        )
+        self.assertEqual(
+            len({f"fold_{task.outer_fold}_layer_{task.layer:02d}" for task in fold_tasks}),
+            240,
+        )
         for fold in range(5):
             for layer in range(48):
                 task = common.fold_layer_task_id(fold, layer)
                 self.assertEqual(common.map_fold_layer_task(task).outer_fold, fold)
                 self.assertEqual(common.map_fold_layer_task(task).layer, layer)
+        layer_tasks = tuple(common.map_layer_task(task_id) for task_id in range(48))
+        self.assertEqual(layer_tasks, tuple(range(48)))
+        self.assertEqual(len({f"layer_{layer:02d}" for layer in layer_tasks}), 48)
+        with self.assertRaises(ValueError):
+            common.map_fold_layer_task(-1)
         with self.assertRaises(ValueError):
             common.map_fold_layer_task(240)
+        with self.assertRaises(ValueError):
+            common.map_layer_task(-1)
+        with self.assertRaises(ValueError):
+            common.map_layer_task(48)
+        with self.assertRaisesRegex(ValueError, "unique layers"):
+            common.map_layer_task(0, layers=(0, 0))
+        with self.assertRaisesRegex(ValueError, "unique layers"):
+            common.fold_layer_task_id(0, 0, layers=())
 
     def test_deterministic_sampling_is_sorted_bounded_and_layer_independent(self):
         first = common.deterministic_sample_indices(100, "protein-A", 17)
@@ -325,6 +348,26 @@ class OutputReplayAndCheckpointTests(unittest.TestCase):
         self.assertEqual(len(importance), 2)
         self.assertEqual(tuple(importance[0]), common.FEATURE_IMPORTANCE_COLUMNS)
         self.assertEqual(importance[0]["n_outer_folds"], 5)
+
+    def test_run_manifest_rejects_duplicate_task_ids(self):
+        kwargs = {
+            "fold_bundle": common.load_cv_folds(),
+            "analysis_name": "probe",
+            "model_family": "shared_ols",
+            "feature_dim": 2,
+            "evaluation_design": "protein_outer_5fold",
+            "oof_prediction_scope": "heldout_proteins_all_pairs",
+            "configuration": {"mode": "synthetic"},
+            "expected_replay_artifacts": 1,
+        }
+        with self.assertRaisesRegex(ValueError, "Requested task IDs contain duplicates"):
+            common.build_run_manifest(
+                **kwargs, requested_task_ids=(0, 0), completed_task_ids=(0,),
+            )
+        with self.assertRaisesRegex(ValueError, "Completed task IDs contain duplicates"):
+            common.build_run_manifest(
+                **kwargs, requested_task_ids=(0,), completed_task_ids=(0, 0),
+            )
 
     def test_replay_index_checks_artifact_hash_and_unique_responsibility(self):
         with tempfile.TemporaryDirectory() as directory:

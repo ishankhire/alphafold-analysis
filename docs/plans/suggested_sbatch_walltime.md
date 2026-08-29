@@ -39,6 +39,12 @@ this project only; implementation does not deploy or submit jobs.
 | Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated maximum `01:37:20` | `03:00:00` | Comparator-derived, not measured |
 | Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 maximum near `00:16:06` while evaluating all proteins | `00:30:00` | Comparator-derived; v2 evaluates one fold |
 
+Stage 7 confirmed that the four checked-in launchers request exactly
+`00:30:00`, `02:00:00`, `03:00:00`, and `00:30:00`, respectively, with the
+locked `240`, `48`, `240`, and `240` task mappings. No fivefold elapsed-time
+measurement was produced, so the limits remain comparator-derived and the
+explicit no-pilot decision remains in force.
+
 Measured production elapsed times may replace these estimates later, but a
 pre-production pilot is not required by this project's locked plan.
 
