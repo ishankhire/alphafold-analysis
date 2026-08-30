@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-30 — Add layerwise MDS stress
+
+Added normalized 3D distance-reconstruction stress to the main MDS diagnostic,
+using the same five models, 48 layers, and locked 111-protein test population as
+the two eigenvalue-fraction panels.
+
 ## Session: 2026-08-30 — Add MDS eigenvalue-fraction comparison
 
 Expanded main Figure 4 into a two-panel, five-model comparison of the top-three

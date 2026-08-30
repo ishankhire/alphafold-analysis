@@ -94,9 +94,9 @@ for XGBoost, and 0.944 for per-protein linear. The last value includes the
 per-protein model's fitting pairs. As in Figure 1, most linear variants are
 best around layers 45--46 and decline slightly afterward.
 
-## Figure 4: MDS eigenvalue fractions
+## Figure 4: MDS eigenvalue fractions and stress
 
-![MDS top-three and negative eigenvalue fractions](paper_figures/main/main_figure_04_top3_eigenvalue_fraction.png)
+![MDS top-three and negative eigenvalue fractions with reconstruction stress](paper_figures/main/main_figure_04_top3_eigenvalue_fraction.png)
 
 The left panel measures how much of the positive classical-MDS spectral mass
 lies in the top three dimensions. The right panel measures the absolute
@@ -112,6 +112,13 @@ for per-protein linear. Negative mass also falls for every model, from roughly
 0.35--0.38 for the shared linear variants at layer 47. None reaches zero, so
 the decoded matrices remain non-Euclidean even as their spectra become more
 three-dimensionally concentrated.
+
+The third panel directly measures the normalized discrepancy between decoded
+distances and distances in the three-dimensional MDS reconstruction. Mean
+stress falls sharply for every model. At layer 47 it is 0.051 for per-protein
+linear, 0.052 for XGBoost, 0.080 for sequence gated, and about 0.098 for shared
+linear and AA gated. Thus the stronger readouts preserve decoded distances in
+3D more closely, consistent with both of their spectral diagnostics.
 
 ## Figures 5--6: Triangle-violation diagnostics
 

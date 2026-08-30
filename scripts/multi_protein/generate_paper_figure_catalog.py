@@ -382,6 +382,7 @@ def load_geometry_models() -> tuple[dict[str, pd.DataFrame], list[Path]]:
                 "tm_score",
                 "frac_top3_eigenvalues",
                 "negative_eigenvalue_fraction",
+                "stress",
                 *TRIANGLE_COLUMNS,
             },
         )
@@ -409,6 +410,7 @@ def derive_geometry_trajectories(frames: dict[str, pd.DataFrame]) -> pd.DataFram
         "tm_score",
         "frac_top3_eigenvalues",
         "negative_eigenvalue_fraction",
+        "stress",
         *TRIANGLE_COLUMNS,
         "conditional_triangle_violation_magnitude",
     )
@@ -1001,11 +1003,11 @@ def plot_figures_3_4(geometry: pd.DataFrame) -> list[tuple[str, Path, Path]]:
     png, pdf = save_figure(figure, stem)
     outputs.append((stem, png, pdf))
 
-    outputs.append(plot_mds_eigenvalue_fractions(geometry))
+    outputs.append(plot_mds_diagnostics(geometry))
     return outputs
 
 
-def plot_mds_eigenvalue_fractions(
+def plot_mds_diagnostics(
     geometry: pd.DataFrame,
 ) -> tuple[str, Path, Path]:
     panels = (
@@ -1021,10 +1023,16 @@ def plot_mds_eigenvalue_fractions(
             "|Negative mass| / positive mass",
             None,
         ),
+        (
+            "stress",
+            "Three-dimensional reconstruction stress",
+            "Normalized distance discrepancy",
+            None,
+        ),
     )
-    figure, axes = plt.subplots(1, 2, figsize=(13.2, 5.2), sharex=True)
+    figure, axes = plt.subplots(1, 3, figsize=(18.0, 5.2), sharex=True)
     for panel_label, (axis, (metric, title, ylabel, ylim)) in zip(
-        ("A", "B"), zip(axes, panels)
+        ("A", "B", "C"), zip(axes, panels)
     ):
         data = geometry[geometry["geometry_metric"].eq(metric)]
         plot_model_lines(axis, data, "mean")
@@ -1049,7 +1057,7 @@ def plot_mds_eigenvalue_fractions(
         frameon=False,
     )
     figure.suptitle(
-        "Classical-MDS eigenvalue diagnostics across layers "
+        "Classical-MDS diagnostics across layers "
         "(mean across 111 locked test proteins)",
         y=0.98,
     )
@@ -1537,7 +1545,7 @@ def main() -> None:
         ("1", "Mean per-protein R2 across layers", "r2", per_protein_paths, [mean_path], "main_figure_01_mean_per_protein_r2", "model-specific primary scopes", "Per-protein linear uses held-out pairs; shared models use all pairs."),
         ("2", "Mean per-protein MAE across layers", "mae", per_protein_paths, [mean_path], "main_figure_02_mean_per_protein_mae", "model-specific primary scopes", "Per-protein linear uses held-out pairs; shared models use all pairs."),
         ("3", "Mean reconstruction TM-score across layers", "tm_score", geometry_paths, [geometry_path], "main_figure_03_tm_score", "all_pairs", "Reference is OpenFold's final predicted structure; per-protein complete matrices include fitting and held-out pairs."),
-        ("4", "MDS eigenvalue fractions", "frac_top3_eigenvalues; negative_eigenvalue_fraction", geometry_paths, [geometry_path], "main_figure_04_top3_eigenvalue_fraction", "all_pairs", "Top-three positive mass diagnoses low dimensionality; negative mass diagnoses non-Euclidean distance structure."),
+        ("4", "MDS eigenvalue fractions and 3D stress", "frac_top3_eigenvalues; negative_eigenvalue_fraction; stress", geometry_paths, [geometry_path], "main_figure_04_top3_eigenvalue_fraction", "all_pairs", "Top-three positive mass diagnoses low dimensionality, negative mass diagnoses non-Euclidean structure, and stress measures the normalized 3D distance discrepancy."),
         ("5-6", "Triangle-violation diagnostics", "fraction; conditional mean; maximum; severity-bin fractions", geometry_paths, [geometry_path], "main_figure_05_triangle_violation_diagnostics", "all_pairs", "Catalog Figures 5 and 6 consolidated into one six-panel figure at user request."),
         ("7", "Layer-to-layer R2 gain", "r2 gain", per_protein_paths, [gain_path], "main_figure_07_layerwise_r2_gain", "model-specific primary scopes", "Intervals bootstrap paired protein-level layer differences."),
         ("8", "Decodability versus geometric consistency", "all-pairs r2 vs triangle violation fraction", per_protein_paths + geometry_paths, [decodability_path], "main_figure_08_decodability_consistency", "all_pairs", "Per-protein all-pairs R2 mixes fitting and held-out pairs."),
