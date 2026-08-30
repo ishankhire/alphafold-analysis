@@ -69,21 +69,33 @@ def atomic_write_csv(path: Path, columns: tuple[str, ...], rows: list[dict[str, 
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     with temporary.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=columns)
+        writer = csv.DictWriter(handle, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
     temporary.replace(path)
 
 
-def plot_trajectories(layer_rows: list[dict[str, str]]) -> list[str]:
+def plot_trajectories(
+    layer_rows: list[dict[str, str]], channel_rows: list[dict[str, str]]
+) -> list[str]:
     output_names: list[str] = []
     lookup = {
         (int(row["layer"]), row["representation_variant"], row["metric"]): row
         for row in layer_rows
     }
     specs = list(TRAJECTORY_METRICS) + [
-        ("positive_channel_fraction", "Fraction of channels with positive margin")
+        ("positive_channel_fraction", "Fraction of channels with positive margin"),
+        ("zero_scale_fraction", "Fraction of channel triples with zero L1 scale"),
     ]
+    zero_scale_values: dict[tuple[int, str], float] = {}
+    zero_scale_groups: dict[tuple[int, str], list[float]] = defaultdict(list)
+    for row in channel_rows:
+        if row["metric"] == "zero_scale_fraction":
+            zero_scale_groups[
+                (int(row["layer"]), row["representation_variant"])
+            ].append(float(row["protein_equal_mean"]))
+    for key, values in zero_scale_groups.items():
+        zero_scale_values[key] = float(np.mean(values))
     for metric, label in specs:
         figure, axis = plt.subplots(figsize=(9.5, 5.2))
         for variant in VARIANTS:
@@ -94,6 +106,9 @@ def plot_trajectories(layer_rows: list[dict[str, str]]) -> list[str]:
                 if row is not None:
                     values[layer] = float(row["protein_equal_mean"])
                     finite_counts.append(int(row["n_proteins_finite"]))
+                elif metric == "zero_scale_fraction":
+                    values[layer] = zero_scale_values.get((layer, variant), np.nan)
+                    finite_counts.append(154)
             coverage = (
                 f"n={min(finite_counts)}–{max(finite_counts)}"
                 if finite_counts
@@ -233,7 +248,7 @@ def main() -> None:
         raise ValueError(
             f"Expected {expected_channel_rows} channel summaries; observed {len(channel_rows)}"
         )
-    trajectory_files = plot_trajectories(layer_rows)
+    trajectory_files = plot_trajectories(layer_rows, channel_rows)
     heatmap_files = plot_channel_heatmaps(channel_rows)
     ranked = rank_channels(channel_rows)
     atomic_write_csv(OUTPUT_DIR / "ranked_channels.csv", RANKED_COLUMNS, ranked)
