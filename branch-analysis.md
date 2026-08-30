@@ -1730,3 +1730,13 @@ Added a risk-driven review plan for protocol-2.0 cross-validation that avoids
 duplicating Stage-7 shard checks and instead specifies leakage perturbations,
 independent aggregation oracles, detailed MDS/alignment/TM and exact-triangle
 tests, real artifact replay, stability checks, review outputs, and fix gates.
+
+## Session: 2026-08-30 — Implement adversarial fivefold correctness review
+
+Added independent local adversarial CV-wiring and geometry-oracle suites plus a
+local review driver and structured review artifacts. The expanded 68-test CV
+suite passes with four classified expected failures for defensive validation
+gaps in low-level complete-distance helpers; the unchanged 107-test release
+baseline also passes with one declared skip. No production regression or
+analysis implementation was changed, and real protocol-2.0 replay plus native
+XGBoost verification remain deferred until Delta outputs exist.
