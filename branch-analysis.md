@@ -1723,3 +1723,10 @@ comparator-derived resources, aligned launchers with current Delta filesystem
 constraints, and documented flat deployment, aggregation, and triangle replay.
 All active local regression suites passed; no files were deployed and no jobs
 were submitted.
+
+## Session: 2026-08-30 — Plan adversarial fivefold correctness review
+
+Added a risk-driven review plan for protocol-2.0 cross-validation that avoids
+duplicating Stage-7 shard checks and instead specifies leakage perturbations,
+independent aggregation oracles, detailed MDS/alignment/TM and exact-triangle
+tests, real artifact replay, stability checks, review outputs, and fix gates.
