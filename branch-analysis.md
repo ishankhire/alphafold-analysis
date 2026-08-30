@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-30 — Focus the main MDS figure on stress
+
+Removed the two spectral panels from main Figure 4 and retained only normalized
+3D MDS reconstruction stress, with a brief reader-facing definition in the
+paper-figure results narrative.
+
 ## Session: 2026-08-30 — Add layerwise MDS stress
 
 Added normalized 3D distance-reconstruction stress to the main MDS diagnostic,

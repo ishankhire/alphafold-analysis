@@ -196,23 +196,19 @@ Principal columns: `model`, `layer`, `geometry_metric`, `mean`, `std`, `median`,
 
 **Figure:** `paper_figures/main/main_figure_03_tm_score.*`.
 
-### Main Figure 4 — MDS eigenvalue fractions and stress across layers
+### Main Figure 4 — MDS reconstruction stress across layers
 
-**Question:** How much of the positive classical-MDS spectral mass becomes
-concentrated in three dimensions, how much negative spectral mass remains, and
-how closely do the resulting 3D distances reproduce the decoded distances?
+**Question:** How closely do distances in the three-dimensional classical-MDS
+reconstruction reproduce the decoded distances?
 
-Use three panels for all five models. Plot the mean top-three positive eigenvalue
-fraction on a 0--1 y-axis, and the mean absolute negative eigenvalue mass divided
-by positive mass and normalized MDS stress on their own nonnegative y-axes.
-Interpret these respectively as low dimensionality, non-Euclideanity, and
-literal 3D distance-reconstruction discrepancy diagnostics.
+Plot mean normalized MDS stress for all five models on a nonnegative y-axis.
+Define stress as the RMS difference between decoded pair distances and distances
+in the 3D MDS reconstruction, normalized by the RMS decoded distance. Lower is
+better and zero denotes exact reconstruction.
 
 **Readiness:** Ready.
 
-**Plot data:** `geometry_model_trajectories.csv`,
-`geometry_metric=frac_top3_eigenvalues` and
-`geometry_metric=negative_eigenvalue_fraction`, and `geometry_metric=stress`.
+**Plot data:** `geometry_model_trajectories.csv`, `geometry_metric=stress`.
 
 **Figure:** `paper_figures/main/main_figure_04_top3_eigenvalue_fraction.*`.
 
