@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-08-30 — Add MDS eigenvalue-fraction comparison
+
+Expanded main Figure 4 into a two-panel, five-model comparison of the top-three
+positive eigenvalue fraction and the negative-to-positive eigenvalue mass
+fraction across all 48 Evoformer layers.
+
 ## Session: 2026-08-27 — Plan pair-representation triangle dominance
 
 Added a no-training CAMEO pilot plan for four directional/absolute pair-channel

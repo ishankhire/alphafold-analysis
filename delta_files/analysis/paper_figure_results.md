@@ -94,19 +94,24 @@ for XGBoost, and 0.944 for per-protein linear. The last value includes the
 per-protein model's fitting pairs. As in Figure 1, most linear variants are
 best around layers 45--46 and decline slightly afterward.
 
-## Figure 4: Top-three positive eigenvalue fraction
+## Figure 4: MDS eigenvalue fractions
 
-![Top-three positive eigenvalue fraction](paper_figures/main/main_figure_04_top3_eigenvalue_fraction.png)
+![MDS top-three and negative eigenvalue fractions](paper_figures/main/main_figure_04_top3_eigenvalue_fraction.png)
 
-This measures how much of the positive classical-MDS spectral mass lies in the
-top three dimensions. It is a low-dimensionality diagnostic, not proof that a
-distance matrix is Euclidean.
+The left panel measures how much of the positive classical-MDS spectral mass
+lies in the top three dimensions. The right panel measures the absolute
+negative eigenvalue mass relative to the positive mass; nonzero values diagnose
+a distance matrix that is not exactly Euclidean. Together they distinguish
+three-dimensional concentration from Euclidean validity.
 
 The fraction rises for every model, so late-layer decoded matrices are much
 more concentrated in a three-dimensional subspace. At layer 47 it ranges from
 0.626 for AA gated and 0.639 for shared linear to 0.706 for XGBoost and 0.753
-for per-protein linear. None reaches 1, which is consistent with the remaining
-distance errors and triangle violations.
+for per-protein linear. Negative mass also falls for every model, from roughly
+0.47--0.50 at layer 0 to 0.24 for per-protein linear, 0.30 for XGBoost, and
+0.35--0.38 for the shared linear variants at layer 47. None reaches zero, so
+the decoded matrices remain non-Euclidean even as their spectra become more
+three-dimensionally concentrated.
 
 ## Figures 5--6: Triangle-violation diagnostics
 

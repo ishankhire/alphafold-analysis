@@ -381,6 +381,7 @@ def load_geometry_models() -> tuple[dict[str, pd.DataFrame], list[Path]]:
                 "geometry_status",
                 "tm_score",
                 "frac_top3_eigenvalues",
+                "negative_eigenvalue_fraction",
                 *TRIANGLE_COLUMNS,
             },
         )
@@ -407,6 +408,7 @@ def derive_geometry_trajectories(frames: dict[str, pd.DataFrame]) -> pd.DataFram
     metrics = (
         "tm_score",
         "frac_top3_eigenvalues",
+        "negative_eigenvalue_fraction",
         *TRIANGLE_COLUMNS,
         "conditional_triangle_violation_magnitude",
     )
@@ -982,25 +984,79 @@ def plot_figures_1_2(mean_trajectories: pd.DataFrame) -> list[tuple[str, Path, P
 
 def plot_figures_3_4(geometry: pd.DataFrame) -> list[tuple[str, Path, Path]]:
     outputs = []
-    specifications = (
-        ("tm_score", "Mean reconstruction TM-score", "main_figure_03_tm_score"),
+
+    figure, axis = plt.subplots(figsize=(8.4, 5.3))
+    data = geometry[geometry["geometry_metric"].eq("tm_score")]
+    plot_model_lines(axis, data, "mean")
+    axis.set(
+        xlabel="Evoformer layer",
+        ylabel="Mean reconstruction TM-score",
+        xlim=(0, 47),
+        ylim=(0, 1),
+    )
+    axis.set_xticks([0, 10, 20, 30, 40, 47])
+    model_legend(axis, loc="best")
+    figure.tight_layout()
+    stem = "main_figure_03_tm_score"
+    png, pdf = save_figure(figure, stem)
+    outputs.append((stem, png, pdf))
+
+    outputs.append(plot_mds_eigenvalue_fractions(geometry))
+    return outputs
+
+
+def plot_mds_eigenvalue_fractions(
+    geometry: pd.DataFrame,
+) -> tuple[str, Path, Path]:
+    panels = (
         (
             "frac_top3_eigenvalues",
-            "Mean top-three positive eigenvalue fraction",
-            "main_figure_04_top3_eigenvalue_fraction",
+            "Top-three positive eigenvalue mass",
+            "Fraction of positive eigenvalue mass",
+            (0, 1),
+        ),
+        (
+            "negative_eigenvalue_fraction",
+            "Negative eigenvalue mass",
+            "|Negative mass| / positive mass",
+            None,
         ),
     )
-    for metric, ylabel, stem in specifications:
-        figure, axis = plt.subplots(figsize=(8.4, 5.3))
+    figure, axes = plt.subplots(1, 2, figsize=(13.2, 5.2), sharex=True)
+    for panel_label, (axis, (metric, title, ylabel, ylim)) in zip(
+        ("A", "B"), zip(axes, panels)
+    ):
         data = geometry[geometry["geometry_metric"].eq(metric)]
         plot_model_lines(axis, data, "mean")
-        axis.set(xlabel="Evoformer layer", ylabel=ylabel, xlim=(0, 47), ylim=(0, 1))
+        axis.set(
+            title=f"{panel_label}  {title}",
+            xlabel="Evoformer layer",
+            ylabel=ylabel,
+            xlim=(0, 47),
+        )
         axis.set_xticks([0, 10, 20, 30, 40, 47])
-        model_legend(axis, loc="best")
-        figure.tight_layout()
-        png, pdf = save_figure(figure, stem)
-        outputs.append((stem, png, pdf))
-    return outputs
+        if ylim is None:
+            axis.set_ylim(bottom=0)
+        else:
+            axis.set_ylim(*ylim)
+    handles, labels = axes[0].get_legend_handles_labels()
+    figure.legend(
+        handles,
+        labels,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 0.005),
+        ncol=len(MODEL_ORDER),
+        frameon=False,
+    )
+    figure.suptitle(
+        "Classical-MDS eigenvalue diagnostics across layers "
+        "(mean across 111 locked test proteins)",
+        y=0.98,
+    )
+    figure.tight_layout(rect=(0, 0.12, 1, 0.93))
+    stem = "main_figure_04_top3_eigenvalue_fraction"
+    png, pdf = save_figure(figure, stem)
+    return stem, png, pdf
 
 
 def plot_triangle_diagnostics(geometry: pd.DataFrame) -> tuple[str, Path, Path]:
@@ -1481,7 +1537,7 @@ def main() -> None:
         ("1", "Mean per-protein R2 across layers", "r2", per_protein_paths, [mean_path], "main_figure_01_mean_per_protein_r2", "model-specific primary scopes", "Per-protein linear uses held-out pairs; shared models use all pairs."),
         ("2", "Mean per-protein MAE across layers", "mae", per_protein_paths, [mean_path], "main_figure_02_mean_per_protein_mae", "model-specific primary scopes", "Per-protein linear uses held-out pairs; shared models use all pairs."),
         ("3", "Mean reconstruction TM-score across layers", "tm_score", geometry_paths, [geometry_path], "main_figure_03_tm_score", "all_pairs", "Reference is OpenFold's final predicted structure; per-protein complete matrices include fitting and held-out pairs."),
-        ("4", "Top-three positive eigenvalue fraction", "frac_top3_eigenvalues", geometry_paths, [geometry_path], "main_figure_04_top3_eigenvalue_fraction", "all_pairs", "Low-dimensionality diagnostic, not proof of Euclidean validity."),
+        ("4", "MDS eigenvalue fractions", "frac_top3_eigenvalues; negative_eigenvalue_fraction", geometry_paths, [geometry_path], "main_figure_04_top3_eigenvalue_fraction", "all_pairs", "Top-three positive mass diagnoses low dimensionality; negative mass diagnoses non-Euclidean distance structure."),
         ("5-6", "Triangle-violation diagnostics", "fraction; conditional mean; maximum; severity-bin fractions", geometry_paths, [geometry_path], "main_figure_05_triangle_violation_diagnostics", "all_pairs", "Catalog Figures 5 and 6 consolidated into one six-panel figure at user request."),
         ("7", "Layer-to-layer R2 gain", "r2 gain", per_protein_paths, [gain_path], "main_figure_07_layerwise_r2_gain", "model-specific primary scopes", "Intervals bootstrap paired protein-level layer differences."),
         ("8", "Decodability versus geometric consistency", "all-pairs r2 vs triangle violation fraction", per_protein_paths + geometry_paths, [decodability_path], "main_figure_08_decodability_consistency", "all_pairs", "Per-protein all-pairs R2 mixes fitting and held-out pairs."),

@@ -125,7 +125,7 @@ The common visual conventions are:
   horizontal direction;
 - model names, colors, and line styles are fixed across every figure;
 - mean per-protein R2, TM-score, and top-three eigenvalue fraction use a y-axis
-  from 0 to 1;
+  from 0 to 1; negative-eigenvalue mass is shown on its own nonnegative axis;
 - MAE and violation magnitude use angstroms;
 - triangle violation fraction is labeled as a fraction or percentage and may
   use a focused range because all values occupy a small part of 0 to 1;
@@ -196,19 +196,21 @@ Principal columns: `model`, `layer`, `geometry_metric`, `mean`, `std`, `median`,
 
 **Figure:** `paper_figures/main/main_figure_03_tm_score.*`.
 
-### Main Figure 4 — Top-three positive eigenvalue fraction across layers
+### Main Figure 4 — MDS eigenvalue fractions across layers
 
 **Question:** How much of the positive classical-MDS spectral mass becomes
-concentrated in three dimensions?
+concentrated in three dimensions, and how much negative spectral mass remains?
 
-Plot the mean top-three positive eigenvalue fraction for all five models on a
-0--1 y-axis. Interpret this as a low-dimensionality diagnostic, not proof of a
-valid Euclidean distance matrix.
+Use two panels for all five models. Plot the mean top-three positive eigenvalue
+fraction on a 0--1 y-axis, and the mean absolute negative eigenvalue mass divided
+by positive mass on its own nonnegative y-axis. Interpret the first as a
+low-dimensionality diagnostic and the second as a non-Euclideanity diagnostic.
 
 **Readiness:** Ready.
 
 **Plot data:** `geometry_model_trajectories.csv`,
-`geometry_metric=frac_top3_eigenvalues`.
+`geometry_metric=frac_top3_eigenvalues` and
+`geometry_metric=negative_eigenvalue_fraction`.
 
 **Figure:** `paper_figures/main/main_figure_04_top3_eigenvalue_fraction.*`.
 
