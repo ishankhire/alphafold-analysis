@@ -172,7 +172,12 @@ def _write_json(path: Path, value: object) -> None:
 def _write_csv(path: Path, columns: Sequence[str], rows: Iterable[Mapping[str, object]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="raise")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=columns,
+            extrasaction="raise",
+            lineterminator="\n",
+        )
         writer.writeheader()
         for raw in rows:
             writer.writerow({column: raw.get(column, "") for column in columns})
