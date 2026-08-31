@@ -445,7 +445,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 data["consistency_value"],
                 color=color,
                 linestyle=catalog_spec["linestyle"],
-                linewidth=1.75,
+                linewidth=2.05,
                 alpha=0.96,
                 zorder=2,
             )
@@ -453,11 +453,22 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 data["normalized_r2"],
                 data["consistency_value"],
                 color=color,
+                s=12,
+                edgecolors="white",
+                linewidths=0.25,
+                alpha=0.9,
+                zorder=3,
+            )
+            milestones = data[data["layer"].isin(SELECTED_LAYERS[1:-1])]
+            axis.scatter(
+                milestones["normalized_r2"],
+                milestones["consistency_value"],
+                color=color,
                 s=34,
                 edgecolors="white",
                 linewidths=0.75,
                 alpha=1.0,
-                zorder=3,
+                zorder=4,
             )
             start = data[data["layer"].eq(0)]
             end = data[data["layer"].eq(47)]
@@ -470,7 +481,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 edgecolors="white",
                 linewidths=0.9,
                 clip_on=False,
-                zorder=4,
+                zorder=5,
             )
             axis.scatter(
                 end["normalized_r2"],
@@ -481,7 +492,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 edgecolors="white",
                 linewidths=0.7,
                 clip_on=False,
-                zorder=5,
+                zorder=6,
             )
             annotate_overlay_layers(axis, data, color, model_index)
 
