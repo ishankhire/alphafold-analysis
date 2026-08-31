@@ -18,7 +18,7 @@ The x-axis starts from the protein-equal mean test-set `all_pairs` R² at each l
 | 04 | Relative slack: low, medium, high |
 | 05 | Largest-angle shape: clearly acute, near right, clearly obtuse |
 
-Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and 47 in Figures 02–05; circles and stars emphasize layers 0 and 47 in every figure. Figure 01 colors paths by model, while Figures 02–05 color paths by category. Category membership is fixed from final-PDB reference geometry. Axes are shared across model columns within each row of Figures 02–05.
+Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and 47; circles and stars emphasize layers 0 and 47. Figure 01 colors paths by model, while Figures 02–05 color paths by category. Category membership is fixed from final-PDB reference geometry. Axes are shared across model columns within each row of Figures 02–05.
 
 ## Evaluation caveats
 

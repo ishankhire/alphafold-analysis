@@ -381,6 +381,39 @@ def annotate_layers(
         )
 
 
+def annotate_overlay_layers(
+    axis: plt.Axes,
+    data: pd.DataFrame,
+    color: object,
+    model_index: int,
+) -> None:
+    """Label decade layers while separating nearby overlaid model labels."""
+    offsets = ((4, 3), (4, -7), (4, 3), (4, -7), (4, 3), (-4, -7))
+    model_shift = (-5, 5, -5, 5)[model_index]
+    selected = data[data["layer"].isin(SELECTED_LAYERS)]
+    for selected_index, row in enumerate(selected.itertuples(index=False)):
+        dx, dy = offsets[selected_index]
+        horizontal_alignment = "right" if row.layer == 47 else "left"
+        axis.annotate(
+            str(row.layer),
+            (row.normalized_r2, row.consistency_value),
+            xytext=(dx, dy + model_shift),
+            textcoords="offset points",
+            fontsize=6.2,
+            fontweight="semibold" if row.layer in (0, 47) else "normal",
+            color=color,
+            horizontalalignment=horizontal_alignment,
+            bbox={
+                "facecolor": "white",
+                "edgecolor": "none",
+                "alpha": 0.68,
+                "pad": 0.15,
+            },
+            clip_on=False,
+            zorder=6,
+        )
+
+
 def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
     """Plot both all-triangle metrics with the four probe trajectories overlaid."""
     figure, axes = plt.subplots(
@@ -400,7 +433,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
         metric_points = system_points[
             system_points["consistency_metric"].eq(metric)
         ]
-        for analysis_name in MODEL_ORDER:
+        for model_index, analysis_name in enumerate(MODEL_ORDER):
             model_spec = MODEL_SPECS[analysis_name]
             catalog_spec = catalog.MODEL_SPECS[str(model_spec["catalog_model"])]
             data = metric_points[
@@ -450,6 +483,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 clip_on=False,
                 zorder=5,
             )
+            annotate_overlay_layers(axis, data, color, model_index)
 
         axis.set_title(str(metric_spec["title"]), pad=10, fontweight="semibold")
         axis.set_xlabel("Normalized mean per-protein all-pairs $R^2$")
@@ -697,10 +731,10 @@ def write_readme() -> Path:
         "",
         (
             "Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and "
-            "47 in Figures 02–05; circles and stars emphasize layers 0 and 47 in every "
-            "figure. Figure 01 colors paths by model, while Figures 02–05 color paths by "
-            "category. Category membership is fixed from final-PDB reference geometry. Axes "
-            "are shared across model columns within each row of Figures 02–05."
+            "47; circles and stars emphasize layers 0 and 47. Figure 01 colors paths by "
+            "model, while Figures 02–05 color paths by category. Category membership is "
+            "fixed from final-PDB reference geometry. Axes are shared across model columns "
+            "within each row of Figures 02–05."
         ),
         "",
         "## Evaluation caveats",
