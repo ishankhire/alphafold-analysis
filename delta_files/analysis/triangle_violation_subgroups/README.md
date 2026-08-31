@@ -61,6 +61,9 @@ The shared linear probe is the only model with a large layer-47 monotonic length
 
 ## Files and caveats
 
+- `stratification_and_peak_trough_methods.md` gives the exact reference
+  subgroup definitions, local-extremum tests, null hypotheses, and
+  Benjamini-Hochberg correction family.
 - `category_trajectories/` contains the complete category-system figure suite.
 - `focused_main_figures/` contains the five reduced figures using only violation fraction and normalized mean triangle violation.
 - `focused_decodability_consistency/` contains five separately generated 2×4 phase grids relating per-model normalized R² to those two focused metrics.

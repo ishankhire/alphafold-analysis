@@ -1757,3 +1757,10 @@ aggregators, with family-specific logs, conservative initial resources, and no
 worker-data `/work/hdd` dependency. Updated the runbook, resource guides, and
 flat-deployment hashes; shell checks, the 69-test focused suite, the 108-test
 broad regression suite, and the 39-file deployment verification all pass.
+
+## Session: 2026-08-31 — Document triangle strata and extrema tests
+
+Added a self-contained methods note beside the triangle-violation subgroup
+figures defining the frozen reference geometry strata, violation outcomes,
+paired peak/trough tests and nulls, and outcome-specific Benjamini-Hochberg
+families. Linked the note from the analysis README.
