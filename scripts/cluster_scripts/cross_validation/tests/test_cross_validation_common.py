@@ -418,5 +418,51 @@ class OutputReplayAndCheckpointTests(unittest.TestCase):
                 )
 
 
+class AggregationLauncherTests(unittest.TestCase):
+    def test_aggregation_launchers_are_simple_serial_wrappers(self):
+        launchers = {
+            "aggregate_shared_ols_base256.sbatch": (
+                "aggregate_shared_ols_base256.py",
+                "00:30:00",
+                "shared_ols_base256",
+            ),
+            "aggregate_per_protein_ols_base256.sbatch": (
+                "aggregate_per_protein_ols_base256.py",
+                "01:00:00",
+                "per_protein_ols_base256",
+            ),
+            "aggregate_sequence_gated_ols_base256.sbatch": (
+                "aggregate_sequence_gated_ols_base256.py",
+                "00:30:00",
+                "sequence_gated_ols_base256",
+            ),
+            "aggregate_shared_xgboost_base256_fixed_s4.sbatch": (
+                "aggregate_shared_xgboost_base256_fixed_s4.py",
+                "00:30:00",
+                "shared_xgboost_base256_fixed_s4",
+            ),
+        }
+        common_required = (
+            "#SBATCH --account=bekh-delta-cpu",
+            "#SBATCH --partition=cpu",
+            "#SBATCH --cpus-per-task=1",
+            "#SBATCH --mem=8g",
+            '#SBATCH --constraint="scratch"',
+            "#SBATCH --mail-type=BEGIN,END,FAIL",
+            "#SBATCH --mail-user=ikhire3@gatech.edu",
+            "export CSV_ROOT=${CSV_ROOT:-$HOME/csv_files}",
+            "SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}",
+        )
+        for filename, (entrypoint, walltime, family) in launchers.items():
+            with self.subTest(filename=filename):
+                launcher = (CV_DIR / filename).read_text()
+                self.assertTrue(all(value in launcher for value in common_required))
+                self.assertIn(f"#SBATCH --time={walltime}", launcher)
+                self.assertIn(f"regression_5fold_v1/{family}/logs", launcher)
+                self.assertIn(f'srun python3 -u "$SCRIPT_DIR/{entrypoint}"', launcher)
+                self.assertNotIn("#SBATCH --array", launcher)
+                self.assertNotIn('constraint="scratch&work"', launcher)
+
+
 if __name__ == "__main__":
     unittest.main()

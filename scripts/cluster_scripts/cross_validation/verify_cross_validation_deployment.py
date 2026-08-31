@@ -9,13 +9,17 @@ import os
 from pathlib import Path
 
 
-# SHA-256 values from the repository deployment inventory on 2026-08-30.
+# SHA-256 values from the repository deployment inventory on 2026-08-31.
 DEPLOYMENT_FILES = {
     "__init__.py": "46a9c0ea5ad6a7db3caddc16707aa2f4ea8e8af8a7e5b7fde9041a2beb12cfff",
     "aggregate_per_protein_ols_base256.py": "4d931d54175283a6ffbb18ba4146dcc98a48d98a23234192b647695fd0b6948a",
+    "aggregate_per_protein_ols_base256.sbatch": "564bda5d6ab10cb3b2b6e0948f7154d0085f9da14d27b64cd20308015d384fcf",
     "aggregate_sequence_gated_ols_base256.py": "7554bcbb5478b7f2d8a6e16c88b57a1fe7ca331bed9184e8c5dd2c7f10b4807b",
+    "aggregate_sequence_gated_ols_base256.sbatch": "46c88a5bf959f362472d0f6498e382073ed5345f83f18c25de65e20006675f29",
     "aggregate_shared_ols_base256.py": "8793b8ab0e6c489155748397389a8d92fd67400ce46321c63d1c27d165aa44fa",
+    "aggregate_shared_ols_base256.sbatch": "81416c6503743a21782684e9d8921dc0cf308aa936d036aab1825d93f95146d8",
     "aggregate_shared_xgboost_base256_fixed_s4.py": "8d6a24cd77759796d3e34ad8e5d630ed6b16dd739bfd7595d17d3866671135f4",
+    "aggregate_shared_xgboost_base256_fixed_s4.sbatch": "0f538d63266ae622ae75c3a8bc5b3e8f861ca009b11ffcd08071239a8dd4b190",
     "cluster_regression_helpers.py": "52aaf788044f1ee7434bfffcf6c85469b531cb6d7b773eed840bfd84f81377a7",
     "cross_validation_common.py": "b1c686252d7508ad9a681e5d152a47b33ef57efaa156f1f684ef93147aee94eb",
     "per_protein_ols_base256_common.py": "eca523acb510900f90a73b62e52f356524bc13e93e4e5aba353ec3c85fdc1d60",
@@ -39,7 +43,7 @@ DEPLOYMENT_FILES = {
 TEST_FILES = {
     "tests/__init__.py": "b0351f20db5155cefd3da9fa94d77a3107fb45999d0c67247b20cae8ac7881f3",
     "tests/test_adversarial_cv_wiring.py": "1cc5b15fa3e55484925a9490d6d97155dd30dfa1822400c22422f450341428ff",
-    "tests/test_cross_validation_common.py": "6c9e1d03b97824a9a79a0cd5f35df5a8fa47d5f08fe0cb464762ea3de28b984b",
+    "tests/test_cross_validation_common.py": "715e47668394467ace9ef67580be3b6f4ecb23257712d0c161704dc1e266c813",
     "tests/test_geometry_independent_oracles.py": "04ac51c3f65649e466d06f8bd040bf9cd854e95e757fe4a0e4980545d6a8d41d",
     "tests/test_per_protein_ols_base256.py": "985a0f3bf7a5a37f75cb9e46c60d4f2574588efebf0e00fbd92d8ff0a2b42aab",
     "tests/test_sequence_gated_ols_base256.py": "839c3b341b3010e4a23d0c4a323636b34ccd3c41a1f8d438d55870450b6f1f29",

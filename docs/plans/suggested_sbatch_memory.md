@@ -32,6 +32,22 @@ estimate and the explicit no-pilot decision remains in force.
 After production completes, measured MaxRSS may replace these estimates, but a
 pre-production pilot is not a prerequisite for this project.
 
+### Fivefold aggregation estimates
+
+The four production aggregators are serial validation and consolidation jobs.
+They do not reopen pair tensors or materialize the worker fitting matrices.
+Their initial requests are:
+
+| Fivefold aggregation workflow | Comparator or working-set basis | Estimated `--mem` | Status |
+|---|---|---:|---|
+| Shared OLS aggregation | Measured gated aggregation peaked at 2.86 GiB; this job validates 240 shards | `8g` | Comparator-derived, not measured |
+| Per-protein OLS aggregation | One stability shard is validated at a time; final stability output is streamed | `8g` | Working-set estimate, not measured |
+| Sequence-gated OLS aggregation | Measured gated aggregation plus validation and copying of 1,440 compact coefficient artifacts | `8g` | Comparator-derived, not measured |
+| Fixed shared XGBoost aggregation | Compact metrics plus validation and copying of 240 booster artifacts | `8g` | Comparator-derived, not measured |
+
+Record MaxRSS from each first successful production aggregation and replace
+these estimates before future broad reruns.
+
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
 | Shared OLS, `general_base256_combined` | 97.96 GiB | `120g` | Completed base256 jobs peaked at 97.96 GiB for layers 0–23 and 94.63 GiB for layers 24–47. |

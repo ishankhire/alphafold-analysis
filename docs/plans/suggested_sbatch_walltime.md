@@ -48,6 +48,18 @@ explicit no-pilot decision remains in force.
 Measured production elapsed times may replace these estimates later, but a
 pre-production pilot is not required by this project's locked plan.
 
+### Fivefold aggregation estimates
+
+| Fivefold aggregation workflow | Comparator or workload basis | Estimated `--time` | Status |
+|---|---|---:|---|
+| Shared OLS aggregation | Measured gated aggregation completed in `00:04:09`; allow for strict validation of 240 shards | `00:30:00` | Comparator-derived, not measured |
+| Per-protein OLS aggregation | Validate and stream 6,782,976 stability rows and build a 132,480-row replay index | `01:00:00` | Workload estimate, not measured |
+| Sequence-gated OLS aggregation | Validate 240 shards and copy/check 1,440 coefficient artifacts | `00:30:00` | Comparator-derived, not measured |
+| Fixed shared XGBoost aggregation | Validate 240 shards and copy/check 240 native boosters | `00:30:00` | Comparator-derived, not measured |
+
+Record allocation-level elapsed time from each first successful production
+aggregation and replace these estimates before future broad reruns.
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much

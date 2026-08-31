@@ -3,9 +3,10 @@
 This directory contains the production-ready protocol-2.0 implementation for
 the four fivefold out-of-fold regression families. Stage 7 release hardening
 validated the task mappings, exact shard inventories, aggregation failure
-policy, launchers, and replay contract. No files have been deployed and no
-Delta jobs have been submitted; protocol-2.0 production result families do not
-yet exist.
+policy, worker launchers, and replay contract. Simple aggregation launchers are
+also provided for the four completed shard families. No files have been
+deployed and no Delta jobs have been submitted; protocol-2.0 production result
+families do not yet exist.
 
 The scientific protocol and output contract remain authoritative in
 `docs/methodology/regression_methodology.md` and
@@ -125,17 +126,31 @@ corrupt checkpoint is not accepted as complete.
 ## Aggregation and completion audit
 
 Aggregation is production computation and must run inside an approved CPU
-compute allocation, not on a login node. The locked plan does not assign new
-aggregation resource estimates or aggregation sbatch launchers, so obtain an
-appropriately sized allocation under current Delta policy and then run the
-applicable commands from the flat deployment directory:
+compute allocation, not on a login node. Submit the applicable launcher from
+the flat deployment directory only after every expected worker task for that
+family is `COMPLETED`:
 
 ```bash
-python3 -u aggregate_shared_ols_base256.py
-python3 -u aggregate_per_protein_ols_base256.py
-python3 -u aggregate_sequence_gated_ols_base256.py
-python3 -u aggregate_shared_xgboost_base256_fixed_s4.py
+sbatch aggregate_shared_ols_base256.sbatch
+sbatch aggregate_per_protein_ols_base256.sbatch
+sbatch aggregate_sequence_gated_ols_base256.sbatch
+sbatch aggregate_shared_xgboost_base256_fixed_s4.sbatch
 ```
+
+| Family | Aggregation launcher | CPUs | Memory | Walltime |
+|---|---|---:|---:|---:|
+| Shared OLS | `aggregate_shared_ols_base256.sbatch` | 1 | `8g` | `00:30:00` |
+| Per-protein OLS | `aggregate_per_protein_ols_base256.sbatch` | 1 | `8g` | `01:00:00` |
+| Sequence-gated OLS | `aggregate_sequence_gated_ols_base256.sbatch` | 1 | `8g` | `00:30:00` |
+| Fixed shared XGBoost | `aggregate_shared_xgboost_base256_fixed_s4.sbatch` | 1 | `8g` | `00:30:00` |
+
+These initial requests are comparator-derived rather than measured. The
+per-protein launcher allows extra time because it validates and streams
+6,782,976 stability rows and builds a 132,480-row replay index. After the first
+successful production runs, record allocation-level elapsed time and MaxRSS in
+the shared resource guides. Aggregation reads the completed HOME-backed result
+tree and therefore retains the project `scratch` constraint without requesting
+the workers' `/work/hdd` `work` dependency.
 
 Each production aggregator requires all 48 layers and the exact physical shard
 inventory listed above. It rejects missing or unexpected directories,
