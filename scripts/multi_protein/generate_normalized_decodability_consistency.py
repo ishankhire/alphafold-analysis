@@ -445,7 +445,7 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 data["consistency_value"],
                 color=color,
                 linestyle=catalog_spec["linestyle"],
-                linewidth=2.05,
+                linewidth=1.75,
                 alpha=0.96,
                 zorder=2,
             )
@@ -453,10 +453,10 @@ def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
                 data["normalized_r2"],
                 data["consistency_value"],
                 color=color,
-                s=18,
+                s=34,
                 edgecolors="white",
-                linewidths=0.35,
-                alpha=0.9,
+                linewidths=0.75,
+                alpha=1.0,
                 zorder=3,
             )
             start = data[data["layer"].eq(0)]
