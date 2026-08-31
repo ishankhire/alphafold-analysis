@@ -1740,3 +1740,10 @@ gaps in low-level complete-distance helpers; the unchanged 107-test release
 baseline also passes with one declared skip. No production regression or
 analysis implementation was changed, and real protocol-2.0 replay plus native
 XGBoost verification remain deferred until Delta outputs exist.
+
+## Session: 2026-08-31 — Overlay all-triangle consistency trajectories
+
+Redesigned focused decodability-consistency Figure 01 as two side-by-side
+metric panels with all four probe trajectories overlaid, using the canonical
+model colors and shared endpoint markers. The three-category Figures 02–05
+retain their existing 2×4 grids for legibility.

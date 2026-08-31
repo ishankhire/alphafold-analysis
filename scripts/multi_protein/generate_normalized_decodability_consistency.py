@@ -381,7 +381,139 @@ def annotate_layers(
         )
 
 
+def plot_all_triangles_overlay(points: pd.DataFrame) -> plt.Figure:
+    """Plot both all-triangle metrics with the four probe trajectories overlaid."""
+    figure, axes = plt.subplots(
+        1,
+        len(METRIC_SPECS),
+        figsize=(13.2, 5.2),
+        sharex=True,
+        squeeze=False,
+    )
+    axes = axes[0]
+    system_points = points[
+        points["category_system"].eq("all_triangles")
+        & points["category_label"].eq("all")
+    ]
+
+    for axis, (metric, metric_spec) in zip(axes, METRIC_SPECS.items()):
+        metric_points = system_points[
+            system_points["consistency_metric"].eq(metric)
+        ]
+        for analysis_name in MODEL_ORDER:
+            model_spec = MODEL_SPECS[analysis_name]
+            catalog_spec = catalog.MODEL_SPECS[str(model_spec["catalog_model"])]
+            data = metric_points[
+                metric_points["analysis_name"].eq(analysis_name)
+            ].sort_values("layer")
+            color = catalog_spec["color"]
+            axis.plot(
+                data["normalized_r2"],
+                data["consistency_value"],
+                color=color,
+                linestyle=catalog_spec["linestyle"],
+                linewidth=2.05,
+                alpha=0.96,
+                zorder=2,
+            )
+            axis.scatter(
+                data["normalized_r2"],
+                data["consistency_value"],
+                color=color,
+                s=12,
+                edgecolors="white",
+                linewidths=0.25,
+                alpha=0.9,
+                zorder=3,
+            )
+            start = data[data["layer"].eq(0)]
+            end = data[data["layer"].eq(47)]
+            axis.scatter(
+                start["normalized_r2"],
+                start["consistency_value"],
+                color=color,
+                marker="o",
+                s=58,
+                edgecolors="white",
+                linewidths=0.9,
+                clip_on=False,
+                zorder=4,
+            )
+            axis.scatter(
+                end["normalized_r2"],
+                end["consistency_value"],
+                color=color,
+                marker="*",
+                s=120,
+                edgecolors="white",
+                linewidths=0.7,
+                clip_on=False,
+                zorder=5,
+            )
+
+        axis.set_title(str(metric_spec["title"]), pad=10, fontweight="semibold")
+        axis.set_xlabel("Normalized mean per-protein all-pairs $R^2$")
+        axis.set_ylabel(str(metric_spec["ylabel"]))
+        axis.set_xlim(0.0, 1.0)
+        axis.set_xticks((0.0, 0.25, 0.5, 0.75, 1.0))
+        axis.set_ylim(bottom=0.0)
+        axis.margins(y=0.08)
+
+    model_handles = []
+    for analysis_name in MODEL_ORDER:
+        model_spec = MODEL_SPECS[analysis_name]
+        catalog_spec = catalog.MODEL_SPECS[str(model_spec["catalog_model"])]
+        model_handles.append(
+            Line2D(
+                [0],
+                [0],
+                color=catalog_spec["color"],
+                linestyle=catalog_spec["linestyle"],
+                linewidth=2.4,
+                label=str(model_spec["label"]),
+            )
+        )
+    endpoint_handles = [
+        Line2D(
+            [0],
+            [0],
+            color="#4A4A4A",
+            marker="o",
+            linestyle="none",
+            markersize=6,
+            label="Layer 0",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color="#4A4A4A",
+            marker="*",
+            linestyle="none",
+            markersize=9,
+            label="Layer 47",
+        ),
+    ]
+    figure.legend(
+        handles=model_handles + endpoint_handles,
+        loc="outside lower center",
+        ncol=len(model_handles) + len(endpoint_handles),
+        frameon=False,
+        handlelength=2.8,
+        columnspacing=1.7,
+    )
+    figure.suptitle(
+        "All triangles: normalized decodability versus triangle consistency",
+        y=0.99,
+        fontweight="semibold",
+    )
+    figure.tight_layout(rect=(0, 0.12, 1, 0.94), w_pad=3.0)
+    return figure
+
+
 def plot_grid(points: pd.DataFrame, system: str) -> plt.Figure:
+    if system == "all_triangles":
+        return plot_all_triangles_overlay(points)
+
     category_spec = CATEGORY_SPECS[system]
     labels = tuple(category_spec["labels"])
     colors = category_colors(labels)
@@ -528,10 +660,11 @@ def write_readme() -> Path:
         "# Focused normalized decodability–consistency grids",
         "",
         (
-            "These five 2×4 phase grids combine the layout and fixed reference-geometry "
-            "categories from `focused_main_figures` with the decodability-versus-consistency "
-            "trajectory style of main Figure 8. Columns are probe models; rows are triangle "
-            "violation fraction and normalized mean triangle violation."
+            "These five phase figures combine the fixed reference-geometry categories from "
+            "`focused_main_figures` with the decodability-versus-consistency trajectory style "
+            "of main Figure 8. Figure 01 overlays the four probe models in two side-by-side "
+            "metric panels. Figures 02–05 retain separate model columns and metric rows so "
+            "their three category trajectories remain legible."
         ),
         "",
         "## Normalization and metrics",
@@ -564,9 +697,10 @@ def write_readme() -> Path:
         "",
         (
             "Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and "
-            "47; circles and stars emphasize layers 0 and 47. Category membership is fixed "
-            "from final-PDB reference geometry. Axes are shared across model columns within "
-            "each row."
+            "47 in Figures 02–05; circles and stars emphasize layers 0 and 47 in every "
+            "figure. Figure 01 colors paths by model, while Figures 02–05 color paths by "
+            "category. Category membership is fixed from final-PDB reference geometry. Axes "
+            "are shared across model columns within each row of Figures 02–05."
         ),
         "",
         "## Evaluation caveats",

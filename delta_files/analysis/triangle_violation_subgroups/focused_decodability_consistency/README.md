@@ -1,6 +1,6 @@
 # Focused normalized decodability–consistency grids
 
-These five 2×4 phase grids combine the layout and fixed reference-geometry categories from `focused_main_figures` with the decodability-versus-consistency trajectory style of main Figure 8. Columns are probe models; rows are triangle violation fraction and normalized mean triangle violation.
+These five phase figures combine the fixed reference-geometry categories from `focused_main_figures` with the decodability-versus-consistency trajectory style of main Figure 8. Figure 01 overlays the four probe models in two side-by-side metric panels. Figures 02–05 retain separate model columns and metric rows so their three category trajectories remain legible.
 
 ## Normalization and metrics
 
@@ -18,7 +18,7 @@ The x-axis starts from the protein-equal mean test-set `all_pairs` R² at each l
 | 04 | Relative slack: low, medium, high |
 | 05 | Largest-angle shape: clearly acute, near right, clearly obtuse |
 
-Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and 47; circles and stars emphasize layers 0 and 47. Category membership is fixed from final-PDB reference geometry. Axes are shared across model columns within each row.
+Paths connect layers 0–47 in order. Labels mark layers 0, 10, 20, 30, 40, and 47 in Figures 02–05; circles and stars emphasize layers 0 and 47 in every figure. Figure 01 colors paths by model, while Figures 02–05 color paths by category. Category membership is fixed from final-PDB reference geometry. Axes are shared across model columns within each row of Figures 02–05.
 
 ## Evaluation caveats
 
