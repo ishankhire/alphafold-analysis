@@ -4,17 +4,17 @@
   "artifact_sha256": {
     "README.md": "17ef23590e93594eae236750ca8020e474e41b23d22ad27cba58b3c50cba852b",
     "decodability_consistency_points.csv": "210a84b2588296e8cc78c990ad557b2a9fa5256c323c1714e31a69183907705b",
-    "figure_01_all_triangles_decodability_consistency.pdf": "567677e3a3900d9b418c4cb329dfa9729869e5528a29c51a04be2378afed9006",
-    "figure_01_all_triangles_decodability_consistency.png": "9ba385a8c38d80e93f2252cbc575039d2913320ca114d5ce4d333fed92d689a1",
-    "figure_02_rms_size_decodability_consistency.pdf": "4517863a0712e777a1233198e484d651f98e391af71f4a084ffdf6d925c8ffcc",
+    "figure_01_all_triangles_decodability_consistency.pdf": "8eef512573a72a69005521bc38da5706e15cfc5e63986c35d9207b02a351c00c",
+    "figure_01_all_triangles_decodability_consistency.png": "1e00842cfae31089198e58021aa9e95d224c3718fdf6152df4f27c78882ddc44",
+    "figure_02_rms_size_decodability_consistency.pdf": "e7caadde93c6319a15002dd4c6a9958982b312bca88f1dce3683dbbf71021a4b",
     "figure_02_rms_size_decodability_consistency.png": "7578b5af7da8806e807a3b409e53da548003bfb365e035029ff8d594203038ba",
-    "figure_03_area_decodability_consistency.pdf": "164ac676c3c10cbedc2febffb1faf6fb62f8073d8694b32db3269e7139af9f93",
+    "figure_03_area_decodability_consistency.pdf": "7d0e1b00bcd9628fee86bf4e5fee6b231fe01616705504fef9536d3d3917f54c",
     "figure_03_area_decodability_consistency.png": "41dddd90727f359c1cd6289dee27ca99548e9628c02e586ea707c809dd71c2d4",
-    "figure_04_relative_slack_decodability_consistency.pdf": "9d93806c74efca13f6318ef0a63c1f3f1128b95192bedbb86e99fc1db981c290",
+    "figure_04_relative_slack_decodability_consistency.pdf": "786c7fb390f820d9f9076710c820243aa4da92cf1149f05f832c40944ce4d715",
     "figure_04_relative_slack_decodability_consistency.png": "bad81a6a2faac0e0b16163cf2199c8f7d4b882b286895c2766292adc1db3b825",
-    "figure_05_angle_shape_decodability_consistency.pdf": "20089a5ab62d5bac6dbeb87eda9fbc61d613a28081b7ec6e21fee9f5e16ed6ad",
+    "figure_05_angle_shape_decodability_consistency.pdf": "745e616ad56d7ef4d73e53ab9b6158871ed59cfcd4ebdc8c79afab4c5b7bf852",
     "figure_05_angle_shape_decodability_consistency.png": "d5309e332508a0a6aa418d953d3de8155926a8c706a75343b02eae8b7f8eadf7",
-    "figure_manifest.csv": "8351f9ea240d9d9c6bdb10b04601b02b35287d43ba0392ec5a691f4b454de0d1"
+    "figure_manifest.csv": "39196d029c9bde473a76982c5cb429511c187e3a0ab093389bcd5f9f3b9d1347"
   },
   "category_systems": [
     "all_triangles",
@@ -25,7 +25,7 @@
   ],
   "consistency_evaluation_scope": "all_edges",
   "distinct_figures": 5,
-  "generated_at": "2026-08-31T04:51:34.713352+00:00",
+  "generated_at": "2026-08-31T04:55:12.224203+00:00",
   "layers": [
     0,
     1,

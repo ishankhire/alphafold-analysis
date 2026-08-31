@@ -1746,5 +1746,5 @@ XGBoost verification remain deferred until Delta outputs exist.
 Redesigned focused decodability-consistency Figure 01 as two side-by-side
 metric panels with all four probe trajectories overlaid, using the canonical
 model colors, shared endpoint markers, and labels at layers 0, 10, 20, 30, 40,
-and 47. The three-category Figures 02–05 retain their existing 2×4 grids for
-legibility.
+and 47. Slightly enlarged per-layer points improve trajectory readability. The
+three-category Figures 02–05 retain their existing 2×4 grids for legibility.
