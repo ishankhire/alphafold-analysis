@@ -1,10 +1,10 @@
 # Branch Analysis
 
-## Session: 2026-08-30 — Focus the main MDS figure on stress
+## Session: 2026-08-31 — Restore the full MDS diagnostic figure
 
-Removed the two spectral panels from main Figure 4 and retained only normalized
-3D MDS reconstruction stress, with a brief reader-facing definition in the
-paper-figure results narrative.
+Restored main Figure 4 as a three-panel comparison of top-three positive
+eigenvalue fraction, negative eigenvalue mass, and normalized 3D reconstruction
+stress for all five models.
 
 ## Session: 2026-08-30 — Add layerwise MDS stress
 
@@ -1749,3 +1749,11 @@ model colors, shared endpoint markers, and labels at layers 0, 10, 20, 30, 40,
 and 47. Ordinary layers retain small points, while white-outlined milestone
 points emphasize layers 10, 20, 30, and 40. The three-category Figures 02–05
 retain their existing 2×4 grids for legibility.
+
+## Session: 2026-08-31 — Add fivefold aggregation launchers
+
+Added four simple serial Delta launchers for the protocol-2.0 cross-validation
+aggregators, with family-specific logs, conservative initial resources, and no
+worker-data `/work/hdd` dependency. Updated the runbook, resource guides, and
+flat-deployment hashes; shell checks, the 69-test focused suite, the 108-test
+broad regression suite, and the 39-file deployment verification all pass.
