@@ -1,5 +1,14 @@
 # Branch Analysis
 
+## Session: 2026-09-01 — Plan fivefold OOF triangle-subgroup refactor
+
+Replaced the historical 111-protein triangle-subgroup plan with a versioned
+protocol-2.0 replay plan over all 552 proteins. The plan assembles one complete
+OOF distance matrix per protein before triangle calculations and adds a
+per-protein diagnostic that stratifies triangles by whether their edges come
+from one, two, or three pair-fold models, with exact schemas, row counts,
+reproduction checks, and measured-resource follow-up requirements.
+
 ## Session: 2026-08-31 — Restore the full MDS diagnostic figure
 
 Restored main Figure 4 as a three-panel comparison of top-three positive
