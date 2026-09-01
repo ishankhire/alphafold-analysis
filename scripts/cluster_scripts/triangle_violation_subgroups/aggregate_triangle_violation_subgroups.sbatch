@@ -5,9 +5,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32g
+#SBATCH --mem=16g
 #SBATCH --time=02:00:00
-#SBATCH --constraint="work"
+#SBATCH --constraint="scratch&work"
 #SBATCH -o slurm-%j.out
 #SBATCH -e slurm-%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL

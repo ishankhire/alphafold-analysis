@@ -1773,3 +1773,14 @@ Added a self-contained methods note beside the triangle-violation subgroup
 figures defining the frozen reference geometry strata, violation outcomes,
 paired peak/trough tests and nulls, and outcome-specific Benjamini-Hochberg
 families. Linked the note from the analysis README.
+
+## Session: 2026-09-01 — Implement fivefold OOF triangle subgroup replay
+
+Refactored the triangle-violation subgroup workflow to protocol 2.0 over the
+552-protein fivefold cohort and four frozen replay families. Added strict
+artifact/digest validation, exact shared and cross-fitted per-protein OOF
+matrices, the edge-model-count stitching diagnostic and reference balance,
+checkpointed reference/layer stages, layer-streaming aggregation with producer
+geometry reproduction, versioned local figures, right-sized Delta launchers,
+and synthetic plus real-artifact loader checks. Production Delta execution and
+resource measurement remain pending.

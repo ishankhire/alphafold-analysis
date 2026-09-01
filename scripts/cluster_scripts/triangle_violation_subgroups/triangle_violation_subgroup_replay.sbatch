@@ -5,9 +5,9 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=8g
-#SBATCH --time=01:20:00
-#SBATCH --constraint="work"
+#SBATCH --mem=12g
+#SBATCH --time=06:00:00
+#SBATCH --constraint="scratch&work"
 #SBATCH --array=0-47%12
 #SBATCH -o slurm-%A_%a.out
 #SBATCH -e slurm-%A_%a.err
@@ -19,7 +19,6 @@ module load python
 source ~/protein_venv/bin/activate
 
 export CSV_ROOT=$HOME/csv_files
-export TRIANGLE_PER_PROTEIN_OLS_ROOT=$CSV_ROOT/per_protein_base256_combined
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK

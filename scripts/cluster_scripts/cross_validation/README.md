@@ -4,9 +4,9 @@ This directory contains the production-ready protocol-2.0 implementation for
 the four fivefold out-of-fold regression families. Stage 7 release hardening
 validated the task mappings, exact shard inventories, aggregation failure
 policy, worker launchers, and replay contract. Simple aggregation launchers are
-also provided for the four completed shard families. No files have been
-deployed and no Delta jobs have been submitted; protocol-2.0 production result
-families do not yet exist.
+also provided for the four completed shard families. The copied canonical
+protocol-2.0 results are under `delta_files/regression_5fold_v1/`; cluster
+deployment and submission remain separate operational steps.
 
 The scientific protocol and output contract remain authoritative in
 `docs/methodology/regression_methodology.md` and
@@ -46,6 +46,9 @@ preserving the repository's `cross_validation/` subdirectory:
 - `scripts/cluster_scripts/cluster_regression_helpers.py`;
 - `scripts/cluster_scripts/regression_output_helpers.py`;
 - `scripts/cluster_scripts/regression_protocol.py`; and
+- every top-level `.py` and `.sbatch` file under
+  `scripts/cluster_scripts/triangle_violation_subgroups/` when running the
+  downstream triangle replay; and
 - `scripts/cluster_scripts/regression_protocol_data/regression_master_split_v1.csv`
   under the sole retained subdirectory
   `regression_protocol_data/regression_master_split_v1.csv`.
@@ -200,7 +203,11 @@ one held-out-fold model. For per-protein OLS, every pair receives exactly the
 one model that withheld its regenerated pair fold. Complete OOF predictions
 must be assembled before triangle or other geometry calculations.
 
-The existing triangle-violation subgroup workflow remains unchanged and uses
-historical protocol-1.0 artifacts. Moving it to this protocol-2.0 replay
-interface, including any change from its current 111-protein evaluation scope,
-is a separate project.
+The versioned downstream implementation is
+`triangle_violation_subgroups_5fold_v1`. Run its preparation job after all four
+family manifests are complete, then its 48-task layer array, then its streaming
+aggregator. It writes beneath
+`$CSV_ROOT/analysis/triangle_violation_subgroups_5fold_v1/` and leaves the
+historical protocol-1.0 result tree unchanged. The per-protein OLS replay also
+reports the separate `1_model`/`2_models`/`3_models` cross-fit stitching
+diagnostic; it is not crossed with the seven reference-geometry systems.

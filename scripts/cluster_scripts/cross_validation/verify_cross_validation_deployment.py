@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 
-# SHA-256 values from the repository deployment inventory on 2026-08-31.
+# SHA-256 values from the repository deployment inventory on 2026-09-01.
 DEPLOYMENT_FILES = {
     "__init__.py": "46a9c0ea5ad6a7db3caddc16707aa2f4ea8e8af8a7e5b7fde9041a2beb12cfff",
     "aggregate_per_protein_ols_base256.py": "4d931d54175283a6ffbb18ba4146dcc98a48d98a23234192b647695fd0b6948a",
@@ -38,6 +38,12 @@ DEPLOYMENT_FILES = {
     "shared_xgboost_base256_fixed_s4_config.json": "e8e77b8a3c88eba4ff428ce5fa0f1edc4215a66e7e422416a45b9b99801d88f5",
     "shared_xgboost_base256_fixed_s4_fold_layer.py": "23134561a826d3318726ac3631a19746efeef339827051a0b0941f5d00a0a063",
     "shared_xgboost_base256_fixed_s4_fold_layer.sbatch": "5dfb470523c35891fa7e37997244ac3b249e640eb28d97a72b09607d704043f7",
+    "prepare_triangle_violation_reference.py": "6e7cf32c0005dc0e73c20ca9475b1cb0fe13ee03760bf64f6f76ad0556a4bacf",
+    "prepare_triangle_violation_reference.sbatch": "f962b333886e04213fcd49687ae5eba106c15fc6d6e45fa65c03e031c2253b5b",
+    "triangle_violation_subgroup_replay.py": "fa54c42161a8461ba97b8e3d3e369db0c6dfdcbbda5df2350262032e42e10f86",
+    "triangle_violation_subgroup_replay.sbatch": "c89577b29c395adc0d279a6661ceb53ca66721f31b31754f52ec2203f9edba90",
+    "aggregate_triangle_violation_subgroups.py": "49509748c37dde3b610539fd5fb1a92eb4ebb212ce877f0f8c34b81088af8a8e",
+    "aggregate_triangle_violation_subgroups.sbatch": "94f65f57c48b4fd864e71443ae73695c4af4158750c74c0e3d250d9412c2a466",
 }
 
 TEST_FILES = {
@@ -49,7 +55,7 @@ TEST_FILES = {
     "tests/test_sequence_gated_ols_base256.py": "839c3b341b3010e4a23d0c4a323636b34ccd3c41a1f8d438d55870450b6f1f29",
     "tests/test_shared_ols_base256.py": "bfdbf7289d00c96ba1f26596fc79c6df15ef39571b5170b95e00fd45e36387be",
     "tests/test_shared_xgboost_base256_fixed_s4.py": "2bf861fc83c287f499f0ca647daa3a8e8043c41ddedb31b699c4ed80ac438f25",
-    "triangle_violation_subgroup_common.py": "f0c8671cc6b1ed7be96d24ebb26f6749ceb4c16dba15a237568c3b13d441b491",
+    "triangle_violation_subgroup_common.py": "7a6acaaac9d4a0474a11568630a0848d3aab228301ad7172e534919bb4d0f821",
 }
 
 METADATA_FILES = {

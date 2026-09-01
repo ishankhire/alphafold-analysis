@@ -48,6 +48,19 @@ Their initial requests are:
 Record MaxRSS from each first successful production aggregation and replace
 these estimates before future broad reruns.
 
+### Fivefold OOF triangle-subgroup replay estimates
+
+The versioned `triangle_violation_subgroups_5fold_v1` replay is implemented but
+has not yet been measured on Delta. Its initial requests follow the approved
+implementation plan and must be replaced with allocation MaxRSS after the first
+representative run of each stage.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| Reference preparation | `12g` | Bounded one-protein reference arrays and chunked digests; no 552-protein measurement yet. |
+| One-layer four-family OOF replay | `12g` | Historical 111-protein replay peaked at 6.15 GiB; the new implementation retains one protein working set plus compact model state. |
+| Streaming aggregation | `16g` | One 56,856-row layer plus compact summaries and producer geometry indexes; no exact measurement yet. |
+
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
 | Shared OLS, `general_base256_combined` | 97.96 GiB | `120g` | Completed base256 jobs peaked at 97.96 GiB for layers 0–23 and 94.63 GiB for layers 24–47. |

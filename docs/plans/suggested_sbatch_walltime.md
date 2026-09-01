@@ -60,6 +60,18 @@ pre-production pilot is not required by this project's locked plan.
 Record allocation-level elapsed time from each first successful production
 aggregation and replace these estimates before future broad reruns.
 
+### Fivefold OOF triangle-subgroup replay estimates
+
+The versioned `triangle_violation_subgroups_5fold_v1` stages are unmeasured.
+Their initial limits are conservative plan estimates and must be updated from
+successful representative allocations before broad reruns.
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| Reference preparation | `06:00:00` | Exact reference enumeration for 552 proteins with per-protein checkpoints. |
+| One-layer four-family OOF replay | `06:00:00` | Approximately five times the historical 111-protein cohort, with all four OOF families replayed sequentially per protein. |
+| Streaming aggregation | `02:00:00` | Layer-bounded validation and derivation of 2,729,088 consolidated rows; unmeasured. |
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much
