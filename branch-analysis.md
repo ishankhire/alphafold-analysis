@@ -1880,4 +1880,5 @@ layerwise paper CSVs from the shared `/work/hdd` result directory into
 
 Added a local plotting entrypoint and generated six individual-protein TM-score
 trajectory figures for FWD and REV Pair transition MLP, MSA MLP, and combined
-TMU plus triangle-attention ablations under the September 2 plot bundle.
+TMU plus triangle-attention ablations under the September 2 plot bundle. The
+figures use gray protein trajectories with a marked black protein-equal mean.
