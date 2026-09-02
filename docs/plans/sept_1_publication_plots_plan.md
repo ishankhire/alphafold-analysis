@@ -52,8 +52,10 @@
   generator.
 - Main PDF/PNG pairs: fivefold mean per-protein R2; reconstruction TM-score;
   combined and five standalone spatial-distance MAE figures; a historical
-  all-triangles peak/trough overlay; and a verbatim copy of the historical
-  all-triangles decodability-consistency figure.
+  normalized-mean all-triangles peak/trough overlay; and a historical
+  normalized-mean all-triangles decodability-consistency figure. The
+  triangle-inequality violation-fraction versions of the latter two figures
+  are retained as supplemental PDF/PNG pairs.
 - Supplemental PDF/PNG pairs: combined and six standalone sequence-separation
   MAE figures; verbatim historical RMS-size, area, relative-slack, and
   angle-shape annotated trajectories; and two uncertainty/heterogeneity

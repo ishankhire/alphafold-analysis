@@ -26,13 +26,14 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_1_publication_plots_v2"
+GENERATOR_VERSION = "sept_1_publication_plots_v3"
 BOOTSTRAP_REPLICATES = 10_000
 BOOTSTRAP_SEED = 20260901
 EXPECTED_PROTEINS = 552
 LAYERS = tuple(range(48))
 SEQUENCE_BINS = ("1", "2-4", "5-9", "10-19", "20-49", "50+")
 SPATIAL_BINS = ("0-5", "5-10", "10-20", "20-40", "40+")
+SELECTED_LAYERS = (0, 10, 20, 30, 40, 47)
 
 DELTA_DIR = PROJECT_ROOT / "delta_files"
 REGRESSION_DIR = DELTA_DIR / "regression_5fold_v1"
@@ -77,6 +78,16 @@ HISTORICAL_NAME_MAP = {
     "per_protein_base256_combined": "per_protein_ols_base256",
     "shared_xgboost_base256_combined": "shared_xgboost_base256_fixed_s4",
     "analysis_1_sequence_gated": "sequence_gated_ols_base256",
+}
+TRIANGLE_METRIC_SPECS = {
+    "violation_fraction": {
+        "title": "Triangle-inequality violation fraction",
+        "ylabel": "Fraction of triangles",
+    },
+    "mean_relative_violation_all": {
+        "title": "Normalized mean triangle violation",
+        "ylabel": "Mean relative violation per triangle",
+    },
 }
 
 
@@ -479,38 +490,124 @@ def load_historical_triangle_values() -> pd.DataFrame:
 
 
 def plot_historical_overlay(
-    summaries: dict[str, pd.DataFrame], candidates: pd.DataFrame,
+    summary: pd.DataFrame,
+    candidates: pd.DataFrame,
+    metric: str,
+    stem: str,
+    directory: Path,
 ) -> tuple[Path, Path]:
-    panels = (
-        ("violation_fraction", "Triangle-inequality violation fraction", "Fraction of triangles"),
-        ("mean_relative_violation_all", "Normalized mean triangle violation", "Mean relative violation per triangle"),
-    )
-    figure, axes = plt.subplots(1, 2, figsize=(15.2, 5.5), sharex=True)
-    for axis, (metric, title, ylabel) in zip(axes, panels):
-        plot_model_lines(axis, summaries[metric])
-        markers = candidates[
-            candidates["category_system"].eq("all_triangles") & candidates["metric"].eq(metric)
-        ]
-        for row in markers.itertuples():
-            analysis = HISTORICAL_NAME_MAP[str(row.analysis_name)]
-            marker = "^" if row.direction == "peak" else "v"
-            supported = bool(row.supported_extremum)
-            axis.scatter(
-                row.layer, row.center_mean, marker=marker, s=48,
-                facecolor=MODEL_SPECS[analysis]["color"] if supported else "white",
-                edgecolor=MODEL_SPECS[analysis]["color"], linewidth=1.2, zorder=5,
-            )
-        style_axis(axis, ylabel)
-        axis.set_title(title)
-    handles, labels = axes[0].get_legend_handles_labels()
+    metric_spec = TRIANGLE_METRIC_SPECS[metric]
+    figure, axis = plt.subplots(figsize=(8.6, 5.6))
+    plot_model_lines(axis, summary)
+    markers = candidates[
+        candidates["category_system"].eq("all_triangles") & candidates["metric"].eq(metric)
+    ]
+    for row in markers.itertuples():
+        analysis = HISTORICAL_NAME_MAP[str(row.analysis_name)]
+        marker = "^" if row.direction == "peak" else "v"
+        supported = bool(row.supported_extremum)
+        axis.scatter(
+            row.layer, row.center_mean, marker=marker, s=48,
+            facecolor=MODEL_SPECS[analysis]["color"] if supported else "white",
+            edgecolor=MODEL_SPECS[analysis]["color"], linewidth=1.2, zorder=5,
+        )
+    style_axis(axis, str(metric_spec["ylabel"]))
+    axis.set_title(str(metric_spec["title"]))
+    handles, labels = axis.get_legend_handles_labels()
     handles.extend([
         Line2D([], [], marker="^", linestyle="None", markerfacecolor="white", markeredgecolor="black", label="Candidate peak/trough"),
         Line2D([], [], marker="o", linestyle="None", markerfacecolor="black", markeredgecolor="black", label="BH-supported"),
     ])
     labels.extend(["Candidate peak/trough", "BH-supported"])
     figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False)
-    figure.tight_layout(rect=(0, 0.12, 1, 1))
-    return save_figure(figure, MAIN_DIR, "main_figure_all_triangles_peak_troughs_overlay")
+    figure.tight_layout(rect=(0, 0.15, 1, 1))
+    return save_figure(figure, directory, stem)
+
+
+def plot_decodability_consistency(
+    points: pd.DataFrame,
+    metric: str,
+    stem: str,
+    directory: Path,
+) -> tuple[Path, Path]:
+    metric_spec = TRIANGLE_METRIC_SPECS[metric]
+    selected = points[
+        points["category_system"].eq("all_triangles")
+        & points["category_label"].eq("all")
+        & points["consistency_metric"].eq(metric)
+    ].copy()
+    expected_rows = len(MODEL_ORDER) * len(LAYERS)
+    if len(selected) != expected_rows:
+        raise ValueError(
+            f"All-triangle decodability metric {metric} has {len(selected)} rows; "
+            f"expected {expected_rows}"
+        )
+    if set(selected["analysis_name"]) != set(HISTORICAL_NAME_MAP):
+        raise ValueError(f"All-triangle decodability metric {metric} has the wrong models")
+
+    figure, axis = plt.subplots(figsize=(8.6, 5.8))
+    label_shifts = (-6, 6, -6, 6)
+    for model_index, historical_name in enumerate(HISTORICAL_NAME_MAP):
+        analysis = HISTORICAL_NAME_MAP[historical_name]
+        spec = MODEL_SPECS[analysis]
+        data = selected[selected["analysis_name"].eq(historical_name)].sort_values("layer")
+        color = spec["color"]
+        axis.plot(
+            data["normalized_r2"], data["consistency_value"],
+            color=color, linestyle=spec["linestyle"], linewidth=2.05,
+            alpha=0.96, label=spec["label"], zorder=2,
+        )
+        axis.scatter(
+            data["normalized_r2"], data["consistency_value"],
+            color=color, s=12, edgecolors="white", linewidths=0.25,
+            alpha=0.9, zorder=3,
+        )
+        milestones = data[data["layer"].isin(SELECTED_LAYERS[1:-1])]
+        axis.scatter(
+            milestones["normalized_r2"], milestones["consistency_value"],
+            color=color, s=34, edgecolors="white", linewidths=0.75, zorder=4,
+        )
+        start = data[data["layer"].eq(0)]
+        end = data[data["layer"].eq(47)]
+        axis.scatter(
+            start["normalized_r2"], start["consistency_value"], color=color,
+            marker="o", s=58, edgecolors="white", linewidths=0.9, zorder=5,
+        )
+        axis.scatter(
+            end["normalized_r2"], end["consistency_value"], color=color,
+            marker="*", s=120, edgecolors="white", linewidths=0.7, zorder=6,
+        )
+        for row in data[data["layer"].isin(SELECTED_LAYERS)].itertuples():
+            is_end = int(row.layer) == 47
+            axis.annotate(
+                str(row.layer),
+                (row.normalized_r2, row.consistency_value),
+                xytext=(-4 if is_end else 4, label_shifts[model_index]),
+                textcoords="offset points", fontsize=6.2,
+                fontweight="semibold" if row.layer in (0, 47) else "normal",
+                color=color, horizontalalignment="right" if is_end else "left",
+                bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.68, "pad": 0.15},
+                clip_on=False, zorder=7,
+            )
+
+    endpoint_handles = [
+        Line2D([], [], color="#4A4A4A", marker="o", linestyle="none", markersize=6, label="Layer 0"),
+        Line2D([], [], color="#4A4A4A", marker="*", linestyle="none", markersize=9, label="Layer 47"),
+    ]
+    handles, labels = axis.get_legend_handles_labels()
+    handles.extend(endpoint_handles)
+    labels.extend(["Layer 0", "Layer 47"])
+    axis.set(
+        title=str(metric_spec["title"]),
+        xlabel="Normalized mean per-protein all-pairs $R^2$",
+        ylabel=str(metric_spec["ylabel"]),
+        xlim=(0, 1),
+    )
+    axis.set_xticks((0, 0.25, 0.5, 0.75, 1))
+    axis.set_ylim(bottom=0)
+    figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False)
+    figure.tight_layout(rect=(0, 0.15, 1, 1))
+    return save_figure(figure, directory, stem)
 
 
 def manifest_row(
@@ -647,10 +744,30 @@ def main() -> None:
     for stem, png, pdf in standalone_subgroup_figures(sequence_summary, SEQUENCE_BINS, "supp_figure_sequence_separation_mae", SUPPLEMENT_DIR, ylabel=subgroup_ylabel, band=subgroup_band):
         manifest.append(manifest_row(stem=stem, section="supplemental", title=f"Sequence-bin {subgroup_ylabel}: {stem.rsplit('_', 1)[-1]}", png=png, pdf=pdf, source_csvs=[source_paths[sequence_raw_key], source_paths["sequence_separation_mae_plot_summary"]], uncertainty=subgroup_uncertainty, cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False, aggregation=subgroup_aggregation, temporary_pooled_mae_placeholder=subgroup_placeholder))
 
-    png, pdf = plot_historical_overlay(historical_summaries, candidates)
-    manifest.append(manifest_row(stem="main_figure_all_triangles_peak_troughs_overlay", section="main", title="Historical all-triangles peak/trough overlay", png=png, pdf=pdf, source_csvs=[source_paths["triangle_peak_trough_values_historical"], source_paths["all_triangles_plot_summary_historical"], source_paths["triangle_candidate_extrema_historical"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
-    png, pdf = copy_pair(HISTORICAL_ANALYSIS / "focused_decodability_consistency", "figure_01_all_triangles_decodability_consistency", MAIN_DIR, "main_figure_all_triangles_decodability_consistency")
-    manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Historical all-triangles decodability consistency", png=png, pdf=pdf, source_csvs=[source_paths["triangle_decodability_consistency_historical"]], uncertainty="none", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=True))
+    normalized_metric = "mean_relative_violation_all"
+    fraction_metric = "violation_fraction"
+    png, pdf = plot_historical_overlay(
+        historical_summaries[normalized_metric], candidates, normalized_metric,
+        "main_figure_all_triangles_peak_troughs_overlay", MAIN_DIR,
+    )
+    manifest.append(manifest_row(stem="main_figure_all_triangles_peak_troughs_overlay", section="main", title="Historical normalized mean all-triangles peak/trough overlay", png=png, pdf=pdf, source_csvs=[source_paths["triangle_peak_trough_values_historical"], source_paths["all_triangles_plot_summary_historical"], source_paths["triangle_candidate_extrema_historical"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
+    png, pdf = plot_decodability_consistency(
+        decodability, normalized_metric,
+        "main_figure_all_triangles_decodability_consistency", MAIN_DIR,
+    )
+    manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Historical normalized mean all-triangles decodability consistency", png=png, pdf=pdf, source_csvs=[source_paths["triangle_decodability_consistency_historical"]], uncertainty="none", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
+
+    fraction_peak_stem = "supp_figure_all_triangles_violation_fraction_peak_troughs_overlay"
+    png, pdf = plot_historical_overlay(
+        historical_summaries[fraction_metric], candidates, fraction_metric,
+        fraction_peak_stem, SUPPLEMENT_DIR,
+    )
+    manifest.append(manifest_row(stem=fraction_peak_stem, section="supplemental", title="Historical all-triangles violation-fraction peak/trough overlay", png=png, pdf=pdf, source_csvs=[source_paths["triangle_peak_trough_values_historical"], source_paths["all_triangles_plot_summary_historical"], source_paths["triangle_candidate_extrema_historical"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
+    fraction_phase_stem = "supp_figure_all_triangles_violation_fraction_decodability_consistency"
+    png, pdf = plot_decodability_consistency(
+        decodability, fraction_metric, fraction_phase_stem, SUPPLEMENT_DIR,
+    )
+    manifest.append(manifest_row(stem=fraction_phase_stem, section="supplemental", title="Historical all-triangles violation-fraction decodability consistency", png=png, pdf=pdf, source_csvs=[source_paths["triangle_decodability_consistency_historical"]], uncertainty="none", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
 
     for stem in (
         "figure_02_rms_size_peak_troughs", "figure_03_area_peak_troughs",
@@ -717,6 +834,8 @@ def main() -> None:
         "111-protein placeholders "
         "in the manifest and source tables. Per-protein OLS measures unseen pairs within seen "
         "proteins; the other families measure unseen proteins. No AA-gated model is included. "
+        "The two all-triangle main figures show normalized mean triangle violation only; "
+        "triangle-inequality violation-fraction counterparts are supplemental. "
         f"{subgroup_readme} See `figure_manifest.csv` and `source_data/` for exact provenance.\n"
     )
     print(f"Generated {len(manifest_frame)} publication figures in {relative(OUTPUT_ROOT)}")

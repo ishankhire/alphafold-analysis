@@ -1805,3 +1805,10 @@ pair-pooled subgroup tables when the per-protein replay CSV is absent. The
 bundle labels the aggregation and temporary status in source data, manifest,
 README, and generation metadata, omits unsupported MAE uncertainty/spaghetti
 variants, and automatically restores the per-protein path once available.
+
+## Session: 2026-09-02 — Separate all-triangle consistency metrics
+
+Changed both all-triangle main figures to show only normalized mean triangle
+violation. Moved the violation-fraction peak/trough trajectory and decodability
+phase plot into separate supplemental PDF/PNG pairs, with updated generator,
+manifest, source-data links, and bundle documentation.
