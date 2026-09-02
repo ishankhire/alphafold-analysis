@@ -1,0 +1,41 @@
+[2026-08-31T05:21:33-05:00] shared OLS fold/layer task starting on cn131.delta.ncsa.illinois.edu
+[2026-08-31T05:22:18-05:00] loaded targets for 50/552 proteins
+[2026-08-31T05:22:21-05:00] loaded targets for 100/552 proteins
+[2026-08-31T05:22:26-05:00] loaded targets for 150/552 proteins
+[2026-08-31T05:22:31-05:00] loaded targets for 200/552 proteins
+[2026-08-31T05:22:36-05:00] loaded targets for 250/552 proteins
+[2026-08-31T05:22:40-05:00] loaded targets for 300/552 proteins
+[2026-08-31T05:22:45-05:00] loaded targets for 350/552 proteins
+[2026-08-31T05:22:48-05:00] loaded targets for 400/552 proteins
+[2026-08-31T05:22:53-05:00] loaded targets for 450/552 proteins
+[2026-08-31T05:22:57-05:00] loaded targets for 500/552 proteins
+[2026-08-31T05:23:02-05:00] loaded targets for 550/552 proteins
+[2026-08-31T05:23:03-05:00] loaded targets for 552/552 proteins
+[2026-08-31T05:23:03-05:00] task 137: loading 442 training feature blocks
+[2026-08-31T05:23:07-05:00] task 137: cached 25/442 training proteins
+[2026-08-31T05:23:11-05:00] task 137: cached 50/442 training proteins
+[2026-08-31T05:23:14-05:00] task 137: cached 75/442 training proteins
+[2026-08-31T05:23:20-05:00] task 137: cached 100/442 training proteins
+[2026-08-31T05:23:23-05:00] task 137: cached 125/442 training proteins
+[2026-08-31T05:23:29-05:00] task 137: cached 150/442 training proteins
+[2026-08-31T05:23:38-05:00] task 137: cached 175/442 training proteins
+[2026-08-31T05:23:44-05:00] task 137: cached 200/442 training proteins
+[2026-08-31T05:23:49-05:00] task 137: cached 225/442 training proteins
+[2026-08-31T05:23:55-05:00] task 137: cached 250/442 training proteins
+[2026-08-31T05:24:01-05:00] task 137: cached 275/442 training proteins
+[2026-08-31T05:24:08-05:00] task 137: cached 300/442 training proteins
+[2026-08-31T05:24:14-05:00] task 137: cached 325/442 training proteins
+[2026-08-31T05:24:20-05:00] task 137: cached 350/442 training proteins
+[2026-08-31T05:24:30-05:00] task 137: cached 375/442 training proteins
+[2026-08-31T05:24:36-05:00] task 137: cached 400/442 training proteins
+[2026-08-31T05:24:46-05:00] task 137: cached 425/442 training proteins
+[2026-08-31T05:24:51-05:00] task 137: cached 442/442 training proteins
+[2026-08-31T05:24:51-05:00] task 137: fitting dense float64 protein-equal OLS
+[2026-08-31T05:30:34-05:00] task 137: streaming 110 held-out proteins
+[2026-08-31T05:30:39-05:00] task 137: evaluated 20/110 held-out proteins
+[2026-08-31T05:30:47-05:00] task 137: evaluated 40/110 held-out proteins
+[2026-08-31T05:30:54-05:00] task 137: evaluated 60/110 held-out proteins
+[2026-08-31T05:31:05-05:00] task 137: evaluated 80/110 held-out proteins
+[2026-08-31T05:31:15-05:00] task 137: evaluated 100/110 held-out proteins
+[2026-08-31T05:31:21-05:00] task 137: evaluated 110/110 held-out proteins
+[2026-08-31T05:31:21-05:00] task 137: complete in 498.7s

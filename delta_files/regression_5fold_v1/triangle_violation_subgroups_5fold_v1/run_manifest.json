@@ -1,0 +1,57 @@
+{
+  "aggregation_completed_at": "2026-09-02T04:55:27.418351+00:00",
+  "aggregation_elapsed_seconds": 444.6285761470208,
+  "aggregation_peak_rss_mb": 902.21875,
+  "analysis_name": "triangle_violation_subgroups_5fold_v1",
+  "analysis_status": "complete",
+  "cohort_digest": "ec65eeb90599de6d2b83c83a27df87efd420b5272fbf436ffaadfaee5025d9ea",
+  "completed_at": "2026-09-01T21:59:28.225054+00:00",
+  "created_at": "2026-09-01T21:59:28.225046+00:00",
+  "cv_protocol_version": "2.0",
+  "elapsed_seconds": 1343.0994700761512,
+  "evaluation_scope": "oof_all_pairs",
+  "files": {
+    "edge_model_count_contrasts.csv": "61871ed81cbdfbb64d54fe3d9f3565cf1ce90d2830ab903af5dfb44894e91b74",
+    "edge_model_count_reference_balance.csv": "d064eb0b4aa01a6e765e87d53cca64805f3aceacab7c763bb46cecbb64ebfacd",
+    "geometry_reproduction_failures.csv": "0f6e08963e343f41fd12c60915bef713294c88bb80ffe30e372f7bc358e88ba3",
+    "geometry_reproduction_summary.csv": "ea1c31e3e25dfa9d5f776aa61021ebc8519753a8fd364a048e4c5e38a8706b48",
+    "length_bin_summary.csv": "0780284564a9e66f7c92fa56262ef31bcc7e073412884f36a6d59c926a159ca6",
+    "metadata/artifact_provenance.json": "0344d543a755e453d73f65d483f0727dc8da8a62302850000271dce66f02ac10",
+    "metadata/cohort.csv": "a7c51239abb808030a1f3e1c1ca0eb78d0d1ac8039321eb6b2c2c77324ec6164",
+    "metadata/preparation_failures.csv": "1ed7122582c92868251caf4918cc47e9e25fe1d6d9f4844f0e111e811c9602c4",
+    "metadata/protein_reference_thresholds.csv": "2342b9b78b9bc527ecc4bdcf838f9e40d0dc32a834139d2de78b7882a5e9f08f",
+    "paired_model_contrasts.csv": "15bf777b23d563dd9dcf74be06ed29eaf5a35ffe78e10d7fb0dc0d1ebbdd9630",
+    "per_protein_triangle_metrics.csv": "badc45f0f8f8765d1cdde59ba5504cb4cffda38d79c256179ab8da1a0b924c7f",
+    "protein_length_effects.csv": "b97b8faddf1a6cfb362707d1b356092c2a3dd5b3e4377a7c0507c11113ba5cda",
+    "runtime.csv": "8a6817fb912ac655fb2d7b560d79e14aa84e7e5e34e2f184d228253f6ac0d0e0",
+    "triangle_metric_summary.csv": "56b7430b75c19784290016a7df4e2caf131e1ab515b3447b9064ea1830c1d3f6"
+  },
+  "n_edge_model_count_reference_balance_rows": 1656,
+  "n_geometry_reproduction_failures": 0,
+  "n_layers": 48,
+  "n_model_families": 4,
+  "n_per_protein_triangle_metric_rows": 2729088,
+  "n_proteins": 552,
+  "n_reference_threshold_rows": 552,
+  "n_triangle_metric_summary_rows": 64272,
+  "outer_fold_digest": "7d9432555ce0df9b141be8a7866061320d55f712b354cf7206ba55de6b9868cf",
+  "output_schema_version": "2.0",
+  "pair_fold_manifest_digest": "ef239c80479ffd1bc4fb98a5660a73e8e714f5be0409bdf1fb8032eb342f8044",
+  "peak_rss_mb": 5640.06640625,
+  "preparation_status": "complete",
+  "reference_definition": {
+    "angle_broad_boundaries_degrees": [
+      88.0,
+      92.0
+    ],
+    "angle_sign_relative_tolerance": 1e-12,
+    "coordinate_source": "final_predicted_pdb_ca",
+    "tertile_intervals": "half_open_values_lt_q1_values_lt_q2_else_upper",
+    "triangle_violation_tolerance_angstrom": 1e-12
+  },
+  "software": {
+    "numpy": "2.4.2",
+    "python": "3.13.5"
+  },
+  "started_at": "2026-09-01T21:37:05.126058+00:00"
+}

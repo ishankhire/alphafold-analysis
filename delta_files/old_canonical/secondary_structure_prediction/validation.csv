@@ -1,0 +1,116 @@
+category,metric,model_family,layer,split,orientation,value,n,threshold,status,details
+artifact,layer_models_load,all,0,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,1,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,2,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,3,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,4,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,5,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,6,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,7,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,8,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,9,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,10,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,11,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,12,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,13,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,14,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,15,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,16,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,17,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,18,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,19,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,20,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,21,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,22,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,23,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,24,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,25,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,26,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,27,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,28,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,29,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,30,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,31,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,32,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,33,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,34,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,35,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,36,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,37,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,38,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,39,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,40,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,41,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,42,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,43,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,44,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,45,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,46,test,,4,111,4,pass,all frozen artifacts load
+artifact,layer_models_load,all,47,test,,4,111,4,pass,all frozen artifacts load
+cohort,eligible_proteins_prepared,all,,all,,552,552,552,pass,no silent cohort loss
+indexing,per_protein_split_digests_valid,per_protein_ols,,all,,552,552,552,pass,seed=42; counts and digests reproduced
+dssp,complete_residue_mappings,,,all,,552,552,552,pass,348 advisory flags retained separately
+helix_score,true_matrix_auroc,true_distance,,test,,0.970483521964463,13019,0.95,pass,H versus E
+helix_gate,score_threshold,true_distance,,development,,1.4503993389951728,18767,0.95,calibrated,empirical 95th percentile of development E scores
+helix_gate,closeness_threshold,true_distance,,development,,4.320055549146173,32959,0.95,calibrated,empirical 95th percentile of development H raw closeness
+sheet_gate,partner_distance_threshold,true_distance,,development,all,7.750654945018784,245105,0.05,calibrated,empirical fifth percentile of development matched-random distances
+beta_true_distance,matched_random_partner_mean,true_distance,,development,parallel,4.834634535867162,3441,,check,true-distance ceiling
+beta_true_distance,matched_random_control_mean,true_distance,,development,parallel,21.694342857029508,68368,,check,true-distance ceiling
+beta_true_distance,matched_random_auroc,true_distance,,development,parallel,0.9955679107536608,71809,,check,true-distance ceiling
+beta_true_distance,matched_random_within_bridge_margin,true_distance,,development,parallel,16.793070671811815,3441,,check,mean control minus partner
+beta_true_distance,matched_random_paired_correct_fraction,true_distance,,development,parallel,1.0,3441,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_1_partner_mean,true_distance,,development,parallel,4.834634535867162,3441,,check,true-distance ceiling
+beta_true_distance,shift_1_control_mean,true_distance,,development,parallel,6.041558615835177,5621,,check,true-distance ceiling
+beta_true_distance,shift_1_auroc,true_distance,,development,parallel,0.9901701289239955,9062,,check,true-distance ceiling
+beta_true_distance,shift_1_within_bridge_margin,true_distance,,development,parallel,1.191268159786115,3441,,check,mean control minus partner
+beta_true_distance,shift_1_paired_correct_fraction,true_distance,,development,parallel,0.994768962510898,3441,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_2_partner_mean,true_distance,,development,parallel,4.834634535867162,3441,,check,true-distance ceiling
+beta_true_distance,shift_2_control_mean,true_distance,,development,parallel,7.961282303328927,4221,,check,true-distance ceiling
+beta_true_distance,shift_2_auroc,true_distance,,development,parallel,0.9994861771462639,7662,,check,true-distance ceiling
+beta_true_distance,shift_2_within_bridge_margin,true_distance,,development,parallel,3.109665066143208,3256,,check,mean control minus partner
+beta_true_distance,shift_2_paired_correct_fraction,true_distance,,development,parallel,0.9993857493857494,3256,,check,fraction of positive within-bridge margins
+beta_true_distance,matched_random_partner_mean,true_distance,,test,parallel,4.824176667168399,919,,check,true-distance ceiling
+beta_true_distance,matched_random_control_mean,true_distance,,test,parallel,20.782871035457926,18335,,check,true-distance ceiling
+beta_true_distance,matched_random_auroc,true_distance,,test,parallel,0.9944332491684651,19254,,check,true-distance ceiling
+beta_true_distance,matched_random_within_bridge_margin,true_distance,,test,parallel,15.939015407402652,919,,check,mean control minus partner
+beta_true_distance,matched_random_paired_correct_fraction,true_distance,,test,parallel,1.0,919,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_1_partner_mean,true_distance,,test,parallel,4.824176667168399,919,,check,true-distance ceiling
+beta_true_distance,shift_1_control_mean,true_distance,,test,parallel,6.04229232325383,1512,,check,true-distance ceiling
+beta_true_distance,shift_1_auroc,true_distance,,test,parallel,0.9929875468504413,2431,,check,true-distance ceiling
+beta_true_distance,shift_1_within_bridge_margin,true_distance,,test,parallel,1.205026217464455,919,,check,mean control minus partner
+beta_true_distance,shift_1_paired_correct_fraction,true_distance,,test,parallel,0.9978237214363439,919,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_2_partner_mean,true_distance,,test,parallel,4.824176667168399,919,,check,true-distance ceiling
+beta_true_distance,shift_2_control_mean,true_distance,,test,parallel,7.950774716128941,1132,,check,true-distance ceiling
+beta_true_distance,shift_2_auroc,true_distance,,test,parallel,0.9996904762820241,2051,,check,true-distance ceiling
+beta_true_distance,shift_2_within_bridge_margin,true_distance,,test,parallel,3.107218781041768,878,,check,mean control minus partner
+beta_true_distance,shift_2_paired_correct_fraction,true_distance,,test,parallel,1.0,878,,check,fraction of positive within-bridge margins
+beta_true_distance,matched_random_partner_mean,true_distance,,development,antiparallel,4.874459329809052,8916,,check,true-distance ceiling
+beta_true_distance,matched_random_control_mean,true_distance,,development,antiparallel,20.331832093604685,176737,,check,true-distance ceiling
+beta_true_distance,matched_random_auroc,true_distance,,development,antiparallel,0.995784546000076,185653,,check,true-distance ceiling
+beta_true_distance,matched_random_within_bridge_margin,true_distance,,development,antiparallel,15.42144033160825,8916,,check,mean control minus partner
+beta_true_distance,matched_random_paired_correct_fraction,true_distance,,development,antiparallel,1.0,8916,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_1_partner_mean,true_distance,,development,antiparallel,4.874459329809052,8916,,check,true-distance ceiling
+beta_true_distance,shift_1_control_mean,true_distance,,development,antiparallel,6.040825831074205,15080,,check,true-distance ceiling
+beta_true_distance,shift_1_auroc,true_distance,,development,antiparallel,0.978896386908523,23996,,check,true-distance ceiling
+beta_true_distance,shift_1_within_bridge_margin,true_distance,,development,antiparallel,1.1573049158391886,8916,,check,mean control minus partner
+beta_true_distance,shift_1_paired_correct_fraction,true_distance,,development,antiparallel,0.9945042620008973,8916,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_2_partner_mean,true_distance,,development,antiparallel,4.874459329809052,8916,,check,true-distance ceiling
+beta_true_distance,shift_2_control_mean,true_distance,,development,antiparallel,8.025498885498402,12057,,check,true-distance ceiling
+beta_true_distance,shift_2_auroc,true_distance,,development,antiparallel,0.9993156943727701,20973,,check,true-distance ceiling
+beta_true_distance,shift_2_within_bridge_margin,true_distance,,development,antiparallel,3.1245582243488212,8374,,check,mean control minus partner
+beta_true_distance,shift_2_paired_correct_fraction,true_distance,,development,antiparallel,0.99964174826845,8374,,check,fraction of positive within-bridge margins
+beta_true_distance,matched_random_partner_mean,true_distance,,test,antiparallel,4.865814831979111,2248,,check,true-distance ceiling
+beta_true_distance,matched_random_control_mean,true_distance,,test,antiparallel,20.59395127003195,44351,,check,true-distance ceiling
+beta_true_distance,matched_random_auroc,true_distance,,test,antiparallel,0.9958821696638536,46599,,check,true-distance ceiling
+beta_true_distance,matched_random_within_bridge_margin,true_distance,,test,antiparallel,15.660785237016961,2248,,check,mean control minus partner
+beta_true_distance,matched_random_paired_correct_fraction,true_distance,,test,antiparallel,1.0,2248,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_1_partner_mean,true_distance,,test,antiparallel,4.865814831979111,2248,,check,true-distance ceiling
+beta_true_distance,shift_1_control_mean,true_distance,,test,antiparallel,6.042333347813918,3798,,check,true-distance ceiling
+beta_true_distance,shift_1_auroc,true_distance,,test,antiparallel,0.9765009070141806,6046,,check,true-distance ceiling
+beta_true_distance,shift_1_within_bridge_margin,true_distance,,test,antiparallel,1.1699044298689671,2248,,check,mean control minus partner
+beta_true_distance,shift_1_paired_correct_fraction,true_distance,,test,antiparallel,0.994661921708185,2248,,check,fraction of positive within-bridge margins
+beta_true_distance,shift_2_partner_mean,true_distance,,test,antiparallel,4.865814831979111,2248,,check,true-distance ceiling
+beta_true_distance,shift_2_control_mean,true_distance,,test,antiparallel,8.071490065011606,3032,,check,true-distance ceiling
+beta_true_distance,shift_2_auroc,true_distance,,test,antiparallel,0.9994518727875379,5280,,check,true-distance ceiling
+beta_true_distance,shift_2_within_bridge_margin,true_distance,,test,antiparallel,3.171292825911733,2108,,check,mean control minus partner
+beta_true_distance,shift_2_paired_correct_fraction,true_distance,,test,antiparallel,1.0,2108,,check,fraction of positive within-bridge margins

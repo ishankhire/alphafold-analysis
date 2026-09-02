@@ -1,0 +1,46 @@
+[2026-08-31T14:15:54-05:00] sequence-gated OLS fold/layer task starting on cn012.delta.ncsa.illinois.edu
+[2026-08-31T14:16:58-05:00] loaded targets for 50/552 proteins
+[2026-08-31T14:17:00-05:00] loaded targets for 100/552 proteins
+[2026-08-31T14:17:02-05:00] loaded targets for 150/552 proteins
+[2026-08-31T14:17:04-05:00] loaded targets for 200/552 proteins
+[2026-08-31T14:17:06-05:00] loaded targets for 250/552 proteins
+[2026-08-31T14:17:08-05:00] loaded targets for 300/552 proteins
+[2026-08-31T14:17:11-05:00] loaded targets for 350/552 proteins
+[2026-08-31T14:17:14-05:00] loaded targets for 400/552 proteins
+[2026-08-31T14:17:17-05:00] loaded targets for 450/552 proteins
+[2026-08-31T14:17:20-05:00] loaded targets for 500/552 proteins
+[2026-08-31T14:17:24-05:00] loaded targets for 550/552 proteins
+[2026-08-31T14:17:24-05:00] loaded targets for 552/552 proteins
+[2026-08-31T14:17:24-05:00] task 52: loading 441 training feature blocks
+[2026-08-31T14:17:30-05:00] task 52: cached 25/441 training proteins
+[2026-08-31T14:17:37-05:00] task 52: cached 50/441 training proteins
+[2026-08-31T14:17:42-05:00] task 52: cached 75/441 training proteins
+[2026-08-31T14:17:50-05:00] task 52: cached 100/441 training proteins
+[2026-08-31T14:17:56-05:00] task 52: cached 125/441 training proteins
+[2026-08-31T14:18:05-05:00] task 52: cached 150/441 training proteins
+[2026-08-31T14:18:18-05:00] task 52: cached 175/441 training proteins
+[2026-08-31T14:18:26-05:00] task 52: cached 200/441 training proteins
+[2026-08-31T14:18:33-05:00] task 52: cached 225/441 training proteins
+[2026-08-31T14:18:41-05:00] task 52: cached 250/441 training proteins
+[2026-08-31T14:18:50-05:00] task 52: cached 275/441 training proteins
+[2026-08-31T14:18:57-05:00] task 52: cached 300/441 training proteins
+[2026-08-31T14:19:05-05:00] task 52: cached 325/441 training proteins
+[2026-08-31T14:19:14-05:00] task 52: cached 350/441 training proteins
+[2026-08-31T14:19:25-05:00] task 52: cached 375/441 training proteins
+[2026-08-31T14:19:35-05:00] task 52: cached 400/441 training proteins
+[2026-08-31T14:19:49-05:00] task 52: cached 425/441 training proteins
+[2026-08-31T14:19:56-05:00] task 52: cached 441/441 training proteins
+[2026-08-31T14:19:56-05:00] task 52: fitting gate 1/6 (1)
+[2026-08-31T14:19:58-05:00] task 52: fitting gate 2/6 (2-4)
+[2026-08-31T14:20:03-05:00] task 52: fitting gate 3/6 (5-9)
+[2026-08-31T14:20:11-05:00] task 52: fitting gate 4/6 (10-19)
+[2026-08-31T14:20:27-05:00] task 52: fitting gate 5/6 (20-49)
+[2026-08-31T14:21:16-05:00] task 52: fitting gate 6/6 (50+)
+[2026-08-31T14:25:10-05:00] task 52: streaming 111 held-out proteins
+[2026-08-31T14:25:14-05:00] task 52: evaluated 20/111 held-out proteins
+[2026-08-31T14:25:22-05:00] task 52: evaluated 40/111 held-out proteins
+[2026-08-31T14:25:29-05:00] task 52: evaluated 60/111 held-out proteins
+[2026-08-31T14:25:37-05:00] task 52: evaluated 80/111 held-out proteins
+[2026-08-31T14:25:48-05:00] task 52: evaluated 100/111 held-out proteins
+[2026-08-31T14:25:56-05:00] task 52: evaluated 111/111 held-out proteins
+[2026-08-31T14:25:56-05:00] task 52: complete in 511.8s

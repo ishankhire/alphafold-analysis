@@ -370,10 +370,7 @@ S4/5k/700 was selected through preliminary work on this same cohort. The source
 decision table is
 `delta_files/xgboost_hyperparameter_search/shared/winner_cap_sweep/cross_layer_selection_table.csv`;
 its path and digest must be retained in provenance. The preliminary artifacts
-also exposed the historical test proteins. Consequently, the fivefold estimate
-is neither nested nor fully selection-independent. No new selection script or
-inner CV loop is part of this protocol; a selection-independent claim would
-require a separately approved nested-CV analysis or external holdout.
+also exposed the historical test proteins.
 
 ## Layer comparisons and selection
 

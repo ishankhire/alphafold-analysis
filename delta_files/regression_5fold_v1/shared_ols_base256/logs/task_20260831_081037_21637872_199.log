@@ -1,0 +1,41 @@
+[2026-08-31T08:10:37-05:00] shared OLS fold/layer task starting on cn074.delta.ncsa.illinois.edu
+[2026-08-31T08:11:11-05:00] loaded targets for 50/552 proteins
+[2026-08-31T08:11:12-05:00] loaded targets for 100/552 proteins
+[2026-08-31T08:11:13-05:00] loaded targets for 150/552 proteins
+[2026-08-31T08:11:14-05:00] loaded targets for 200/552 proteins
+[2026-08-31T08:11:16-05:00] loaded targets for 250/552 proteins
+[2026-08-31T08:11:16-05:00] loaded targets for 300/552 proteins
+[2026-08-31T08:11:18-05:00] loaded targets for 350/552 proteins
+[2026-08-31T08:11:19-05:00] loaded targets for 400/552 proteins
+[2026-08-31T08:11:21-05:00] loaded targets for 450/552 proteins
+[2026-08-31T08:11:22-05:00] loaded targets for 500/552 proteins
+[2026-08-31T08:11:24-05:00] loaded targets for 550/552 proteins
+[2026-08-31T08:11:24-05:00] loaded targets for 552/552 proteins
+[2026-08-31T08:11:24-05:00] task 199: loading 442 training feature blocks
+[2026-08-31T08:11:27-05:00] task 199: cached 25/442 training proteins
+[2026-08-31T08:11:30-05:00] task 199: cached 50/442 training proteins
+[2026-08-31T08:11:33-05:00] task 199: cached 75/442 training proteins
+[2026-08-31T08:11:39-05:00] task 199: cached 100/442 training proteins
+[2026-08-31T08:11:44-05:00] task 199: cached 125/442 training proteins
+[2026-08-31T08:11:51-05:00] task 199: cached 150/442 training proteins
+[2026-08-31T08:11:59-05:00] task 199: cached 175/442 training proteins
+[2026-08-31T08:12:04-05:00] task 199: cached 200/442 training proteins
+[2026-08-31T08:12:09-05:00] task 199: cached 225/442 training proteins
+[2026-08-31T08:12:15-05:00] task 199: cached 250/442 training proteins
+[2026-08-31T08:12:20-05:00] task 199: cached 275/442 training proteins
+[2026-08-31T08:12:26-05:00] task 199: cached 300/442 training proteins
+[2026-08-31T08:12:31-05:00] task 199: cached 325/442 training proteins
+[2026-08-31T08:12:39-05:00] task 199: cached 350/442 training proteins
+[2026-08-31T08:12:45-05:00] task 199: cached 375/442 training proteins
+[2026-08-31T08:12:53-05:00] task 199: cached 400/442 training proteins
+[2026-08-31T08:13:04-05:00] task 199: cached 425/442 training proteins
+[2026-08-31T08:13:10-05:00] task 199: cached 442/442 training proteins
+[2026-08-31T08:13:10-05:00] task 199: fitting dense float64 protein-equal OLS
+[2026-08-31T08:19:15-05:00] task 199: streaming 110 held-out proteins
+[2026-08-31T08:19:19-05:00] task 199: evaluated 20/110 held-out proteins
+[2026-08-31T08:19:25-05:00] task 199: evaluated 40/110 held-out proteins
+[2026-08-31T08:19:33-05:00] task 199: evaluated 60/110 held-out proteins
+[2026-08-31T08:19:41-05:00] task 199: evaluated 80/110 held-out proteins
+[2026-08-31T08:19:52-05:00] task 199: evaluated 100/110 held-out proteins
+[2026-08-31T08:19:57-05:00] task 199: evaluated 110/110 held-out proteins
+[2026-08-31T08:19:57-05:00] task 199: complete in 512.8s

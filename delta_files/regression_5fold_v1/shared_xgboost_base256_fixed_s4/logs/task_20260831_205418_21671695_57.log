@@ -1,0 +1,41 @@
+[2026-08-31T20:54:18-05:00] fixed S4 shared XGBoost fold/layer task starting on cn061.delta.ncsa.illinois.edu
+[2026-08-31T20:54:48-05:00] loaded targets for 50/441 requested proteins
+[2026-08-31T20:54:49-05:00] loaded targets for 100/441 requested proteins
+[2026-08-31T20:54:50-05:00] loaded targets for 150/441 requested proteins
+[2026-08-31T20:54:52-05:00] loaded targets for 200/441 requested proteins
+[2026-08-31T20:54:53-05:00] loaded targets for 250/441 requested proteins
+[2026-08-31T20:54:54-05:00] loaded targets for 300/441 requested proteins
+[2026-08-31T20:54:55-05:00] loaded targets for 350/441 requested proteins
+[2026-08-31T20:54:57-05:00] loaded targets for 400/441 requested proteins
+[2026-08-31T20:54:58-05:00] loaded targets for 441/441 requested proteins
+[2026-08-31T20:54:58-05:00] task 57: materializing deterministic 5k training samples
+[2026-08-31T20:55:02-05:00] materialized samples for 25/441 training proteins
+[2026-08-31T20:55:07-05:00] materialized samples for 50/441 training proteins
+[2026-08-31T20:55:11-05:00] materialized samples for 75/441 training proteins
+[2026-08-31T20:55:15-05:00] materialized samples for 100/441 training proteins
+[2026-08-31T20:55:19-05:00] materialized samples for 125/441 training proteins
+[2026-08-31T20:55:24-05:00] materialized samples for 150/441 training proteins
+[2026-08-31T20:55:32-05:00] materialized samples for 175/441 training proteins
+[2026-08-31T20:55:38-05:00] materialized samples for 200/441 training proteins
+[2026-08-31T20:55:43-05:00] materialized samples for 225/441 training proteins
+[2026-08-31T20:55:49-05:00] materialized samples for 250/441 training proteins
+[2026-08-31T20:55:55-05:00] materialized samples for 275/441 training proteins
+[2026-08-31T20:56:00-05:00] materialized samples for 300/441 training proteins
+[2026-08-31T20:56:07-05:00] materialized samples for 325/441 training proteins
+[2026-08-31T20:56:13-05:00] materialized samples for 350/441 training proteins
+[2026-08-31T20:56:22-05:00] materialized samples for 375/441 training proteins
+[2026-08-31T20:56:30-05:00] materialized samples for 400/441 training proteins
+[2026-08-31T20:56:39-05:00] materialized samples for 425/441 training proteins
+[2026-08-31T20:56:45-05:00] materialized samples for 441/441 training proteins
+[2026-08-31T20:56:46-05:00] task 57: fitting S4 for exactly 700 rounds
+[2026-08-31T20:59:49-05:00] task 57: loading held-out fold after booster checkpoint
+[2026-08-31T20:59:50-05:00] loaded targets for 50/111 requested proteins
+[2026-08-31T20:59:52-05:00] loaded targets for 100/111 requested proteins
+[2026-08-31T20:59:52-05:00] loaded targets for 111/111 requested proteins
+[2026-08-31T21:00:00-05:00] task 57: evaluated 20/111 held-out proteins
+[2026-08-31T21:00:09-05:00] task 57: evaluated 40/111 held-out proteins
+[2026-08-31T21:00:18-05:00] task 57: evaluated 60/111 held-out proteins
+[2026-08-31T21:00:25-05:00] task 57: evaluated 80/111 held-out proteins
+[2026-08-31T21:00:37-05:00] task 57: evaluated 100/111 held-out proteins
+[2026-08-31T21:00:44-05:00] task 57: evaluated 111/111 held-out proteins
+[2026-08-31T21:00:44-05:00] task 57: complete in 345.6s

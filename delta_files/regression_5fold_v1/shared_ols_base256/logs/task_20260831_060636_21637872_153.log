@@ -1,0 +1,41 @@
+[2026-08-31T06:06:36-05:00] shared OLS fold/layer task starting on cn131.delta.ncsa.illinois.edu
+[2026-08-31T06:07:11-05:00] loaded targets for 50/552 proteins
+[2026-08-31T06:07:13-05:00] loaded targets for 100/552 proteins
+[2026-08-31T06:07:15-05:00] loaded targets for 150/552 proteins
+[2026-08-31T06:07:19-05:00] loaded targets for 200/552 proteins
+[2026-08-31T06:07:21-05:00] loaded targets for 250/552 proteins
+[2026-08-31T06:07:24-05:00] loaded targets for 300/552 proteins
+[2026-08-31T06:07:27-05:00] loaded targets for 350/552 proteins
+[2026-08-31T06:07:30-05:00] loaded targets for 400/552 proteins
+[2026-08-31T06:07:33-05:00] loaded targets for 450/552 proteins
+[2026-08-31T06:07:36-05:00] loaded targets for 500/552 proteins
+[2026-08-31T06:07:39-05:00] loaded targets for 550/552 proteins
+[2026-08-31T06:07:39-05:00] loaded targets for 552/552 proteins
+[2026-08-31T06:07:39-05:00] task 153: loading 442 training feature blocks
+[2026-08-31T06:07:42-05:00] task 153: cached 25/442 training proteins
+[2026-08-31T06:07:47-05:00] task 153: cached 50/442 training proteins
+[2026-08-31T06:07:50-05:00] task 153: cached 75/442 training proteins
+[2026-08-31T06:07:55-05:00] task 153: cached 100/442 training proteins
+[2026-08-31T06:08:00-05:00] task 153: cached 125/442 training proteins
+[2026-08-31T06:08:06-05:00] task 153: cached 150/442 training proteins
+[2026-08-31T06:08:15-05:00] task 153: cached 175/442 training proteins
+[2026-08-31T06:08:20-05:00] task 153: cached 200/442 training proteins
+[2026-08-31T06:08:25-05:00] task 153: cached 225/442 training proteins
+[2026-08-31T06:08:30-05:00] task 153: cached 250/442 training proteins
+[2026-08-31T06:08:34-05:00] task 153: cached 275/442 training proteins
+[2026-08-31T06:08:41-05:00] task 153: cached 300/442 training proteins
+[2026-08-31T06:08:47-05:00] task 153: cached 325/442 training proteins
+[2026-08-31T06:08:54-05:00] task 153: cached 350/442 training proteins
+[2026-08-31T06:09:02-05:00] task 153: cached 375/442 training proteins
+[2026-08-31T06:09:09-05:00] task 153: cached 400/442 training proteins
+[2026-08-31T06:09:16-05:00] task 153: cached 425/442 training proteins
+[2026-08-31T06:09:22-05:00] task 153: cached 442/442 training proteins
+[2026-08-31T06:09:22-05:00] task 153: fitting dense float64 protein-equal OLS
+[2026-08-31T06:15:16-05:00] task 153: streaming 110 held-out proteins
+[2026-08-31T06:15:20-05:00] task 153: evaluated 20/110 held-out proteins
+[2026-08-31T06:15:29-05:00] task 153: evaluated 40/110 held-out proteins
+[2026-08-31T06:15:36-05:00] task 153: evaluated 60/110 held-out proteins
+[2026-08-31T06:15:46-05:00] task 153: evaluated 80/110 held-out proteins
+[2026-08-31T06:15:52-05:00] task 153: evaluated 100/110 held-out proteins
+[2026-08-31T06:15:58-05:00] task 153: evaluated 110/110 held-out proteins
+[2026-08-31T06:15:58-05:00] task 153: complete in 499.1s

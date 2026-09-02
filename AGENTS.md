@@ -137,12 +137,16 @@ against requested walltime and shorter accurate jobs can backfill sooner.
 - Record important codebase changes very briefly in `branch-analysis.md`; omit
   minor edits.
 
+## Overleaf
+
+Before editing anything inside the overleaf folder, please check the AGENTS.md located inside overleaf/
+
 ## Git workflow
 
 After every significant change:
 
 ```bash
-git add -A
+git add <changed-files>
 git commit -m "<descriptive message>"
 git push
 ```

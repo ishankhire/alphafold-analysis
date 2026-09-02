@@ -1,0 +1,19 @@
+{
+  "analysis_name": "pair_representation_triangle_dominance",
+  "base_seed": 20260827,
+  "cohort_csv_sha256": "c1e5f2aa762e0184167c170c1b94f86094e2ded08f035c53b1dfdf4746dd5706",
+  "cohort_digest": "67da7698dcce547f2c6957c7f53dd30276606356fa8443c6bb47a3f45598b680",
+  "configuration_digest": "a0ef9d8f43ac63a37a48df94b309725e0d32655869e77f76124ab6a69c23ac22",
+  "numpy_version": "2.4.2",
+  "protein_count": 154,
+  "python_version": "3.13.5",
+  "rank_order": "ascending_within_protein",
+  "rng_algorithm": "numpy_Generator_PCG64",
+  "sample_cap": 20000,
+  "sample_manifest_sha256": "02c5573fed6b87e748628c726d739b503acc066a2d3fc3ac8f2fdb22db67063a",
+  "sample_semantic_digest": "434b145acdd26bf40bc3d172c0ee61f76ff93f275d661decea294c57fc386afc",
+  "sample_version": "pair_triangle_samples_v1",
+  "total_sampled_triangles": 3065984,
+  "triangle_samples_npz_sha256": "5e899d35be6715915eb69cc55edbf47e4337b4432ca74ea3c036e975aeb9245d",
+  "unranking_algorithm": "colex_combinadic_v1"
+}

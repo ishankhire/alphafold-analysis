@@ -1,0 +1,46 @@
+[2026-08-31T18:11:31-05:00] sequence-gated OLS fold/layer task starting on cn109.delta.ncsa.illinois.edu
+[2026-08-31T18:12:12-05:00] loaded targets for 50/552 proteins
+[2026-08-31T18:12:13-05:00] loaded targets for 100/552 proteins
+[2026-08-31T18:12:15-05:00] loaded targets for 150/552 proteins
+[2026-08-31T18:12:17-05:00] loaded targets for 200/552 proteins
+[2026-08-31T18:12:18-05:00] loaded targets for 250/552 proteins
+[2026-08-31T18:12:19-05:00] loaded targets for 300/552 proteins
+[2026-08-31T18:12:21-05:00] loaded targets for 350/552 proteins
+[2026-08-31T18:12:22-05:00] loaded targets for 400/552 proteins
+[2026-08-31T18:12:24-05:00] loaded targets for 450/552 proteins
+[2026-08-31T18:12:26-05:00] loaded targets for 500/552 proteins
+[2026-08-31T18:12:27-05:00] loaded targets for 550/552 proteins
+[2026-08-31T18:12:27-05:00] loaded targets for 552/552 proteins
+[2026-08-31T18:12:27-05:00] task 208: loading 442 training feature blocks
+[2026-08-31T18:12:30-05:00] task 208: cached 25/442 training proteins
+[2026-08-31T18:12:34-05:00] task 208: cached 50/442 training proteins
+[2026-08-31T18:12:38-05:00] task 208: cached 75/442 training proteins
+[2026-08-31T18:12:45-05:00] task 208: cached 100/442 training proteins
+[2026-08-31T18:12:49-05:00] task 208: cached 125/442 training proteins
+[2026-08-31T18:12:57-05:00] task 208: cached 150/442 training proteins
+[2026-08-31T18:13:08-05:00] task 208: cached 175/442 training proteins
+[2026-08-31T18:13:14-05:00] task 208: cached 200/442 training proteins
+[2026-08-31T18:13:20-05:00] task 208: cached 225/442 training proteins
+[2026-08-31T18:13:27-05:00] task 208: cached 250/442 training proteins
+[2026-08-31T18:13:32-05:00] task 208: cached 275/442 training proteins
+[2026-08-31T18:13:39-05:00] task 208: cached 300/442 training proteins
+[2026-08-31T18:13:45-05:00] task 208: cached 325/442 training proteins
+[2026-08-31T18:13:53-05:00] task 208: cached 350/442 training proteins
+[2026-08-31T18:14:00-05:00] task 208: cached 375/442 training proteins
+[2026-08-31T18:14:10-05:00] task 208: cached 400/442 training proteins
+[2026-08-31T18:14:19-05:00] task 208: cached 425/442 training proteins
+[2026-08-31T18:14:26-05:00] task 208: cached 442/442 training proteins
+[2026-08-31T18:14:26-05:00] task 208: fitting gate 1/6 (1)
+[2026-08-31T18:14:28-05:00] task 208: fitting gate 2/6 (2-4)
+[2026-08-31T18:14:32-05:00] task 208: fitting gate 3/6 (5-9)
+[2026-08-31T18:14:40-05:00] task 208: fitting gate 4/6 (10-19)
+[2026-08-31T18:14:57-05:00] task 208: fitting gate 5/6 (20-49)
+[2026-08-31T18:15:47-05:00] task 208: fitting gate 6/6 (50+)
+[2026-08-31T18:18:52-05:00] task 208: streaming 110 held-out proteins
+[2026-08-31T18:18:57-05:00] task 208: evaluated 20/110 held-out proteins
+[2026-08-31T18:19:02-05:00] task 208: evaluated 40/110 held-out proteins
+[2026-08-31T18:19:12-05:00] task 208: evaluated 60/110 held-out proteins
+[2026-08-31T18:19:23-05:00] task 208: evaluated 80/110 held-out proteins
+[2026-08-31T18:19:35-05:00] task 208: evaluated 100/110 held-out proteins
+[2026-08-31T18:19:41-05:00] task 208: evaluated 110/110 held-out proteins
+[2026-08-31T18:19:41-05:00] task 208: complete in 433.4s

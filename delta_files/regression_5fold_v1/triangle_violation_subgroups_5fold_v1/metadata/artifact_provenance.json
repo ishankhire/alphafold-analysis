@@ -1,0 +1,95 @@
+{
+  "artifact_provenance_version": "triangle_violation_subgroups_5fold_v1_v1",
+  "created_at": "2026-09-01T21:37:07.805921+00:00",
+  "metadata": {
+    "cohort_digest": "ec65eeb90599de6d2b83c83a27df87efd420b5272fbf436ffaadfaee5025d9ea",
+    "construction_parameters": {
+      "canonical_pair_order": "np.tril_indices(n_residues, k=-1)",
+      "fold_0_source": "historical_master_role=test",
+      "n_outer_folds": 5,
+      "n_pair_folds": 5,
+      "outer_fold_algorithm": "numpy_rng44_length_bin_round_robin_v1",
+      "outer_fold_seed": 44,
+      "pair_fold_algorithm": "canonical_lower_triangle_numpy_shuffle_array_split_v1",
+      "pair_fold_base_seed": 42
+    },
+    "cv_protocol_version": "2.0",
+    "master_manifest_digest": "5561b786682d4408612c76d44c14ff6cf760291c2616159d3bea4cf13a149440",
+    "outer_fold_digest": "7d9432555ce0df9b141be8a7866061320d55f712b354cf7206ba55de6b9868cf",
+    "pair_fold_manifest_digest": "ef239c80479ffd1bc4fb98a5660a73e8e714f5be0409bdf1fb8032eb342f8044",
+    "per_fold_length_bin_counts": {
+      "0": {
+        "0": 23,
+        "1": 22,
+        "2": 22,
+        "3": 22,
+        "4": 22
+      },
+      "1": {
+        "0": 22,
+        "1": 22,
+        "2": 23,
+        "3": 22,
+        "4": 22
+      },
+      "2": {
+        "0": 22,
+        "1": 22,
+        "2": 22,
+        "3": 22,
+        "4": 22
+      },
+      "3": {
+        "0": 22,
+        "1": 22,
+        "2": 22,
+        "3": 22,
+        "4": 22
+      },
+      "4": {
+        "0": 22,
+        "1": 22,
+        "2": 22,
+        "3": 22,
+        "4": 22
+      }
+    },
+    "per_fold_protein_counts": {
+      "0": 111,
+      "1": 111,
+      "2": 110,
+      "3": 110,
+      "4": 110
+    }
+  },
+  "producers": {
+    "per_protein_ols_base256": {
+      "configuration_digest": "eb94e4905999eb2c3a679769d9398623f6e0ae684ed7d825cf820a04d7270ad0",
+      "n_replay_rows": 132480,
+      "replay_index_sha256": "b4960a9c92b4092fb40e98644753c2dd2ab0c3635e3b85614611038eeb8c4d56",
+      "root": "/u/ikhire/csv_files/regression_5fold_v1/per_protein_ols_base256",
+      "run_manifest_sha256": "e27907daf2937f2bddc5f55c59711524ba142b93ab005f0cc9fc9821cb74a3cc"
+    },
+    "sequence_gated_ols_base256": {
+      "configuration_digest": "a7b378d50fa79ed158c161d38b3e55d6574982e771b3a1cf6ac652a8d5c214ae",
+      "n_replay_rows": 1440,
+      "replay_index_sha256": "9687e7962e9537e1cd51fa4d7ec5afe7b9b0b4e349a43ecdc6339eb461192df2",
+      "root": "/u/ikhire/csv_files/regression_5fold_v1/sequence_gated_ols_base256",
+      "run_manifest_sha256": "aa1d8807529ebbf1e7ec1a18162ff54fd53f09d41c7d980f8648c194bc8983d7"
+    },
+    "shared_ols_base256": {
+      "configuration_digest": "7946c4317a46aa2f20f8202c43b391e1c68313a30125492857d111cae1510721",
+      "n_replay_rows": 240,
+      "replay_index_sha256": "f946a4e173fa4f194f4c5f48b137f838c43f63108affc860a44d45fcdd33a296",
+      "root": "/u/ikhire/csv_files/regression_5fold_v1/shared_ols_base256",
+      "run_manifest_sha256": "f73c343a194457b4a43c26b5b442df34a6958dd6e486c5651e86dc5d36c48a06"
+    },
+    "shared_xgboost_base256_fixed_s4": {
+      "configuration_digest": "fde4313c4298f23dca61730e526912f7fb6a4db2232fa564ea92c63ec5aa2ad6",
+      "n_replay_rows": 240,
+      "replay_index_sha256": "3d75d625078cf89db877aafd61f6d299de95c0ba8657717b717c14f4e07ed944",
+      "root": "/u/ikhire/csv_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4",
+      "run_manifest_sha256": "34c228f8b9955367f3ef4b569b8eba557a8b3072504733437a5be3520f107123"
+    }
+  }
+}

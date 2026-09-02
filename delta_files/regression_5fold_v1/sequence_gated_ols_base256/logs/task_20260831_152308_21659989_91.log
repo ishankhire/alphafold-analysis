@@ -1,0 +1,46 @@
+[2026-08-31T15:23:08-05:00] sequence-gated OLS fold/layer task starting on cn042.delta.ncsa.illinois.edu
+[2026-08-31T15:23:38-05:00] loaded targets for 50/552 proteins
+[2026-08-31T15:23:42-05:00] loaded targets for 100/552 proteins
+[2026-08-31T15:23:45-05:00] loaded targets for 150/552 proteins
+[2026-08-31T15:23:48-05:00] loaded targets for 200/552 proteins
+[2026-08-31T15:23:51-05:00] loaded targets for 250/552 proteins
+[2026-08-31T15:23:53-05:00] loaded targets for 300/552 proteins
+[2026-08-31T15:23:57-05:00] loaded targets for 350/552 proteins
+[2026-08-31T15:24:00-05:00] loaded targets for 400/552 proteins
+[2026-08-31T15:24:03-05:00] loaded targets for 450/552 proteins
+[2026-08-31T15:24:07-05:00] loaded targets for 500/552 proteins
+[2026-08-31T15:24:11-05:00] loaded targets for 550/552 proteins
+[2026-08-31T15:24:11-05:00] loaded targets for 552/552 proteins
+[2026-08-31T15:24:11-05:00] task 91: loading 441 training feature blocks
+[2026-08-31T15:24:15-05:00] task 91: cached 25/441 training proteins
+[2026-08-31T15:24:20-05:00] task 91: cached 50/441 training proteins
+[2026-08-31T15:24:26-05:00] task 91: cached 75/441 training proteins
+[2026-08-31T15:24:33-05:00] task 91: cached 100/441 training proteins
+[2026-08-31T15:24:38-05:00] task 91: cached 125/441 training proteins
+[2026-08-31T15:24:45-05:00] task 91: cached 150/441 training proteins
+[2026-08-31T15:24:55-05:00] task 91: cached 175/441 training proteins
+[2026-08-31T15:24:58-05:00] task 91: cached 200/441 training proteins
+[2026-08-31T15:25:02-05:00] task 91: cached 225/441 training proteins
+[2026-08-31T15:25:08-05:00] task 91: cached 250/441 training proteins
+[2026-08-31T15:25:16-05:00] task 91: cached 275/441 training proteins
+[2026-08-31T15:25:23-05:00] task 91: cached 300/441 training proteins
+[2026-08-31T15:25:29-05:00] task 91: cached 325/441 training proteins
+[2026-08-31T15:25:38-05:00] task 91: cached 350/441 training proteins
+[2026-08-31T15:25:50-05:00] task 91: cached 375/441 training proteins
+[2026-08-31T15:25:58-05:00] task 91: cached 400/441 training proteins
+[2026-08-31T15:26:09-05:00] task 91: cached 425/441 training proteins
+[2026-08-31T15:26:17-05:00] task 91: cached 441/441 training proteins
+[2026-08-31T15:26:17-05:00] task 91: fitting gate 1/6 (1)
+[2026-08-31T15:26:19-05:00] task 91: fitting gate 2/6 (2-4)
+[2026-08-31T15:26:24-05:00] task 91: fitting gate 3/6 (5-9)
+[2026-08-31T15:26:31-05:00] task 91: fitting gate 4/6 (10-19)
+[2026-08-31T15:26:47-05:00] task 91: fitting gate 5/6 (20-49)
+[2026-08-31T15:27:35-05:00] task 91: fitting gate 6/6 (50+)
+[2026-08-31T15:31:56-05:00] task 91: streaming 111 held-out proteins
+[2026-08-31T15:32:00-05:00] task 91: evaluated 20/111 held-out proteins
+[2026-08-31T15:32:11-05:00] task 91: evaluated 40/111 held-out proteins
+[2026-08-31T15:32:19-05:00] task 91: evaluated 60/111 held-out proteins
+[2026-08-31T15:32:26-05:00] task 91: evaluated 80/111 held-out proteins
+[2026-08-31T15:32:38-05:00] task 91: evaluated 100/111 held-out proteins
+[2026-08-31T15:32:45-05:00] task 91: evaluated 111/111 held-out proteins
+[2026-08-31T15:32:45-05:00] task 91: complete in 514.1s

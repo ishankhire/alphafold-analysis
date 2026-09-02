@@ -1,0 +1,41 @@
+[2026-08-31T10:16:54-05:00] shared OLS fold/layer task starting on cn013.delta.ncsa.illinois.edu
+[2026-08-31T10:17:30-05:00] loaded targets for 50/552 proteins
+[2026-08-31T10:17:34-05:00] loaded targets for 100/552 proteins
+[2026-08-31T10:17:37-05:00] loaded targets for 150/552 proteins
+[2026-08-31T10:17:41-05:00] loaded targets for 200/552 proteins
+[2026-08-31T10:17:45-05:00] loaded targets for 250/552 proteins
+[2026-08-31T10:17:48-05:00] loaded targets for 300/552 proteins
+[2026-08-31T10:17:52-05:00] loaded targets for 350/552 proteins
+[2026-08-31T10:17:56-05:00] loaded targets for 400/552 proteins
+[2026-08-31T10:18:00-05:00] loaded targets for 450/552 proteins
+[2026-08-31T10:18:04-05:00] loaded targets for 500/552 proteins
+[2026-08-31T10:18:08-05:00] loaded targets for 550/552 proteins
+[2026-08-31T10:18:09-05:00] loaded targets for 552/552 proteins
+[2026-08-31T10:18:09-05:00] task 238: loading 442 training feature blocks
+[2026-08-31T10:18:12-05:00] task 238: cached 25/442 training proteins
+[2026-08-31T10:18:16-05:00] task 238: cached 50/442 training proteins
+[2026-08-31T10:18:19-05:00] task 238: cached 75/442 training proteins
+[2026-08-31T10:18:25-05:00] task 238: cached 100/442 training proteins
+[2026-08-31T10:18:29-05:00] task 238: cached 125/442 training proteins
+[2026-08-31T10:18:35-05:00] task 238: cached 150/442 training proteins
+[2026-08-31T10:18:44-05:00] task 238: cached 175/442 training proteins
+[2026-08-31T10:18:48-05:00] task 238: cached 200/442 training proteins
+[2026-08-31T10:18:53-05:00] task 238: cached 225/442 training proteins
+[2026-08-31T10:18:59-05:00] task 238: cached 250/442 training proteins
+[2026-08-31T10:19:04-05:00] task 238: cached 275/442 training proteins
+[2026-08-31T10:19:10-05:00] task 238: cached 300/442 training proteins
+[2026-08-31T10:19:18-05:00] task 238: cached 325/442 training proteins
+[2026-08-31T10:19:27-05:00] task 238: cached 350/442 training proteins
+[2026-08-31T10:19:34-05:00] task 238: cached 375/442 training proteins
+[2026-08-31T10:19:45-05:00] task 238: cached 400/442 training proteins
+[2026-08-31T10:19:57-05:00] task 238: cached 425/442 training proteins
+[2026-08-31T10:20:04-05:00] task 238: cached 442/442 training proteins
+[2026-08-31T10:20:04-05:00] task 238: fitting dense float64 protein-equal OLS
+[2026-08-31T10:26:45-05:00] task 238: streaming 110 held-out proteins
+[2026-08-31T10:26:49-05:00] task 238: evaluated 20/110 held-out proteins
+[2026-08-31T10:26:54-05:00] task 238: evaluated 40/110 held-out proteins
+[2026-08-31T10:27:04-05:00] task 238: evaluated 60/110 held-out proteins
+[2026-08-31T10:27:13-05:00] task 238: evaluated 80/110 held-out proteins
+[2026-08-31T10:27:24-05:00] task 238: evaluated 100/110 held-out proteins
+[2026-08-31T10:27:29-05:00] task 238: evaluated 110/110 held-out proteins
+[2026-08-31T10:27:29-05:00] task 238: complete in 560.2s

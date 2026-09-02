@@ -1,0 +1,5 @@
+model_family,layer,status_scope,requested_fits,completed_fits,stable_fits,rank_deficient_fits,underdetermined_fits,ill_conditioned_fits,minimum_design_rank,maximum_design_rank,minimum_condition_number,maximum_condition_number,complete_pooled_r2,stable_only_pooled_r2,stable_minus_complete_r2,status,details
+shared_ols,,availability,,,,,,,,,,,,,,unavailable,Missing /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/delta_files/regression_5fold_v1/shared_ols_base256/model_status.csv
+per_protein_ols,,availability,,,,,,,,,,,,,,unavailable,Missing /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/delta_files/regression_5fold_v1/per_protein_ols_base256/model_status.csv
+gated_ols,,availability,,,,,,,,,,,,,,unavailable,Missing /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/delta_files/regression_5fold_v1/sequence_gated_ols_base256/model_status.csv
+shared_xgboost,,availability,,,,,,,,,,,,,,unavailable,Missing /Users/ishankhire/Desktop/ai_safety/AlphaFoldResearch/protein/delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/model_status.csv

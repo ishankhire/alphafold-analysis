@@ -1,0 +1,46 @@
+[2026-08-31T14:45:11-05:00] sequence-gated OLS fold/layer task starting on cn012.delta.ncsa.illinois.edu
+[2026-08-31T14:45:49-05:00] loaded targets for 50/552 proteins
+[2026-08-31T14:45:50-05:00] loaded targets for 100/552 proteins
+[2026-08-31T14:45:51-05:00] loaded targets for 150/552 proteins
+[2026-08-31T14:45:53-05:00] loaded targets for 200/552 proteins
+[2026-08-31T14:45:54-05:00] loaded targets for 250/552 proteins
+[2026-08-31T14:45:55-05:00] loaded targets for 300/552 proteins
+[2026-08-31T14:45:57-05:00] loaded targets for 350/552 proteins
+[2026-08-31T14:45:58-05:00] loaded targets for 400/552 proteins
+[2026-08-31T14:46:01-05:00] loaded targets for 450/552 proteins
+[2026-08-31T14:46:03-05:00] loaded targets for 500/552 proteins
+[2026-08-31T14:46:05-05:00] loaded targets for 550/552 proteins
+[2026-08-31T14:46:05-05:00] loaded targets for 552/552 proteins
+[2026-08-31T14:46:05-05:00] task 71: loading 441 training feature blocks
+[2026-08-31T14:46:10-05:00] task 71: cached 25/441 training proteins
+[2026-08-31T14:46:14-05:00] task 71: cached 50/441 training proteins
+[2026-08-31T14:46:20-05:00] task 71: cached 75/441 training proteins
+[2026-08-31T14:46:26-05:00] task 71: cached 100/441 training proteins
+[2026-08-31T14:46:32-05:00] task 71: cached 125/441 training proteins
+[2026-08-31T14:46:38-05:00] task 71: cached 150/441 training proteins
+[2026-08-31T14:46:48-05:00] task 71: cached 175/441 training proteins
+[2026-08-31T14:46:56-05:00] task 71: cached 200/441 training proteins
+[2026-08-31T14:47:03-05:00] task 71: cached 225/441 training proteins
+[2026-08-31T14:47:08-05:00] task 71: cached 250/441 training proteins
+[2026-08-31T14:47:16-05:00] task 71: cached 275/441 training proteins
+[2026-08-31T14:47:24-05:00] task 71: cached 300/441 training proteins
+[2026-08-31T14:47:31-05:00] task 71: cached 325/441 training proteins
+[2026-08-31T14:47:38-05:00] task 71: cached 350/441 training proteins
+[2026-08-31T14:47:47-05:00] task 71: cached 375/441 training proteins
+[2026-08-31T14:47:55-05:00] task 71: cached 400/441 training proteins
+[2026-08-31T14:48:05-05:00] task 71: cached 425/441 training proteins
+[2026-08-31T14:48:11-05:00] task 71: cached 441/441 training proteins
+[2026-08-31T14:48:11-05:00] task 71: fitting gate 1/6 (1)
+[2026-08-31T14:48:14-05:00] task 71: fitting gate 2/6 (2-4)
+[2026-08-31T14:48:20-05:00] task 71: fitting gate 3/6 (5-9)
+[2026-08-31T14:48:28-05:00] task 71: fitting gate 4/6 (10-19)
+[2026-08-31T14:48:44-05:00] task 71: fitting gate 5/6 (20-49)
+[2026-08-31T14:49:35-05:00] task 71: fitting gate 6/6 (50+)
+[2026-08-31T14:53:28-05:00] task 71: streaming 111 held-out proteins
+[2026-08-31T14:53:36-05:00] task 71: evaluated 20/111 held-out proteins
+[2026-08-31T14:53:47-05:00] task 71: evaluated 40/111 held-out proteins
+[2026-08-31T14:53:56-05:00] task 71: evaluated 60/111 held-out proteins
+[2026-08-31T14:54:03-05:00] task 71: evaluated 80/111 held-out proteins
+[2026-08-31T14:54:13-05:00] task 71: evaluated 100/111 held-out proteins
+[2026-08-31T14:54:20-05:00] task 71: evaluated 111/111 held-out proteins
+[2026-08-31T14:54:20-05:00] task 71: complete in 495.2s

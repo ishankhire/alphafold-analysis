@@ -1,0 +1,46 @@
+[2026-08-31T17:35:20-05:00] sequence-gated OLS fold/layer task starting on cn058.delta.ncsa.illinois.edu
+[2026-08-31T17:36:04-05:00] loaded targets for 50/552 proteins
+[2026-08-31T17:36:08-05:00] loaded targets for 100/552 proteins
+[2026-08-31T17:36:12-05:00] loaded targets for 150/552 proteins
+[2026-08-31T17:36:17-05:00] loaded targets for 200/552 proteins
+[2026-08-31T17:36:22-05:00] loaded targets for 250/552 proteins
+[2026-08-31T17:36:26-05:00] loaded targets for 300/552 proteins
+[2026-08-31T17:36:30-05:00] loaded targets for 350/552 proteins
+[2026-08-31T17:36:34-05:00] loaded targets for 400/552 proteins
+[2026-08-31T17:36:39-05:00] loaded targets for 450/552 proteins
+[2026-08-31T17:36:44-05:00] loaded targets for 500/552 proteins
+[2026-08-31T17:36:48-05:00] loaded targets for 550/552 proteins
+[2026-08-31T17:36:48-05:00] loaded targets for 552/552 proteins
+[2026-08-31T17:36:48-05:00] task 180: loading 442 training feature blocks
+[2026-08-31T17:36:52-05:00] task 180: cached 25/442 training proteins
+[2026-08-31T17:36:57-05:00] task 180: cached 50/442 training proteins
+[2026-08-31T17:37:01-05:00] task 180: cached 75/442 training proteins
+[2026-08-31T17:37:07-05:00] task 180: cached 100/442 training proteins
+[2026-08-31T17:37:13-05:00] task 180: cached 125/442 training proteins
+[2026-08-31T17:37:21-05:00] task 180: cached 150/442 training proteins
+[2026-08-31T17:37:31-05:00] task 180: cached 175/442 training proteins
+[2026-08-31T17:37:38-05:00] task 180: cached 200/442 training proteins
+[2026-08-31T17:37:44-05:00] task 180: cached 225/442 training proteins
+[2026-08-31T17:37:50-05:00] task 180: cached 250/442 training proteins
+[2026-08-31T17:37:57-05:00] task 180: cached 275/442 training proteins
+[2026-08-31T17:38:04-05:00] task 180: cached 300/442 training proteins
+[2026-08-31T17:38:11-05:00] task 180: cached 325/442 training proteins
+[2026-08-31T17:38:21-05:00] task 180: cached 350/442 training proteins
+[2026-08-31T17:38:29-05:00] task 180: cached 375/442 training proteins
+[2026-08-31T17:38:36-05:00] task 180: cached 400/442 training proteins
+[2026-08-31T17:38:43-05:00] task 180: cached 425/442 training proteins
+[2026-08-31T17:38:49-05:00] task 180: cached 442/442 training proteins
+[2026-08-31T17:38:49-05:00] task 180: fitting gate 1/6 (1)
+[2026-08-31T17:38:51-05:00] task 180: fitting gate 2/6 (2-4)
+[2026-08-31T17:38:56-05:00] task 180: fitting gate 3/6 (5-9)
+[2026-08-31T17:39:05-05:00] task 180: fitting gate 4/6 (10-19)
+[2026-08-31T17:39:23-05:00] task 180: fitting gate 5/6 (20-49)
+[2026-08-31T17:40:13-05:00] task 180: fitting gate 6/6 (50+)
+[2026-08-31T17:44:06-05:00] task 180: streaming 110 held-out proteins
+[2026-08-31T17:44:10-05:00] task 180: evaluated 20/110 held-out proteins
+[2026-08-31T17:44:18-05:00] task 180: evaluated 40/110 held-out proteins
+[2026-08-31T17:44:26-05:00] task 180: evaluated 60/110 held-out proteins
+[2026-08-31T17:44:36-05:00] task 180: evaluated 80/110 held-out proteins
+[2026-08-31T17:44:43-05:00] task 180: evaluated 100/110 held-out proteins
+[2026-08-31T17:44:49-05:00] task 180: evaluated 110/110 held-out proteins
+[2026-08-31T17:44:49-05:00] task 180: complete in 480.9s

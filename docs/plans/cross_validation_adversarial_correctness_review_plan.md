@@ -597,32 +597,7 @@ Every finding cites a minimized reproducer and its automated test ID. The
 report distinguishes confirmed defects, semantic decisions, and unavailable
 real-artifact checks.
 
-## 13. Five-hour execution order
-
-If constrained to approximately five hours, use this order:
-
-1. **0:00-0:30 — Boundary map and baseline:** rerun focused existing tests,
-   record Stage-7 coverage, and trace manifest -> fit -> held-out prediction ->
-   accumulator -> geometry responsibility.
-2. **0:30-1:30 — Adversarial wiring:** run target poisoning, pair-order,
-   direction-order, dtype, shape, missing-value, and silent-dropping tests.
-3. **1:30-3:00 — Geometry oracles:** run exact Euclidean, rigid transform,
-   reflection, higher-dimensional, non-Euclidean metric, triangle boundary,
-   brute-force enumeration, and differential utility tests.
-4. **3:00-3:45 — Real replay:** when v2 artifacts exist, replay the fixed
-   anchor cases and perform applicable fold-0 parity checks. Otherwise record
-   this stage as unavailable.
-5. **3:45-4:30 — Stability and summaries:** validate stable-fit scope,
-   geometry attempted/included/excluded counts, and complete-versus-stable
-   sensitivity.
-6. **4:30-5:00 — Triage:** minimize discrepancies, classify findings, and read
-   only the code paths implicated by failed evidence.
-
-When compute or artifact availability blocks Stage E, spend the recovered time
-on additional randomized geometry oracle cases rather than repeating Stage-7
-shard checks.
-
-## 14. Acceptance criteria
+## 13. Acceptance criteria
 
 The review is complete only when:
 
@@ -650,7 +625,7 @@ The review is complete only when:
   exist, or is explicitly marked unavailable; and
 - every discrepancy is classified before any production code is changed.
 
-## 15. Implementation and change-control stages
+## 14. Implementation and change-control stages
 
 1. Add the two independent adversarial test modules without modifying
    production behavior. Run focused and complete tests.

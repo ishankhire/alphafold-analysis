@@ -1,0 +1,41 @@
+[2026-08-31T08:43:49-05:00] shared OLS fold/layer task starting on cn084.delta.ncsa.illinois.edu
+[2026-08-31T08:44:27-05:00] loaded targets for 50/552 proteins
+[2026-08-31T08:44:29-05:00] loaded targets for 100/552 proteins
+[2026-08-31T08:44:31-05:00] loaded targets for 150/552 proteins
+[2026-08-31T08:44:33-05:00] loaded targets for 200/552 proteins
+[2026-08-31T08:44:35-05:00] loaded targets for 250/552 proteins
+[2026-08-31T08:44:37-05:00] loaded targets for 300/552 proteins
+[2026-08-31T08:44:40-05:00] loaded targets for 350/552 proteins
+[2026-08-31T08:44:43-05:00] loaded targets for 400/552 proteins
+[2026-08-31T08:44:46-05:00] loaded targets for 450/552 proteins
+[2026-08-31T08:44:49-05:00] loaded targets for 500/552 proteins
+[2026-08-31T08:44:53-05:00] loaded targets for 550/552 proteins
+[2026-08-31T08:44:53-05:00] loaded targets for 552/552 proteins
+[2026-08-31T08:44:53-05:00] task 212: loading 442 training feature blocks
+[2026-08-31T08:44:57-05:00] task 212: cached 25/442 training proteins
+[2026-08-31T08:45:02-05:00] task 212: cached 50/442 training proteins
+[2026-08-31T08:45:06-05:00] task 212: cached 75/442 training proteins
+[2026-08-31T08:45:13-05:00] task 212: cached 100/442 training proteins
+[2026-08-31T08:45:17-05:00] task 212: cached 125/442 training proteins
+[2026-08-31T08:45:26-05:00] task 212: cached 150/442 training proteins
+[2026-08-31T08:45:36-05:00] task 212: cached 175/442 training proteins
+[2026-08-31T08:45:41-05:00] task 212: cached 200/442 training proteins
+[2026-08-31T08:45:47-05:00] task 212: cached 225/442 training proteins
+[2026-08-31T08:45:53-05:00] task 212: cached 250/442 training proteins
+[2026-08-31T08:46:01-05:00] task 212: cached 275/442 training proteins
+[2026-08-31T08:46:08-05:00] task 212: cached 300/442 training proteins
+[2026-08-31T08:46:16-05:00] task 212: cached 325/442 training proteins
+[2026-08-31T08:46:29-05:00] task 212: cached 350/442 training proteins
+[2026-08-31T08:46:36-05:00] task 212: cached 375/442 training proteins
+[2026-08-31T08:46:47-05:00] task 212: cached 400/442 training proteins
+[2026-08-31T08:46:59-05:00] task 212: cached 425/442 training proteins
+[2026-08-31T08:47:05-05:00] task 212: cached 442/442 training proteins
+[2026-08-31T08:47:05-05:00] task 212: fitting dense float64 protein-equal OLS
+[2026-08-31T08:52:44-05:00] task 212: streaming 110 held-out proteins
+[2026-08-31T08:52:49-05:00] task 212: evaluated 20/110 held-out proteins
+[2026-08-31T08:52:57-05:00] task 212: evaluated 40/110 held-out proteins
+[2026-08-31T08:53:09-05:00] task 212: evaluated 60/110 held-out proteins
+[2026-08-31T08:53:20-05:00] task 212: evaluated 80/110 held-out proteins
+[2026-08-31T08:53:34-05:00] task 212: evaluated 100/110 held-out proteins
+[2026-08-31T08:53:39-05:00] task 212: evaluated 110/110 held-out proteins
+[2026-08-31T08:53:39-05:00] task 212: complete in 525.8s

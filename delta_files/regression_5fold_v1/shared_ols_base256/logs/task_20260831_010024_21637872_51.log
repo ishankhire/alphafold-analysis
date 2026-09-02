@@ -1,0 +1,41 @@
+[2026-08-31T01:00:25-05:00] shared OLS fold/layer task starting on cn008.delta.ncsa.illinois.edu
+[2026-08-31T01:01:08-05:00] loaded targets for 50/552 proteins
+[2026-08-31T01:01:10-05:00] loaded targets for 100/552 proteins
+[2026-08-31T01:01:11-05:00] loaded targets for 150/552 proteins
+[2026-08-31T01:01:13-05:00] loaded targets for 200/552 proteins
+[2026-08-31T01:01:16-05:00] loaded targets for 250/552 proteins
+[2026-08-31T01:01:18-05:00] loaded targets for 300/552 proteins
+[2026-08-31T01:01:19-05:00] loaded targets for 350/552 proteins
+[2026-08-31T01:01:22-05:00] loaded targets for 400/552 proteins
+[2026-08-31T01:01:23-05:00] loaded targets for 450/552 proteins
+[2026-08-31T01:01:25-05:00] loaded targets for 500/552 proteins
+[2026-08-31T01:01:27-05:00] loaded targets for 550/552 proteins
+[2026-08-31T01:01:27-05:00] loaded targets for 552/552 proteins
+[2026-08-31T01:01:27-05:00] task 51: loading 441 training feature blocks
+[2026-08-31T01:01:31-05:00] task 51: cached 25/441 training proteins
+[2026-08-31T01:01:36-05:00] task 51: cached 50/441 training proteins
+[2026-08-31T01:01:40-05:00] task 51: cached 75/441 training proteins
+[2026-08-31T01:01:47-05:00] task 51: cached 100/441 training proteins
+[2026-08-31T01:01:51-05:00] task 51: cached 125/441 training proteins
+[2026-08-31T01:01:58-05:00] task 51: cached 150/441 training proteins
+[2026-08-31T01:02:08-05:00] task 51: cached 175/441 training proteins
+[2026-08-31T01:02:15-05:00] task 51: cached 200/441 training proteins
+[2026-08-31T01:02:22-05:00] task 51: cached 225/441 training proteins
+[2026-08-31T01:02:27-05:00] task 51: cached 250/441 training proteins
+[2026-08-31T01:02:35-05:00] task 51: cached 275/441 training proteins
+[2026-08-31T01:02:43-05:00] task 51: cached 300/441 training proteins
+[2026-08-31T01:02:51-05:00] task 51: cached 325/441 training proteins
+[2026-08-31T01:02:59-05:00] task 51: cached 350/441 training proteins
+[2026-08-31T01:03:08-05:00] task 51: cached 375/441 training proteins
+[2026-08-31T01:03:18-05:00] task 51: cached 400/441 training proteins
+[2026-08-31T01:03:30-05:00] task 51: cached 425/441 training proteins
+[2026-08-31T01:03:36-05:00] task 51: cached 441/441 training proteins
+[2026-08-31T01:03:36-05:00] task 51: fitting dense float64 protein-equal OLS
+[2026-08-31T01:09:18-05:00] task 51: streaming 111 held-out proteins
+[2026-08-31T01:09:24-05:00] task 51: evaluated 20/111 held-out proteins
+[2026-08-31T01:09:34-05:00] task 51: evaluated 40/111 held-out proteins
+[2026-08-31T01:09:43-05:00] task 51: evaluated 60/111 held-out proteins
+[2026-08-31T01:09:52-05:00] task 51: evaluated 80/111 held-out proteins
+[2026-08-31T01:10:05-05:00] task 51: evaluated 100/111 held-out proteins
+[2026-08-31T01:10:13-05:00] task 51: evaluated 111/111 held-out proteins
+[2026-08-31T01:10:13-05:00] task 51: complete in 526.3s

@@ -1,0 +1,41 @@
+[2026-08-31T07:08:39-05:00] shared OLS fold/layer task starting on cn008.delta.ncsa.illinois.edu
+[2026-08-31T07:09:15-05:00] loaded targets for 50/552 proteins
+[2026-08-31T07:09:16-05:00] loaded targets for 100/552 proteins
+[2026-08-31T07:09:17-05:00] loaded targets for 150/552 proteins
+[2026-08-31T07:09:18-05:00] loaded targets for 200/552 proteins
+[2026-08-31T07:09:20-05:00] loaded targets for 250/552 proteins
+[2026-08-31T07:09:21-05:00] loaded targets for 300/552 proteins
+[2026-08-31T07:09:22-05:00] loaded targets for 350/552 proteins
+[2026-08-31T07:09:23-05:00] loaded targets for 400/552 proteins
+[2026-08-31T07:09:25-05:00] loaded targets for 450/552 proteins
+[2026-08-31T07:09:27-05:00] loaded targets for 500/552 proteins
+[2026-08-31T07:09:29-05:00] loaded targets for 550/552 proteins
+[2026-08-31T07:09:29-05:00] loaded targets for 552/552 proteins
+[2026-08-31T07:09:29-05:00] task 176: loading 442 training feature blocks
+[2026-08-31T07:09:32-05:00] task 176: cached 25/442 training proteins
+[2026-08-31T07:09:37-05:00] task 176: cached 50/442 training proteins
+[2026-08-31T07:09:43-05:00] task 176: cached 75/442 training proteins
+[2026-08-31T07:09:48-05:00] task 176: cached 100/442 training proteins
+[2026-08-31T07:09:52-05:00] task 176: cached 125/442 training proteins
+[2026-08-31T07:09:57-05:00] task 176: cached 150/442 training proteins
+[2026-08-31T07:10:05-05:00] task 176: cached 175/442 training proteins
+[2026-08-31T07:10:10-05:00] task 176: cached 200/442 training proteins
+[2026-08-31T07:10:15-05:00] task 176: cached 225/442 training proteins
+[2026-08-31T07:10:20-05:00] task 176: cached 250/442 training proteins
+[2026-08-31T07:10:27-05:00] task 176: cached 275/442 training proteins
+[2026-08-31T07:10:36-05:00] task 176: cached 300/442 training proteins
+[2026-08-31T07:10:42-05:00] task 176: cached 325/442 training proteins
+[2026-08-31T07:10:53-05:00] task 176: cached 350/442 training proteins
+[2026-08-31T07:11:05-05:00] task 176: cached 375/442 training proteins
+[2026-08-31T07:11:15-05:00] task 176: cached 400/442 training proteins
+[2026-08-31T07:11:25-05:00] task 176: cached 425/442 training proteins
+[2026-08-31T07:11:35-05:00] task 176: cached 442/442 training proteins
+[2026-08-31T07:11:35-05:00] task 176: fitting dense float64 protein-equal OLS
+[2026-08-31T07:16:47-05:00] task 176: streaming 110 held-out proteins
+[2026-08-31T07:16:50-05:00] task 176: evaluated 20/110 held-out proteins
+[2026-08-31T07:16:57-05:00] task 176: evaluated 40/110 held-out proteins
+[2026-08-31T07:17:04-05:00] task 176: evaluated 60/110 held-out proteins
+[2026-08-31T07:17:14-05:00] task 176: evaluated 80/110 held-out proteins
+[2026-08-31T07:17:20-05:00] task 176: evaluated 100/110 held-out proteins
+[2026-08-31T07:17:25-05:00] task 176: evaluated 110/110 held-out proteins
+[2026-08-31T07:17:26-05:00] task 176: complete in 476.9s
