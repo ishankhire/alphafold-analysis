@@ -865,6 +865,7 @@ def faceted_subgroup_figure(
     yticks: Mapping[str, Sequence[float]] | None = None,
     visible_y_tick_categories: Collection[str] | None = None,
     shared_axis_labels: bool = False,
+    title_pad: float | None = None,
 ) -> tuple[Path, Path]:
     nrows = math.ceil(len(categories) / ncols)
     if figsize is None:
@@ -886,7 +887,10 @@ def faceted_subgroup_figure(
             and category not in visible_y_tick_categories
         ):
             axis.tick_params(axis="y", left=False, labelleft=False)
-        axis.set_title(category)
+        if title_pad is None:
+            axis.set_title(category)
+        else:
+            axis.set_title(category, pad=title_pad)
     for axis in flat[len(categories) :]:
         axis.set_visible(False)
     handles, labels = flat[0].get_legend_handles_labels()
@@ -1277,16 +1281,17 @@ def main() -> None:
     manifest.append(manifest_row(stem="main_figure_03_tm_score", section="main", title="Mean fivefold OOF reconstruction TM-score", png=png, pdf=pdf, source_csvs=[source_paths["tm_raw"], source_paths["tm_summary"]], uncertainty=standard_uncertainty))
 
     png, pdf = faceted_subgroup_figure(
-        spatial_summary, SPATIAL_BINS, "Mean per-protein MAE (Å)",
+        spatial_summary, SPATIAL_BINS, "Mean per-protein\nMAE (Å)",
         "main_figure_15_spatial_distance_mae_combined", MAIN_DIR,
         ncols=len(SPATIAL_BINS),
-        figsize=(15, 3.8),
+        figsize=(15, 4.0),
         ylimits={category: (0, 5) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 15)},
         yticks={category: tuple(range(6)) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 5, 10, 15)},
         visible_y_tick_categories=(SPATIAL_BINS[0], SPATIAL_BINS[-1]),
         shared_axis_labels=True,
+        title_pad=10,
     )
     manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title="Protein-equal MAE by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths["spatial_raw"], source_paths["spatial_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
