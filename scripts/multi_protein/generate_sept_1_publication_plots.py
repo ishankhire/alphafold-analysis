@@ -45,7 +45,10 @@ POOLED_SUBGROUP_FILENAMES = {
     "sequence_separation": "by_sequence_separation.csv",
 }
 HISTORICAL_RAW = DELTA_DIR / "triangle_violation_subgroups/per_protein_triangle_metrics.csv"
-HISTORICAL_ANALYSIS = DELTA_DIR / "analysis/triangle_violation_subgroups"
+HISTORICAL_ANALYSIS = (
+    PROJECT_ROOT
+    / "historical_outputs/historical_results/analysis/triangle_violation_subgroups"
+)
 PEAK_ROOT = HISTORICAL_ANALYSIS / "peak_trough_significance"
 OUTPUT_ROOT = DELTA_DIR / "publication_plots/sept_1_plots"
 MAIN_DIR = OUTPUT_ROOT / "main_figures"

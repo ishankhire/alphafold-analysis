@@ -1812,3 +1812,10 @@ Changed both all-triangle main figures to show only normalized mean triangle
 violation. Moved the violation-fraction peak/trough trajectory and decodability
 phase plot into separate supplemental PDF/PNG pairs, with updated generator,
 manifest, source-data links, and bundle documentation.
+
+## Session: 2026-09-02 — Repair paths after output archival
+
+Restored the frozen XGBoost selection source, current cross-validation review,
+and publication PDFs at their documented canonical paths. Repointed the
+publication generator to the archived historical triangle analysis and updated
+the top-level current-results links and saved publication provenance.

@@ -7,11 +7,12 @@ across 48 layers, mainly with distance-regression probes.
 
 - [Regression methodology](docs/methodology/regression_methodology.md) defines
   the shared methodology for all regression variants.
-- [Paper figure results](delta_files/analysis/paper_figure_results.md) summarizes
-  the main results.
-- [Main analysis results](delta_files/analysis/) contains the primary result
-  tables and reports, and [paper figures](delta_files/analysis/paper_figures/)
-  contains the figures.
+- [Fivefold regression results](delta_files/regression_5fold_v1/) contains the
+  current protocol-2.0 outputs.
+- [September 1 publication plots](delta_files/publication_plots/sept_1_plots/)
+  contains the current paper figures, source tables, and provenance manifest.
+- [Cross-validation correctness review](delta_files/analysis/cross_validation_adversarial_review_v1/)
+  contains the current protocol-2.0 adversarial audit artifacts.
 - [Experiment plans](docs/plans/) contains more detailed plans used to carry
   out some regressions.
 

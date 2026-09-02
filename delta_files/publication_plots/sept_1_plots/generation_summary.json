@@ -35,7 +35,7 @@
     "delta_files/regression_5fold_v1/sequence_gated_ols_base256/subgroup_metrics/by_spatial_distance.csv": "48ff6442280ac2440ddc5bab367eb5388e4ea5f567874d87d901a74537f72441",
     "delta_files/regression_5fold_v1/sequence_gated_ols_base256/subgroup_metrics/by_sequence_separation.csv": "d9debb464f0732e5e5767afeb1781a0111819f6c97ba38d33bfba25cfd0f75ee",
     "delta_files/triangle_violation_subgroups/per_protein_triangle_metrics.csv": "e0e37b5ffd7ceb3fe4382b0e26dde3a03fb47a738d81ca30d0892d0a3cd8d589",
-    "delta_files/analysis/triangle_violation_subgroups/peak_trough_significance/candidate_extrema.csv": "5770ef8cc6bdcf0261db1915570ef5112f9b0eb0ca068f8d4f529ad6a3ad0236"
+    "historical_outputs/historical_results/analysis/triangle_violation_subgroups/peak_trough_significance/candidate_extrema.csv": "5770ef8cc6bdcf0261db1915570ef5112f9b0eb0ca068f8d4f529ad6a3ad0236"
   },
   "manifest": "delta_files/publication_plots/sept_1_plots/figure_manifest.csv"
 }
