@@ -1850,3 +1850,9 @@ Copied the September 2 supplemental PDFs into the Overleaf project, added the
 selected triangle, ablation, sequence-separation, MDS-reference, and
 individual-protein figures to the supplemental draft with descriptive metric
 captions, and moved the triangle-mechanism ablation panels out of draft 4.
+
+## Session: 2026-09-02 — Reference MDS geometry figures in the supplement
+
+Added the September 2 top-three positive-eigenvalue fraction and normalized
+MDS stress figures to the supplemental Other Results section with explicit,
+non-interpretive metric definitions.
