@@ -1784,3 +1784,15 @@ checkpointed reference/layer stages, layer-streaming aggregation with producer
 geometry reproduction, versioned local figures, right-sized Delta launchers,
 and synthetic plus real-artifact loader checks. Production Delta execution and
 resource measurement remain pending.
+
+## Session: 2026-09-01 — Implement publication figure bundle workflow
+
+Added a standalone four-family replay for per-protein sequence- and
+spatial-bin MAE, including restartable Delta layer shards, strict aggregation,
+and exact reconciliation to the canonical pair-pooled subgroup outputs. Added
+the September 1 local publication generator with fivefold protein-equal
+R2/TM/MAE figures, bootstrap intervals, 2-SD and individual-protein variants,
+historical triangle placeholders, source CSVs, and hashed provenance. The new
+and related test suites pass and representative available-data figures were
+visually inspected. Full bundle generation remains pending the new Delta
+replay output; the generator fails explicitly rather than using pooled MAE.

@@ -61,6 +61,17 @@ representative run of each stage.
 | One-layer four-family OOF replay | `12g` | Historical 111-protein replay peaked at 6.15 GiB; the new implementation retains one protein working set plus compact model state. |
 | Streaming aggregation | `16g` | One 56,856-row layer plus compact summaries and producer geometry indexes; no exact measurement yet. |
 
+### Publication per-protein subgroup-MAE replay estimates
+
+The independent `publication_subgroup_mae_5fold_v1` workflow reuses the same
+four model-artifact loaders and one-protein pair working set as the fivefold
+triangle replay, but it does not materialize triangle geometry.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| One-layer four-family subgroup replay | `12g` | Same bounded model/pair working set as the unmeasured fivefold triangle replay; retain its initial request until a representative MaxRSS is recorded. |
+| Streaming aggregation and pooled reconciliation | `8g` | One 24,288-row shard plus 2,112 compact summary groups; no production measurement yet. |
+
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
 | Shared OLS, `general_base256_combined` | 97.96 GiB | `120g` | Completed base256 jobs peaked at 97.96 GiB for layers 0–23 and 94.63 GiB for layers 24–47. |

@@ -72,6 +72,13 @@ successful representative allocations before broad reruns.
 | One-layer four-family OOF replay | `06:00:00` | Approximately five times the historical 111-protein cohort, with all four OOF families replayed sequentially per protein. |
 | Streaming aggregation | `02:00:00` | Layer-bounded validation and derivation of 2,729,088 consolidated rows; unmeasured. |
 
+### Publication per-protein subgroup-MAE replay estimates
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| One-layer four-family subgroup replay | `02:00:00` | Replays all 552 proteins but omits the triangle enumeration performed by the closest fivefold replay comparator. |
+| Streaming aggregation and pooled reconciliation | `00:30:00` | Streams 1,165,824 rows and validates 2,112 additive comparisons; no production measurement yet. |
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much
