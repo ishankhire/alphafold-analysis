@@ -116,10 +116,12 @@ def test_metric_domain_clipping_is_display_only() -> None:
     assert np.array_equal(unbounded_high, high)
 
 
-def test_figure_names_cover_27_pairs_and_all_canonical_bins() -> None:
+def test_figure_names_cover_29_pairs_and_all_canonical_bins() -> None:
     figure_ids = expected_figure_ids()
-    assert len(figure_ids) == 27
-    assert len(set(figure_ids)) == 27
+    assert len(figure_ids) == 29
+    assert len(set(figure_ids)) == 29
+    assert "supp_figure_top3_eigenvalue_fraction" in figure_ids
+    assert "supp_figure_mds_stress" in figure_ids
     for category in SPATIAL_BINS:
         assert f"main_figure_15_spatial_distance_mae_{bin_slug(category)}" in figure_ids
     for category in SEQUENCE_BINS:

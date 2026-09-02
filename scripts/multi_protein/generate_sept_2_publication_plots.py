@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_2_publication_plots_v1"
+GENERATOR_VERSION = "sept_2_publication_plots_v2"
 MAIN_FIGURE_FONT_SCALE = 1.5
 BOOTSTRAP_REPLICATES = 2_000
 BOOTSTRAP_SEED = 20260902
@@ -241,6 +241,8 @@ def expected_figure_ids() -> tuple[str, ...]:
         *sequence,
         "supp_figure_all_triangles_violation_fraction_peak_troughs_overlay",
         "supp_figure_all_triangles_violation_fraction_decodability_consistency",
+        "supp_figure_top3_eigenvalue_fraction",
+        "supp_figure_mds_stress",
         *annotated,
         "supp_figure_individual_proteins_r2_by_model",
         "supp_figure_individual_proteins_tm_score_by_model",
@@ -1136,9 +1138,15 @@ def main() -> None:
     cohort = load_cohort()
     counts = bootstrap_counts()
 
-    print("Loading fivefold R2 and TM-score values...")
+    print("Loading fivefold R2 and geometry values...")
     r2, r2_inputs = load_core_metric(cohort, "per_protein.csv", "r2", "prediction_status")
     tm, tm_inputs = load_core_metric(cohort, "geometry_metrics.csv", "tm_score", "geometry_status")
+    top3, top3_inputs = load_core_metric(
+        cohort, "geometry_metrics.csv", "frac_top3_eigenvalues", "geometry_status"
+    )
+    stress, stress_inputs = load_core_metric(
+        cohort, "geometry_metrics.csv", "stress", "geometry_status"
+    )
     print("Loading per-protein subgroup MAE values...")
     subgroup, subgroup_inputs = load_subgroup_values(cohort)
     spatial = subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
@@ -1149,6 +1157,8 @@ def main() -> None:
     print("Computing paired-protein bootstrap summaries...")
     r2_summary = bootstrap_summary(r2, cohort, counts)
     tm_summary = bootstrap_summary(tm, cohort, counts)
+    top3_summary = bootstrap_summary(top3, cohort, counts)
+    stress_summary = bootstrap_summary(stress, cohort, counts)
     spatial_summary = bootstrap_summary(
         spatial, cohort, counts, ("category_scope", "category_label")
     )
@@ -1176,6 +1186,18 @@ def main() -> None:
     source_paths["r2_summary"] = write_source_csv(r2_summary, "r2_plot_summary")
     source_paths["tm_raw"] = write_source_csv(tm, "tm_score_per_protein_values")
     source_paths["tm_summary"] = write_source_csv(tm_summary, "tm_score_plot_summary")
+    source_paths["top3_raw"] = write_source_csv(
+        top3, "top3_eigenvalue_fraction_per_protein_values"
+    )
+    source_paths["top3_summary"] = write_source_csv(
+        top3_summary, "top3_eigenvalue_fraction_plot_summary"
+    )
+    source_paths["stress_raw"] = write_source_csv(
+        stress, "mds_stress_per_protein_values"
+    )
+    source_paths["stress_summary"] = write_source_csv(
+        stress_summary, "mds_stress_plot_summary"
+    )
     source_paths["spatial_raw"] = write_source_csv(
         spatial, "spatial_distance_mae_per_protein_values", compressed=True
     )
@@ -1269,6 +1291,20 @@ def main() -> None:
     )
     manifest.append(manifest_row(stem=fraction_phase_stem, section="supplemental", title="Normalized decodability versus all-triangle violation fraction", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
 
+    top3_stem = "supp_figure_top3_eigenvalue_fraction"
+    png, pdf = line_figure(
+        top3_summary, "Mean top-3 eigenvalue fraction", top3_stem,
+        SUPPLEMENT_DIR, "unit",
+    )
+    manifest.append(manifest_row(stem=top3_stem, section="supplemental", title="Mean top-3 MDS eigenvalue fraction across Evoformer layers", png=png, pdf=pdf, source_csvs=[source_paths["top3_raw"], source_paths["top3_summary"]], uncertainty=standard_uncertainty))
+
+    stress_stem = "supp_figure_mds_stress"
+    png, pdf = line_figure(
+        stress_summary, "Mean normalized MDS stress", stress_stem,
+        SUPPLEMENT_DIR, "nonnegative",
+    )
+    manifest.append(manifest_row(stem=stress_stem, section="supplemental", title="Mean normalized MDS stress across Evoformer layers", png=png, pdf=pdf, source_csvs=[source_paths["stress_raw"], source_paths["stress_summary"]], uncertainty=standard_uncertainty))
+
     for system, category_spec in TRIANGLE_CATEGORY_SPECS.items():
         if system == "all_triangles":
             continue
@@ -1308,7 +1344,7 @@ def main() -> None:
 
     manifest_frame = pd.DataFrame(manifest)
     expected_ids = set(expected_figure_ids())
-    if len(manifest_frame) != 27 or set(manifest_frame["figure_id"]) != expected_ids:
+    if len(manifest_frame) != 29 or set(manifest_frame["figure_id"]) != expected_ids:
         missing = sorted(expected_ids - set(manifest_frame["figure_id"]))
         extra = sorted(set(manifest_frame["figure_id"]) - expected_ids)
         raise ValueError(f"Figure inventory mismatch; missing={missing}, extra={extra}")
@@ -1321,6 +1357,8 @@ def main() -> None:
         OUTER_FOLD_PATH,
         *r2_inputs,
         *tm_inputs,
+        *top3_inputs,
+        *stress_inputs,
         *subgroup_inputs,
         *triangle_inputs,
         SUBGROUP_DIR / "run_manifest.json",
@@ -1351,11 +1389,13 @@ def main() -> None:
             "layers": 48,
             "r2_rows": 105_984,
             "tm_score_rows": 105_984,
+            "top3_eigenvalue_fraction_rows": 105_984,
+            "mds_stress_rows": 105_984,
             "spatial_mae_rows": 529_920,
             "sequence_mae_rows": 635_904,
             "focused_triangle_rows": 1_377_792,
             "peak_trough_tests": 7_904,
-            "figures": 27,
+            "figures": 29,
         },
         "observed_counts": {
             "models": len(MODEL_ORDER),
@@ -1363,6 +1403,8 @@ def main() -> None:
             "layers": len(LAYERS),
             "r2_rows": len(r2),
             "tm_score_rows": len(tm),
+            "top3_eigenvalue_fraction_rows": len(top3),
+            "mds_stress_rows": len(stress),
             "spatial_mae_rows": len(spatial),
             "sequence_mae_rows": len(sequence),
             "focused_triangle_rows": len(triangle),
@@ -1389,8 +1431,9 @@ def main() -> None:
         "This bundle is derived exclusively from `delta_files/regression_5fold_v1/`. "
         "It contains four protocol-2.0 fivefold OOF probe families, 552 proteins, and "
         "layers 0–47; no AA-gated model or historical triangle placeholder is used. "
-        "Every plotted mean—including R2, TM-score, subgroup MAE, normalized triangle "
-        "violation, and triangle violation fraction—is protein-equal. Bands are "
+        "Every plotted mean—including R2, TM-score, top-3 MDS eigenvalue fraction, "
+        "normalized MDS stress, subgroup MAE, normalized triangle violation, and "
+        "triangle violation fraction—is protein-equal. Bands are "
         "pointwise paired-protein bootstrap percentile 95% intervals from 2,000 "
         "replicates (seed 20260902). Long-range bins average finite supported proteins "
         "and report their counts in source data. Pooled subgroup MAE is retained only "

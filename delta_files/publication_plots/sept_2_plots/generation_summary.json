@@ -1,6 +1,6 @@
 {
-  "generator_version": "sept_2_publication_plots_v1",
-  "generated_at": "2026-09-02T08:32:03.212784+00:00",
+  "generator_version": "sept_2_publication_plots_v2",
+  "generated_at": "2026-09-02T19:42:53+00:00",
   "input_root": "delta_files/regression_5fold_v1",
   "input_policy": "all analytical and provenance inputs resolve below regression_5fold_v1",
   "bootstrap": {
@@ -61,11 +61,13 @@
     "layers": 48,
     "r2_rows": 105984,
     "tm_score_rows": 105984,
+    "top3_eigenvalue_fraction_rows": 105984,
+    "mds_stress_rows": 105984,
     "spatial_mae_rows": 529920,
     "sequence_mae_rows": 635904,
     "focused_triangle_rows": 1377792,
     "peak_trough_tests": 7904,
-    "figures": 27
+    "figures": 29
   },
   "observed_counts": {
     "models": 4,
@@ -73,11 +75,13 @@
     "layers": 48,
     "r2_rows": 105984,
     "tm_score_rows": 105984,
+    "top3_eigenvalue_fraction_rows": 105984,
+    "mds_stress_rows": 105984,
     "spatial_mae_rows": 529920,
     "sequence_mae_rows": 635904,
     "focused_triangle_rows": 1377792,
     "peak_trough_tests": 7904,
-    "figures": 27
+    "figures": 29
   },
   "models": [
     "shared_ols_base256",
@@ -109,6 +113,10 @@
     "delta_files/publication_plots/sept_2_plots/source_data/r2_plot_summary.csv": "1bcc318e143c5dae1f8e53574aff52766c418f54e3ea915494d17cb1f7f08903",
     "delta_files/publication_plots/sept_2_plots/source_data/tm_score_per_protein_values.csv": "ccf702e181ef9b2871ed4e11bc962bbd41616e8fc83bdf89947b82763ee17835",
     "delta_files/publication_plots/sept_2_plots/source_data/tm_score_plot_summary.csv": "78f970525f3569f9b4296a36ab7557ce9a840e7e785090ae63901628fd720d02",
+    "delta_files/publication_plots/sept_2_plots/source_data/top3_eigenvalue_fraction_per_protein_values.csv": "1e7c6810032cdfb3646f9fd8db3fbec55cbbe16dccdb00800fe4898e2dc62767",
+    "delta_files/publication_plots/sept_2_plots/source_data/top3_eigenvalue_fraction_plot_summary.csv": "b2c643b32ac8bc889bbe5653a14dffa559d48fa710b747d7b017da0914d19bad",
+    "delta_files/publication_plots/sept_2_plots/source_data/mds_stress_per_protein_values.csv": "822715cd214a505c98d1b7f7c1d118526384c2cf09952ca30f68c6b426c4c362",
+    "delta_files/publication_plots/sept_2_plots/source_data/mds_stress_plot_summary.csv": "5916a75baeedd7b3ad4d6579c43f6b8f197f7b77e1d38684cfd7c045e058026e",
     "delta_files/publication_plots/sept_2_plots/source_data/spatial_distance_mae_per_protein_values.csv.gz": "af28d94e8f0a53b3126c5e77ed81816738ea2e6f3fd715f28fa9407a647a07e1",
     "delta_files/publication_plots/sept_2_plots/source_data/spatial_distance_mae_plot_summary.csv": "c3ab24db12e8b698531e06eff780ab2268d954affdb58b6abf31acdb4f4daeab",
     "delta_files/publication_plots/sept_2_plots/source_data/sequence_separation_mae_per_protein_values.csv.gz": "d70ade38ce58a005c37cbc1f3aa266ddbfab105036dde6754f03e182676c3959",
@@ -230,6 +238,14 @@
     "supp_figure_individual_proteins_triangle_violation_fraction_by_model": {
       "png": "delta_files/publication_plots/sept_2_plots/supplemental_figures/individual_protein_trajectories/supp_figure_individual_proteins_triangle_violation_fraction_by_model.png",
       "pdf": "delta_files/publication_plots/sept_2_plots/supplemental_figures/individual_protein_trajectories/supp_figure_individual_proteins_triangle_violation_fraction_by_model.pdf"
+    },
+    "supp_figure_top3_eigenvalue_fraction": {
+      "png": "delta_files/publication_plots/sept_2_plots/supplemental_figures/supp_figure_top3_eigenvalue_fraction.png",
+      "pdf": "delta_files/publication_plots/sept_2_plots/supplemental_figures/supp_figure_top3_eigenvalue_fraction.pdf"
+    },
+    "supp_figure_mds_stress": {
+      "png": "delta_files/publication_plots/sept_2_plots/supplemental_figures/supp_figure_mds_stress.png",
+      "pdf": "delta_files/publication_plots/sept_2_plots/supplemental_figures/supp_figure_mds_stress.pdf"
     }
   }
 }

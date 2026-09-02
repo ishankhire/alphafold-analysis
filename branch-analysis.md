@@ -1836,3 +1836,10 @@ Restored the frozen XGBoost selection source, current cross-validation review,
 and publication PDFs at their documented canonical paths. Repointed the
 publication generator to the archived historical triangle analysis and updated
 the top-level current-results links and saved publication provenance.
+
+## Session: 2026-09-02 — Add fivefold MDS geometry figures
+
+Added supplemental layerwise figures for the protein-equal top-3 MDS
+eigenvalue fraction and normalized MDS stress across all four protocol-2.0
+fivefold regression families, with paired-protein bootstrap 95% intervals and
+source-data provenance in the September 2 publication bundle.
