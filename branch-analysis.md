@@ -1856,3 +1856,9 @@ captions, and moved the triangle-mechanism ablation panels out of draft 4.
 Added the September 2 top-three positive-eigenvalue fraction and normalized
 MDS stress figures to the supplemental Other Results section with explicit,
 non-interpretive metric definitions.
+
+## Session: 2026-09-02 — Consolidate supplemental captions and MDS panels
+
+Centralized the shared triangle-figure bootstrap and extrema-test conventions,
+shortened the individual triangle captions, and replaced the outdated MDS
+diagnostic figure with a current two-panel eigenvalue-fraction and stress figure.
