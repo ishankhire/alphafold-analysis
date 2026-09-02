@@ -1869,3 +1869,9 @@ Combined the canonical 10–20 and 20–40 Å evaluation bins into an exact
 per-protein 10–40 Å MAE panel for the September 2 main figure by summing pair
 counts and absolute-error totals before recomputing MAE. Regenerated the
 paired-protein bootstrap intervals, source tables, manifest, and Overleaf figure.
+
+## Session: 2026-09-02 — Add layerwise ablation CSV copy utility
+
+Added a Delta utility that copies and byte-verifies the 15 joint CAMEO/ECOD
+layerwise paper CSVs from the shared `/work/hdd` result directory into
+`$HOME/csv_files/layerwise_ablation_csvs` without transforming their contents.
