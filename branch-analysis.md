@@ -1875,3 +1875,9 @@ paired-protein bootstrap intervals, source tables, manifest, and Overleaf figure
 Added a Delta utility that copies and byte-verifies the 15 joint CAMEO/ECOD
 layerwise paper CSVs from the shared `/work/hdd` result directory into
 `$HOME/csv_files/layerwise_ablation_csvs` without transforming their contents.
+
+## Session: 2026-09-02 — Plot selected layerwise ablation trajectories
+
+Added a local plotting entrypoint and generated six individual-protein TM-score
+trajectory figures for FWD and REV Pair transition MLP, MSA MLP, and combined
+TMU plus triangle-attention ablations under the September 2 plot bundle.
