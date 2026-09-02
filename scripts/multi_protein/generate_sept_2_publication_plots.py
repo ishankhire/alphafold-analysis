@@ -27,6 +27,7 @@ from matplotlib.lines import Line2D
 
 
 GENERATOR_VERSION = "sept_2_publication_plots_v1"
+MAIN_FIGURE_FONT_SCALE = 1.5
 BOOTSTRAP_REPLICATES = 2_000
 BOOTSTRAP_SEED = 20260902
 EXPECTED_PROTEINS = 552
@@ -129,16 +130,17 @@ TRIANGLE_METRICS = {
 }
 
 
-def configure_style() -> None:
+def configure_style(*, font_scale: float = 1.0) -> None:
+    """Configure figure styling, with enlarged type for publication main figures."""
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
-            "font.size": 10,
-            "axes.titlesize": 12,
-            "axes.labelsize": 11,
-            "xtick.labelsize": 9,
-            "ytick.labelsize": 9,
-            "legend.fontsize": 8.5,
+            "font.size": 10 * font_scale,
+            "axes.titlesize": 12 * font_scale,
+            "axes.labelsize": 11 * font_scale,
+            "xtick.labelsize": 9 * font_scale,
+            "ytick.labelsize": 9 * font_scale,
+            "legend.fontsize": 8.5 * font_scale,
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.grid": True,
@@ -1033,7 +1035,8 @@ def phase_figure(
         for row in milestones.itertuples():
             axis.annotate(
                 str(row.layer), (row.normalized_r2, row.consistency_value),
-                xytext=(4, label_shifts[model_index]), textcoords="offset points", fontsize=6.2,
+                xytext=(4, label_shifts[model_index]), textcoords="offset points",
+                fontsize=6.2 * (plt.rcParams["font.size"] / 10),
                 color=spec["color"], bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.65, "pad": 0.1},
             )
     axis.set(
@@ -1211,6 +1214,7 @@ def main() -> None:
     standard_uncertainty = "paired protein bootstrap percentile 95% CI"
     phase_uncertainty = "joint paired-protein bootstrap 95% x/y intervals at milestone layers"
 
+    configure_style(font_scale=MAIN_FIGURE_FONT_SCALE)
     png, pdf = line_figure(
         r2_summary, "Mean per-protein $R^2$", "main_figure_01_mean_per_protein_r2",
         MAIN_DIR, "unbounded",
@@ -1243,6 +1247,7 @@ def main() -> None:
     )
     manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Normalized decodability versus normalized mean triangle violation", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
 
+    configure_style()
     png, pdf = faceted_subgroup_figure(
         sequence_summary, SEQUENCE_BINS, "Mean per-protein MAE (Å)",
         "supp_figure_sequence_separation_mae_combined", SUPPLEMENT_DIR,

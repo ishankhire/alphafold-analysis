@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-09-02 — Enlarge September 2 main-figure typography
+
+Increased main-figure titles, axis labels, tick numbers, legends, and numeric
+annotations by 50% in the September 2 publication generator while preserving
+the original supplemental-figure typography and analytical content.
+
 ## Session: 2026-09-02 — Generate fivefold-only publication figure bundle
 
 Added a September 2 publication generator and 27-pair PDF/PNG bundle derived
