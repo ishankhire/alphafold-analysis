@@ -895,13 +895,17 @@ def faceted_subgroup_figure(
         axis.set_visible(False)
     handles, labels = flat[0].get_legend_handles_labels()
     if shared_axis_labels:
-        figure.supylabel(ylabel)
+        shared_ylabel = figure.supylabel(
+            ylabel, x=0.045, multialignment="center"
+        )
         figure.supxlabel("Evoformer layer", y=0.14)
         figure.legend(
             handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
             ncol=4, frameon=False,
         )
-        figure.tight_layout(rect=(0.025, 0.22, 1, 1))
+        figure.tight_layout(rect=(0.025, 0.22, 1, 0.98))
+        first_axis_bounds = flat[0].get_position()
+        shared_ylabel.set_y((first_axis_bounds.y0 + first_axis_bounds.y1) / 2)
     else:
         figure.legend(handles, labels, loc="lower center", ncol=4, frameon=False)
         figure.tight_layout(rect=(0, 0.08, 1, 1))
@@ -1284,14 +1288,14 @@ def main() -> None:
         spatial_summary, SPATIAL_BINS, "Mean per-protein\nMAE (Å)",
         "main_figure_15_spatial_distance_mae_combined", MAIN_DIR,
         ncols=len(SPATIAL_BINS),
-        figsize=(15, 4.0),
+        figsize=(15, 3.9),
         ylimits={category: (0, 5) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 15)},
         yticks={category: tuple(range(6)) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 5, 10, 15)},
         visible_y_tick_categories=(SPATIAL_BINS[0], SPATIAL_BINS[-1]),
         shared_axis_labels=True,
-        title_pad=10,
+        title_pad=14,
     )
     manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title="Protein-equal MAE by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths["spatial_raw"], source_paths["spatial_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
