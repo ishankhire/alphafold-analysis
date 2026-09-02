@@ -1796,3 +1796,12 @@ historical triangle placeholders, source CSVs, and hashed provenance. The new
 and related test suites pass and representative available-data figures were
 visually inspected. Full bundle generation remains pending the new Delta
 replay output; the generator fails explicitly rather than using pooled MAE.
+
+## Session: 2026-09-01 — Enable interim pooled publication MAE plots
+
+Added a user-approved temporary fallback that renders the combined and
+standalone sequence/spatial MAE figures from the complete protocol-2.0
+pair-pooled subgroup tables when the per-protein replay CSV is absent. The
+bundle labels the aggregation and temporary status in source data, manifest,
+README, and generation metadata, omits unsupported MAE uncertainty/spaghetti
+variants, and automatically restores the per-protein path once available.

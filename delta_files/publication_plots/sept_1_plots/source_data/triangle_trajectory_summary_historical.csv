@@ -1,0 +1,105 @@
+analysis_name,model_family,model,category_system,category_label,metric,metric_role,n_candidate_peaks,candidate_peak_layers,n_supported_peaks,supported_peak_layers,largest_supported_peak_prominence,largest_supported_peak_layer,n_candidate_troughs,candidate_trough_layers,n_supported_troughs,supported_trough_layers,largest_supported_trough_prominence,largest_supported_trough_layer
+general_base256_combined,shared_ols,Shared linear,all_triangles,all,violation_fraction,secondary,3,11;34;40,1,34,0.0071498815239096,34.0,1,22,0,,,
+general_base256_combined,shared_ols,Shared linear,rms_size,large,violation_fraction,secondary,1,32,1,32,0.0076531352796473,32.0,2,27;35,2,27;35,0.0068020945408291,35.0
+general_base256_combined,shared_ols,Shared linear,rms_size,medium,violation_fraction,secondary,2,15;34,1,34,0.0140401799628649,34.0,2,23;37,1,23,0.0041732045713862,23.0
+general_base256_combined,shared_ols,Shared linear,rms_size,small,violation_fraction,secondary,2,9;34,2,9;34,0.0197129406121955,9.0,1,22,0,,,
+general_base256_combined,shared_ols,Shared linear,area,high,violation_fraction,secondary,3,11;20;32,1,32,0.0014120775361173,32.0,4,15;27;35;42,2,35;42,0.0017986933621276,35.0
+general_base256_combined,shared_ols,Shared linear,area,low,violation_fraction,secondary,2,11;34,1,34,0.0125974684727869,34.0,1,17,0,,,
+general_base256_combined,shared_ols,Shared linear,area,medium,violation_fraction,secondary,3,18;34;40,2,34;40,0.0096072491469296,34.0,1,35,0,,,
+general_base256_combined,shared_ols,Shared linear,relative_slack,high,violation_fraction,secondary,3,9;34;40,3,9;34;40,0.004181227464703,9.0,2,22;35,1,22,0.001641299573505,22.0
+general_base256_combined,shared_ols,Shared linear,relative_slack,low,violation_fraction,secondary,2,34;40,1,34,0.0140922959379971,34.0,0,,0,,,
+general_base256_combined,shared_ols,Shared linear,relative_slack,medium,violation_fraction,secondary,3,10;34;40,3,10;34;40,0.013384110166439,10.0,2,22;35,1,22,0.003943888927716,22.0
+general_base256_combined,shared_ols,Shared linear,angle_shape,clearly_acute,violation_fraction,secondary,3,9;34;40,2,34;40,0.0025483373062278,34.0,2,22;35,0,,,
+general_base256_combined,shared_ols,Shared linear,angle_shape,clearly_obtuse,violation_fraction,secondary,2,34;40,1,34,0.0109191141672269,34.0,1,21,0,,,
+general_base256_combined,shared_ols,Shared linear,angle_shape,near_right,violation_fraction,secondary,3,10;34;40,2,34;40,0.0034848307453459,40.0,2,18;35,1,18,0.0027235713241719,18.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,all_triangles,all,violation_fraction,secondary,2,10;34,1,10,0.0017407788302913,10.0,1,22,1,22,0.0027793844218535,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,large,violation_fraction,secondary,2,6;32,2,6;32,0.0012856918140547,32.0,2,12;36,1,12,0.0015000151156104,12.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,medium,violation_fraction,secondary,2,15;34,2,15;34,0.0073089432856879,15.0,1,22,1,22,0.002082887142395,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,small,violation_fraction,secondary,2,9;30,2,9;30,0.0085142007712716,9.0,1,22,1,22,0.0059821794407942,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,high,violation_fraction,secondary,1,30,1,30,0.0002159653165117,30.0,2,12;41,0,,,
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,low,violation_fraction,secondary,2,10;34,2,10;34,0.0059767233337997,10.0,1,22,1,22,0.0076453867927723,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,medium,violation_fraction,secondary,1,34,0,,,,1,22,1,22,0.0005782632852365,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,high,violation_fraction,secondary,1,34,0,,,,1,22,0,,,
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,low,violation_fraction,secondary,2,11;34,2,11;34,0.0077793663243196,11.0,1,22,1,22,0.0052439450522822,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,medium,violation_fraction,secondary,2,6;30,2,6;30,0.0033913133133634,6.0,1,22,1,22,0.001328229755023,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,clearly_acute,violation_fraction,secondary,2,6;31,2,6;31,0.0012305037688442,6.0,1,22,1,22,0.0003402546919321,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,clearly_obtuse,violation_fraction,secondary,2,10;34,1,10,0.0067205402803322,10.0,1,22,1,22,0.0044956914051645,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,near_right,violation_fraction,secondary,2,6;30,2,6;30,0.0039762897513357,6.0,1,22,1,22,0.0007413227227644,22.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,all_triangles,all,violation_fraction,secondary,2,12;30,0,,,,1,20,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,large,violation_fraction,secondary,1,32,0,,,,1,27,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,medium,violation_fraction,secondary,2,14;34,2,14;34,0.007332662682579,14.0,0,,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,small,violation_fraction,secondary,2,7;30,2,7;30,0.0095478177602993,7.0,1,20,1,20,0.0038474526690183,20.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,high,violation_fraction,secondary,2,20;32,1,32,0.0015415169560491,32.0,1,27,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,low,violation_fraction,secondary,2,8;30,2,8;30,0.007039405921347,8.0,1,20,1,20,0.004220427060701,20.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,medium,violation_fraction,secondary,2,15;32,1,32,0.002450217682774,32.0,0,,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,high,violation_fraction,secondary,1,30,1,30,0.000333625699736,30.0,1,24,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,low,violation_fraction,secondary,2,12;34,0,,,,2,22;29,1,22,0.0035729948199917,22.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,medium,violation_fraction,secondary,2,7;30,2,7;30,0.0020167001114117,7.0,0,,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,clearly_acute,violation_fraction,secondary,2,5;30,2,5;30,0.0005382908996048,30.0,1,24,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,clearly_obtuse,violation_fraction,secondary,2,12;32,1,12,0.0056488801092524,12.0,2,22;29,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,near_right,violation_fraction,secondary,2,6;30,2,6;30,0.0019245080000301,6.0,1,24,1,24,0.00068895563342,24.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,all_triangles,all,violation_fraction,secondary,2,11;34,2,11;34,0.0061496431499243,11.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,large,violation_fraction,secondary,2,23;32,1,32,0.0062789561114661,32.0,2,27;35,2,27;35,0.0039370754783311,35.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,medium,violation_fraction,secondary,2,15;34,1,34,0.0106453001706609,34.0,1,23,1,23,0.003211811498077,23.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,small,violation_fraction,secondary,2,9;34,2,9;34,0.0178016210564053,9.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,high,violation_fraction,secondary,1,32,1,32,0.0015337916046591,32.0,2,5;39,1,39,0.0014582451392555,39.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,low,violation_fraction,secondary,2,11;34,2,11;34,0.0149614921216341,11.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,medium,violation_fraction,secondary,2,18;34,1,34,0.004898125195391,34.0,0,,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,high,violation_fraction,secondary,2,8;34,2,8;34,0.003884731396321,8.0,2,24;35,1,24,0.000358746272733,24.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,low,violation_fraction,secondary,2,18;34,2,18;34,0.0116472936452005,34.0,0,,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,medium,violation_fraction,secondary,2,10;34,1,10,0.0069015329479646,10.0,1,23,1,23,0.0024521164379378,23.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,clearly_acute,violation_fraction,secondary,2,8;34,2,8;34,0.0027871898154881,8.0,1,24,1,24,0.0004290834808989,24.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,clearly_obtuse,violation_fraction,secondary,2,11;34,1,34,0.0078271899635599,34.0,1,21,1,21,0.0035683400192201,21.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,near_right,violation_fraction,secondary,1,8,1,8,0.0048244047171979,8.0,1,24,1,24,0.001211070216855,24.0
+general_base256_combined,shared_ols,Shared linear,all_triangles,all,mean_relative_violation_all,primary,3,10;34;40,3,10;34;40,0.0025123173343749,10.0,2,22;35,0,,,
+general_base256_combined,shared_ols,Shared linear,rms_size,large,mean_relative_violation_all,primary,1,32,1,32,0.0010712369156631,32.0,2,27;35,1,35,0.0007797915077187,35.0
+general_base256_combined,shared_ols,Shared linear,rms_size,medium,mean_relative_violation_all,primary,2,10;34,1,34,0.002549254959245,34.0,1,22,1,22,0.0007484584393791,22.0
+general_base256_combined,shared_ols,Shared linear,rms_size,small,mean_relative_violation_all,primary,3,9;34;40,3,9;34;40,0.0048222355521522,9.0,2,18;35,0,,,
+general_base256_combined,shared_ols,Shared linear,area,high,mean_relative_violation_all,primary,3,11;20;32,0,,,,4,16;27;35;42,2,35;42,0.0001640416862756,42.0
+general_base256_combined,shared_ols,Shared linear,area,low,mean_relative_violation_all,primary,3,9;34;40,2,9;34,0.0059974670504187,9.0,2,18;35,0,,,
+general_base256_combined,shared_ols,Shared linear,area,medium,mean_relative_violation_all,primary,3,10;34;40,3,10;34;40,0.0027665834886736,10.0,2,22;35,1,22,0.000432036043196,22.0
+general_base256_combined,shared_ols,Shared linear,relative_slack,high,mean_relative_violation_all,primary,3,6;34;40,2,34;40,0.0006119720328373,34.0,2,22;35,1,35,0.0003471106653723,35.0
+general_base256_combined,shared_ols,Shared linear,relative_slack,low,mean_relative_violation_all,primary,3,10;34;40,2,10;34,0.0058924818347445,10.0,2,22;35,0,,,
+general_base256_combined,shared_ols,Shared linear,relative_slack,medium,mean_relative_violation_all,primary,3,10;34;40,3,10;34;40,0.0018341239510668,10.0,2,22;35,1,22,0.000672289408112,22.0
+general_base256_combined,shared_ols,Shared linear,angle_shape,clearly_acute,mean_relative_violation_all,primary,3,6;34;40,3,6;34;40,0.0010237504301729,6.0,2,18;35,1,18,0.0002106089731484,18.0
+general_base256_combined,shared_ols,Shared linear,angle_shape,clearly_obtuse,mean_relative_violation_all,primary,3,10;34;40,2,10;34,0.0048230516119115,10.0,2,22;35,0,,,
+general_base256_combined,shared_ols,Shared linear,angle_shape,near_right,mean_relative_violation_all,primary,3,6;34;40,2,34;40,0.0007952093444056,34.0,2,18;35,1,18,0.0005499495406977,18.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,all_triangles,all,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0010479060168464,6.0,1,22,1,22,0.0004566065703223,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,large,mean_relative_violation_all,primary,2,6;32,1,32,9.959831686847928e-05,32.0,1,12,1,12,0.0001763712362126,12.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,medium,mean_relative_violation_all,primary,3,8;15;34,1,34,0.0001605002442519,34.0,1,22,1,22,0.0002425334258829,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,rms_size,small,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0030038705514873,6.0,1,22,1,22,0.0010688071532425,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,high,mean_relative_violation_all,primary,2,16;30,0,,,,1,14,0,,,
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,low,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0030416559384826,6.0,1,22,1,22,0.0012906262140153,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,area,medium,mean_relative_violation_all,primary,1,31,1,31,8.207110605418622e-05,31.0,1,22,1,22,7.28430419266888e-05,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,high,mean_relative_violation_all,primary,2,6;31,2,6;31,0.0003375281469553,6.0,1,22,0,,,
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,low,mean_relative_violation_all,primary,2,7;30,2,7;30,0.0011739308581364,7.0,1,22,1,22,0.0010663582052325,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,relative_slack,medium,mean_relative_violation_all,primary,2,6;31,2,6;31,0.0009891467634176,6.0,1,22,1,22,0.0002199646886502,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,clearly_acute,mean_relative_violation_all,primary,2,6;31,2,6;31,0.0004307055706958,6.0,1,22,1,22,8.028368052649708e-05,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,clearly_obtuse,mean_relative_violation_all,primary,2,7;30,2,7;30,0.0013652088657278,7.0,1,22,1,22,0.0007136602593359,22.0
+per_protein_base256_combined,per_protein_ols,Per-protein linear,angle_shape,near_right,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0008937458582742,6.0,1,22,1,22,0.0001160971928639,22.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,all_triangles,all,mean_relative_violation_all,primary,2,7;30,2,7;30,0.0007001673573898,7.0,1,20,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,large,mean_relative_violation_all,primary,2,19;32,1,32,0.0006613905432678,32.0,1,27,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,medium,mean_relative_violation_all,primary,2,12;32,2,12;32,0.0011846013118218,12.0,1,23,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,rms_size,small,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0021255210130337,6.0,1,20,1,20,0.0006922150222457,20.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,high,mean_relative_violation_all,primary,2,20;32,1,32,0.0002216097170706,32.0,2,6;27,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,low,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0027624143688741,6.0,1,20,1,20,0.0006504604406749,20.0
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,area,medium,mean_relative_violation_all,primary,2,15;32,1,32,0.00039154729714,32.0,0,,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,high,mean_relative_violation_all,primary,0,,0,,,,1,24,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,low,mean_relative_violation_all,primary,2,7;30,1,30,0.0007896903212837,30.0,1,20,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,relative_slack,medium,mean_relative_violation_all,primary,2,6;30,2,6;30,0.0003515089412401,6.0,1,20,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,clearly_acute,mean_relative_violation_all,primary,2,5;30,1,30,7.199970132472743e-05,30.0,1,24,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,clearly_obtuse,mean_relative_violation_all,primary,2,7;30,2,7;30,0.0013186106758875,7.0,1,20,0,,,
+shared_xgboost_base256_combined,shared_xgboost,XGBoost,angle_shape,near_right,mean_relative_violation_all,primary,2,5;30,2,5;30,0.0003488775150062,5.0,1,24,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,all_triangles,all,mean_relative_violation_all,primary,2,10;34,2,10;34,0.0015937774429667,10.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,large,mean_relative_violation_all,primary,2,32;41,1,32,0.0007767129638575,32.0,0,,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,medium,mean_relative_violation_all,primary,2,12;34,1,34,0.0014152176838816,34.0,1,23,1,23,0.0006040035700396,23.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,rms_size,small,mean_relative_violation_all,primary,2,9;34,2,9;34,0.0042243753916535,9.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,high,mean_relative_violation_all,primary,2,12;32,1,32,0.0001618576372781,32.0,2,5;16,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,low,mean_relative_violation_all,primary,2,9;34,2,9;34,0.0050598069710276,9.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,area,medium,mean_relative_violation_all,primary,2,10;34,2,10;34,0.0011777251453009,10.0,1,22,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,high,mean_relative_violation_all,primary,2,8;34,1,34,0.0001102601030728,34.0,2,22;35,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,low,mean_relative_violation_all,primary,2,10;34,2,10;34,0.0041102374566512,10.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,relative_slack,medium,mean_relative_violation_all,primary,2,8;34,2,8;34,0.001544029773455,8.0,1,22,1,22,0.0002936899027383,22.0
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,clearly_acute,mean_relative_violation_all,primary,2,6;34,2,6;34,0.0004656635059381,6.0,2,22;35,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,clearly_obtuse,mean_relative_violation_all,primary,2,10;34,2,10;34,0.0031927602767988,10.0,1,23,0,,,
+analysis_1_sequence_gated,gated_ols,Sequence gated,angle_shape,near_right,mean_relative_violation_all,primary,2,8;34,1,8,0.0007282268903575,8.0,1,22,0,,,

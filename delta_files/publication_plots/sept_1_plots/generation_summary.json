@@ -1,0 +1,41 @@
+{
+  "generator_version": "sept_1_publication_plots_v2",
+  "generated_at": "2026-09-02T02:14:23.527278+00:00",
+  "bootstrap_replicates": 10000,
+  "bootstrap_seed": 20260901,
+  "bootstrap_method": "paired protein percentile, pointwise 95% intervals",
+  "figures": 25,
+  "models": [
+    "shared_ols_base256",
+    "per_protein_ols_base256",
+    "shared_xgboost_base256_fixed_s4",
+    "sequence_gated_ols_base256"
+  ],
+  "aa_gated_included": false,
+  "fivefold_proteins": 552,
+  "historical_triangle_proteins": 111,
+  "subgroup_mae_mode": "temporary_pair_pooled_mae",
+  "subgroup_mae_temporary_placeholder": true,
+  "subgroup_mae_uncertainty": "none (single pair-pooled estimate)",
+  "inputs": {
+    "delta_files/regression_5fold_v1/shared_ols_base256/per_protein.csv": "211799074f3e47df32f00dd373f6575bb1a2c2faf9c26074df87d279aaaeb704",
+    "delta_files/regression_5fold_v1/shared_ols_base256/geometry_metrics.csv": "c7ea36603d03666ece6aa6d16d09ffd45ed502cdc0bf99e1b6070c0c7f7d609b",
+    "delta_files/regression_5fold_v1/per_protein_ols_base256/per_protein.csv": "dd1151131663c3f00b4d4a9b2da05ddc69d31bc220a59159c46ae963525c3319",
+    "delta_files/regression_5fold_v1/per_protein_ols_base256/geometry_metrics.csv": "0d215f875817cd14eb62a29b64c7bbffdea7bdb0aa4a604db7bf69858460ed47",
+    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/per_protein.csv": "1280eb5a96c370343e9fd21671734d1e481d895971684814ac9b88c822791722",
+    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/geometry_metrics.csv": "f9da2dddeeb255ea484d462bfc0b904e2be493c1679d7e387d43ddf4fd8e1042",
+    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/per_protein.csv": "52157d8c84c26685c7686c32c01b618eb74c2bcb10408706dcded265ad081c99",
+    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/geometry_metrics.csv": "2ece2e18726d6721a5a8980a0f2dda6d3d64cde89a360838e9ecba01fc8f2b68",
+    "delta_files/regression_5fold_v1/shared_ols_base256/subgroup_metrics/by_spatial_distance.csv": "f20521d1a23f163f093efa487df77eb98db3b0fcd20cac5e5094ee0b5013bc68",
+    "delta_files/regression_5fold_v1/shared_ols_base256/subgroup_metrics/by_sequence_separation.csv": "a1313a478c0439305f345388e72a3f678b7472f912c752f7dfb486ac53fb5178",
+    "delta_files/regression_5fold_v1/per_protein_ols_base256/subgroup_metrics/by_spatial_distance.csv": "e42edd74cd739cd25d777e17893d01600df6e2968ae9b48db0a7954bf8f9639f",
+    "delta_files/regression_5fold_v1/per_protein_ols_base256/subgroup_metrics/by_sequence_separation.csv": "a69ce3bada796684068346d70501bb6c762b0b07c1670b0eb979d2b4592f8d22",
+    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/subgroup_metrics/by_spatial_distance.csv": "9aee53717a3d204c3224fcdc418022913ac69ca7396dd152eb82659afb276610",
+    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/subgroup_metrics/by_sequence_separation.csv": "1cedd15948b1476591da8105b6ae91b7eb2d846e0a4bc484ba661ba5f3251e5d",
+    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/subgroup_metrics/by_spatial_distance.csv": "48ff6442280ac2440ddc5bab367eb5388e4ea5f567874d87d901a74537f72441",
+    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/subgroup_metrics/by_sequence_separation.csv": "d9debb464f0732e5e5767afeb1781a0111819f6c97ba38d33bfba25cfd0f75ee",
+    "delta_files/triangle_violation_subgroups/per_protein_triangle_metrics.csv": "e0e37b5ffd7ceb3fe4382b0e26dde3a03fb47a738d81ca30d0892d0a3cd8d589",
+    "delta_files/analysis/triangle_violation_subgroups/peak_trough_significance/candidate_extrema.csv": "5770ef8cc6bdcf0261db1915570ef5112f9b0eb0ca068f8d4f529ad6a3ad0236"
+  },
+  "manifest": "delta_files/publication_plots/sept_1_plots/figure_manifest.csv"
+}

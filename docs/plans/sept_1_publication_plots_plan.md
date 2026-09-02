@@ -13,6 +13,22 @@
 
 ## Missing per-protein subgroup data
 
+### Interim pooled-MAE generation mode (user-approved September 1, 2026)
+
+- Until the per-protein subgroup replay is copied back from Delta, the local
+  generator may use the canonical protocol-2.0 pair-pooled subgroup tables for
+  the same four models, 552 proteins, and 48 layers.
+- This is an explicit, temporary fallback rather than a silent substitution.
+  Source tables, the figure manifest, bundle README, and generation metadata
+  label the aggregation as `pair_pooled_mae` and flag the temporary status.
+- Temporary MAE plots use the y-axis label `Pooled MAE (Å)` and do not show
+  bootstrap, SD, or individual-protein variants because those quantities
+  cannot be recovered from a single pooled estimate. The combined and
+  standalone spatial/sequence PDF/PNG pairs are still generated.
+- When the complete per-protein replay CSV becomes available, rerunning the
+  same generator automatically restores the planned protein-equal curves and
+  their uncertainty/heterogeneity variants.
+
 - Add an independent Delta replay workflow under
   `scripts/cluster_scripts/publication_figures/`. Reuse the saved OOF
   coefficient and booster artifacts without refitting.
@@ -63,8 +79,9 @@
 - Reconcile replay primitives to the existing pooled subgroup MAEs.
 - Require every requested figure to have nonempty PDF/PNG files and declared
   source CSVs; require copied historical assets to retain their hashes.
-- Fail clearly if the per-protein subgroup replay output is missing or
-  incomplete. Never silently substitute pooled MAE.
+- If the per-protein subgroup replay output exists, fail clearly when it is
+  incomplete rather than falling back. If it is absent, use only the explicit
+  user-approved pooled-MAE placeholder mode documented above.
 - Run relevant tests with `./.venv`, generate the complete bundle once the
   replay CSV is available, visually inspect representative figures, run
   integrity checks, update `branch-analysis.md`, and commit/push only the

@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_1_publication_plots_v1"
+GENERATOR_VERSION = "sept_1_publication_plots_v2"
 BOOTSTRAP_REPLICATES = 10_000
 BOOTSTRAP_SEED = 20260901
 EXPECTED_PROTEINS = 552
@@ -39,6 +39,10 @@ REGRESSION_DIR = DELTA_DIR / "regression_5fold_v1"
 SUBGROUP_PATH = (
     DELTA_DIR / "analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv"
 )
+POOLED_SUBGROUP_FILENAMES = {
+    "spatial_distance": "by_spatial_distance.csv",
+    "sequence_separation": "by_sequence_separation.csv",
+}
 HISTORICAL_RAW = DELTA_DIR / "triangle_violation_subgroups/per_protein_triangle_metrics.csv"
 HISTORICAL_ANALYSIS = DELTA_DIR / "analysis/triangle_violation_subgroups"
 PEAK_ROOT = HISTORICAL_ANALYSIS / "peak_trough_significance"
@@ -198,7 +202,85 @@ def load_subgroup_values() -> pd.DataFrame:
     validate_subgroup_values(frame)
     frame["model"] = frame["analysis_name"].map(lambda value: MODEL_SPECS[value]["label"])
     frame["value"] = frame["mae"]
+    frame["aggregation"] = "protein_equal_mean"
+    frame["temporary_pooled_mae_placeholder"] = False
     return frame
+
+
+def validate_pooled_subgroup_values(frame: pd.DataFrame) -> None:
+    required = {
+        "analysis_name", "model_family", "layer", "evaluation_design",
+        "evaluation_scope", "oof_prediction_scope", "category_scope",
+        "category_label", "n_proteins", "n_expected_pairs",
+        "n_evaluated_pairs", "pair_coverage", "support_status", "pooled_mae",
+    }
+    require_columns(frame, required, "fivefold pooled subgroup MAE")
+    if set(frame["analysis_name"]) != set(MODEL_ORDER):
+        raise ValueError("Pooled subgroup MAE does not contain exactly the four planned models")
+    if set(pd.to_numeric(frame["layer"]).astype(int)) != set(LAYERS):
+        raise ValueError("Pooled subgroup MAE does not contain layers 0-47")
+    expected_rows = len(MODEL_ORDER) * len(LAYERS) * (len(SPATIAL_BINS) + len(SEQUENCE_BINS))
+    if len(frame) != expected_rows:
+        raise ValueError(f"Pooled subgroup MAE has {len(frame)} rows, expected {expected_rows}")
+    key = ["analysis_name", "layer", "category_scope", "category_label"]
+    if frame.duplicated(key).any():
+        raise ValueError("Pooled subgroup MAE contains duplicate keys")
+    expected_labels = {"sequence_separation": set(SEQUENCE_BINS), "spatial_distance": set(SPATIAL_BINS)}
+    for scope, labels in expected_labels.items():
+        subset = frame[frame["category_scope"].eq(scope)]
+        if set(subset["category_label"].astype(str)) != labels:
+            raise ValueError(f"Pooled subgroup MAE has wrong labels for {scope}")
+    if frame["n_proteins"].le(0).any() or frame["n_proteins"].gt(EXPECTED_PROTEINS).any():
+        raise ValueError("Pooled subgroup MAE has invalid per-category protein support")
+    support_counts = frame.groupby(["category_scope", "category_label"])["n_proteins"].nunique()
+    if not support_counts.eq(1).all():
+        raise ValueError("Pooled subgroup MAE protein support differs across models or layers")
+    if set(frame["support_status"]) != {"sufficient"}:
+        raise ValueError("Pooled subgroup MAE contains unsupported rows")
+    if not np.isfinite(pd.to_numeric(frame["pooled_mae"], errors="coerce")).all():
+        raise ValueError("Pooled subgroup MAE contains nonfinite values")
+    if not frame["n_evaluated_pairs"].eq(frame["n_expected_pairs"]).all():
+        raise ValueError("Pooled subgroup MAE does not have complete pair coverage")
+
+
+def load_pooled_subgroup_values() -> tuple[pd.DataFrame, list[Path]]:
+    """Load the temporary pair-pooled fallback from canonical fivefold outputs."""
+    frames: list[pd.DataFrame] = []
+    paths: list[Path] = []
+    for analysis in MODEL_ORDER:
+        for scope, filename in POOLED_SUBGROUP_FILENAMES.items():
+            path = REGRESSION_DIR / analysis / "subgroup_metrics" / filename
+            frame = pd.read_csv(path, dtype={"category_label": str})
+            if set(frame["category_scope"]) != {scope}:
+                raise ValueError(f"{relative(path)} has the wrong category scope")
+            frames.append(frame)
+            paths.append(path)
+    result = pd.concat(frames, ignore_index=True)
+    validate_pooled_subgroup_values(result)
+    result["model"] = result["analysis_name"].map(lambda value: MODEL_SPECS[value]["label"])
+    result["generalization_scope"] = result["analysis_name"].map(
+        lambda value: MODEL_SPECS[value]["generalization_scope"]
+    )
+    result["value"] = result["pooled_mae"]
+    result["aggregation"] = "pair_pooled_mae"
+    result["temporary_pooled_mae_placeholder"] = True
+    return result, paths
+
+
+def pooled_subgroup_summary(frame: pd.DataFrame) -> pd.DataFrame:
+    """Put pair-pooled trajectories into the publication summary schema."""
+    rows = frame.copy()
+    rows["mean"] = rows["pooled_mae"]
+    for column in (
+        "sd", "se", "bootstrap_ci_low", "bootstrap_ci_high", "two_sd_low", "two_sd_high",
+    ):
+        rows[column] = np.nan
+    rows["n_proteins_total"] = EXPECTED_PROTEINS
+    rows["n_proteins_finite"] = rows["n_proteins"].astype(int)
+    rows["aggregation"] = "pair_pooled_mae"
+    rows["historical_placeholder"] = False
+    rows["temporary_pooled_mae_placeholder"] = True
+    return rows
 
 
 def paired_bootstrap_summary(
@@ -266,22 +348,24 @@ def paired_bootstrap_summary(
                 "oof_prediction_scope": oof_prediction_scope,
                 "generalization_scope": generalization_scope,
                 "historical_placeholder": bool(placeholder),
+                "temporary_pooled_mae_placeholder": False,
             }
             row.update(dict(zip(group_columns, keys)))
             rows.append(row)
     return pd.DataFrame(rows)
 
 
-def plot_model_lines(axis: plt.Axes, summary: pd.DataFrame, band: str = "bootstrap") -> None:
+def plot_model_lines(axis: plt.Axes, summary: pd.DataFrame, band: str | None = "bootstrap") -> None:
     for analysis in MODEL_ORDER:
         data = summary[summary["analysis_name"].eq(analysis)].sort_values("layer")
         spec = MODEL_SPECS[analysis]
         axis.plot(data["layer"], data["mean"], color=spec["color"], linestyle=spec["linestyle"], linewidth=2, label=spec["label"])
-        low, high = (
-            ("bootstrap_ci_low", "bootstrap_ci_high") if band == "bootstrap"
-            else ("two_sd_low", "two_sd_high")
-        )
-        axis.fill_between(data["layer"].to_numpy(float), data[low].to_numpy(float), data[high].to_numpy(float), color=spec["color"], alpha=0.13 if band == "bootstrap" else 0.09, linewidth=0)
+        if band is not None:
+            low, high = (
+                ("bootstrap_ci_low", "bootstrap_ci_high") if band == "bootstrap"
+                else ("two_sd_low", "two_sd_high")
+            )
+            axis.fill_between(data["layer"].to_numpy(float), data[low].to_numpy(float), data[high].to_numpy(float), color=spec["color"], alpha=0.13 if band == "bootstrap" else 0.09, linewidth=0)
 
 
 def plot_individual_lines(axis: plt.Axes, raw: pd.DataFrame, summary: pd.DataFrame) -> None:
@@ -313,7 +397,7 @@ def save_figure(figure: plt.Figure, directory: Path, stem: str) -> tuple[Path, P
     return png, pdf
 
 
-def line_figure(summary: pd.DataFrame, ylabel: str, stem: str, directory: Path, *, band: str = "bootstrap", bounded: bool = False) -> tuple[Path, Path]:
+def line_figure(summary: pd.DataFrame, ylabel: str, stem: str, directory: Path, *, band: str | None = "bootstrap", bounded: bool = False) -> tuple[Path, Path]:
     figure, axis = plt.subplots(figsize=(8.4, 5.3))
     plot_model_lines(axis, summary, band=band)
     style_axis(axis, ylabel, bounded=bounded)
@@ -353,7 +437,7 @@ def faceted_figure(
             plot_individual_lines(axis, raw_category, summary_category)
         else:
             plot_model_lines(axis, summary_category, band=band)
-        style_axis(axis, "Mean per-protein MAE (Å)")
+        style_axis(axis, ylabel)
         axis.set_title(category)
     for axis in flat[len(categories):]:
         axis.set_visible(False)
@@ -363,12 +447,15 @@ def faceted_figure(
     return save_figure(figure, directory, stem)
 
 
-def standalone_subgroup_figures(summary: pd.DataFrame, categories: Sequence[str], prefix: str, directory: Path) -> list[tuple[str, Path, Path]]:
+def standalone_subgroup_figures(
+    summary: pd.DataFrame, categories: Sequence[str], prefix: str, directory: Path,
+    *, ylabel: str, band: str | None,
+) -> list[tuple[str, Path, Path]]:
     outputs = []
     for category in categories:
         stem = f"{prefix}_{bin_slug(category)}"
         subset = summary[summary["category_label"].astype(str).eq(category)]
-        png, pdf = line_figure(subset, "Mean per-protein MAE (Å)", stem, directory)
+        png, pdf = line_figure(subset, ylabel, stem, directory, band=band)
         outputs.append((stem, png, pdf))
     return outputs
 
@@ -430,13 +517,16 @@ def manifest_row(
     *, stem: str, section: str, title: str, png: Path, pdf: Path,
     source_csvs: Sequence[Path], uncertainty: str, cohort: str,
     scope: str, placeholder: bool, copied: bool,
+    aggregation: str = "protein_equal_mean",
+    temporary_pooled_mae_placeholder: bool = False,
 ) -> dict[str, object]:
     return {
         "figure_id": stem, "section": section, "title": title,
         "png_path": relative(png), "pdf_path": relative(pdf),
         "source_csvs": ";".join(relative(path) for path in source_csvs),
-        "cohort": cohort, "evaluation_scope": scope, "aggregation": "protein_equal_mean",
+        "cohort": cohort, "evaluation_scope": scope, "aggregation": aggregation,
         "uncertainty": uncertainty, "historical_placeholder": placeholder,
+        "temporary_pooled_mae_placeholder": temporary_pooled_mae_placeholder,
         "copied_verbatim": copied, "png_sha256": sha256_file(png), "pdf_sha256": sha256_file(pdf),
         "generator_version": GENERATOR_VERSION,
     }
@@ -454,26 +544,54 @@ def copy_pair(source_directory: Path, stem: str, destination: Path, output_stem:
 
 
 def main() -> None:
-    if not SUBGROUP_PATH.is_file():
-        raise FileNotFoundError(
-            f"Required per-protein subgroup replay is missing: {SUBGROUP_PATH}. "
-            "Run the Delta publication subgroup replay and copy its consolidated output first."
-        )
     configure_style()
     ensure_directories()
     generated_at = datetime.now(timezone.utc).isoformat()
 
     r2 = load_metric_values("per_protein.csv", "r2", "prediction_status")
     tm = load_metric_values("geometry_metrics.csv", "tm_score", "geometry_status")
-    subgroup = load_subgroup_values()
+    if SUBGROUP_PATH.is_file():
+        subgroup = load_subgroup_values()
+        subgroup_mode = "per_protein_mae"
+        subgroup_inputs = [SUBGROUP_PATH]
+        subgroup_summary = None
+        subgroup_band = "bootstrap"
+        subgroup_ylabel = "Mean per-protein MAE (Å)"
+        subgroup_aggregation = "protein_equal_mean"
+        subgroup_uncertainty = "paired protein bootstrap percentile 95% CI"
+        subgroup_placeholder = False
+        subgroup_raw_suffix = "per_protein_values"
+        print(f"Using per-protein subgroup MAE: {relative(SUBGROUP_PATH)}")
+    else:
+        subgroup, subgroup_inputs = load_pooled_subgroup_values()
+        subgroup_mode = "temporary_pair_pooled_mae"
+        subgroup_summary = pooled_subgroup_summary(subgroup)
+        subgroup_band = None
+        subgroup_ylabel = "Pooled MAE (Å)"
+        subgroup_aggregation = "pair_pooled_mae"
+        subgroup_uncertainty = "none (single pair-pooled estimate)"
+        subgroup_placeholder = True
+        subgroup_raw_suffix = "pooled_values"
+        print(
+            "Per-protein subgroup replay is unavailable; using the explicit temporary "
+            "pair-pooled fivefold fallback."
+        )
     spatial = subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
     sequence = subgroup[subgroup["category_scope"].eq("sequence_separation")].copy()
     historical = load_historical_triangle_values()
 
     r2_summary = paired_bootstrap_summary(r2)
     tm_summary = paired_bootstrap_summary(tm)
-    spatial_summary = paired_bootstrap_summary(spatial, ("category_scope", "category_label"))
-    sequence_summary = paired_bootstrap_summary(sequence, ("category_scope", "category_label"))
+    if subgroup_summary is None:
+        spatial_summary = paired_bootstrap_summary(spatial, ("category_scope", "category_label"))
+        sequence_summary = paired_bootstrap_summary(sequence, ("category_scope", "category_label"))
+    else:
+        spatial_summary = subgroup_summary[
+            subgroup_summary["category_scope"].eq("spatial_distance")
+        ].copy()
+        sequence_summary = subgroup_summary[
+            subgroup_summary["category_scope"].eq("sequence_separation")
+        ].copy()
     historical_summaries = {}
     all_triangle = historical[historical["category_system"].eq("all_triangles")].copy()
     for metric in ("violation_fraction", "mean_relative_violation_all"):
@@ -481,11 +599,13 @@ def main() -> None:
         historical_summaries[metric] = paired_bootstrap_summary(metric_values, placeholder=True)
 
     source_paths = {}
+    spatial_raw_key = f"spatial_distance_mae_{subgroup_raw_suffix}"
+    sequence_raw_key = f"sequence_separation_mae_{subgroup_raw_suffix}"
     for name, frame in (
         ("r2_per_protein_values", r2), ("r2_plot_summary", r2_summary),
         ("tm_score_per_protein_values", tm), ("tm_score_plot_summary", tm_summary),
-        ("spatial_distance_mae_per_protein_values", spatial), ("spatial_distance_mae_plot_summary", spatial_summary),
-        ("sequence_separation_mae_per_protein_values", sequence), ("sequence_separation_mae_plot_summary", sequence_summary),
+        (spatial_raw_key, spatial), ("spatial_distance_mae_plot_summary", spatial_summary),
+        (sequence_raw_key, sequence), ("sequence_separation_mae_plot_summary", sequence_summary),
         ("triangle_peak_trough_values_historical", historical),
     ):
         path = SOURCE_DIR / f"{name}.csv"
@@ -517,15 +637,15 @@ def main() -> None:
     png, pdf = line_figure(tm_summary, "Mean reconstruction TM-score", "main_figure_03_tm_score", MAIN_DIR, bounded=True)
     manifest.append(manifest_row(stem="main_figure_03_tm_score", section="main", title="Mean fivefold OOF reconstruction TM-score", png=png, pdf=pdf, source_csvs=[source_paths["tm_score_per_protein_values"], source_paths["tm_score_plot_summary"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
 
-    png, pdf = faceted_figure(spatial, spatial_summary, SPATIAL_BINS, "Mean per-protein MAE (Å)", "main_figure_15_spatial_distance_mae_combined", MAIN_DIR)
-    manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title="Mean per-protein MAE by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths["spatial_distance_mae_per_protein_values"], source_paths["spatial_distance_mae_plot_summary"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
-    for stem, png, pdf in standalone_subgroup_figures(spatial_summary, SPATIAL_BINS, "main_figure_15_spatial_distance_mae", MAIN_DIR):
-        manifest.append(manifest_row(stem=stem, section="main", title=f"Mean per-protein spatial-bin MAE: {stem.rsplit('_', 1)[-1]}", png=png, pdf=pdf, source_csvs=[source_paths["spatial_distance_mae_per_protein_values"], source_paths["spatial_distance_mae_plot_summary"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
+    png, pdf = faceted_figure(spatial, spatial_summary, SPATIAL_BINS, subgroup_ylabel, "main_figure_15_spatial_distance_mae_combined", MAIN_DIR, band=subgroup_band)
+    manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title=f"{subgroup_ylabel} by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths[spatial_raw_key], source_paths["spatial_distance_mae_plot_summary"]], uncertainty=subgroup_uncertainty, cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False, aggregation=subgroup_aggregation, temporary_pooled_mae_placeholder=subgroup_placeholder))
+    for stem, png, pdf in standalone_subgroup_figures(spatial_summary, SPATIAL_BINS, "main_figure_15_spatial_distance_mae", MAIN_DIR, ylabel=subgroup_ylabel, band=subgroup_band):
+        manifest.append(manifest_row(stem=stem, section="main", title=f"Spatial-bin {subgroup_ylabel}: {stem.rsplit('_', 1)[-1]}", png=png, pdf=pdf, source_csvs=[source_paths[spatial_raw_key], source_paths["spatial_distance_mae_plot_summary"]], uncertainty=subgroup_uncertainty, cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False, aggregation=subgroup_aggregation, temporary_pooled_mae_placeholder=subgroup_placeholder))
 
-    png, pdf = faceted_figure(sequence, sequence_summary, SEQUENCE_BINS, "Mean per-protein MAE (Å)", "supp_figure_sequence_separation_mae_combined", SUPPLEMENT_DIR)
-    manifest.append(manifest_row(stem="supp_figure_sequence_separation_mae_combined", section="supplemental", title="Mean per-protein MAE by sequence separation", png=png, pdf=pdf, source_csvs=[source_paths["sequence_separation_mae_per_protein_values"], source_paths["sequence_separation_mae_plot_summary"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
-    for stem, png, pdf in standalone_subgroup_figures(sequence_summary, SEQUENCE_BINS, "supp_figure_sequence_separation_mae", SUPPLEMENT_DIR):
-        manifest.append(manifest_row(stem=stem, section="supplemental", title=f"Mean per-protein sequence-bin MAE: {stem.rsplit('_', 1)[-1]}", png=png, pdf=pdf, source_csvs=[source_paths["sequence_separation_mae_per_protein_values"], source_paths["sequence_separation_mae_plot_summary"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
+    png, pdf = faceted_figure(sequence, sequence_summary, SEQUENCE_BINS, subgroup_ylabel, "supp_figure_sequence_separation_mae_combined", SUPPLEMENT_DIR, band=subgroup_band)
+    manifest.append(manifest_row(stem="supp_figure_sequence_separation_mae_combined", section="supplemental", title=f"{subgroup_ylabel} by sequence separation", png=png, pdf=pdf, source_csvs=[source_paths[sequence_raw_key], source_paths["sequence_separation_mae_plot_summary"]], uncertainty=subgroup_uncertainty, cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False, aggregation=subgroup_aggregation, temporary_pooled_mae_placeholder=subgroup_placeholder))
+    for stem, png, pdf in standalone_subgroup_figures(sequence_summary, SEQUENCE_BINS, "supp_figure_sequence_separation_mae", SUPPLEMENT_DIR, ylabel=subgroup_ylabel, band=subgroup_band):
+        manifest.append(manifest_row(stem=stem, section="supplemental", title=f"Sequence-bin {subgroup_ylabel}: {stem.rsplit('_', 1)[-1]}", png=png, pdf=pdf, source_csvs=[source_paths[sequence_raw_key], source_paths["sequence_separation_mae_plot_summary"]], uncertainty=subgroup_uncertainty, cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False, aggregation=subgroup_aggregation, temporary_pooled_mae_placeholder=subgroup_placeholder))
 
     png, pdf = plot_historical_overlay(historical_summaries, candidates)
     manifest.append(manifest_row(stem="main_figure_all_triangles_peak_troughs_overlay", section="main", title="Historical all-triangles peak/trough overlay", png=png, pdf=pdf, source_csvs=[source_paths["triangle_peak_trough_values_historical"], source_paths["all_triangles_plot_summary_historical"], source_paths["triangle_candidate_extrema_historical"]], uncertainty="paired protein bootstrap percentile 95% CI", cohort="111 historical locked-test proteins", scope="all_edges", placeholder=True, copied=False))
@@ -549,14 +669,15 @@ def main() -> None:
         png, pdf = spaghetti_figure(raw, summary, ylabel, f"{base}_individual_proteins", bounded=bounded)
         manifest.append(manifest_row(stem=f"{base}_individual_proteins", section="supplemental_variant", title=f"{base}: individual protein trajectories", png=png, pdf=pdf, source_csvs=[source_paths["r2_per_protein_values"] if base.startswith("main_figure_01") else source_paths["tm_score_per_protein_values"]], uncertainty="raw individual proteins", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
 
-    for raw, summary, categories, base, raw_key, summary_key in (
-        (spatial, spatial_summary, SPATIAL_BINS, "main_figure_15_spatial_distance_mae_combined", "spatial_distance_mae_per_protein_values", "spatial_distance_mae_plot_summary"),
-        (sequence, sequence_summary, SEQUENCE_BINS, "supp_figure_sequence_separation_mae_combined", "sequence_separation_mae_per_protein_values", "sequence_separation_mae_plot_summary"),
-    ):
-        png, pdf = faceted_figure(raw, summary, categories, "Mean per-protein MAE (Å)", f"{base}_2sd", VARIANT_DIR, band="2sd")
-        manifest.append(manifest_row(stem=f"{base}_2sd", section="supplemental_variant", title=f"{base}: mean plus or minus 2 SD", png=png, pdf=pdf, source_csvs=[source_paths[raw_key], source_paths[summary_key]], uncertainty="mean +/- 2 sample SD", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
-        png, pdf = faceted_figure(raw, summary, categories, "Mean per-protein MAE (Å)", f"{base}_individual_proteins", VARIANT_DIR, individual=True)
-        manifest.append(manifest_row(stem=f"{base}_individual_proteins", section="supplemental_variant", title=f"{base}: individual protein trajectories", png=png, pdf=pdf, source_csvs=[source_paths[raw_key]], uncertainty="raw individual proteins", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
+    if subgroup_mode == "per_protein_mae":
+        for raw, summary, categories, base, raw_key, summary_key in (
+            (spatial, spatial_summary, SPATIAL_BINS, "main_figure_15_spatial_distance_mae_combined", spatial_raw_key, "spatial_distance_mae_plot_summary"),
+            (sequence, sequence_summary, SEQUENCE_BINS, "supp_figure_sequence_separation_mae_combined", sequence_raw_key, "sequence_separation_mae_plot_summary"),
+        ):
+            png, pdf = faceted_figure(raw, summary, categories, "Mean per-protein MAE (Å)", f"{base}_2sd", VARIANT_DIR, band="2sd")
+            manifest.append(manifest_row(stem=f"{base}_2sd", section="supplemental_variant", title=f"{base}: mean plus or minus 2 SD", png=png, pdf=pdf, source_csvs=[source_paths[raw_key], source_paths[summary_key]], uncertainty="mean +/- 2 sample SD", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
+            png, pdf = faceted_figure(raw, summary, categories, "Mean per-protein MAE (Å)", f"{base}_individual_proteins", VARIANT_DIR, individual=True)
+            manifest.append(manifest_row(stem=f"{base}_individual_proteins", section="supplemental_variant", title=f"{base}: individual protein trajectories", png=png, pdf=pdf, source_csvs=[source_paths[raw_key]], uncertainty="raw individual proteins", cohort="552 protocol-2.0 proteins", scope="oof_all_pairs", placeholder=False, copied=False))
 
     manifest_frame = pd.DataFrame(manifest)
     if manifest_frame["figure_id"].duplicated().any():
@@ -564,7 +685,7 @@ def main() -> None:
     manifest_frame.to_csv(OUTPUT_ROOT / "figure_manifest.csv", index=False)
     input_paths = [
         *(REGRESSION_DIR / analysis / filename for analysis in MODEL_ORDER for filename in ("per_protein.csv", "geometry_metrics.csv")),
-        SUBGROUP_PATH, HISTORICAL_RAW, PEAK_ROOT / "candidate_extrema.csv",
+        *subgroup_inputs, HISTORICAL_RAW, PEAK_ROOT / "candidate_extrema.csv",
     ]
     summary = {
         "generator_version": GENERATOR_VERSION, "generated_at": generated_at,
@@ -573,18 +694,30 @@ def main() -> None:
         "figures": len(manifest_frame), "models": list(MODEL_ORDER),
         "aa_gated_included": False, "fivefold_proteins": EXPECTED_PROTEINS,
         "historical_triangle_proteins": 111,
+        "subgroup_mae_mode": subgroup_mode,
+        "subgroup_mae_temporary_placeholder": subgroup_placeholder,
+        "subgroup_mae_uncertainty": subgroup_uncertainty,
         "inputs": {relative(path): sha256_file(path) for path in input_paths},
         "manifest": relative(OUTPUT_ROOT / "figure_manifest.csv"),
     }
     (OUTPUT_ROOT / "generation_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    subgroup_readme = (
+        "Spatial- and sequence-bin MAE currently use pair-pooled fivefold estimates as an "
+        "explicit temporary placeholder; those figures have no uncertainty bands or individual-"
+        "protein variants. Regenerate after copying the per-protein replay CSV to replace them "
+        "automatically."
+        if subgroup_placeholder else
+        "Spatial- and sequence-bin MAE use equal-weight per-protein means from the replay output."
+    )
     (OUTPUT_ROOT / "README.md").write_text(
         "# September 1 publication plots\n\n"
         "This bundle uses protocol-2.0 fivefold OOF results for four probe families and "
-        "protein-equal means. Main uncertainty bands are paired-protein percentile bootstrap "
-        "95% intervals. The triangle figures are explicitly historical 111-protein placeholders "
+        "protein-equal means for R2 and TM-score. Their main uncertainty bands are paired-protein "
+        "percentile bootstrap 95% intervals. The triangle figures are explicitly historical "
+        "111-protein placeholders "
         "in the manifest and source tables. Per-protein OLS measures unseen pairs within seen "
-        "proteins; the other families measure unseen proteins. No AA-gated model or pair-pooled "
-        "MAE is plotted. See `figure_manifest.csv` and `source_data/` for exact provenance.\n"
+        "proteins; the other families measure unseen proteins. No AA-gated model is included. "
+        f"{subgroup_readme} See `figure_manifest.csv` and `source_data/` for exact provenance.\n"
     )
     print(f"Generated {len(manifest_frame)} publication figures in {relative(OUTPUT_ROOT)}")
 
