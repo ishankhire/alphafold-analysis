@@ -70,5 +70,22 @@ historical_outputs/per_protein_base256_combined/coefficients_layers20_29.csv
 historical_outputs/per_protein_base256_combined/coefficients_layers30_39.csv
 historical_outputs/per_protein_base256_combined/coefficients_layers40_47.csv
 
+# Relocated/generated large outputs (>=20 MB)
+delta_files/**/secondary_structure_prediction/bridge_pair_trajectories.csv.gz
+delta_files/**/secondary_structure_prediction/helix_residue_scores.csv.gz
+delta_files/regression_5fold_v1/per_protein_ols_base256/model_stability.csv
+delta_files/regression_5fold_v1/per_protein_ols_base256/training_metrics.csv
+delta_files/regression_5fold_v1/triangle_violation_subgroups_5fold_v1/length_bin_summary.csv
+delta_files/regression_5fold_v1/triangle_violation_subgroups_5fold_v1/paired_model_contrasts.csv
+delta_files/regression_5fold_v1/triangle_violation_subgroups_5fold_v1/per_protein_triangle_metrics.csv
+historical_outputs/**/analysis_4_aa_sequence_gated/subgroup_by_spatial_distance.csv
+historical_outputs/**/analysis_4_aa_sequence_gated/test_per_protein_gate_metrics.csv.gz
+historical_outputs/**/triangle_violation_samples_test/triangle_samples_layer_*.csv
+not_relevant_miscellaneous/**/pair_representation_triangle_dominance/channel_summary.csv
+not_relevant_miscellaneous/**/pair_representation_triangle_dominance/per_protein_metrics.csv
+
+# Overleaf
+overleaf/
+
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy
