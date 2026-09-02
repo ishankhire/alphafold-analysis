@@ -9,7 +9,7 @@ import math
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Collection, Iterable, Mapping, Sequence
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -858,21 +858,49 @@ def faceted_subgroup_figure(
     ylabel: str,
     stem: str,
     directory: Path,
+    *,
+    ncols: int = 3,
+    figsize: tuple[float, float] | None = None,
+    ylimits: Mapping[str, tuple[float, float]] | None = None,
+    yticks: Mapping[str, Sequence[float]] | None = None,
+    visible_y_tick_categories: Collection[str] | None = None,
+    shared_axis_labels: bool = False,
 ) -> tuple[Path, Path]:
-    ncols = 3
     nrows = math.ceil(len(categories) / ncols)
-    figure, axes = plt.subplots(nrows, ncols, figsize=(15, 3.8 * nrows), sharex=True)
+    if figsize is None:
+        figsize = (15, 3.8 * nrows)
+    figure, axes = plt.subplots(nrows, ncols, figsize=figsize, sharex=True)
     flat = np.atleast_1d(axes).ravel()
     for axis, category in zip(flat, categories):
         selected = summary[summary["category_label"].eq(category)]
         plot_model_lines(axis, selected, "nonnegative")
         style_layer_axis(axis, ylabel, "nonnegative")
+        if ylimits is not None and category in ylimits:
+            axis.set_ylim(*ylimits[category])
+        if yticks is not None and category in yticks:
+            axis.set_yticks(yticks[category])
+        if shared_axis_labels:
+            axis.set(xlabel="", ylabel="")
+        if (
+            visible_y_tick_categories is not None
+            and category not in visible_y_tick_categories
+        ):
+            axis.tick_params(axis="y", left=False, labelleft=False)
         axis.set_title(category)
     for axis in flat[len(categories) :]:
         axis.set_visible(False)
     handles, labels = flat[0].get_legend_handles_labels()
-    figure.legend(handles, labels, loc="lower center", ncol=4, frameon=False)
-    figure.tight_layout(rect=(0, 0.08, 1, 1))
+    if shared_axis_labels:
+        figure.supylabel(ylabel)
+        figure.supxlabel("Evoformer layer", y=0.14)
+        figure.legend(
+            handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
+            ncol=4, frameon=False,
+        )
+        figure.tight_layout(rect=(0.025, 0.22, 1, 1))
+    else:
+        figure.legend(handles, labels, loc="lower center", ncol=4, frameon=False)
+        figure.tight_layout(rect=(0, 0.08, 1, 1))
     return save_figure(figure, directory, stem)
 
 
@@ -1251,6 +1279,14 @@ def main() -> None:
     png, pdf = faceted_subgroup_figure(
         spatial_summary, SPATIAL_BINS, "Mean per-protein MAE (Å)",
         "main_figure_15_spatial_distance_mae_combined", MAIN_DIR,
+        ncols=len(SPATIAL_BINS),
+        figsize=(15, 3.8),
+        ylimits={category: (0, 5) for category in SPATIAL_BINS[:-1]}
+        | {SPATIAL_BINS[-1]: (0, 15)},
+        yticks={category: tuple(range(6)) for category in SPATIAL_BINS[:-1]}
+        | {SPATIAL_BINS[-1]: (0, 5, 10, 15)},
+        visible_y_tick_categories=(SPATIAL_BINS[0], SPATIAL_BINS[-1]),
+        shared_axis_labels=True,
     )
     manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title="Protein-equal MAE by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths["spatial_raw"], source_paths["spatial_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
