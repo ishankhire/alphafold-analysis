@@ -1,5 +1,16 @@
 # Branch Analysis
 
+## Session: 2026-09-02 — Generate fivefold-only publication figure bundle
+
+Added a September 2 publication generator and 27-pair PDF/PNG bundle derived
+exclusively from protocol-2.0 `regression_5fold_v1` inputs. The figures use
+protein-equal R2, TM-score, spatial/sequence subgroup MAE, and triangle metrics
+with paired-protein 95% bootstrap intervals; add globally search-adjusted
+peak/trough annotations, joint decodability-consistency intervals, focused
+triangle supplements, and model-separated individual-protein views; and retain
+pooled MAE only as a reconciliation diagnostic. Added source tables,
+input/output hashes, strict cohort/path/inventory checks, and synthetic tests.
+
 ## Session: 2026-09-01 — Plan fivefold OOF triangle-subgroup refactor
 
 Replaced the historical 111-protein triangle-subgroup plan with a versioned
