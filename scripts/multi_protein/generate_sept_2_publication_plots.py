@@ -1293,7 +1293,6 @@ def main() -> None:
         | {SPATIAL_BINS[-1]: (0, 15)},
         yticks={category: tuple(range(6)) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 5, 10, 15)},
-        visible_y_tick_categories=(SPATIAL_BINS[0], SPATIAL_BINS[-1]),
         shared_axis_labels=True,
         title_pad=14,
     )
