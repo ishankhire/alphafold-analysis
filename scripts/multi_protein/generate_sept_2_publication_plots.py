@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_2_publication_plots_v2"
+GENERATOR_VERSION = "sept_2_publication_plots_v3"
 MAIN_FIGURE_FONT_SCALE = 1.5
 BOOTSTRAP_REPLICATES = 2_000
 BOOTSTRAP_SEED = 20260902
@@ -77,7 +77,8 @@ MODEL_SPECS = {
 }
 MODEL_ORDER = tuple(MODEL_SPECS)
 
-SPATIAL_BINS = ("0-5", "5-10", "10-20", "20-40", "40+")
+SPATIAL_INPUT_BINS = ("0-5", "5-10", "10-20", "20-40", "40+")
+SPATIAL_BINS = ("0-5", "5-10", "10-40", "40+")
 SEQUENCE_BINS = ("1", "2-4", "5-9", "10-19", "20-49", "50+")
 EXPECTED_BIN_SUPPORT = {
     ("spatial_distance", "0-5"): 552,
@@ -327,7 +328,7 @@ def validate_subgroup_values(frame: pd.DataFrame, cohort: Sequence[str]) -> None
     if frame.duplicated(key).any():
         raise ValueError("Per-protein subgroup MAE contains duplicate keys")
     expected_labels = {
-        "spatial_distance": set(SPATIAL_BINS),
+        "spatial_distance": set(SPATIAL_INPUT_BINS),
         "sequence_separation": set(SEQUENCE_BINS),
     }
     for scope, labels in expected_labels.items():
@@ -405,6 +406,97 @@ def load_subgroup_values(cohort: Sequence[str]) -> tuple[pd.DataFrame, list[Path
     ):
         raise ValueError("Replayed subgroup pooled MAE does not reconcile")
     return frame, [path, reconciliation_path]
+
+
+def combine_spatial_distance_bins(frame: pd.DataFrame) -> pd.DataFrame:
+    """Combine [10, 20) and [20, 40) into exact per-protein [10, 40) MAE."""
+    require_columns(
+        frame,
+        {
+            "analysis_name",
+            "model_family",
+            "layer",
+            "protein_id",
+            "source",
+            "cv_protocol_version",
+            "evaluation_design",
+            "outer_fold",
+            "evaluation_scope",
+            "oof_prediction_scope",
+            "generalization_scope",
+            "category_scope",
+            "category_label",
+            "n_pairs",
+            "sum_absolute_error",
+            "mae",
+            "support_status",
+            "value",
+            "model",
+        },
+        "spatial-distance merge input",
+    )
+    if set(frame["category_label"]) != set(SPATIAL_INPUT_BINS):
+        raise ValueError("Spatial-distance merge input has the wrong source bins")
+
+    identity_columns = [
+        "analysis_name",
+        "model_family",
+        "layer",
+        "protein_id",
+        "source",
+        "cv_protocol_version",
+        "evaluation_design",
+        "outer_fold",
+        "evaluation_scope",
+        "oof_prediction_scope",
+        "generalization_scope",
+        "category_scope",
+        "model",
+    ]
+    source_bin_counts = frame.groupby(identity_columns, sort=False, dropna=False)[
+        "category_label"
+    ].nunique()
+    if not source_bin_counts.eq(len(SPATIAL_INPUT_BINS)).all():
+        raise ValueError("Spatial-distance merge input is incomplete for one or more keys")
+    expected_rows = len(source_bin_counts)
+
+    source = frame[frame["category_label"].isin(("10-20", "20-40"))]
+    combined = (
+        source.groupby(identity_columns, sort=False, dropna=False)
+        .agg(
+            source_bin_count=("category_label", "nunique"),
+            n_pairs=("n_pairs", "sum"),
+            sum_absolute_error=("sum_absolute_error", "sum"),
+        )
+        .reset_index()
+    )
+    if len(combined) != expected_rows or not combined["source_bin_count"].eq(2).all():
+        raise ValueError("Spatial-distance merge does not contain both source bins per key")
+    combined = combined.drop(columns="source_bin_count")
+    combined["category_label"] = "10-40"
+    combined["mae"] = combined["sum_absolute_error"] / combined["n_pairs"]
+    combined["value"] = combined["mae"]
+    combined["support_status"] = np.where(
+        combined["n_pairs"].gt(0), "complete", "empty_category"
+    )
+
+    untouched = frame[~frame["category_label"].isin(("10-20", "20-40"))]
+    result = pd.concat([untouched, combined], ignore_index=True)[frame.columns]
+    expected_plot_rows = expected_rows * len(SPATIAL_BINS)
+    if len(result) != expected_plot_rows or set(result["category_label"]) != set(SPATIAL_BINS):
+        raise ValueError("Combined spatial-distance values have the wrong plot inventory")
+    key = ["analysis_name", "layer", "protein_id", "category_label"]
+    if result.duplicated(key).any():
+        raise ValueError("Combined spatial-distance values contain duplicate keys")
+    supported = result["n_pairs"].gt(0)
+    if not result.loc[supported, "support_status"].eq("complete").all():
+        raise ValueError("Supported combined spatial-distance rows are not complete")
+    if not np.isfinite(result.loc[supported, "value"]).all():
+        raise ValueError("Supported combined spatial-distance rows contain nonfinite MAE")
+    merged_rows = result["category_label"].eq("10-40")
+    if not supported[merged_rows].all():
+        raise ValueError("The combined 10-40 spatial-distance bin lacks full support")
+    return result
 
 
 def validate_triangle_values(frame: pd.DataFrame, cohort: Sequence[str]) -> None:
@@ -1185,7 +1277,9 @@ def main() -> None:
     )
     print("Loading per-protein subgroup MAE values...")
     subgroup, subgroup_inputs = load_subgroup_values(cohort)
-    spatial = subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
+    spatial = combine_spatial_distance_bins(
+        subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
+    )
     sequence = subgroup[subgroup["category_scope"].eq("sequence_separation")].copy()
     print("Loading focused fivefold triangle values...")
     triangle, triangle_inputs = load_triangle_values(cohort)
@@ -1288,7 +1382,7 @@ def main() -> None:
         spatial_summary, SPATIAL_BINS, "Mean per-protein\nMAE (Å)",
         "main_figure_15_spatial_distance_mae_combined", MAIN_DIR,
         ncols=len(SPATIAL_BINS),
-        figsize=(15, 3.9),
+        figsize=(12.5, 3.9),
         ylimits={category: (0, 5) for category in SPATIAL_BINS[:-1]}
         | {SPATIAL_BINS[-1]: (0, 15)},
         yticks={category: tuple(range(6)) for category in SPATIAL_BINS[:-1]}
@@ -1388,7 +1482,7 @@ def main() -> None:
 
     manifest_frame = pd.DataFrame(manifest)
     expected_ids = set(expected_figure_ids())
-    if len(manifest_frame) != 29 or set(manifest_frame["figure_id"]) != expected_ids:
+    if len(manifest_frame) != len(expected_ids) or set(manifest_frame["figure_id"]) != expected_ids:
         missing = sorted(expected_ids - set(manifest_frame["figure_id"]))
         extra = sorted(set(manifest_frame["figure_id"]) - expected_ids)
         raise ValueError(f"Figure inventory mismatch; missing={missing}, extra={extra}")
@@ -1435,11 +1529,11 @@ def main() -> None:
             "tm_score_rows": 105_984,
             "top3_eigenvalue_fraction_rows": 105_984,
             "mds_stress_rows": 105_984,
-            "spatial_mae_rows": 529_920,
+            "spatial_mae_rows": 423_936,
             "sequence_mae_rows": 635_904,
             "focused_triangle_rows": 1_377_792,
             "peak_trough_tests": 7_904,
-            "figures": 29,
+            "figures": 28,
         },
         "observed_counts": {
             "models": len(MODEL_ORDER),
@@ -1459,6 +1553,12 @@ def main() -> None:
         "aa_gated_included": False,
         "historical_inputs_used": False,
         "pooled_mae_used_for_plots": False,
+        "spatial_distance_plot_bins": list(SPATIAL_BINS),
+        "spatial_distance_merge": {
+            "source_bins": ["10-20", "20-40"],
+            "derived_bin": "10-40",
+            "method": "sum per-protein absolute-error totals and pair counts before recomputing MAE",
+        },
         "inputs": {relative(path): sha256_file(path) for path in resolved_inputs},
         "source_data": {relative(path): sha256_file(path) for path in source_paths.values()},
         "manifest": relative(manifest_path),
@@ -1480,7 +1580,9 @@ def main() -> None:
         "triangle violation fraction—is protein-equal. Bands are "
         "pointwise paired-protein bootstrap percentile 95% intervals from 2,000 "
         "replicates (seed 20260902). Long-range bins average finite supported proteins "
-        "and report their counts in source data. Pooled subgroup MAE is retained only "
+        "and report their counts in source data. The plotted 10–40 Å category exactly "
+        "combines per-protein absolute-error sums and pair counts from the canonical "
+        "10–20 Å and 20–40 Å bins before bootstrapping. Pooled subgroup MAE is retained only "
         "as a reconciliation diagnostic and never supplies a plotted value. Peak/trough "
         "BH correction is separate by triangle metric and spans all plotted models, "
         "categories, directions, and eligible layers (3,952 hypotheses per metric). "

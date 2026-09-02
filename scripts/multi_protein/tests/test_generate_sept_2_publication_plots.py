@@ -23,6 +23,7 @@ from generate_sept_2_publication_plots import (  # noqa: E402
     bootstrap_matrix_summary,
     bootstrap_summary,
     clip_interval,
+    combine_spatial_distance_bins,
     expected_figure_ids,
     peak_trough_test_at_layer,
     phase_axis_summary,
@@ -74,6 +75,52 @@ def test_missing_bin_values_average_only_finite_proteins() -> None:
     assert result["n_proteins_finite"].tolist() == [3, 1]
 
 
+def test_spatial_merge_sums_sufficient_statistics_before_recomputing_mae() -> None:
+    rows = []
+    for analysis in MODEL_ORDER:
+        for protein_id in ("p1", "p2"):
+            for layer in range(48):
+                for category_label, n_pairs, sum_absolute_error in (
+                    ("0-5", 2, 2.0),
+                    ("5-10", 3, 6.0),
+                    ("10-20", 2, 4.0),
+                    ("20-40", 8, 32.0),
+                    ("40+", 1, 5.0),
+                ):
+                    mae = sum_absolute_error / n_pairs
+                    rows.append(
+                        {
+                            "analysis_name": analysis,
+                            "model_family": analysis,
+                            "layer": layer,
+                            "protein_id": protein_id,
+                            "source": "synthetic",
+                            "cv_protocol_version": "2.0",
+                            "evaluation_design": "synthetic_5fold",
+                            "outer_fold": 0,
+                            "evaluation_scope": "oof_all_pairs",
+                            "oof_prediction_scope": "synthetic_oof",
+                            "generalization_scope": "synthetic",
+                            "category_scope": "spatial_distance",
+                            "category_label": category_label,
+                            "n_pairs": n_pairs,
+                            "sum_absolute_error": sum_absolute_error,
+                            "mae": mae,
+                            "support_status": "complete",
+                            "value": mae,
+                            "model": analysis,
+                        }
+                    )
+    values = pd.DataFrame(rows)
+    merged = combine_spatial_distance_bins(values)
+    combined = merged[merged["category_label"].eq("10-40")]
+    assert len(combined) == len(MODEL_ORDER) * 48 * 2
+    assert combined["n_pairs"].eq(10).all()
+    assert combined["sum_absolute_error"].eq(36.0).all()
+    assert combined["mae"].eq(3.6).all()
+    assert set(merged["category_label"]) == set(SPATIAL_BINS)
+
+
 def test_joint_phase_intervals_use_fixed_point_estimate_range() -> None:
     matrix = np.array([[0.0, 2.0, 4.0], [2.0, 4.0, 6.0], [4.0, 6.0, 8.0]])
     counts = bootstrap_counts(n_proteins=3, replicates=500, seed=11)
@@ -116,10 +163,10 @@ def test_metric_domain_clipping_is_display_only() -> None:
     assert np.array_equal(unbounded_high, high)
 
 
-def test_figure_names_cover_29_pairs_and_all_canonical_bins() -> None:
+def test_figure_names_cover_28_pairs_and_all_plotted_bins() -> None:
     figure_ids = expected_figure_ids()
-    assert len(figure_ids) == 29
-    assert len(set(figure_ids)) == 29
+    assert len(figure_ids) == 28
+    assert len(set(figure_ids)) == 28
     assert "supp_figure_top3_eigenvalue_fraction" in figure_ids
     assert "supp_figure_mds_stress" in figure_ids
     for category in SPATIAL_BINS:

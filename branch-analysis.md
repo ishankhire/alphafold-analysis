@@ -1862,3 +1862,10 @@ non-interpretive metric definitions.
 Centralized the shared triangle-figure bootstrap and extrema-test conventions,
 shortened the individual triangle captions, and replaced the outdated MDS
 diagnostic figure with a current two-panel eigenvalue-fraction and stress figure.
+
+## Session: 2026-09-02 — Merge medium-range spatial-distance panels
+
+Combined the canonical 10–20 and 20–40 Å evaluation bins into an exact
+per-protein 10–40 Å MAE panel for the September 2 main figure by summing pair
+counts and absolute-error totals before recomputing MAE. Regenerated the
+paired-protein bootstrap intervals, source tables, manifest, and Overleaf figure.

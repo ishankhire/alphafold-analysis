@@ -22,9 +22,11 @@
   `analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv`,
   and triangle values from
   `analysis/triangle_violation_subgroups_5fold_v1/per_protein_triangle_metrics.csv`.
-- Plot five spatial bins (`0-5`, `5-10`, `10-20`, `20-40`, `40+`) and six
-  sequence bins (`1`, `2-4`, `5-9`, `10-19`, `20-49`, `50+`). Average finite
-  per-protein MAEs equally and retain unsupported rows and support counts.
+- Plot four spatial bins (`0-5`, `5-10`, `10-40`, `40+`) and six sequence bins
+  (`1`, `2-4`, `5-9`, `10-19`, `20-49`, `50+`). Derive each protein's `10-40`
+  MAE exactly by summing its `10-20` and `20-40` absolute-error totals and pair
+  counts before division. Average finite per-protein MAEs equally and retain
+  unsupported rows and support counts.
 - Use only `all_triangles`, `rms_size`, `area`, `relative_slack`, and broad
   `angle_shape`. Both triangle fraction and normalized violation are computed
   per protein before equal-protein aggregation.
@@ -38,7 +40,7 @@
 
 ## Figures and source data
 
-- Write 10 main PDF/PNG pairs: R2, TM-score, combined plus five standalone
+- Write 9 main PDF/PNG pairs: R2, TM-score, combined plus four standalone
   spatial MAE figures, normalized all-triangle peak/trough overlay, and
   normalized all-triangle decodability-consistency.
 - Write 17 supplemental PDF/PNG pairs: combined plus six standalone sequence
@@ -62,6 +64,6 @@
 - Add synthetic tests for aggregation, missing support, bootstrap
   determinism, joint phase intervals, BH families, extrema candidates, domain
   clipping, and filenames.
-- Generate and inspect the bundle, verify all 27 PDF/PNG pairs and hashes,
+- Generate and inspect the bundle, verify all 28 PDF/PNG pairs and hashes,
   update `branch-analysis.md`, and commit/push only scoped changes while
   preserving unrelated working-tree changes.
