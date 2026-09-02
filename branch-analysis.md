@@ -1843,3 +1843,10 @@ Added supplemental layerwise figures for the protein-equal top-3 MDS
 eigenvalue fraction and normalized MDS stress across all four protocol-2.0
 fivefold regression families, with paired-protein bootstrap 95% intervals and
 source-data provenance in the September 2 publication bundle.
+
+## Session: 2026-09-02 — Assemble supplemental publication figures
+
+Copied the September 2 supplemental PDFs into the Overleaf project, added the
+selected triangle, ablation, sequence-separation, MDS-reference, and
+individual-protein figures to the supplemental draft with descriptive metric
+captions, and moved the triangle-mechanism ablation panels out of draft 4.
