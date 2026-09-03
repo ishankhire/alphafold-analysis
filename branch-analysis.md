@@ -1913,3 +1913,11 @@ metrics, then writes aligned reconstructed and reference CA PDBs plus compact
 checkpointed metrics/provenance. The bounded one-protein replay uses an initial
 8 GiB / 30 minute request based on the existing replay measurements; record its
 first successful MaxRSS and elapsed time before any broader use.
+
+## Session: 2026-09-02 — Restyle layerwise ablation trajectories
+
+Made the six standalone layerwise-ablation trajectory figures narrower and
+more legible at paper scale, removed their titles, legend, and protein-count
+annotation, simplified the x-axis label to `Layer`, and slightly reduced the
+opacity of individual-protein trajectories. Refreshed the matching Overleaf
+PDFs without changing the twin-axis overlay figures.

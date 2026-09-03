@@ -9,8 +9,8 @@ The ablation inputs contain 554 proteins. These plots use the frozen 552-protein
 protocol-2.0 regression cohort and exclude ECOD proteins 000196893, 001681437. Every graph
 plots all 552 retained proteins as thin, semi-transparent gray lines. The thicker
 black line is their protein-equal mean, with a black dot at every layer; no
-uncertainty band is shown. The x-axis is the boundary layer recorded by each FWD
-or REV source CSV.
+uncertainty band is shown. The x-axis, labeled `Layer`, is the boundary layer
+recorded by each FWD or REV source CSV.
 
 PDF-only copies and twin-axis overlays with the four protocol-2.0 probe families
 are stored in `overleaf/layerwise_ablation_trends/`. The overlay probe curves use

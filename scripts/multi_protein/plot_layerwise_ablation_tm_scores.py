@@ -284,7 +284,13 @@ def load_probe_means(
     return {"r2": r2_means, "mean_relative_violation_all": triangle_means}
 
 
-def draw_ablation_trajectory(axis: plt.Axes, matrix: np.ndarray) -> None:
+def draw_ablation_trajectory(
+    axis: plt.Axes,
+    matrix: np.ndarray,
+    *,
+    trajectory_alpha: float = 0.12,
+    mean_label: str | None = "Mean ablation TM-score",
+) -> None:
     layers = np.asarray(LAYERS)
     segments = np.stack(
         (
@@ -298,7 +304,7 @@ def draw_ablation_trajectory(axis: plt.Axes, matrix: np.ndarray) -> None:
             segments,
             colors="#8A8A8A",
             linewidths=0.55,
-            alpha=0.12,
+            alpha=trajectory_alpha,
             rasterized=True,
         )
     )
@@ -311,7 +317,7 @@ def draw_ablation_trajectory(axis: plt.Axes, matrix: np.ndarray) -> None:
         markersize=3.5,
         markeredgewidth=0,
         zorder=5,
-        label="Mean ablation TM-score",
+        label=mean_label,
     )
 
 
@@ -326,23 +332,24 @@ def style_ablation_axis(axis: plt.Axes, *, label: str, direction: str) -> None:
     axis.set_xticks((0, 10, 20, 30, 40, 47))
 
 
-def plot_trajectory(
-    *, matrix: np.ndarray, label: str, direction: str, stem: str
-) -> tuple[Path, Path, Path]:
-    figure, axis = plt.subplots(figsize=(8.4, 5.3))
-    draw_ablation_trajectory(axis, matrix)
-    style_ablation_axis(axis, label=label, direction=direction)
-    axis.legend(loc="best", frameon=True)
-    axis.text(
-        0.99,
-        0.02,
-        f"{matrix.shape[0]} proteins",
-        transform=axis.transAxes,
-        ha="right",
-        va="bottom",
-        color="#555555",
-        fontsize=9,
+def plot_trajectory(*, matrix: np.ndarray, stem: str) -> tuple[Path, Path, Path]:
+    figure, axis = plt.subplots(figsize=(7.0, 5.3))
+    draw_ablation_trajectory(
+        axis,
+        matrix,
+        trajectory_alpha=0.10,
+        mean_label=None,
     )
+    axis.set(
+        xlabel="Layer",
+        ylabel="TM-score",
+        xlim=(0, 47),
+        ylim=(0, 1),
+    )
+    axis.set_xticks((0, 10, 20, 30, 40, 47))
+    axis.xaxis.label.set_size(14)
+    axis.yaxis.label.set_size(14)
+    axis.tick_params(axis="both", labelsize=12)
     figure.tight_layout()
 
     png_path = OUTPUT_DIR / f"{stem}.png"
@@ -448,8 +455,8 @@ The ablation inputs contain 554 proteins. These plots use the frozen 552-protein
 protocol-2.0 regression cohort and exclude ECOD proteins {excluded}. Every graph
 plots all 552 retained proteins as thin, semi-transparent gray lines. The thicker
 black line is their protein-equal mean, with a black dot at every layer; no
-uncertainty band is shown. The x-axis is the boundary layer recorded by each FWD
-or REV source CSV.
+uncertainty band is shown. The x-axis, labeled `Layer`, is the boundary layer
+recorded by each FWD or REV source CSV.
 
 PDF-only copies and twin-axis overlays with the four protocol-2.0 probe families
 are stored in `overleaf/layerwise_ablation_trends/`. The overlay probe curves use
@@ -482,8 +489,6 @@ def main() -> None:
             base_stem = f"{ablation['key']}_{direction}_tm_score_trajectory"
             png, pdf, overleaf_pdf = plot_trajectory(
                 matrix=matrix,
-                label=str(ablation["label"]),
-                direction=direction,
                 stem=base_stem,
             )
             generated_delta.extend((png, pdf))
