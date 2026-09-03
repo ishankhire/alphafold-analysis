@@ -1,0 +1,61 @@
+{
+  "cohort_digest": "ec65eeb90599de6d2b83c83a27df87efd420b5272fbf436ffaadfaee5025d9ea",
+  "construction_parameters": {
+    "canonical_pair_order": "np.tril_indices(n_residues, k=-1)",
+    "fold_0_source": "historical_master_role=test",
+    "n_outer_folds": 5,
+    "n_pair_folds": 5,
+    "outer_fold_algorithm": "numpy_rng44_length_bin_round_robin_v1",
+    "outer_fold_seed": 44,
+    "pair_fold_algorithm": "canonical_lower_triangle_numpy_shuffle_array_split_v1",
+    "pair_fold_base_seed": 42
+  },
+  "cv_protocol_version": "2.0",
+  "master_manifest_digest": "5561b786682d4408612c76d44c14ff6cf760291c2616159d3bea4cf13a149440",
+  "outer_fold_digest": "7d9432555ce0df9b141be8a7866061320d55f712b354cf7206ba55de6b9868cf",
+  "pair_fold_manifest_digest": "ef239c80479ffd1bc4fb98a5660a73e8e714f5be0409bdf1fb8032eb342f8044",
+  "per_fold_length_bin_counts": {
+    "0": {
+      "0": 23,
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22
+    },
+    "1": {
+      "0": 22,
+      "1": 22,
+      "2": 23,
+      "3": 22,
+      "4": 22
+    },
+    "2": {
+      "0": 22,
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22
+    },
+    "3": {
+      "0": 22,
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22
+    },
+    "4": {
+      "0": 22,
+      "1": 22,
+      "2": 22,
+      "3": 22,
+      "4": 22
+    }
+  },
+  "per_fold_protein_counts": {
+    "0": 111,
+    "1": 111,
+    "2": 110,
+    "3": 110,
+    "4": 110
+  }
+}

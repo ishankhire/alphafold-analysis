@@ -1,0 +1,23 @@
+# Local credential used only to read the private paper repository
+readonly-neurips-overleaf.txt
+
+# Python and tool state
+.venv/
+.cache/
+.mplconfig/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+
+# Local/editor files and generated cluster logs
+.DS_Store
+*.log
+slurm-*.out
+*.err
+
+# Large upstream inputs and regenerated model artifacts
+*.cif
+*.npy
+*.npz
+delta_files/regression_5fold_v1/*/layer_shards/
+delta_files/regression_5fold_v1/*/model_artifacts/
