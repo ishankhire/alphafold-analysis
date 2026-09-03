@@ -1942,3 +1942,10 @@ Added a standalone NeurIPS-style supplemental draft covering the complete
 five-fold OOF probe protocol, MDS and triangle methods, paired extremum tests,
 selected cumulative ablations, verified current figures and extrema, and
 ranked figure TODOs. The Overleaf source was committed and pushed separately.
+
+## Session: 2026-09-03 — Preserve historical MDS visualization references
+
+Copied the three top-level visualization Python references and the ten original
+full-atom OpenFold PDBs from `aug-16-archive` into the current shared-OLS MDS
+export directory. Added a provenance note that distinguishes the reference-only
+legacy scripts from the OpenFold structures used as final predicted structures.
