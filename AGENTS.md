@@ -141,6 +141,11 @@ against requested walltime and shorter accurate jobs can backfill sooner.
 
 Before editing anything inside the overleaf folder, please check the AGENTS.md located inside overleaf/
 
+## vizfold-main
+
+The vizfold-main/ directory contains scripts used to create ablations and associated ablation graphs, as well as run OpenFold. It is not important to the regression analysis.
+It should not need to be referenced unless specifically requested for.
+
 ## Git workflow
 
 After every significant change:
