@@ -1949,3 +1949,10 @@ Copied the three top-level visualization Python references and the ten original
 full-atom OpenFold PDBs from `aug-16-archive` into the current shared-OLS MDS
 export directory. Added a provenance note that distinguishes the reference-only
 legacy scripts from the OpenFold structures used as final predicted structures.
+
+## Session: 2026-09-03 — Render shared-OLS MDS PyMOL panels
+
+Added a local PyMOL renderer and generated 60 ray-traced panels for the ten
+visualization proteins: detailed green Structure Module cartoons plus red
+CA-tube reconstructions at layers 0, 10, 20, 30, and 47. Each protein uses its
+own six-structure union frame, held fixed across that protein's panels.
