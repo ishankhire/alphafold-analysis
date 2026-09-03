@@ -1,6 +1,0 @@
-segment_type,chain,start_residue_index,start_pdb_resseq,start_insertion_code,end_residue_index,end_pdb_resseq,end_insertion_code,n_residues
-beta_strand,A,19,20,,22,23,,4
-beta_strand,A,31,32,,37,38,,7
-beta_strand,A,42,43,,48,49,,7
-beta_strand,A,53,54,,59,60,,7
-beta_strand,A,63,64,,65,66,,3

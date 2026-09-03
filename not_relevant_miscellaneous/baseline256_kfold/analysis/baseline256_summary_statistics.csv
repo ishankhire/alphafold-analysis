@@ -1,5 +1,0 @@
-metric,distribution,count,mean,variance,std,min,max,median,q1,q3,iqr,p05,p95,best_layer,best_layer_mean,worst_layer,worst_layer_mean,notes
-r2,fold_averaged_protein_layer,8832,0.675937,0.084888,0.291356,-2.150349,0.970438,0.764013,0.565221,0.861881,0.296660,0.220610,0.928122,46,0.910164,3,0.364970,Per-protein R² averaged across five folds at each layer.
-r2,layer_mean,48,0.675937,0.031750,0.178185,0.364970,0.910164,0.747913,0.504489,0.797205,0.292716,0.369631,0.908385,46,0.910164,3,0.364970,Distribution over 48 layer means after fold-averaging per protein.
-tm_score,fold4_protein_layer,8832,0.518107,0.054095,0.232583,0.039031,0.943222,0.523855,0.320461,0.732644,0.412183,0.158081,0.858779,45,0.760911,5,0.299244,Fold-4 TM-score values from geometry_metrics_last_fold.csv.
-tm_score,layer_mean,48,0.518107,0.019474,0.139548,0.299244,0.760911,0.554833,0.372735,0.609274,0.236539,0.301893,0.738123,45,0.760911,5,0.299244,Distribution over 48 fold-4 TM-score layer means.

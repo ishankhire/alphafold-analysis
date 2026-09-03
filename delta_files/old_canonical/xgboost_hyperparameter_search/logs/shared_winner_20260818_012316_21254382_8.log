@@ -1,4 +1,0 @@
-[2026-08-18T01:23:16-05:00] job starting on cn041.delta.ncsa.illinois.edu
-[2026-08-18T01:23:21-05:00] Shared winner task 8: layer=47, cap=20k
-[2026-08-18T01:23:57-05:00] Training fresh S4 booster (cap=20k) with validation early stopping
-[2026-08-18T01:38:24-05:00] Shared winner task 8 complete

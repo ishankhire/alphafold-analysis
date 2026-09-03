@@ -1,6 +1,0 @@
-Shared XGBoost hyperparameter search — layer 47
-Generated: 2026-08-17T16:16:18-05:00
-Completed configurations: 6
-Split digest: fc6f023c44305d991cef04b4f96dc9f7bc448ddc76a1df631b857fbd02a74c94
-Task elapsed seconds: 2277.708
-
