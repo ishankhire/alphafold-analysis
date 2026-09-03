@@ -1935,3 +1935,10 @@ PDF into the Overleaf figure directory.
 Reduced the combined layerwise-ablation summary to the four Pair Transition and
 MSA MLP FWD/REV panels, retaining the shared axes and enlarged typography. The
 standalone TMU plus triangle-attention figures remain available.
+
+## Session: 2026-09-03 — Add protocol-2.0 supplemental draft
+
+Added a standalone NeurIPS-style supplemental draft covering the complete
+five-fold OOF probe protocol, MDS and triangle methods, paired extremum tests,
+selected cumulative ablations, verified current figures and extrema, and
+ranked figure TODOs. The Overleaf source was committed and pushed separately.
