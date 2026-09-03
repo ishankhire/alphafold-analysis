@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-09-02 — Align layerwise ablations with the 552-protein cohort
+
+Filtered the six selected forward/reverse ablation trajectories to the frozen
+552-protein regression cohort and added twin-axis comparisons with protein-equal
+R2 and normalized triangle-violation means for all four protocol-2.0 probes.
+
 ## Session: 2026-09-02 — Enlarge September 2 main-figure typography
 
 Increased main-figure titles, axis labels, tick numbers, legends, and numeric
