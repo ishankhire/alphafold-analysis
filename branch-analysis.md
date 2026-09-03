@@ -1882,3 +1882,9 @@ Added a local plotting entrypoint and generated six individual-protein TM-score
 trajectory figures for FWD and REV Pair transition MLP, MSA MLP, and combined
 TMU plus triangle-attention ablations under the September 2 plot bundle. The
 figures use gray protein trajectories with a marked black protein-equal mean.
+
+## Session: 2026-09-02 — Update layerwise ablation CSV source
+
+Repointed the Delta layerwise ablation copy utility to the patched final-results
+directory containing the current triangle-end fixes and documented that source
+in the cluster notes.

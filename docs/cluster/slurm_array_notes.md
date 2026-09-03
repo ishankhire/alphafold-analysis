@@ -55,6 +55,14 @@ These workers read pair tensors and PDBs from `/work/hdd`. In addition to the
 project's locked `scratch` constraint, their launchers declare Delta's current
 `work` filesystem dependency as `#SBATCH --constraint="scratch&work"`.
 
+## Layerwise ablation CSV source
+
+The current canonical source for the layerwise ablation CSVs on Delta is
+`/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`. The
+`copy_layerwise_ablation_csvs.sh` utility copies the expected files from that
+directory by default; set `LAYERWISE_ABLATION_SOURCE_DIR` only when intentionally
+using another source.
+
 ## Arrays
 
 `#SBATCH --array=0-47%12` creates 48 tasks with task IDs `0` through `47`, with
