@@ -1888,3 +1888,12 @@ figures use gray protein trajectories with a marked black protein-equal mean.
 Repointed the Delta layerwise ablation copy utility to the patched final-results
 directory containing the current triangle-end fixes and documented that source
 in the cluster notes.
+
+## Session: 2026-09-02 — Validate current layerwise ablation plots
+
+Validated all 15 current layerwise-ablation CSVs against the expected shared
+554-protein, 48-layer schema. The selected trajectory plotter required no code
+changes; regenerated its six figure pairs and confirmed their joint mean curves
+agree with the corresponding Overleaf plots. The pair-transition and MSA PNGs
+were unchanged, while the combined TMU plus triangle-attention figures were
+refreshed from the corrected CSV values.
