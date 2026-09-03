@@ -1897,3 +1897,13 @@ changes; regenerated its six figure pairs and confirmed their joint mean curves
 agree with the corresponding Overleaf plots. The pair-transition and MSA PNGs
 were unchanged, while the combined TMU plus triangle-attention figures were
 refreshed from the corrected CSV values.
+
+## Session: 2026-09-02 — Add canonical shared-OLS MDS PDB export
+
+Added a Delta-ready diagnostic that replays each of the ten proteins from the
+outdated MDS montage through its protocol-2.0 held-out-fold shared-OLS model at
+layers 0, 10, 20, 30, 40, and 47. It validates replay checksums and published
+metrics, then writes aligned reconstructed and reference CA PDBs plus compact
+checkpointed metrics/provenance. The bounded one-protein replay uses an initial
+8 GiB / 30 minute request based on the existing replay measurements; record its
+first successful MaxRSS and elapsed time before any broader use.
