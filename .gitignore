@@ -1,6 +1,3 @@
-# Local credential used only to read the private paper repository
-readonly-neurips-overleaf.txt
-
 # Python and tool state
 .venv/
 .cache/
