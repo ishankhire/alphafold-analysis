@@ -1929,3 +1929,9 @@ TMU plus triangle-attention FWD/REV ablation trajectories. The panels share a
 0–1 TM-score scale and figure-level axis labels, with enlarged panel titles and
 tick labels for readability after reduction in the paper; copied the matching
 PDF into the Overleaf figure directory.
+
+## Session: 2026-09-02 — Remove triangle panels from combined ablation figure
+
+Reduced the combined layerwise-ablation summary to the four Pair Transition and
+MSA MLP FWD/REV panels, retaining the shared axes and enlarged typography. The
+standalone TMU plus triangle-attention figures remain available.

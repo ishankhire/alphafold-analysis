@@ -63,6 +63,7 @@ ABLATIONS = (
     },
 )
 DIRECTIONS = {"fwd": "FWD", "rev": "REV"}
+COMBINED_ABLATION_KEYS = frozenset({"pair_transition_mlp", "msa_mlp"})
 
 MODEL_SPECS = {
     "shared_ols_base256": {
@@ -368,15 +369,16 @@ def plot_trajectory(*, matrix: np.ndarray, stem: str) -> tuple[Path, Path, Path]
 def plot_combined_trajectories(
     panels: Sequence[tuple[str, str, np.ndarray]],
 ) -> tuple[Path, Path, Path]:
-    if len(panels) != 6:
+    expected_panels = len(COMBINED_ABLATION_KEYS) * len(DIRECTIONS)
+    if len(panels) != expected_panels:
         raise ValueError(
-            f"Expected six combined-figure panels; received {len(panels)}"
+            f"Expected {expected_panels} combined-figure panels; received {len(panels)}"
         )
 
     figure, axes = plt.subplots(
         1,
         len(panels),
-        figsize=(21.0, 4.8),
+        figsize=(14.0, 4.8),
         sharex=True,
         sharey=True,
     )
@@ -409,9 +411,9 @@ def plot_combined_trajectories(
         axis.title.set_size(20)
 
     figure.supxlabel("Layer", fontsize=25, y=0.025)
-    figure.supylabel("TM-score", fontsize=25, x=0.012)
+    figure.supylabel("TM-score", fontsize=25, x=0.015)
     figure.subplots_adjust(
-        left=0.055,
+        left=0.085,
         right=0.995,
         bottom=0.22,
         top=0.76,
@@ -516,7 +518,8 @@ def write_readme() -> None:
 This folder contains FWD and REV layerwise ablations for Pair transition MLPs,
 MSA MLPs (`msa_transition`), and the combined TMU + triangle-attention
 (`tri_start`, `tri_end`, and `tmu`) intervention. Each individual figure and a
-six-panel horizontal summary are supplied as both PNG and PDF.
+four-panel horizontal Pair Transition/MSA MLP summary are supplied as both PNG
+and PDF.
 
 The ablation inputs contain 554 proteins. These plots use the frozen 552-protein
 protocol-2.0 regression cohort and exclude ECOD proteins {excluded}. Every graph
@@ -561,9 +564,10 @@ def main() -> None:
             )
             generated_delta.extend((png, pdf))
             generated_overleaf.append(overleaf_pdf)
-            combined_panels.append(
-                (str(ablation["panel_label"]), direction, matrix)
-            )
+            if ablation["key"] in COMBINED_ABLATION_KEYS:
+                combined_panels.append(
+                    (str(ablation["panel_label"]), direction, matrix)
+                )
             overlay_stem = f"{ablation['key']}_{direction}_tm_score"
             for metric, means in probe_means.items():
                 generated_overleaf.append(

@@ -3,7 +3,8 @@
 This folder contains FWD and REV layerwise ablations for Pair transition MLPs,
 MSA MLPs (`msa_transition`), and the combined TMU + triangle-attention
 (`tri_start`, `tri_end`, and `tmu`) intervention. Each individual figure and a
-six-panel horizontal summary are supplied as both PNG and PDF.
+four-panel horizontal Pair Transition/MSA MLP summary are supplied as both PNG
+and PDF.
 
 The ablation inputs contain 554 proteins. These plots use the frozen 552-protein
 protocol-2.0 regression cohort and exclude ECOD proteins 000196893, 001681437. Every graph
