@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly SOURCE_DIR="${LAYERWISE_ABLATION_SOURCE_DIR:-/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD}"
+readonly SOURCE_DIR="${LAYERWISE_ABLATION_SOURCE_DIR:-/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD}"
 readonly CSV_ROOT="${CSV_ROOT:-${HOME}/csv_files}"
 readonly DEST_DIR="${CSV_ROOT}/layerwise_ablation_csvs"
 

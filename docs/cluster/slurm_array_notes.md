@@ -58,7 +58,7 @@ project's locked `scratch` constraint, their launchers declare Delta's current
 ## Layerwise ablation CSV source
 
 The current canonical source for the layerwise ablation CSVs on Delta is
-`/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`. The
+`/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`. The
 `copy_layerwise_ablation_csvs.sh` utility copies the expected files from that
 directory by default; set `LAYERWISE_ABLATION_SOURCE_DIR` only when intentionally
 using another source.
