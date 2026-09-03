@@ -230,7 +230,7 @@ def fivefold_result_root(csv_root: str | Path | None = None) -> Path:
     elif os.environ.get("CSV_ROOT"):
         root = Path(os.environ["CSV_ROOT"]).expanduser()
     else:
-        root = Path(__file__).resolve().parents[3] / "delta_files"
+        root = Path(__file__).resolve().parents[3] / "results"
     return root.resolve() / RESULT_ROOT_NAME
 
 

@@ -44,7 +44,7 @@
   "final_fit_evaluation_set": false,
   "post_cv_all_data_refit": false,
   "raw_pair_predictions_saved": false,
-  "selection_source_path": "delta_files/xgboost_hyperparameter_search/shared/winner_cap_sweep/cross_layer_selection_table.csv",
+  "selection_source_path": "results/xgboost_hyperparameter_search/shared/winner_cap_sweep/cross_layer_selection_table.csv",
   "selection_source_sha256": "4890bdd629a7ad29ec6ed166de533bd0ca8db1659af17cb2b4ea849b2b527569",
   "selection_source_selected_mean_validation_r2": 0.8209633288007732,
   "selection_source_runner_up_configuration_id": "S1",
@@ -54,5 +54,5 @@
   "fully_selection_independent": false,
   "source_runs_exposed_historical_test": true,
   "historical_test_exposure_disclosed": true,
-  "configuration_digest": "fde4313c4298f23dca61730e526912f7fb6a4db2232fa564ea92c63ec5aa2ad6"
+  "configuration_digest": "200f0fdd78a02a38e9efd54a67a22055e0748b829173af507c35a9ef87bebb33"
 }

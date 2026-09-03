@@ -20,9 +20,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
-SOURCE_DIR = PROJECT_ROOT / "delta_files/publication_plots/sept_2_plots/source_data"
-OUTPUT_DIR = PROJECT_ROOT / "delta_files/publication_plots/sept_2_plots/main_figures"
-MANIFEST_PATH = PROJECT_ROOT / "delta_files/publication_plots/sept_2_plots/figure_manifest.csv"
+SOURCE_DIR = PROJECT_ROOT / "results/publication_plots/source_data"
+OUTPUT_DIR = PROJECT_ROOT / "results/publication_plots/main_figures"
+MANIFEST_PATH = PROJECT_ROOT / "results/publication_plots/figure_manifest.csv"
 
 LAYERS = tuple(range(48))
 MILESTONE_LAYERS = (0, 10, 20, 30, 40, 47)

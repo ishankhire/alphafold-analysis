@@ -58,7 +58,7 @@ MASTER_MANIFEST_PATH = (
     MODULE_DIR / "regression_protocol_data" / "regression_master_split_v1.csv"
 )
 REPOSITORY_ROOT = MODULE_DIR.parents[1]
-FIVEFOLD_METADATA_DIR = REPOSITORY_ROOT / "delta_files" / "regression_5fold_v1" / "metadata"
+FIVEFOLD_METADATA_DIR = REPOSITORY_ROOT / "results" / "regression_5fold_v1" / "metadata"
 OUTER_FOLD_MANIFEST_PATH = FIVEFOLD_METADATA_DIR / "regression_outer_folds_v1.csv"
 PAIR_FOLD_MANIFEST_PATH = FIVEFOLD_METADATA_DIR / "per_protein_pair_folds_v1.csv"
 FOLD_DIGESTS_PATH = FIVEFOLD_METADATA_DIR / "fold_digests.json"

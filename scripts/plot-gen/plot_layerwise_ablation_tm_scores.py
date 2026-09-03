@@ -20,13 +20,13 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 
-INPUT_DIR = PROJECT_ROOT / "delta_files/layerwise_ablation_csvs"
+INPUT_DIR = PROJECT_ROOT / "results/layerwise_ablation_csvs"
 COHORT_PATH = (
-    PROJECT_ROOT / "delta_files/regression_5fold_v1/metadata/regression_outer_folds_v1.csv"
+    PROJECT_ROOT / "results/regression_5fold_v1/metadata/regression_outer_folds_v1.csv"
 )
 OUTPUT_DIR = (
     PROJECT_ROOT
-    / "delta_files/publication_plots/sept_2_plots/layerwise_ablation_trajectories"
+    / "results/publication_plots/layerwise_ablation_trajectories"
 )
 
 LAYERS = tuple(range(48))

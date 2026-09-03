@@ -19,5 +19,5 @@ slurm-*.out
 *.cif
 *.npy
 *.npz
-delta_files/regression_5fold_v1/*/layer_shards/
-delta_files/regression_5fold_v1/*/model_artifacts/
+results/regression_5fold_v1/*/layer_shards/
+results/regression_5fold_v1/*/model_artifacts/

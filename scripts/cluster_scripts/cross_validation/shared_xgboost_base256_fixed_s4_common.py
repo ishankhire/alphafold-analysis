@@ -94,7 +94,7 @@ BOOSTING_ROUNDS = 700
 BASE_RANDOM_SEED = 42
 CONFIG_PATH = SCRIPT_DIR / "shared_xgboost_base256_fixed_s4_config.json"
 SELECTION_SOURCE_PATH = (
-    "delta_files/xgboost_hyperparameter_search/shared/winner_cap_sweep/"
+    "results/xgboost_hyperparameter_search/shared/winner_cap_sweep/"
     "cross_layer_selection_table.csv"
 )
 SELECTION_SOURCE_SHA256 = (

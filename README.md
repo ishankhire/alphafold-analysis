@@ -1,11 +1,11 @@
 # Layerwise geometric decoding in OpenFold
 
-This is the compact companion repository for the NeurIPS workshop submission
-whose main text is `draft_4.tex`. It contains the four probe implementations,
-the frozen cross-validation manifests, plot-ready source data, and the six PDFs
-included by that draft. Raw pair representations, per-pair predictions, model
-artifacts, exploratory analyses, logs, and unused figures are intentionally
-omitted.
+This is the compact companion repository for the NeurIPS workshop submission.
+It contains the four probe implementations, the frozen cross-validation
+manifests, plot-ready source data, and the six PDFs included by the paper's
+separately maintained `draft_4.tex`. Raw pair representations, per-pair
+predictions, model artifacts, exploratory analyses, logs, and unused figures
+are intentionally omitted.
 
 ## Experiment
 
@@ -26,19 +26,23 @@ confidence bands are paired-protein bootstrap 95% intervals.
 The source pool has 554 CAMEO and ECOD proteins. The frozen probe cohort has
 552: ECOD proteins `000196893` and `001681437` are excluded because their layer
 0 pair-tensor dimensions do not match their residue counts. The manifests in
-`delta_files/regression_5fold_v1/metadata/` record the exact cohort and folds.
+`results/regression_5fold_v1/metadata/` record the exact cohort and folds.
 
 ## Contents
 
 - `scripts/cluster_scripts/cross_validation/`: the four Delta/SLURM probe
   workflows and their aggregators.
-- `scripts/multi_protein/`: the two local renderers.
-- `delta_files/publication_plots/sept_2_plots/source_data/`: compact source
-  tables for the five probe figures.
-- `delta_files/layerwise_ablation_csvs/`: Pair Transition and MSA Transition
-  tables used by the combined ablation figure.
-- `delta_files/publication_plots/sept_2_plots/`: the six final PDFs and a hash
-  manifest for the five probe figures.
+- `scripts/plot-gen/`: the two local figure renderers.
+- `results/regression_5fold_v1/metadata/`: frozen cohort, fold assignments,
+  and their semantic digests.
+- `results/publication_plots/source_data/`: compact source tables for the five
+  probe figures.
+- `results/layerwise_ablation_csvs/`: Pair Transition and MSA Transition tables
+  used by the combined ablation figure.
+- `results/publication_plots/`: the six final PDFs and a hash manifest for the
+  five probe figures.
+- `results/xgboost_hyperparameter_search/`: the compact selection table that
+  records the fixed XGBoost configuration decision.
 
 The training entrypoints expect the original pair tensors and predicted PDBs
 at the Delta paths defined in `cluster_regression_helpers.py`; those large
@@ -53,8 +57,8 @@ Use Python 3.13:
 ```bash
 python3.13 -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
-./.venv/bin/python scripts/multi_protein/generate_sept_2_publication_plots.py
-./.venv/bin/python scripts/multi_protein/plot_layerwise_ablation_tm_scores.py
+./.venv/bin/python scripts/plot-gen/generate_sept_2_publication_plots.py
+./.venv/bin/python scripts/plot-gen/plot_layerwise_ablation_tm_scores.py
 ./.venv/bin/python -m unittest discover -s tests
 ```
 

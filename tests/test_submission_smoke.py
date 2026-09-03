@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import unittest
 from pathlib import Path
 
@@ -13,8 +15,10 @@ MODELS = {
     "shared_xgboost_base256_fixed_s4",
 }
 LAYERS = set(range(48))
-SOURCE_DIR = ROOT / "delta_files/publication_plots/sept_2_plots/source_data"
-PLOT_ROOT = ROOT / "delta_files/publication_plots/sept_2_plots"
+RESULTS_ROOT = ROOT / "results"
+SOURCE_DIR = RESULTS_ROOT / "publication_plots/source_data"
+PLOT_ROOT = RESULTS_ROOT / "publication_plots"
+METADATA_DIR = RESULTS_ROOT / "regression_5fold_v1/metadata"
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -22,16 +26,46 @@ def read_rows(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(handle))
 
 
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
 class SubmissionSmokeTest(unittest.TestCase):
     def test_frozen_cohort(self) -> None:
-        rows = read_rows(
-            ROOT
-            / "delta_files/regression_5fold_v1/metadata/regression_outer_folds_v1.csv"
-        )
+        rows = read_rows(METADATA_DIR / "regression_outer_folds_v1.csv")
         keys = {(row["source"], row["protein_id"]) for row in rows}
         self.assertEqual(len(rows), 552)
         self.assertEqual(len(keys), 552)
         self.assertEqual({int(row["outer_fold"]) for row in rows}, set(range(5)))
+
+    def test_frozen_metadata_inventory(self) -> None:
+        self.assertEqual(
+            {path.name for path in METADATA_DIR.iterdir() if path.is_file()},
+            {
+                "fold_digests.json",
+                "per_protein_pair_folds_v1.csv",
+                "regression_outer_folds_v1.csv",
+            },
+        )
+        with (METADATA_DIR / "fold_digests.json").open() as handle:
+            digests = json.load(handle)
+        self.assertEqual(
+            set(digests),
+            {
+                "cohort_digest",
+                "construction_parameters",
+                "cv_protocol_version",
+                "master_manifest_digest",
+                "outer_fold_digest",
+                "pair_fold_manifest_digest",
+                "per_fold_length_bin_counts",
+                "per_fold_protein_counts",
+            },
+        )
 
     def test_probe_source_tables(self) -> None:
         expected = {
@@ -61,7 +95,7 @@ class SubmissionSmokeTest(unittest.TestCase):
                     )
 
     def test_ablation_sources(self) -> None:
-        ablation_dir = ROOT / "delta_files/layerwise_ablation_csvs"
+        ablation_dir = RESULTS_ROOT / "layerwise_ablation_csvs"
         paths = sorted(ablation_dir.glob("*.csv"))
         self.assertEqual(len(paths), 4)
         for path in paths:
@@ -88,6 +122,41 @@ class SubmissionSmokeTest(unittest.TestCase):
         )
         self.assertEqual(actual, expected)
         self.assertTrue(all(path.stat().st_size > 0 for path in actual))
+
+    def test_figure_manifest(self) -> None:
+        rows = read_rows(PLOT_ROOT / "figure_manifest.csv")
+        self.assertEqual(len(rows), 5)
+        for row in rows:
+            with self.subTest(figure_id=row["figure_id"]):
+                pdf_path = ROOT / row["pdf_path"]
+                self.assertTrue(pdf_path.is_relative_to(PLOT_ROOT))
+                self.assertEqual(sha256_file(pdf_path), row["pdf_sha256"])
+                source_paths = [
+                    ROOT / value for value in row["source_csvs"].split(";")
+                ]
+                source_hashes = row["source_sha256"].split(";")
+                self.assertEqual(len(source_paths), len(source_hashes))
+                self.assertTrue(
+                    all(path.is_relative_to(SOURCE_DIR) for path in source_paths)
+                )
+                self.assertEqual(
+                    [sha256_file(path) for path in source_paths], source_hashes
+                )
+
+    def test_xgboost_selection_provenance(self) -> None:
+        source = (
+            RESULTS_ROOT
+            / "xgboost_hyperparameter_search/shared/winner_cap_sweep/"
+            "cross_layer_selection_table.csv"
+        )
+        rows = read_rows(source)
+        self.assertEqual(
+            {row["config_id"] for row in rows}, {f"S{i}" for i in range(6)}
+        )
+        self.assertEqual(
+            sha256_file(source),
+            "4890bdd629a7ad29ec6ed166de533bd0ca8db1659af17cb2b4ea849b2b527569",
+        )
 
 
 if __name__ == "__main__":
