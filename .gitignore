@@ -89,3 +89,13 @@ overleaf/
 
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy
+
+# Generated analysis artifacts (>=10 MB)
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/length_bin_summary.csv
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/paired_model_contrasts.csv
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/per_protein_triangle_metrics.csv
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/protein_length_effects.csv
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/runtime.csv
+delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/triangle_metric_summary.csv
+delta_files/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv
+vizfold-main.zip
