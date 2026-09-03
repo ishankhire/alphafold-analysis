@@ -1956,3 +1956,9 @@ Added a local PyMOL renderer and generated 60 ray-traced panels for the ten
 visualization proteins: detailed green Structure Module cartoons plus red
 CA-tube reconstructions at layers 0, 10, 20, 30, and 47. Each protein uses its
 own six-structure union frame, held fixed across that protein's panels.
+
+## Session: 2026-09-03 — Assemble shared-OLS MDS structure figure
+
+Added a local compositor for the 60 PyMOL panels and generated the current
+ten-protein by six-column supplemental structure figure. Replaced the outdated
+Overleaf assets and placeholder captions with the held-out shared-OLS version.
