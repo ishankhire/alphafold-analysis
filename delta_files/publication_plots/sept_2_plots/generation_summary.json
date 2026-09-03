@@ -1,6 +1,6 @@
 {
-  "generator_version": "sept_2_publication_plots_v3",
-  "generated_at": "2026-09-02T21:18:51.399580+00:00",
+  "generator_version": "sept_2_publication_plots_v4",
+  "generated_at": "2026-09-03T11:27:49.599292+00:00",
   "input_root": "delta_files/regression_5fold_v1",
   "input_policy": "all analytical and provenance inputs resolve below regression_5fold_v1",
   "bootstrap": {
@@ -257,5 +257,6 @@
     ],
     "derived_bin": "10-40",
     "method": "sum per-protein absolute-error totals and pair counts before recomputing MAE"
-  }
+  },
+  "render_source": "existing validated source_data tables; canonical pooled_reconciliation.csv unavailable during typography-only rerender"
 }

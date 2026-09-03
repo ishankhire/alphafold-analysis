@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-09-03 — Enlarge manuscript figure typography
+
+Increased tick and regression-model label sizes across the September 2 main
+and supplemental publication figures, with additional manuscript-scale sizing
+for half-width diagnostics and dense multi-panel supplements.
+
 ## Session: 2026-09-02 — Align layerwise ablations with the 552-protein cohort
 
 Filtered the six selected forward/reverse ablation trajectories to the frozen

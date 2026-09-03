@@ -26,8 +26,10 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_2_publication_plots_v3"
-MAIN_FIGURE_FONT_SCALE = 1.5
+GENERATOR_VERSION = "sept_2_publication_plots_v4"
+MAIN_FIGURE_FONT_SCALE = 1.75
+SUPPLEMENTAL_FIGURE_FONT_SCALE = 1.4
+DENSE_SUPPLEMENTAL_FONT_SCALE = 1.7
 BOOTSTRAP_REPLICATES = 2_000
 BOOTSTRAP_SEED = 20260902
 EXPECTED_PROTEINS = 552
@@ -132,16 +134,16 @@ TRIANGLE_METRICS = {
 
 
 def configure_style(*, font_scale: float = 1.0) -> None:
-    """Configure figure styling, with enlarged type for publication main figures."""
+    """Configure legible manuscript-scale figure typography."""
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
             "font.size": 10 * font_scale,
             "axes.titlesize": 12 * font_scale,
             "axes.labelsize": 11 * font_scale,
-            "xtick.labelsize": 9 * font_scale,
-            "ytick.labelsize": 9 * font_scale,
-            "legend.fontsize": 8.5 * font_scale,
+            "xtick.labelsize": 10 * font_scale,
+            "ytick.labelsize": 10 * font_scale,
+            "legend.fontsize": 10 * font_scale,
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.grid": True,
@@ -1091,7 +1093,7 @@ def triangle_stratified_figure(
     category_spec = TRIANGLE_CATEGORY_SPECS[system]
     labels = tuple(category_spec["labels"])
     colors = {label: plt.get_cmap("tab10")(index) for index, label in enumerate(labels)}
-    figure, axes = plt.subplots(2, 4, figsize=(16.5, 8.0), sharex=True, sharey="row")
+    figure, axes = plt.subplots(2, 4, figsize=(14.0, 8.0), sharex=True, sharey="row")
     for row_index, metric in enumerate(TRIANGLE_METRICS):
         metric_spec = TRIANGLE_METRICS[metric]
         for column_index, analysis in enumerate(MODEL_ORDER):
@@ -1115,6 +1117,10 @@ def triangle_stratified_figure(
                 ]
                 add_extrema_markers(axis, marker_rows, analysis, color, label)
             style_layer_axis(axis, str(metric_spec["ylabel"]), str(metric_spec["domain"]))
+            if column_index != 0:
+                axis.set_ylabel("")
+            if row_index != len(TRIANGLE_METRICS) - 1:
+                axis.set_xlabel("")
             if row_index == 0:
                 axis.set_title(str(MODEL_SPECS[analysis]["label"]))
     category_handles = [Line2D([], [], color=colors[label], linewidth=2, label=display_category(label)) for label in labels]
@@ -1260,7 +1266,7 @@ def manifest_row(
 
 
 def main() -> None:
-    configure_style()
+    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
     ensure_directories()
     generated_at = datetime.now(timezone.utc).isoformat()
     cohort = load_cohort()
@@ -1407,10 +1413,11 @@ def main() -> None:
     )
     manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Normalized decodability versus normalized mean triangle violation", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
 
-    configure_style()
+    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
     png, pdf = faceted_subgroup_figure(
         sequence_summary, SEQUENCE_BINS, "Mean per-protein MAE (Å)",
         "supp_figure_sequence_separation_mae_combined", SUPPLEMENT_DIR,
+        figsize=(11.5, 7.6),
     )
     manifest.append(manifest_row(stem="supp_figure_sequence_separation_mae_combined", section="supplemental", title="Protein-equal MAE by sequence separation", png=png, pdf=pdf, source_csvs=[source_paths["sequence_raw"], source_paths["sequence_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
@@ -1429,6 +1436,8 @@ def main() -> None:
     )
     manifest.append(manifest_row(stem=fraction_phase_stem, section="supplemental", title="Normalized decodability versus all-triangle violation fraction", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
 
+    # These diagnostics appear side by side at half-text width in the supplement.
+    configure_style(font_scale=DENSE_SUPPLEMENTAL_FONT_SCALE)
     top3_stem = "supp_figure_top3_eigenvalue_fraction"
     png, pdf = line_figure(
         top3_summary, "Mean top-3 eigenvalue fraction", top3_stem,
@@ -1443,6 +1452,8 @@ def main() -> None:
     )
     manifest.append(manifest_row(stem=stress_stem, section="supplemental", title="Mean normalized MDS stress across Evoformer layers", png=png, pdf=pdf, source_csvs=[source_paths["stress_raw"], source_paths["stress_summary"]], uncertainty=standard_uncertainty))
 
+    # The 2x4 grids are reduced substantially when placed at manuscript width.
+    configure_style(font_scale=DENSE_SUPPLEMENTAL_FONT_SCALE)
     for system, category_spec in TRIANGLE_CATEGORY_SPECS.items():
         if system == "all_triangles":
             continue
@@ -1452,6 +1463,7 @@ def main() -> None:
         )
         manifest.append(manifest_row(stem=stem, section="supplemental", title=f"{category_spec['title']} annotated triangle trajectories", png=png, pdf=pdf, source_csvs=[source_paths["triangle_raw"], source_paths["triangle_summary"], source_paths["all_tests"], source_paths["candidates"], source_paths["trajectory"]], uncertainty=standard_uncertainty))
 
+    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
     all_triangle_raw = triangle[
         triangle["category_system"].eq("all_triangles")
         & triangle["category_label"].eq("all")
