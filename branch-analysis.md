@@ -1,5 +1,12 @@
 # Branch Analysis
 
+## Session: 2026-09-02 — Relate ablation and triangle-violation changes
+
+Added connected layer-transition scatterplots comparing the shared linear
+probe's protein-equal normalized triangle-violation changes with mean
+per-protein TM-score changes for all six selected forward/reverse layerwise
+ablations.
+
 ## Session: 2026-09-02 — Align layerwise ablations with the 552-protein cohort
 
 Filtered the six selected forward/reverse ablation trajectories to the frozen
