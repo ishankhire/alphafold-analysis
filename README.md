@@ -2,8 +2,7 @@
 
 This is the compact companion repository for the NeurIPS workshop submission.
 It contains the four probe implementations, the frozen cross-validation
-manifests, plot-ready source data, and the six PDFs included by the paper's
-separately maintained `draft_4.tex`. Raw pair representations, per-pair
+manifests, plot-ready source data, and the six PDFs included in the paper. Raw pair representations, per-pair
 predictions, model artifacts, exploratory analyses, logs, and unused figures
 are intentionally omitted.
 
