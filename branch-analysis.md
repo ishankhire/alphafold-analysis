@@ -4,7 +4,9 @@
 
 Increased tick and regression-model label sizes across the September 2 main
 and supplemental publication figures, with additional manuscript-scale sizing
-for half-width diagnostics and dense multi-panel supplements.
+for half-width diagnostics and dense multi-panel supplements. A follow-up pass
+reduced the main spatial-MAE grid's axis typography and separated the two row
+labels in the dense triangle grids.
 
 ## Session: 2026-09-02 — Align layerwise ablations with the 552-protein cohort
 

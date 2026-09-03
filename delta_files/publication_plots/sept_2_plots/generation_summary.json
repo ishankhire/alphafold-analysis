@@ -1,6 +1,6 @@
 {
-  "generator_version": "sept_2_publication_plots_v4",
-  "generated_at": "2026-09-03T11:27:49.599292+00:00",
+  "generator_version": "sept_2_publication_plots_v5",
+  "generated_at": "2026-09-03T11:43:00.234904+00:00",
   "input_root": "delta_files/regression_5fold_v1",
   "input_policy": "all analytical and provenance inputs resolve below regression_5fold_v1",
   "bootstrap": {

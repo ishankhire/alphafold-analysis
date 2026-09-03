@@ -26,10 +26,13 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 
-GENERATOR_VERSION = "sept_2_publication_plots_v4"
+GENERATOR_VERSION = "sept_2_publication_plots_v5"
 MAIN_FIGURE_FONT_SCALE = 1.75
 SUPPLEMENTAL_FIGURE_FONT_SCALE = 1.4
 DENSE_SUPPLEMENTAL_FONT_SCALE = 1.7
+MAIN_FACET_AXIS_LABEL_SIZE = 14.5
+MAIN_FACET_TICK_LABEL_SIZE = 12.5
+TRIANGLE_GRID_YLABEL_SIZE = 14.0
 BOOTSTRAP_REPLICATES = 2_000
 BOOTSTRAP_SEED = 20260902
 EXPECTED_PROTEINS = 552
@@ -960,6 +963,8 @@ def faceted_subgroup_figure(
     visible_y_tick_categories: Collection[str] | None = None,
     shared_axis_labels: bool = False,
     title_pad: float | None = None,
+    axis_label_fontsize: float | None = None,
+    tick_label_fontsize: float | None = None,
 ) -> tuple[Path, Path]:
     nrows = math.ceil(len(categories) / ncols)
     if figsize is None:
@@ -974,6 +979,8 @@ def faceted_subgroup_figure(
             axis.set_ylim(*ylimits[category])
         if yticks is not None and category in yticks:
             axis.set_yticks(yticks[category])
+        if tick_label_fontsize is not None:
+            axis.tick_params(axis="both", labelsize=tick_label_fontsize)
         if shared_axis_labels:
             axis.set(xlabel="", ylabel="")
         if (
@@ -990,9 +997,14 @@ def faceted_subgroup_figure(
     handles, labels = flat[0].get_legend_handles_labels()
     if shared_axis_labels:
         shared_ylabel = figure.supylabel(
-            ylabel, x=0.045, multialignment="center"
+            ylabel,
+            x=0.045,
+            multialignment="center",
+            fontsize=axis_label_fontsize,
         )
-        figure.supxlabel("Evoformer layer", y=0.14)
+        figure.supxlabel(
+            "Evoformer layer", y=0.14, fontsize=axis_label_fontsize
+        )
         figure.legend(
             handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
             ncol=4, frameon=False,
@@ -1117,7 +1129,18 @@ def triangle_stratified_figure(
                 ]
                 add_extrema_markers(axis, marker_rows, analysis, color, label)
             style_layer_axis(axis, str(metric_spec["ylabel"]), str(metric_spec["domain"]))
-            if column_index != 0:
+            if column_index == 0:
+                grid_ylabel = str(metric_spec["ylabel"]).replace(
+                    " violation per triangle", " violation\nper triangle"
+                )
+                axis.set_ylabel(
+                    grid_ylabel,
+                    fontsize=TRIANGLE_GRID_YLABEL_SIZE,
+                )
+                axis.yaxis.set_label_coords(
+                    -0.18, 0.56 if row_index == 0 else 0.44
+                )
+            else:
                 axis.set_ylabel("")
             if row_index != len(TRIANGLE_METRICS) - 1:
                 axis.set_xlabel("")
@@ -1395,6 +1418,8 @@ def main() -> None:
         | {SPATIAL_BINS[-1]: (0, 5, 10, 15)},
         shared_axis_labels=True,
         title_pad=14,
+        axis_label_fontsize=MAIN_FACET_AXIS_LABEL_SIZE,
+        tick_label_fontsize=MAIN_FACET_TICK_LABEL_SIZE,
     )
     manifest.append(manifest_row(stem="main_figure_15_spatial_distance_mae_combined", section="main", title="Protein-equal MAE by true spatial distance", png=png, pdf=pdf, source_csvs=[source_paths["spatial_raw"], source_paths["spatial_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
