@@ -1921,3 +1921,11 @@ more legible at paper scale, removed their titles, legend, and protein-count
 annotation, simplified the x-axis label to `Layer`, and slightly reduced the
 opacity of individual-protein trajectories. Refreshed the matching Overleaf
 PDFs without changing the twin-axis overlay figures.
+
+## Session: 2026-09-02 — Combine layerwise ablation trajectories
+
+Added a one-row, six-panel summary of the Pair Transition, MSA MLP, and combined
+TMU plus triangle-attention FWD/REV ablation trajectories. The panels share a
+0–1 TM-score scale and figure-level axis labels, with enlarged panel titles and
+tick labels for readability after reduction in the paper; copied the matching
+PDF into the Overleaf figure directory.

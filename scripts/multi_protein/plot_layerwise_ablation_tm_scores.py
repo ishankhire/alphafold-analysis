@@ -46,16 +46,19 @@ ABLATIONS = (
     {
         "key": "pair_transition_mlp",
         "label": "Pair transition MLPs",
+        "panel_label": "Pair Transition",
         "source_stem": "ablate_pair_transition_layerwise",
     },
     {
         "key": "msa_mlp",
         "label": "MSA MLPs",
+        "panel_label": "MSA MLP",
         "source_stem": "ablate_msa_transition_layerwise",
     },
     {
         "key": "tmu_triangle_attention",
         "label": "TMU + triangle attention",
+        "panel_label": "TMU + Triangle\nAttention",
         "source_stem": "ablate_tri_start_ablate_tri_end_ablate_tmu_layerwise",
     },
 )
@@ -362,6 +365,70 @@ def plot_trajectory(*, matrix: np.ndarray, stem: str) -> tuple[Path, Path, Path]
     return png_path, pdf_path, overleaf_path
 
 
+def plot_combined_trajectories(
+    panels: Sequence[tuple[str, str, np.ndarray]],
+) -> tuple[Path, Path, Path]:
+    if len(panels) != 6:
+        raise ValueError(
+            f"Expected six combined-figure panels; received {len(panels)}"
+        )
+
+    figure, axes = plt.subplots(
+        1,
+        len(panels),
+        figsize=(21.0, 4.8),
+        sharex=True,
+        sharey=True,
+    )
+    for panel_index, (panel_label, direction, matrix) in enumerate(panels):
+        axis = axes[panel_index]
+        panel_letter = chr(ord("a") + panel_index)
+        if "\n" in panel_label:
+            title_first_line, title_second_line = panel_label.split("\n", maxsplit=1)
+            panel_title = (
+                f"({panel_letter}) {title_first_line}\n"
+                f"{title_second_line} ({DIRECTIONS[direction]})"
+            )
+        else:
+            panel_title = (
+                f"({panel_letter}) {panel_label}\n({DIRECTIONS[direction]})"
+            )
+        draw_ablation_trajectory(
+            axis,
+            matrix,
+            trajectory_alpha=0.10,
+            mean_label=None,
+        )
+        axis.set(
+            xlim=(0, 47),
+            ylim=(0, 1),
+            title=panel_title,
+        )
+        axis.set_xticks((0, 10, 20, 30, 40, 47))
+        axis.tick_params(axis="both", labelsize=17)
+        axis.title.set_size(20)
+
+    figure.supxlabel("Layer", fontsize=25, y=0.025)
+    figure.supylabel("TM-score", fontsize=25, x=0.012)
+    figure.subplots_adjust(
+        left=0.055,
+        right=0.995,
+        bottom=0.22,
+        top=0.76,
+        wspace=0.08,
+    )
+
+    stem = "combined_layerwise_ablation_tm_score_trajectories"
+    png_path = OUTPUT_DIR / f"{stem}.png"
+    pdf_path = OUTPUT_DIR / f"{stem}.pdf"
+    overleaf_path = OVERLEAF_OUTPUT_DIR / f"{stem}.pdf"
+    figure.savefig(png_path)
+    figure.savefig(pdf_path)
+    shutil.copyfile(pdf_path, overleaf_path)
+    plt.close(figure)
+    return png_path, pdf_path, overleaf_path
+
+
 def padded_limits(trajectories: Iterable[np.ndarray]) -> tuple[float, float]:
     values = np.concatenate([np.asarray(item, dtype=float) for item in trajectories])
     lower = float(values.min())
@@ -432,7 +499,7 @@ def plot_overlay(
 
 
 def expected_overleaf_filenames() -> set[str]:
-    names: set[str] = set()
+    names = {"combined_layerwise_ablation_tm_score_trajectories.pdf"}
     for ablation in ABLATIONS:
         for direction in DIRECTIONS:
             base = f"{ablation['key']}_{direction}_tm_score_trajectory"
@@ -448,8 +515,8 @@ def write_readme() -> None:
 
 This folder contains FWD and REV layerwise ablations for Pair transition MLPs,
 MSA MLPs (`msa_transition`), and the combined TMU + triangle-attention
-(`tri_start`, `tri_end`, and `tmu`) intervention. Each figure is supplied as
-both PNG and PDF.
+(`tri_start`, `tri_end`, and `tmu`) intervention. Each individual figure and a
+six-panel horizontal summary are supplied as both PNG and PDF.
 
 The ablation inputs contain 554 proteins. These plots use the frozen 552-protein
 protocol-2.0 regression cohort and exclude ECOD proteins {excluded}. Every graph
@@ -479,6 +546,7 @@ def main() -> None:
     probe_means = load_probe_means(cohort_keys)
     generated_delta: list[Path] = []
     generated_overleaf: list[Path] = []
+    combined_panels: list[tuple[str, str, np.ndarray]] = []
     for ablation in ABLATIONS:
         for direction in DIRECTIONS:
             filename = f"{ablation['source_stem']}_{direction}.csv"
@@ -493,6 +561,9 @@ def main() -> None:
             )
             generated_delta.extend((png, pdf))
             generated_overleaf.append(overleaf_pdf)
+            combined_panels.append(
+                (str(ablation["panel_label"]), direction, matrix)
+            )
             overlay_stem = f"{ablation['key']}_{direction}_tm_score"
             for metric, means in probe_means.items():
                 generated_overleaf.append(
@@ -506,18 +577,26 @@ def main() -> None:
                     )
                 )
 
+    combined_png, combined_pdf, combined_overleaf_pdf = plot_combined_trajectories(
+        combined_panels
+    )
+    generated_delta.extend((combined_png, combined_pdf))
+    generated_overleaf.append(combined_overleaf_pdf)
+
     write_readme()
-    if len(generated_delta) != 12 or not all(path.is_file() for path in generated_delta):
-        raise RuntimeError("The six Delta PNG/PDF figure pairs were not generated")
+    if len(generated_delta) != 14 or not all(
+        path.is_file() for path in generated_delta
+    ):
+        raise RuntimeError("The seven Delta PNG/PDF figure pairs were not generated")
     generated_names = {path.name for path in generated_overleaf}
     expected_names = expected_overleaf_filenames()
-    if generated_names != expected_names or len(generated_overleaf) != 18:
-        raise RuntimeError("The expected 18 Overleaf PDFs were not generated")
+    if generated_names != expected_names or len(generated_overleaf) != 19:
+        raise RuntimeError("The expected 19 Overleaf PDFs were not generated")
     on_disk_names = {path.name for path in OVERLEAF_OUTPUT_DIR.glob("*.pdf")}
     if on_disk_names != expected_names:
         raise RuntimeError("The Overleaf output directory has an unexpected PDF inventory")
     print(
-        f"Generated 6 Delta PNG/PDF pairs and 18 Overleaf PDFs from "
+        f"Generated 7 Delta PNG/PDF pairs and 19 Overleaf PDFs from "
         f"{EXPECTED_PROTEINS} proteins"
     )
 
