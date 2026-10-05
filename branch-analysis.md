@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Consolidate main-figure legend
+
+Increased the gap between the spatial-MAE x label and its model key, removed
+duplicate legends from the main R2 and TM-score plots, and refreshed hashes.
+
 ## Session: 2026-10-05 — Share labels across individual-protein figures
 
 Extended the shared x/y labels to the TM-score and two triangle-metric

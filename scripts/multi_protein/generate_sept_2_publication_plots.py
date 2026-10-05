@@ -940,14 +940,15 @@ def save_figure(figure: plt.Figure, directory: Path, stem: str) -> tuple[Path, P
 
 def line_figure(
     summary: pd.DataFrame, ylabel: str, stem: str, directory: Path, domain: str,
-    *, ylimits: tuple[float, float] | None = None,
+    *, ylimits: tuple[float, float] | None = None, show_legend: bool = True,
 ) -> tuple[Path, Path]:
     figure, axis = plt.subplots(figsize=(8.4, 5.3))
     plot_model_lines(axis, summary, domain)
     style_layer_axis(axis, ylabel, domain)
     if ylimits is not None:
         axis.set_ylim(*ylimits)
-    axis.legend(frameon=True)
+    if show_legend:
+        axis.legend(frameon=True)
     figure.tight_layout()
     return save_figure(figure, directory, stem)
 
@@ -1006,13 +1007,14 @@ def faceted_subgroup_figure(
             fontsize=axis_label_fontsize,
         )
         figure.supxlabel(
-            "Evoformer layer", y=0.14, fontsize=axis_label_fontsize
+            "Evoformer layer", y=0.20 if nrows == 1 else 0.14,
+            fontsize=axis_label_fontsize,
         )
         figure.legend(
             handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
             ncol=4, frameon=False,
         )
-        figure.tight_layout(rect=(0.025, 0.22 if nrows == 1 else 0.10, 1, 0.98))
+        figure.tight_layout(rect=(0.025, 0.16 if nrows == 1 else 0.10, 1, 0.98))
         if nrows == 1:
             first_axis_bounds = flat[0].get_position()
             shared_ylabel.set_y((first_axis_bounds.y0 + first_axis_bounds.y1) / 2)
@@ -1403,12 +1405,12 @@ def main() -> None:
     configure_style(font_scale=MAIN_FIGURE_FONT_SCALE)
     png, pdf = line_figure(
         r2_summary, "Mean per-protein $R^2$", "main_figure_01_mean_per_protein_r2",
-        MAIN_DIR, "unbounded",
+        MAIN_DIR, "unbounded", show_legend=False,
     )
     manifest.append(manifest_row(stem="main_figure_01_mean_per_protein_r2", section="main", title="Mean per-protein fivefold OOF R2", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["r2_summary"]], uncertainty=standard_uncertainty))
     png, pdf = line_figure(
         tm_summary, "Mean reconstruction TM-score", "main_figure_03_tm_score",
-        MAIN_DIR, "unit", ylimits=(0, 1),
+        MAIN_DIR, "unit", ylimits=(0, 1), show_legend=False,
     )
     manifest.append(manifest_row(stem="main_figure_03_tm_score", section="main", title="Mean fivefold OOF reconstruction TM-score", png=png, pdf=pdf, source_csvs=[source_paths["tm_raw"], source_paths["tm_summary"]], uncertainty=standard_uncertainty))
 
