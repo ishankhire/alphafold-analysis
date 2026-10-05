@@ -929,11 +929,14 @@ def style_layer_axis(axis: plt.Axes, ylabel: str, domain: str) -> None:
         axis.axhline(0, color="#666666", linewidth=0.7, alpha=0.45, zorder=0)
 
 
-def save_figure(figure: plt.Figure, directory: Path, stem: str) -> tuple[Path, Path]:
+def save_figure(
+    figure: plt.Figure, directory: Path, stem: str, *, fixed_canvas: bool = False
+) -> tuple[Path, Path]:
     png = directory / f"{stem}.png"
     pdf = directory / f"{stem}.pdf"
-    figure.savefig(png)
-    figure.savefig(pdf)
+    save_kwargs = {"bbox_inches": figure.bbox_inches} if fixed_canvas else {}
+    figure.savefig(png, **save_kwargs)
+    figure.savefig(pdf, **save_kwargs)
     plt.close(figure)
     return png, pdf
 
@@ -1069,6 +1072,8 @@ def triangle_overlay_figure(
     metric: str,
     stem: str,
     directory: Path,
+    *,
+    paired_main_layout: bool = False,
 ) -> tuple[Path, Path]:
     spec = TRIANGLE_METRICS[metric]
     selected_summary = summary[
@@ -1087,7 +1092,10 @@ def triangle_overlay_figure(
         add_extrema_markers(
             axis, selected_candidates, analysis, MODEL_SPECS[analysis]["color"]
         )
-    style_layer_axis(axis, str(spec["ylabel"]), str(spec["domain"]))
+    ylabel = str(spec["ylabel"])
+    if paired_main_layout:
+        ylabel = ylabel.replace(" violation per triangle", " violation\nper triangle")
+    style_layer_axis(axis, ylabel, str(spec["domain"]))
     axis.set_title(str(spec["title"]))
     handles, labels = axis.get_legend_handles_labels()
     handles.extend(
@@ -1097,9 +1105,17 @@ def triangle_overlay_figure(
         ]
     )
     labels.extend(["Candidate peak/trough", "BH-supported"])
-    figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False)
-    figure.tight_layout(rect=(0, 0.15, 1, 1))
-    return save_figure(figure, directory, stem)
+    if paired_main_layout:
+        figure.legend(
+            handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.02),
+            ncol=3, frameon=False, fontsize=13.5, columnspacing=0.8,
+            handlelength=1.2, handletextpad=0.4,
+        )
+        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.30, top=0.88)
+    else:
+        figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False)
+        figure.tight_layout(rect=(0, 0.15, 1, 1))
+    return save_figure(figure, directory, stem, fixed_canvas=paired_main_layout)
 
 
 def triangle_stratified_figure(
@@ -1162,11 +1178,12 @@ def triangle_stratified_figure(
 
 
 def phase_figure(
-    points: pd.DataFrame, metric: str, stem: str, directory: Path
+    points: pd.DataFrame, metric: str, stem: str, directory: Path,
+    *, paired_main_layout: bool = False,
 ) -> tuple[Path, Path]:
     metric_spec = TRIANGLE_METRICS[metric]
     selected = points[points["consistency_metric"].eq(metric)]
-    figure, axis = plt.subplots(figsize=(8.7, 5.9))
+    figure, axis = plt.subplots(figsize=(8.6, 5.6) if paired_main_layout else (8.7, 5.9))
     label_shifts = (-8, 8, -7, 7)
     for model_index, analysis in enumerate(MODEL_ORDER):
         spec = MODEL_SPECS[analysis]
@@ -1202,10 +1219,13 @@ def phase_figure(
                 fontsize=6.2 * (plt.rcParams["font.size"] / 10),
                 color=spec["color"], bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.65, "pad": 0.1},
             )
+    ylabel = str(metric_spec["ylabel"])
+    if paired_main_layout:
+        ylabel = ylabel.replace(" violation per triangle", " violation\nper triangle")
     axis.set(
         title=str(metric_spec["title"]),
         xlabel="Normalized mean per-protein all-pairs $R^2$",
-        ylabel=str(metric_spec["ylabel"]),
+        ylabel=ylabel,
         xlim=(0, 1),
     )
     axis.set_xticks((0, 0.25, 0.5, 0.75, 1))
@@ -1213,9 +1233,12 @@ def phase_figure(
         axis.set_ylim(0, min(1.0, axis.get_ylim()[1]))
     else:
         axis.set_ylim(bottom=0)
-    axis.legend(frameon=True)
-    figure.tight_layout()
-    return save_figure(figure, directory, stem)
+    if paired_main_layout:
+        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.30, top=0.88)
+    else:
+        axis.legend(frameon=True)
+        figure.tight_layout()
+    return save_figure(figure, directory, stem, fixed_canvas=paired_main_layout)
 
 
 def individual_by_model_figure(
@@ -1437,11 +1460,13 @@ def main() -> None:
     png, pdf = triangle_overlay_figure(
         triangle_summary, candidates, "mean_relative_violation_all",
         "main_figure_all_triangles_peak_troughs_overlay", MAIN_DIR,
+        paired_main_layout=True,
     )
     manifest.append(manifest_row(stem="main_figure_all_triangles_peak_troughs_overlay", section="main", title="Normalized mean all-triangle violation with peak/trough annotations", png=png, pdf=pdf, source_csvs=[source_paths["triangle_raw"], source_paths["triangle_summary"], source_paths["all_tests"], source_paths["candidates"]], uncertainty=standard_uncertainty))
     png, pdf = phase_figure(
         phase_points, "mean_relative_violation_all",
         "main_figure_all_triangles_decodability_consistency", MAIN_DIR,
+        paired_main_layout=True,
     )
     manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Normalized decodability versus normalized mean triangle violation", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
 

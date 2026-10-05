@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Match paired triangle main figures
+
+Saved the triangle trajectory and decodability panels on equal canvases and
+kept one shared model/marker legend in the trajectory panel. Updated hashes.
+
 ## Session: 2026-10-05 — Consolidate main-figure legend
 
 Increased the gap between the spatial-MAE x label and its model key, removed
