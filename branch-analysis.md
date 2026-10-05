@@ -3,7 +3,8 @@
 ## Session: 2026-10-05 — Separate triangle-grid labels from ticks
 
 Replaced hard-coded y-label coordinates in the stratified triangle grids with
-label padding and regenerated the RMS-size figure and manifest hashes.
+label padding and regenerated the RMS-size, area, relative-slack, and
+largest-angle figures with refreshed manifest hashes.
 
 ## Session: 2026-10-05 — Set manuscript TM-score axis to 0–1
 
