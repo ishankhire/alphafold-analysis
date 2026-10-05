@@ -939,11 +939,14 @@ def save_figure(figure: plt.Figure, directory: Path, stem: str) -> tuple[Path, P
 
 
 def line_figure(
-    summary: pd.DataFrame, ylabel: str, stem: str, directory: Path, domain: str
+    summary: pd.DataFrame, ylabel: str, stem: str, directory: Path, domain: str,
+    *, ylimits: tuple[float, float] | None = None,
 ) -> tuple[Path, Path]:
     figure, axis = plt.subplots(figsize=(8.4, 5.3))
     plot_model_lines(axis, summary, domain)
     style_layer_axis(axis, ylabel, domain)
+    if ylimits is not None:
+        axis.set_ylim(*ylimits)
     axis.legend(frameon=True)
     figure.tight_layout()
     return save_figure(figure, directory, stem)
@@ -1403,7 +1406,7 @@ def main() -> None:
     manifest.append(manifest_row(stem="main_figure_01_mean_per_protein_r2", section="main", title="Mean per-protein fivefold OOF R2", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["r2_summary"]], uncertainty=standard_uncertainty))
     png, pdf = line_figure(
         tm_summary, "Mean reconstruction TM-score", "main_figure_03_tm_score",
-        MAIN_DIR, "unit",
+        MAIN_DIR, "unit", ylimits=(0, 1),
     )
     manifest.append(manifest_row(stem="main_figure_03_tm_score", section="main", title="Mean fivefold OOF reconstruction TM-score", png=png, pdf=pdf, source_csvs=[source_paths["tm_raw"], source_paths["tm_summary"]], uncertainty=standard_uncertainty))
 

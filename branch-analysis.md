@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Set manuscript TM-score axis to 0–1
+
+Regenerated main Figure 3 from its saved fivefold summary with a fixed 0–1
+TM-score axis and refreshed its PDF/PNG manifest hashes.
+
 ## Session: 2026-09-03 — Enlarge manuscript figure typography
 
 Increased tick and regression-model label sizes across the September 2 main
