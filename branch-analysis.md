@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Share sequence-separation MAE axes
+
+Regenerated the six-panel sequence-separation MAE supplement with one shared
+axis label, consistent 0–7 Å y limits, and refreshed figure hashes.
+
 ## Session: 2026-10-05 — Separate triangle-grid labels from ticks
 
 Replaced hard-coded y-label coordinates in the stratified triangle grids with

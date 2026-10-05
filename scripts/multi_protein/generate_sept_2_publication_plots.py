@@ -1012,9 +1012,10 @@ def faceted_subgroup_figure(
             handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.01),
             ncol=4, frameon=False,
         )
-        figure.tight_layout(rect=(0.025, 0.22, 1, 0.98))
-        first_axis_bounds = flat[0].get_position()
-        shared_ylabel.set_y((first_axis_bounds.y0 + first_axis_bounds.y1) / 2)
+        figure.tight_layout(rect=(0.025, 0.22 if nrows == 1 else 0.10, 1, 0.98))
+        if nrows == 1:
+            first_axis_bounds = flat[0].get_position()
+            shared_ylabel.set_y((first_axis_bounds.y0 + first_axis_bounds.y1) / 2)
     else:
         figure.legend(handles, labels, loc="lower center", ncol=4, frameon=False)
         figure.tight_layout(rect=(0, 0.08, 1, 1))
@@ -1444,6 +1445,11 @@ def main() -> None:
         sequence_summary, SEQUENCE_BINS, "Mean per-protein MAE (Å)",
         "supp_figure_sequence_separation_mae_combined", SUPPLEMENT_DIR,
         figsize=(11.5, 7.6),
+        # Seven angstroms covers the largest plotted bootstrap CI (6.52 Å).
+        ylimits={category: (0, 7) for category in SEQUENCE_BINS},
+        yticks={category: (0, 2, 4, 6) for category in SEQUENCE_BINS},
+        visible_y_tick_categories={SEQUENCE_BINS[0], SEQUENCE_BINS[3]},
+        shared_axis_labels=True,
     )
     manifest.append(manifest_row(stem="supp_figure_sequence_separation_mae_combined", section="supplemental", title="Protein-equal MAE by sequence separation", png=png, pdf=pdf, source_csvs=[source_paths["sequence_raw"], source_paths["sequence_summary"], source_paths["reconciliation"]], uncertainty=standard_uncertainty))
     for stem, png, pdf in standalone_subgroup_figures(
