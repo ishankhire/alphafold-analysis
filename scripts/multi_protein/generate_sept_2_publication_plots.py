@@ -1139,9 +1139,7 @@ def triangle_stratified_figure(
                 axis.set_ylabel(
                     grid_ylabel,
                     fontsize=TRIANGLE_GRID_YLABEL_SIZE,
-                )
-                axis.yaxis.set_label_coords(
-                    -0.18, 0.56 if row_index == 0 else 0.44
+                    labelpad=12,
                 )
             else:
                 axis.set_ylabel("")
