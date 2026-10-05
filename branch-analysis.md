@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Share labels across individual-protein figures
+
+Extended the shared x/y labels to the TM-score and two triangle-metric
+individual-protein grids, and refreshed their PDF/PNG manifest hashes.
+
 ## Session: 2026-10-05 — Share individual-R2 axis labels
 
 Regenerated the four-panel individual-protein R2 figure with one x label and
