@@ -2006,3 +2006,9 @@ own six-structure union frame, held fixed across that protein's panels.
 Added a local compositor for the 60 PyMOL panels and generated the current
 ten-protein by six-column supplemental structure figure. Replaced the outdated
 Overleaf assets and placeholder captions with the held-out shared-OLS version.
+
+## Session: 2026-10-05 — Share legend across paired triangle figures
+
+Matched the two main triangle-panel canvases, moved their model and extrema key
+into a larger full-width legend PDF, and included it below the pair in drafts
+4–6. Updated the figure manifest and generator inventory.

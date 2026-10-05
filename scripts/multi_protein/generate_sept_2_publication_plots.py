@@ -243,6 +243,7 @@ def expected_figure_ids() -> tuple[str, ...]:
         *spatial,
         "main_figure_all_triangles_peak_troughs_overlay",
         "main_figure_all_triangles_decodability_consistency",
+        "main_figure_all_triangles_shared_legend",
         "supp_figure_sequence_separation_mae_combined",
         *sequence,
         "supp_figure_all_triangles_violation_fraction_peak_troughs_overlay",
@@ -1097,25 +1098,42 @@ def triangle_overlay_figure(
         ylabel = ylabel.replace(" violation per triangle", " violation\nper triangle")
     style_layer_axis(axis, ylabel, str(spec["domain"]))
     axis.set_title(str(spec["title"]))
-    handles, labels = axis.get_legend_handles_labels()
-    handles.extend(
-        [
-            Line2D([], [], marker="^", linestyle="none", markerfacecolor="white", markeredgecolor="black", label="Candidate peak/trough"),
-            Line2D([], [], marker="o", linestyle="none", markerfacecolor="black", markeredgecolor="black", label="BH-supported"),
-        ]
-    )
-    labels.extend(["Candidate peak/trough", "BH-supported"])
     if paired_main_layout:
-        figure.legend(
-            handles, labels, loc="lower center", bbox_to_anchor=(0.5, 0.02),
-            ncol=3, frameon=False, fontsize=13.5, columnspacing=0.8,
-            handlelength=1.2, handletextpad=0.4,
-        )
-        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.30, top=0.88)
+        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.18, top=0.88)
     else:
+        handles, labels = triangle_legend_entries()
         figure.legend(handles, labels, loc="lower center", ncol=3, frameon=False)
         figure.tight_layout(rect=(0, 0.15, 1, 1))
     return save_figure(figure, directory, stem, fixed_canvas=paired_main_layout)
+
+
+def triangle_legend_entries() -> tuple[list[Line2D], list[str]]:
+    handles = [
+        Line2D(
+            [], [], color=MODEL_SPECS[analysis]["color"],
+            linestyle=MODEL_SPECS[analysis]["linestyle"], linewidth=2.0,
+            label=MODEL_SPECS[analysis]["label"],
+        )
+        for analysis in MODEL_ORDER
+    ]
+    handles.extend(
+        [
+            Line2D([], [], marker="^", linestyle="none", markerfacecolor="white", markeredgecolor="black", label="Candidate peak/trough"),
+            Line2D([], [], marker="^", linestyle="none", markerfacecolor="black", markeredgecolor="black", label="BH-supported"),
+        ]
+    )
+    return handles, [handle.get_label() for handle in handles]
+
+
+def shared_triangle_legend_figure(stem: str, directory: Path) -> tuple[Path, Path]:
+    figure = plt.figure(figsize=(17.2, 1.45))
+    handles, labels = triangle_legend_entries()
+    figure.legend(
+        handles, labels, loc="center", bbox_to_anchor=(0.5, 0.5),
+        ncol=3, frameon=False, fontsize=20.5, columnspacing=1.5,
+        handlelength=1.8, handletextpad=0.6, labelspacing=0.35,
+    )
+    return save_figure(figure, directory, stem, fixed_canvas=True)
 
 
 def triangle_stratified_figure(
@@ -1234,7 +1252,7 @@ def phase_figure(
     else:
         axis.set_ylim(bottom=0)
     if paired_main_layout:
-        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.30, top=0.88)
+        figure.subplots_adjust(left=0.18, right=0.97, bottom=0.18, top=0.88)
     else:
         axis.legend(frameon=True)
         figure.tight_layout()
@@ -1469,6 +1487,10 @@ def main() -> None:
         paired_main_layout=True,
     )
     manifest.append(manifest_row(stem="main_figure_all_triangles_decodability_consistency", section="main", title="Normalized decodability versus normalized mean triangle violation", png=png, pdf=pdf, source_csvs=[source_paths["r2_raw"], source_paths["triangle_raw"], source_paths["phase"]], uncertainty=phase_uncertainty))
+    png, pdf = shared_triangle_legend_figure(
+        "main_figure_all_triangles_shared_legend", MAIN_DIR,
+    )
+    manifest.append(manifest_row(stem="main_figure_all_triangles_shared_legend", section="main", title="Shared legend for the paired triangle main figures", png=png, pdf=pdf, source_csvs=[], uncertainty="legend only"))
 
     configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
     png, pdf = faceted_subgroup_figure(
@@ -1607,7 +1629,7 @@ def main() -> None:
             "sequence_mae_rows": 635_904,
             "focused_triangle_rows": 1_377_792,
             "peak_trough_tests": 7_904,
-            "figures": 28,
+            "figures": 29,
         },
         "observed_counts": {
             "models": len(MODEL_ORDER),
