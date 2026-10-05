@@ -1222,6 +1222,8 @@ def individual_by_model_figure(
     ylabel: str,
     domain: str,
     stem: str,
+    *,
+    shared_axis_labels: bool = False,
 ) -> tuple[Path, Path]:
     figure, axes = plt.subplots(2, 2, figsize=(12.5, 8.5), sharex=True, sharey=True)
     for axis, analysis in zip(axes.ravel(), MODEL_ORDER):
@@ -1240,8 +1242,15 @@ def individual_by_model_figure(
             linestyle=spec["linestyle"], linewidth=2.3,
         )
         style_layer_axis(axis, ylabel, domain)
+        if shared_axis_labels:
+            axis.set(xlabel="", ylabel="")
         axis.set_title(str(spec["label"]))
-    figure.tight_layout()
+    if shared_axis_labels:
+        figure.supxlabel("Evoformer layer", y=0.015)
+        figure.supylabel(ylabel, x=0.015)
+        figure.tight_layout(rect=(0.04, 0.04, 1, 1))
+    else:
+        figure.tight_layout()
     return save_figure(figure, INDIVIDUAL_DIR, stem)
 
 
@@ -1505,7 +1514,10 @@ def main() -> None:
         (tm, tm_summary, "Reconstruction TM-score", "unit", "supp_figure_individual_proteins_tm_score_by_model", [source_paths["tm_raw"], source_paths["tm_summary"]]),
     )
     for raw, summary, ylabel, domain, stem, sources in individual_specs:
-        png, pdf = individual_by_model_figure(raw, summary, ylabel, domain, stem)
+        png, pdf = individual_by_model_figure(
+            raw, summary, ylabel, domain, stem,
+            shared_axis_labels=stem == "supp_figure_individual_proteins_r2_by_model",
+        )
         manifest.append(manifest_row(stem=stem, section="supplemental", title=f"Model-separated individual-protein trajectories: {ylabel}", png=png, pdf=pdf, source_csvs=sources, uncertainty=standard_uncertainty))
     for metric, stem in (
         ("mean_relative_violation_all", "supp_figure_individual_proteins_normalized_triangle_violation_by_model"),

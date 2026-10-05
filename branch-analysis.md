@@ -1,5 +1,10 @@
 # Branch Analysis
 
+## Session: 2026-10-05 — Share individual-R2 axis labels
+
+Regenerated the four-panel individual-protein R2 figure with one x label and
+one y label for the grid, and refreshed its manifest hashes.
+
 ## Session: 2026-10-05 — Share sequence-separation MAE axes
 
 Regenerated the six-panel sequence-separation MAE supplement with one shared
