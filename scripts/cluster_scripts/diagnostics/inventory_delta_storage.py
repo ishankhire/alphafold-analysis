@@ -159,9 +159,9 @@ def main() -> None:
     with (output / "files.csv").open("w", newline="") as file_handle, \
          (output / "errors.csv").open("w", newline="") as error_handle, \
          (output / "npy_header_samples.csv").open("w", newline="") as header_handle:
-        files = csv.writer(file_handle)
-        errors = csv.writer(error_handle)
-        headers = csv.writer(header_handle)
+        files = csv.writer(file_handle, lineterminator="\n")
+        errors = csv.writer(error_handle, lineterminator="\n")
+        headers = csv.writer(header_handle, lineterminator="\n")
         files.writerow(["root", "path", "category", "cohort_scope", "logical_bytes",
                         "allocated_bytes", "unique_allocated_bytes", "mtime_ns", "nlink"])
         errors.writerow(["root", "path", "error"])
@@ -230,13 +230,13 @@ def main() -> None:
             header_handle.flush()
             log(f"scan finished root={root} files={file_count - before_files} elapsed_seconds={elapsed:.1f}")
     with (output / "summary.csv").open("w", newline="") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["root", "category", "cohort_scope", "file_count", "logical_bytes",
                          "unique_allocated_bytes", "logical_TB", "unique_allocated_TB"])
         for key, values in sorted(summaries.items(), key=lambda item: -item[1][2]):
             writer.writerow([*key, *values, f"{values[1] / 1e12:.9f}", f"{values[2] / 1e12:.9f}"])
     with (output / "roots.csv").open("w", newline="") as handle:
-        writer = csv.writer(handle)
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["root", "status", "file_count", "error_count", "elapsed_seconds"])
         writer.writerows(root_rows)
     log(f"inventory complete files={file_count} errors={error_count} output={output} elapsed_seconds={time.monotonic() - started:.1f}")
