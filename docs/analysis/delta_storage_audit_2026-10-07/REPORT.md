@@ -41,7 +41,7 @@ supplemental draft. No archive scripts were executed.
   are expected/candidate locations, not remotely verified files.
 - [cohort.csv](cohort.csv): all 554 protein IDs, source, eligibility, exclusion
   reason, residue count, and current fivefold membership.
-- [code_path_references.csv](code_path_references.csv): 11,378 source lines with
+- [code_path_references.csv](code_path_references.csv): 11,379 source lines with
   path construction, filename, root, or filesystem references, including
   historical/archived code and comments. A reference does not prove active use.
 - [absolute_path_references.csv](absolute_path_references.csv): 2,784 literal

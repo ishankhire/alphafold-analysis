@@ -67,7 +67,7 @@
     "sequence_mae_rows": 635904,
     "focused_triangle_rows": 1377792,
     "peak_trough_tests": 7904,
-    "figures": 28
+    "figures": 29
   },
   "observed_counts": {
     "models": 4,
@@ -81,7 +81,7 @@
     "sequence_mae_rows": 635904,
     "focused_triangle_rows": 1377792,
     "peak_trough_tests": 7904,
-    "figures": 28
+    "figures": 29
   },
   "models": [
     "shared_ols_base256",
@@ -242,6 +242,10 @@
     "main_figure_15_spatial_distance_mae_10_40": {
       "png": "delta_files/publication_plots/sept_2_plots/main_figures/main_figure_15_spatial_distance_mae_10_40.png",
       "pdf": "delta_files/publication_plots/sept_2_plots/main_figures/main_figure_15_spatial_distance_mae_10_40.pdf"
+    },
+    "main_figure_all_triangles_shared_legend": {
+      "png": "delta_files/publication_plots/sept_2_plots/main_figures/main_figure_all_triangles_shared_legend.png",
+      "pdf": "delta_files/publication_plots/sept_2_plots/main_figures/main_figure_all_triangles_shared_legend.pdf"
     }
   },
   "spatial_distance_plot_bins": [

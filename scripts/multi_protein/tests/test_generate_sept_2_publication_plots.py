@@ -163,10 +163,11 @@ def test_metric_domain_clipping_is_display_only() -> None:
     assert np.array_equal(unbounded_high, high)
 
 
-def test_figure_names_cover_28_pairs_and_all_plotted_bins() -> None:
+def test_figure_names_cover_29_outputs_and_all_plotted_bins() -> None:
     figure_ids = expected_figure_ids()
-    assert len(figure_ids) == 28
-    assert len(set(figure_ids)) == 28
+    assert len(figure_ids) == 29
+    assert len(set(figure_ids)) == 29
+    assert "main_figure_all_triangles_shared_legend" in figure_ids
     assert "supp_figure_top3_eigenvalue_fraction" in figure_ids
     assert "supp_figure_mds_stress" in figure_ids
     for category in SPATIAL_BINS:

@@ -8,6 +8,42 @@ read-only cluster file-size/header inventory tool. Identified repeated ablation
 representation saves and older full-MSA/duplicate stores as leading candidates;
 no Delta files were deleted or remotely measured.
 
+## Session: 2026-10-05 — Match paired triangle main figures
+
+Saved the triangle trajectory and decodability panels on equal canvases and
+kept one shared model/marker legend in the trajectory panel. Updated hashes.
+
+## Session: 2026-10-05 — Consolidate main-figure legend
+
+Increased the gap between the spatial-MAE x label and its model key, removed
+duplicate legends from the main R2 and TM-score plots, and refreshed hashes.
+
+## Session: 2026-10-05 — Share labels across individual-protein figures
+
+Extended the shared x/y labels to the TM-score and two triangle-metric
+individual-protein grids, and refreshed their PDF/PNG manifest hashes.
+
+## Session: 2026-10-05 — Share individual-R2 axis labels
+
+Regenerated the four-panel individual-protein R2 figure with one x label and
+one y label for the grid, and refreshed its manifest hashes.
+
+## Session: 2026-10-05 — Share sequence-separation MAE axes
+
+Regenerated the six-panel sequence-separation MAE supplement with one shared
+axis label, consistent 0–7 Å y limits, and refreshed figure hashes.
+
+## Session: 2026-10-05 — Separate triangle-grid labels from ticks
+
+Replaced hard-coded y-label coordinates in the stratified triangle grids with
+label padding and regenerated the RMS-size, area, relative-slack, and
+largest-angle figures with refreshed manifest hashes.
+
+## Session: 2026-10-05 — Set manuscript TM-score axis to 0–1
+
+Regenerated main Figure 3 from its saved fivefold summary with a fixed 0–1
+TM-score axis and refreshed its PDF/PNG manifest hashes.
+
 ## Session: 2026-09-03 — Enlarge manuscript figure typography
 
 Increased tick and regression-model label sizes across the September 2 main
@@ -1978,3 +2014,9 @@ own six-structure union frame, held fixed across that protein's panels.
 Added a local compositor for the 60 PyMOL panels and generated the current
 ten-protein by six-column supplemental structure figure. Replaced the outdated
 Overleaf assets and placeholder captions with the held-out shared-OLS version.
+
+## Session: 2026-10-05 — Share legend across paired triangle figures
+
+Matched the two main triangle-panel canvases, moved their model and extrema key
+into a larger full-width legend PDF, and included it below the pair in drafts
+4–6. Updated the figure manifest and generator inventory.
