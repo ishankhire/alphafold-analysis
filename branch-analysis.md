@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-10-07 — Audit Delta storage dependencies
+
+Added a source/PDF/archive audit with protected cohort input paths and conditional
+cleanup candidates under `docs/analysis/delta_storage_audit_2026-10-07/`, plus a
+read-only cluster file-size/header inventory tool. Identified repeated ablation
+representation saves and older full-MSA/duplicate stores as leading candidates;
+no Delta files were deleted or remotely measured.
+
 ## Session: 2026-09-03 — Enlarge manuscript figure typography
 
 Increased tick and regression-model label sizes across the September 2 main

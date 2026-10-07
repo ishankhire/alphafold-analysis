@@ -1,0 +1,19 @@
+{
+  "audit_date": "2026-10-07",
+  "checkout_code_files": 196,
+  "archive_code_files": 751,
+  "code_reference_lines": 11378,
+  "absolute_reference_occurrences": 2784,
+  "protected_input_rows": 27146,
+  "master_cohort": 554,
+  "fivefold_cohort": 552,
+  "source_counts": {
+    "ecod": 398,
+    "cameo": 154
+  },
+  "sum_R": 117749,
+  "sum_R_squared": 33858983,
+  "pair_float32_payload_bytes_48_layers": 832118366208,
+  "query_only_msa_float32_payload_bytes_48_layers": 5787598848,
+  "remote_storage_measured": false
+}
