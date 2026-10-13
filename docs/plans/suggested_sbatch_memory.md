@@ -12,18 +12,21 @@ headroom and recheck MaxRSS after the first canonical run.
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-requires measuring the first representative full-cohort layer before broad
-submission; this is a new downstream workflow, outside the original refactor's
-no-pilot exception. No Delta measurement has been produced during implementation.
+uses the user's explicit decision to submit the full array without a separate
+one-layer pilot. Record representative successful measurements for subsequent
+runs. Preparation job `22876444` failed on disk quota after model validation
+and residue metadata extraction, with a Python-step peak of `1876272K`
+(approximately 1.79 GiB); this partial-run observation informs headroom but is
+not a completed preparation benchmark.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
-| Export preparation | `2g` | Streams model checksums; largest replay index has 132,480 metadata rows. Residue metadata totals only the frozen cohort's aligned residues; no pair features loaded. |
+| Export preparation | `3g` | Approximately 1.68x the 1.79 GiB peak observed before job `22876444` failed on disk quota while writing metadata. Final successful MaxRSS remains to be measured. |
 | One-layer four-family prediction export | `12g` | Closest completed replay peaked at 6.15 GiB (1.95x headroom). Keeps one protein feature working set and compact model state; maximum 794 residues implies about 308 MiB float32 tensor and 615 MiB float64 base256 features before temporaries. |
 | Export finalization | `2g` | Streams one layer's 2,208 array records/checksums and four pooled sufficient-statistic reductions at a time; no cohort feature matrices or concatenated predictions. |
 
 Record allocation MaxRSS after the first successful task of each stage and
-adjust requests before broad submission or repeat runs.
+adjust requests before repeat runs.
 
 ### Original regression refactor estimates
 

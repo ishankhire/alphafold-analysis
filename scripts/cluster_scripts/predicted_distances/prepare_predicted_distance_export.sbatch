@@ -5,11 +5,11 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=2g
+#SBATCH --mem=3g
 #SBATCH --time=00:15:00
 #SBATCH --constraint="scratch&work"
-#SBATCH -o /work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/prepare-%j.out
-#SBATCH -e /work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/prepare-%j.err
+#SBATCH -o /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/prepare-%j.out
+#SBATCH -e /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/prepare-%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=ikhire3@gatech.edu
 
@@ -19,7 +19,7 @@ module load python
 source ~/protein_venv/bin/activate
 module list
 export CSV_ROOT=${CSV_ROOT:-$HOME/csv_files}
-export PREDICTED_DISTANCE_OUTPUT_ROOT=${PREDICTED_DISTANCE_OUTPUT_ROOT:-/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1}
+export PREDICTED_DISTANCE_OUTPUT_ROOT=${PREDICTED_DISTANCE_OUTPUT_ROOT:-/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1}
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export OPENBLAS_NUM_THREADS=$SLURM_CPUS_PER_TASK
 export MKL_NUM_THREADS=$SLURM_CPUS_PER_TASK

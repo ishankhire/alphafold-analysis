@@ -13,7 +13,7 @@ Existing model inputs are read from
 files and checkpoints, default to:
 
 ```text
-/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/
+/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/
   run_manifest.json
   metadata/proteins.csv
   metadata/residue_index.csv
@@ -78,24 +78,21 @@ the Slurm log directory before submission because Slurm opens stdout before
 the script starts:
 
 ```bash
-mkdir -p /work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs
+mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs
 cd "$HOME/openfold_interpretability_canonical"
 sbatch prepare_predicted_distance_export.sbatch
 ```
 
-After preparation succeeds, run **one representative full-cohort layer**:
+After preparation succeeds, submit all 48 layers, with concurrency 4:
 
 ```bash
-sbatch --array=0 export_predicted_distances_layer.sbatch
+sbatch export_predicted_distances_layer.sbatch
 ```
 
-Record successful allocation MaxRSS and elapsed time in the shared guides;
-right-size the provisional 12 GiB / 2 hour worker request before broad
-submission. Then submit remaining layers with concurrency 4:
-
-```bash
-sbatch --array=1-47%4 export_predicted_distances_layer.sbatch
-```
+The user explicitly chose full-array submission without a separate one-layer
+pilot. Record successful allocation MaxRSS and elapsed time in the shared
+guides and right-size the provisional 12 GiB / 2 hour worker requests for
+future runs.
 
 After all 48 layers succeed:
 
@@ -103,8 +100,10 @@ After all 48 layers succeed:
 sbatch finalize_predicted_distance_export.sbatch
 ```
 
-Preparation/finalization initially request 2 GiB / 15 minutes; these are
-streaming-workload estimates. The CPU partition, filesystem dependencies,
+Preparation requests 3 GiB / 15 minutes, allowing 1.68x the approximately
+1.79 GiB peak observed before the original quota failure. Finalization initially
+requests 2 GiB / 15 minutes; it streams one layer's metadata at a time.
+The CPU partition, filesystem dependencies,
 and module setup follow the live
 [Delta running-jobs guide](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/running_jobs.html).
 
@@ -137,7 +136,7 @@ Simple NumPy loading for a known completed layer:
 from pathlib import Path
 import numpy as np
 
-root = Path("/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1")
+root = Path("/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1")
 v = np.load(root / "layers/layer_00/000000022/shared_ols_base256.npy",
             allow_pickle=False)
 # For residues i > j, the packed index is i*(i-1)//2 + j.

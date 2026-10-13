@@ -30,9 +30,10 @@ from fitting into backfill windows.
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-requires measuring the first representative full-cohort layer before broad
-submission. The original regression refactor's no-pilot exception does not
-apply to this downstream export. These requests are unmeasured estimates.
+uses the user's explicit decision to submit the full array without a separate
+one-layer pilot. These requests remain unmeasured estimates; preparation job
+`22876444` failed on storage quota and its elapsed time is not a valid basis
+for sizing successful execution.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
@@ -41,7 +42,7 @@ apply to this downstream export. These requests are unmeasured estimates.
 | Export finalization | `00:15:00` | Reads/checks 105,984 files (12.96 GB payload), checks model provenance, and streams layer metadata; no fitting, features, or geometry. File metadata latency must be measured. |
 
 Replace these estimates with 1.5–2x representative successful elapsed times
-before broad submission or repeat runs; exclude smoke/skipped/no-op tasks.
+before repeat runs; exclude failed, smoke, skipped, and no-op tasks.
 
 ### Original regression refactor estimates
 

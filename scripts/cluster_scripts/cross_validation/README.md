@@ -16,7 +16,7 @@ execution, aggregation, and replay.
 For per-protein/layer/probe NPY predictions, use the separate
 [packed OOF export runbook](../predicted_distances/README.md). It reads these
 saved models and writes all generated predictions/checkpoints under
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
 independently of the existing model-input `CSV_ROOT`.
 
 ## Delta prerequisites

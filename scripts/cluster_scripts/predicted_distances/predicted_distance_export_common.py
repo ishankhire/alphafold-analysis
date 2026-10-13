@@ -31,7 +31,7 @@ from triangle_violation_subgroup_common import (  # noqa: E402
 )
 
 EXPORT_SCHEMA = "predicted_distances_5fold_v1"
-DEFAULT_OUTPUT_ROOT = Path("/work/hdd/bekh/ikhire/regression_5fold_v1") / EXPORT_SCHEMA
+DEFAULT_OUTPUT_ROOT = Path("/work/hdd/bfna/ikhire/regression_5fold_v1") / EXPORT_SCHEMA
 DTYPE = np.dtype("<f4")
 METRICS = ("r2", "mae", "rmse", "bias_pred_minus_true", "mean_true_distance",
            "mean_predicted_distance")

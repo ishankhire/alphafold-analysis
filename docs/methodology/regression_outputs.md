@@ -540,7 +540,7 @@ derived analyses.
 The separate [predicted-distance exporter](../../scripts/cluster_scripts/predicted_distances/README.md)
 replays the four retained canonical model families without refitting. It saves
 one strict-lower-triangle OOF float32 vector per protein, layer, and probe under
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/` on
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/` on
 Delta. Existing model inputs remain under `$HOME/csv_files/regression_5fold_v1/`.
 The local copy, if downloaded, belongs in
 `delta_files/regression_5fold_v1/predicted_distances_5fold_v1/`.

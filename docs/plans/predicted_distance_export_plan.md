@@ -14,9 +14,10 @@ layout throughout: no array concatenates proteins, and no aggregated NPY is
 produced. Coefficients and boosters remain in the existing model-family
 directories and are never copied into this export.
 
-The user selected `/work/hdd/bekh/ikhire` for all generated export data on
-Delta. The exact export root is
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
+After preparation job `22876444` failed because the `bekh` HDD quota was
+exceeded, the user selected `/work/hdd/bfna/ikhire` for all generated export
+data on Delta. The exact export root is
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
 including prediction files, checkpoints, indexes, validation, and manifests.
 
 The experimental rules remain in
@@ -138,7 +139,7 @@ treating float32 exports as exact substitutes for canonical geometry results.
 ## Exact output layout and schemas
 
 Store the Delta export under
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
 The corresponding local copy, if downloaded, remains a sibling of the four
 model-family folders:
 
@@ -177,7 +178,7 @@ delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
 ```
 
 On Delta, use this layout beneath the export root
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
 Resolve generated paths independently of the existing models' `CSV_ROOT`.
 Each final prediction array has shape
 `(R*(R-1)//2,)` for its protein and contains only that protein's raw OOF pair
@@ -306,9 +307,10 @@ only after these checks.
 4. Test interrupted writes, incompatible resume, a changed artifact checksum,
    corrupt completed files, missing gates/folds, duplicate index rows, and
    absent arrays. Never infer completion from file existence alone.
-5. Run one representative full-cohort layer on Delta. Validate it, record
-   successful MaxRSS/elapsed time in the shared sizing guides, then run the
-   remaining layers. Check final pooled metrics using merged sufficient
+5. Submit the full 48-layer array after preparation succeeds, following the
+   user's explicit decision to omit a separate one-layer pilot. Record successful
+   MaxRSS/elapsed time in the shared sizing guides for future sizing. Check
+   final pooled metrics using merged sufficient
    statistics, rather than averaging per-protein metrics.
 
 The reader resolves the protein/layer/probe array from `prediction_index.csv`,
@@ -336,10 +338,11 @@ The closest bounded four-family subgroup replay uses initial estimates of
 12 GiB is about 1.95x that observed peak. Use those as provisional worker
 requests, with an initial array concurrency cap of 4 to limit input I/O.
 This workflow omits geometry but adds persistent NPY writes; 2 hours is a
-comparator estimate, not a measured requirement. Right-size from the first
-successful full layer before broad submission. Preparation and finalization
-use streaming hashes/metadata, with provisional `2g` / `00:15:00` each;
-verify the actual working set and update both guides when adding launchers.
+comparator estimate, not a measured requirement. The user chose full-array
+submission without a separate pilot; right-size from successful allocations
+before future runs. Preparation uses `3g` / `00:15:00`, allowing about 1.68x
+the 1.79 GiB peak seen before its quota failure. Finalization uses provisional
+`2g` / `00:15:00` with streaming hashes/metadata.
 Account for the extra file creation, stat, and hashing work when measuring
 elapsed time; do not assume the same timing as a 192-file layout.
 
@@ -364,7 +367,7 @@ Keep the model-input root and export-output root separate. `CSV_ROOT` still
 selects the existing model inputs, normally `$HOME/csv_files`; do not change
 it to relocate generated predictions. Every new exporter entrypoint instead
 uses `PREDICTED_DISTANCE_OUTPUT_ROOT`, defaulting to
-`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+`/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
 Set that value explicitly in the export launchers and record the resolved
 physical root in the manifest. All export metadata and temporary files use
 this same root; none are generated under `$HOME/csv_files`. The existing model
@@ -372,12 +375,12 @@ artifacts are read in place without moving or duplicating them.
 
 Check write access and byte/file quota at the chosen `/work/hdd` location
 before exporting. If downloading results, copy the completed export into the
-documented local sibling directory. Implementation does not deploy or submit
-jobs, and does not commit the generated 13 GB arrays to Git; the local export
-directory has an explicit generated-output ignore rule.
+documented local sibling directory. Deployment and preparation submission were
+authorized following the quota failure. Generated 13 GB arrays are excluded
+from Git by the explicit local export directory ignore rule.
 
 The normative output document and cross-validation runbook now link to the
 export runbook. Implementation validation covers synthetic full-stage runs,
 failure/resume/corruption cases, and real saved-OLS replay parity on an available
-local protein. Native XGBoost prediction parity and allocation resource sizing
-remain checks for the first full-cohort Delta layer.
+local protein. Native XGBoost prediction parity remains a required per-layer
+Delta check; allocation resource sizing will use successful array measurements.

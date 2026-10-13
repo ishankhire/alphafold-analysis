@@ -2043,3 +2043,10 @@ launchers writing per-protein/layer/probe float32 predictions to the agreed
 metrics and complete pair coverage, and resume from checksummed protein files.
 Synthetic integration/failure tests and real local three-family OLS replay
 passed; native XGBoost parity and resource measurements remain Delta checks.
+
+## Session: 2026-10-13 — Move predicted-distance export to bfna storage
+
+Moved all exporter output/log defaults and documentation to
+`/work/hdd/bfna/ikhire` after preparation failed on the bekh allocation quota.
+Raised preparation memory to 3 GiB for headroom over its observed 1.79 GiB
+partial-run peak and recorded the user's full-array, no-pilot preference.
