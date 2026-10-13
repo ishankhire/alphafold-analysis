@@ -13,6 +13,11 @@ layout throughout: no array concatenates proteins, and no aggregated NPY is
 produced. Coefficients and boosters remain in the existing model-family
 directories and are never copied into this export.
 
+The user selected `/work/hdd/bekh/ikhire` for all generated export data on
+Delta. The exact export root is
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
+including prediction files, checkpoints, indexes, validation, and manifests.
+
 The experimental rules remain in
 [regression_methodology.md](../methodology/regression_methodology.md), and the
 producer artifact contract remains in
@@ -34,8 +39,8 @@ protein exclusion, imputation, or a fallback to historical models.
 
 ## Where the saved models live
 
-The local root is `delta_files/regression_5fold_v1/`. On Delta the matching
-root is `$CSV_ROOT/regression_5fold_v1/`, normally
+The existing models' local root is `delta_files/regression_5fold_v1/`. On Delta
+their input root remains `$CSV_ROOT/regression_5fold_v1/`, normally
 `$HOME/csv_files/regression_5fold_v1/`. In the following table all artifact
 paths are relative to the named family directory. `f` is outer fold 0–4 and
 `LL` is zero-padded layer 00–47.
@@ -131,7 +136,10 @@ treating float32 exports as exact substitutes for canonical geometry results.
 
 ## Exact output layout and schemas
 
-Create a sibling of the four model-family folders:
+Store the Delta export under
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+The corresponding local copy, if downloaded, remains a sibling of the four
+model-family folders:
 
 ```text
 delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
@@ -165,9 +173,10 @@ delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
         <probe>.npy.tmp   # only while writing this individual file
 ```
 
-On Delta, use the same relative layout beneath
-`$HOME/csv_files/regression_5fold_v1/` (or the explicitly configured
-`$CSV_ROOT/regression_5fold_v1/`). Each final prediction array has shape
+On Delta, use this layout beneath the export root
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+Resolve generated paths independently of the existing models' `CSV_ROOT`.
+Each final prediction array has shape
 `(R*(R-1)//2,)` for its protein and contains only that protein's raw OOF pair
 distances, in strict-lower-triangle order. Preserve IDs as strings, including
 leading zeros. Each layer is about 270 MB across its 2,208 arrays.
@@ -347,15 +356,21 @@ launchers use `scratch&work`. Live references checked for this plan:
 [data management](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/data_mgmt.html),
 and [software](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/software.html).
 
-The requested sibling layout defaults to `$HOME/csv_files` like the existing
-families. Delta's live filesystem guide says HOME is not intended for job I/O
-and lists a 100 GB quota; check actual available quota for the additional
-13 GB before exporting. Support a single export-root override for an allocated
-`/work/hdd` or `/projects` location if needed, recording the physical root in
-the manifest. Copy the completed export into the documented local sibling
-directory. This plan does not deploy or submit jobs, and does not commit the
-generated 13 GB arrays to Git; add an explicit generated-output ignore rule
-when implementing the exporter.
+Keep the model-input root and export-output root separate. `CSV_ROOT` still
+selects the existing model inputs, normally `$HOME/csv_files`; do not change
+it to relocate generated predictions. Every new exporter entrypoint instead
+uses `PREDICTED_DISTANCE_OUTPUT_ROOT`, defaulting to
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
+Set that value explicitly in the export launchers and record the resolved
+physical root in the manifest. All export metadata and temporary files use
+this same root; none are generated under `$HOME/csv_files`. The existing model
+artifacts are read in place without moving or duplicating them.
+
+Check write access and byte/file quota at the chosen `/work/hdd` location
+before exporting. If downloading results, copy the completed export into the
+documented local sibling directory. This plan does not deploy or submit jobs,
+and does not commit the generated 13 GB arrays to Git; add an explicit
+generated-output ignore rule when implementing the exporter.
 
 After implementation, link the optional export from the normative output
 document and cross-validation runbook without duplicating scientific rules.
