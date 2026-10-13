@@ -9,6 +9,24 @@ headroom and recheck MaxRSS after the first canonical run.
 
 ## Fivefold OOF comparator-derived estimates
 
+### Packed predicted-distance export estimates
+
+The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
+requires measuring the first representative full-cohort layer before broad
+submission; this is a new downstream workflow, outside the original refactor's
+no-pilot exception. No Delta measurement has been produced during implementation.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| Export preparation | `2g` | Streams model checksums; largest replay index has 132,480 metadata rows. Residue metadata totals only the frozen cohort's aligned residues; no pair features loaded. |
+| One-layer four-family prediction export | `12g` | Closest completed replay peaked at 6.15 GiB (1.95x headroom). Keeps one protein feature working set and compact model state; maximum 794 residues implies about 308 MiB float32 tensor and 615 MiB float64 base256 features before temporaries. |
+| Export finalization | `2g` | Streams one layer's 2,208 array records/checksums and four pooled sufficient-statistic reductions at a time; no cohort feature matrices or concatenated predictions. |
+
+Record allocation MaxRSS after the first successful task of each stage and
+adjust requests before broad submission or repeat runs.
+
+### Original regression refactor estimates
+
 The fivefold OOF refactor has an explicit project-level no-pilot decision. No
 new resource pilot is required before production submission. The requests below
 are planning estimates derived from completed same-family jobs plus conservative

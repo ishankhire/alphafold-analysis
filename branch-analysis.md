@@ -2034,3 +2034,12 @@ Revised the export plan to one packed float32 NPY per protein/layer/probe
 (105,984 files, the same 12.96 GB numeric payload). Checkpoints track completed
 files; finalization combines CSV metadata only and never duplicates model
 artifacts or aggregates prediction arrays.
+
+## Session: 2026-10-13 — Implement packed OOF distance export
+
+Added preparation, layer replay, and finalization entrypoints with Delta
+launchers writing per-protein/layer/probe float32 predictions to the agreed
+`/work/hdd/bekh/ikhire` root. Exports retain model provenance, validate original
+metrics and complete pair coverage, and resume from checksummed protein files.
+Synthetic integration/failure tests and real local three-family OLS replay
+passed; native XGBoost parity and resource measurements remain Delta checks.

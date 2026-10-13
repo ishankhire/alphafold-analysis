@@ -27,6 +27,24 @@ from fitting into backfill windows.
 
 ## Fivefold OOF comparator-derived estimates
 
+### Packed predicted-distance export estimates
+
+The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
+requires measuring the first representative full-cohort layer before broad
+submission. The original regression refactor's no-pilot exception does not
+apply to this downstream export. These requests are unmeasured estimates.
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| Export preparation | `00:15:00` | Streaming hashes of approximately 1.35 GiB of unique models, compact producer tables, and 552 PDBs; no fitting or geometry. |
+| One-layer four-family prediction export | `02:00:00` | Matches the closest 552-protein subgroup-replay estimate; removes geometry, adds pair-input hashes, 2,208 per-protein NPY writes, and durable per-protein progress updates. |
+| Export finalization | `00:15:00` | Reads/checks 105,984 files (12.96 GB payload), checks model provenance, and streams layer metadata; no fitting, features, or geometry. File metadata latency must be measured. |
+
+Replace these estimates with 1.5–2x representative successful elapsed times
+before broad submission or repeat runs; exclude smoke/skipped/no-op tasks.
+
+### Original regression refactor estimates
+
 The fivefold OOF refactor has an explicit project-level no-pilot decision. The
 limits below are conservative estimates from completed same-family tasks, not
 new measurements. They override the usual exact-workflow pilot requirement for

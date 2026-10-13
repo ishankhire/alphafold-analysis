@@ -5,8 +5,9 @@
 Replay the four canonical protocol-2.0 probes at all 48 layers for the frozen
 552-protein cohort, and save **one out-of-fold (OOF) prediction for every
 unordered residue pair**. The user confirmed canonical OOF scope and packed
-`float32` storage on 2026-10-13. This is a plan; the exporter has not been
-implemented or submitted.
+`float32` storage on 2026-10-13. The exporter is now implemented under
+`scripts/cluster_scripts/predicted_distances/`; deployment and production
+submission remain separate. See its README for commands and prerequisites.
 
 The user subsequently requested one NPY file per protein/layer/probe. Use that
 layout throughout: no array concatenates proteins, and no aggregated NPY is
@@ -150,6 +151,7 @@ delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
     residue_index.csv
   prediction_index.csv
   validation.csv
+  pooled_validation.csv
   runtime.csv
   layers/
     layer_00/
@@ -162,6 +164,7 @@ delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
       layer_manifest.json
       prediction_index.csv
       validation.csv
+      pooled_validation.csv
       runtime.json
     ... layer_47/
   .checkpoints/
@@ -192,11 +195,12 @@ The metadata and index contracts are:
 
 | File | Row granularity / expected count | Principal fields |
 |---|---|---|
-| `metadata/proteins.csv` | One protein; 552 rows | `protein_id`, `source`, `outer_fold`, `n_residues`, `n_pairs`, `pair_assignment_digest` |
+| `metadata/proteins.csv` | One protein; 552 rows | `protein_id`, `source`, `outer_fold`, `n_residues`, `n_pairs`, `pair_assignment_digest`, `pdb_path`, `pdb_sha256` |
 | `metadata/residue_index.csv` | One aligned C-alpha residue | `protein_id`, `residue_index` (zero based), `chain_id`, `pdb_resseq`, `insertion_code`, `residue_name`, `pdb_path`, `pdb_sha256` |
 | `prediction_index.csv` | One protein/family/layer array; 105,984 rows | `protein_id`, `analysis_name`, `model_family`, `layer`, `cv_protocol_version`, `evaluation_design`, `evaluation_scope`, `oof_prediction_scope`, `array_path`, `dtype`, `n_values`, `file_bytes`, `array_sha256`, `layer_manifest_path`, `status` |
 | `validation.csv` | One family/layer/protein; 105,984 rows | Family identity and scope, `layer`, `protein_id`, `outer_fold`, `n_expected_pairs`, `n_predicted_pairs`, `pair_coverage`, `prediction_status`, `contributing_fit_status`, raw negative count, replay R²/MAE/RMSE/bias, their differences from producer metrics, `max_abs_cast_error`, `mean_abs_cast_error`, stored metric drift, `validation_status`, `failure_reason` |
 | `runtime.csv` | One layer; 48 successful rows | `layer`, start/end UTC timestamps, `elapsed_seconds`, completed protein/array counts, output bytes, peak RSS if available, `status` |
+| `pooled_validation.csv` | One family/layer; 192 rows | `analysis_name`, `layer`, `n_pairs`, replay/stored pooled metrics, differences from producer metrics, stored-minus-replay drift, `validation_status` |
 
 Family-specific scope labels must come from validated producer manifests,
 including the gated producer's explicit recombined-gate scope. Top-level CSVs
@@ -214,9 +218,9 @@ and final status. Layer manifests additionally pin every model file used,
 its checksum, validation summary, and final array checksums. The existing
 producer replay indexes remain the authority for individual model routing.
 
-## Proposed implementation
+## Implementation
 
-Add cluster entrypoints and helpers under
+Cluster entrypoints and helpers live under
 `scripts/cluster_scripts/predicted_distances/`:
 
 - `predicted_distance_export_common.py`: paths, schemas, layout/checkpoint
@@ -368,11 +372,12 @@ artifacts are read in place without moving or duplicating them.
 
 Check write access and byte/file quota at the chosen `/work/hdd` location
 before exporting. If downloading results, copy the completed export into the
-documented local sibling directory. This plan does not deploy or submit jobs,
-and does not commit the generated 13 GB arrays to Git; add an explicit
-generated-output ignore rule when implementing the exporter.
+documented local sibling directory. Implementation does not deploy or submit
+jobs, and does not commit the generated 13 GB arrays to Git; the local export
+directory has an explicit generated-output ignore rule.
 
-After implementation, link the optional export from the normative output
-document and cross-validation runbook without duplicating scientific rules.
-Record the implementation briefly in `branch-analysis.md`, run the meaningful
-local tests with `./.venv`, and follow the repository commit/push workflow.
+The normative output document and cross-validation runbook now link to the
+export runbook. Implementation validation covers synthetic full-stage runs,
+failure/resume/corruption cases, and real saved-OLS replay parity on an available
+local protein. Native XGBoost prediction parity and allocation resource sizing
+remain checks for the first full-cohort Delta layer.

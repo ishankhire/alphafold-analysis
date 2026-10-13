@@ -534,3 +534,21 @@ analysis needs them:
 
 These exclusions are storage and consistency choices, not prohibitions on later
 derived analyses.
+
+## Optional packed predicted-distance export
+
+The separate [predicted-distance exporter](../../scripts/cluster_scripts/predicted_distances/README.md)
+replays the four retained canonical model families without refitting. It saves
+one strict-lower-triangle OOF float32 vector per protein, layer, and probe under
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/` on
+Delta. Existing model inputs remain under `$HOME/csv_files/regression_5fold_v1/`.
+The local copy, if downloaded, belongs in
+`delta_files/regression_5fold_v1/predicted_distances_5fold_v1/`.
+
+The exporter owns its prediction index, validation, aligned residue metadata,
+runtime, and checkpoint/completion manifests. It does not duplicate model
+artifacts or produce an aggregated prediction array. Replay parity is checked
+against the authoritative producer metrics before casting; stored float32
+rounding error and metric drift are recorded separately. Core geometry and
+metric tables retain their original authority and precision. See the export
+runbook for file schemas, restart behavior, and submission order.

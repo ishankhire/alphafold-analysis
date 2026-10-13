@@ -13,6 +13,12 @@ The scientific protocol and output contract remain authoritative in
 `docs/methodology/regression_outputs.md`. This file only describes deployment,
 execution, aggregation, and replay.
 
+For per-protein/layer/probe NPY predictions, use the separate
+[packed OOF export runbook](../predicted_distances/README.md). It reads these
+saved models and writes all generated predictions/checkpoints under
+`/work/hdd/bekh/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`,
+independently of the existing model-input `CSV_ROOT`.
+
 ## Delta prerequisites
 
 Recheck the live NCSA Delta
