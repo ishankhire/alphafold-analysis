@@ -2020,3 +2020,10 @@ Overleaf assets and placeholder captions with the held-out shared-OLS version.
 Matched the two main triangle-panel canvases, moved their model and extrema key
 into a larger full-width legend PDF, and included it below the pair in drafts
 4–6. Updated the figure manifest and generator inventory.
+
+## Session: 2026-10-13 — Plan canonical predicted-distance export
+
+Mapped and checksum-verified the four saved fivefold model inventories and
+documented an OOF replay exporter for all 552 proteins and 48 layers. The
+agreed packed float32 layout uses 192 NPY arrays (12.96 GB) beside the model
+families, with protein offsets, validation, provenance, and resumable layers.
