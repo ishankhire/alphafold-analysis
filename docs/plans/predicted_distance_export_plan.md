@@ -8,6 +8,11 @@ unordered residue pair**. The user confirmed canonical OOF scope and packed
 `float32` storage on 2026-10-13. This is a plan; the exporter has not been
 implemented or submitted.
 
+The user subsequently requested one NPY file per protein/layer/probe. Use that
+layout throughout: no array concatenates proteins, and no aggregated NPY is
+produced. Coefficients and boosters remain in the existing model-family
+directories and are never copied into this export.
+
 The experimental rules remain in
 [regression_methodology.md](../methodology/regression_methodology.md), and the
 producer artifact contract remains in
@@ -108,11 +113,16 @@ must not be repeated alongside every prediction array; recover them from the
 shared index and deterministic manifests.
 
 Plain `.npy` is not compressed. Its advantages here are a predictable modest
-total size and memory-mapped access to any protein slice. Compressed `.npz`
-would save an uncertain amount, require decompressing an array for ordinary
-slice access, and complicate partial writes. Do not keep both formats. If
+total size and direct access to an individual protein's predictions. Compressed
+`.npz` would save an uncertain amount and require decompression when reading.
+Do not keep both formats. If
 13 GB proves too large, benchmark lossless compression on a representative
 completed layer before changing the format; no compression ratio is assumed.
+
+There will be 105,984 NPY files (`552 * 48 * 4`). The numeric payload remains
+12.96 GB; individual NPY headers and filesystem allocation add some overhead.
+The tradeoff is more files to transfer and index, with simpler per-protein
+loading. Check available file quota as well as byte quota before submission.
 
 Float32 is a storage approximation. Save measured cast error and metric drift.
 For calculations sensitive to the geometry protocol's `1e-12 Å` tolerance,
@@ -128,42 +138,54 @@ delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
   README.md
   run_manifest.json
   metadata/
-    protein_offsets.csv
+    proteins.csv
     residue_index.csv
   prediction_index.csv
   validation.csv
   runtime.csv
   layers/
     layer_00/
-      shared_ols_base256.npy
-      per_protein_ols_base256.npy
-      sequence_gated_ols_base256.npy
-      shared_xgboost_base256_fixed_s4.npy
+      000000022/
+        shared_ols_base256.npy
+        per_protein_ols_base256.npy
+        sequence_gated_ols_base256.npy
+        shared_xgboost_base256_fixed_s4.npy
+      ... <other protein IDs>/
       layer_manifest.json
+      prediction_index.csv
       validation.csv
       runtime.json
     ... layer_47/
   .checkpoints/
     layer_<LL>/
-      <four partially written NPY arrays>
       progress.json
+      prediction_index.csv
       validation.csv
+      <protein_id>/
+        <probe>.npy.tmp   # only while writing this individual file
 ```
 
 On Delta, use the same relative layout beneath
-`$CSV_ROOT/regression_5fold_v1/`. Each of the 192 final prediction arrays has
-shape `(16870617,)`, concatenating proteins in lexicographically sorted
-canonical protein-ID order. Preserve IDs as strings, including leading zeros.
-Each array element is one raw OOF pair-distance prediction. Each layer is
-about 270 MB across its four arrays.
+`$HOME/csv_files/regression_5fold_v1/` (or the explicitly configured
+`$CSV_ROOT/regression_5fold_v1/`). Each final prediction array has shape
+`(R*(R-1)//2,)` for its protein and contains only that protein's raw OOF pair
+distances, in strict-lower-triangle order. Preserve IDs as strings, including
+leading zeros. Each layer is about 270 MB across its 2,208 arrays.
+
+`layers/` holds the prediction files and small completion/validation metadata;
+it never holds coefficients. `.checkpoints/` holds progress metadata and an
+individual temporary prediction file while it is being written. A successful
+write moves that file into its final location in `layers/`, rather than copying
+it. Already completed predictions remain there across restarts. Layer/run
+status stays incomplete until every expected prediction has passed validation.
 
 The metadata and index contracts are:
 
 | File | Row granularity / expected count | Principal fields |
 |---|---|---|
-| `metadata/protein_offsets.csv` | One protein; 552 rows | `protein_id`, `source`, `outer_fold`, `n_residues`, `n_pairs`, `offset_start`, `offset_stop` (exclusive), `pair_assignment_digest` |
+| `metadata/proteins.csv` | One protein; 552 rows | `protein_id`, `source`, `outer_fold`, `n_residues`, `n_pairs`, `pair_assignment_digest` |
 | `metadata/residue_index.csv` | One aligned C-alpha residue | `protein_id`, `residue_index` (zero based), `chain_id`, `pdb_resseq`, `insertion_code`, `residue_name`, `pdb_path`, `pdb_sha256` |
-| `prediction_index.csv` | One family/layer array; 192 rows | `analysis_name`, `model_family`, `layer`, `cv_protocol_version`, `evaluation_design`, `evaluation_scope`, `oof_prediction_scope`, `array_path`, `dtype`, `n_values`, `file_bytes`, `array_sha256`, `layer_manifest_path`, `status` |
+| `prediction_index.csv` | One protein/family/layer array; 105,984 rows | `protein_id`, `analysis_name`, `model_family`, `layer`, `cv_protocol_version`, `evaluation_design`, `evaluation_scope`, `oof_prediction_scope`, `array_path`, `dtype`, `n_values`, `file_bytes`, `array_sha256`, `layer_manifest_path`, `status` |
 | `validation.csv` | One family/layer/protein; 105,984 rows | Family identity and scope, `layer`, `protein_id`, `outer_fold`, `n_expected_pairs`, `n_predicted_pairs`, `pair_coverage`, `prediction_status`, `contributing_fit_status`, raw negative count, replay R²/MAE/RMSE/bias, their differences from producer metrics, `max_abs_cast_error`, `mean_abs_cast_error`, stored metric drift, `validation_status`, `failure_reason` |
 | `runtime.csv` | One layer; 48 successful rows | `layer`, start/end UTC timestamps, `elapsed_seconds`, completed protein/array counts, output bytes, peak RSS if available, `status` |
 
@@ -171,6 +193,8 @@ Family-specific scope labels must come from validated producer manifests,
 including the gated producer's explicit recombined-gate scope. Top-level CSVs
 are consolidated indexes/validation; retain small layer shards for restart and
 audit. Do not duplicate the large NPY arrays during consolidation.
+Consolidation combines small CSV indexes and validation summaries only; it
+does not combine, average, or rewrite any prediction arrays.
 
 The run manifest pins export schema `predicted_distances_5fold_v1`, CV
 protocol `2.0`, `evaluation_scope=oof_all_pairs`, dtype, angstrom units,
@@ -189,11 +213,12 @@ Add cluster entrypoints and helpers under
 - `predicted_distance_export_common.py`: paths, schemas, layout/checkpoint
   validation, and a reader for a protein's packed vector or reconstructed matrix;
 - `prepare_predicted_distance_export.py` and its `.sbatch`: validate producers,
-  freeze offsets/residue alignment, initialize the run manifest and README;
+  freeze protein metadata/residue alignment, initialize the run manifest and README;
 - `export_predicted_distances_layer.py` and its `.sbatch`: one task per layer,
   `SLURM_ARRAY_TASK_ID=0..47`, replaying all four families;
-- `aggregate_predicted_distance_export.py` and its `.sbatch`: strict final
-  coverage/integrity validation and compact index consolidation;
+- `finalize_predicted_distance_export.py` and its `.sbatch`: strict final
+  coverage/integrity validation and compact CSV index consolidation; no NPY
+  aggregation;
 - `tests/test_predicted_distance_export.py`: synthetic routing, round-trip,
   coverage, quantization, and restart/corruption checks.
 
@@ -218,29 +243,42 @@ and routes to six saved sequence gates; per-protein OLS uses `(protein_id,
 pair_fold, layer)` and verifies the regenerated pair-assignment digest.
 
 Compute compact validation before casting, then write the four float32 vectors
-into their common offset slice using `numpy.lib.format.open_memmap`. Keep only
+to four separate files using `np.save(..., allow_pickle=False)`. Each filename
+is scoped to its protein, layer, and probe. Keep only
 one protein's tensor/features/predictions and compact layer model state in
 memory. The 794-residue maximum gives approximately 308 MiB for a float32 pair
 tensor and 615 MiB for the extracted float64 features, before temporary arrays
 and model/runtime overhead; never materialize the whole cohort's features.
 
-Flush checkpoint arrays and atomically update progress/validation after each
-completed protein. Progress records the four segment checksums; on restart,
-accept a completed protein only after validating all four segments and pinned
-input/configuration identities. An interrupted protein is recomputed. Reject
-resume against incompatible manifests. Partial files stay in `.checkpoints/`.
+Write each NPY to a temporary file beneath `.checkpoints/layer_<LL>/`,
+flush/fsync and validate it, then atomically move it to
+`layers/layer_<LL>/<protein_id>/<probe>.npy` on the same filesystem. Use an
+open file handle with `np.save` so it does not append `.npy` to the temporary
+filename. No full-layer partial arrays or second copy of completed arrays are
+needed.
 
-Once all 552 proteins pass coverage and validation, close/flush the arrays,
-write array checksums and a complete layer manifest, and atomically rename the
-layer directory into `layers/layer_<LL>/` on the same filesystem. A worker
-failure must produce an explicit diagnostic and a nonzero exit, preserving
-prior checkpoints. Consolidation requires exactly 48 completed layers, 192
-arrays, and 105,984 successful validation rows, with no duplicate keys or
-missing pairs. Mark the top-level run complete only after these checks.
+Atomically update the authoritative `progress.json` after each completed
+protein, including its four file paths/checksums and index/validation records.
+The checkpoint CSVs are derived from this progress snapshot and can be rebuilt
+if interrupted while being written. On restart, accept a
+completed protein only after validating all four files and pinned
+input/configuration identities. If a crash occurred after a file was moved but
+before the checkpoint was committed, recompute that uncommitted protein and
+replace its files atomically. Reject resume against incompatible manifests.
+Files from incomplete layers are not advertised as a complete export.
+
+Once all 552 proteins pass coverage and validation, finalize the small layer
+index/validation/runtime files and write a complete layer manifest last.
+Remove only temporary files/progress superseded by validated final metadata.
+A worker failure produces an explicit diagnostic and a nonzero exit,
+preserving completed files and prior checkpoints. Finalization requires
+exactly 48 completed layers, 105,984 arrays, and 105,984 successful validation
+rows, with no duplicate keys or missing pairs. Mark the top-level run complete
+only after these checks.
 
 ## Validation and reader behavior
 
-1. Test small synthetic proteins: packed order, offsets, leading-zero IDs,
+1. Test small synthetic proteins: packed order, per-protein paths, leading-zero IDs,
    symmetry/zero diagonal, correct outer-fold and gate selection, and exactly
    one held-out pair-fold write per pair. Retain negative predictions.
 2. Compare uncast replay R², MAE, RMSE, bias, and negative counts with each
@@ -253,15 +291,24 @@ missing pairs. Mark the top-level run complete only after these checks.
    and metric changes per protein; float32 export does not replace producer
    metric tables. Do not assert bitwise cross-version model parity.
 4. Test interrupted writes, incompatible resume, a changed artifact checksum,
-   corrupt completed segments, missing gates/folds, duplicate index rows, and
+   corrupt completed files, missing gates/folds, duplicate index rows, and
    absent arrays. Never infer completion from file existence alone.
 5. Run one representative full-cohort layer on Delta. Validate it, record
    successful MaxRSS/elapsed time in the shared sizing guides, then run the
    remaining layers. Check final pooled metrics using merged sufficient
    statistics, rather than averaging per-protein metrics.
 
-The reader resolves the array from `prediction_index.csv`, verifies completed
-status, and returns `np.load(path, mmap_mode='r')[offset_start:offset_stop]`.
+The reader resolves the protein/layer/probe array from `prediction_index.csv`,
+verifies completed status, and returns `np.load(path, allow_pickle=False)`.
+For example:
+
+```python
+prediction = np.load(
+    export_root / "layers/layer_00/000000022/shared_ols_base256.npy",
+    allow_pickle=False,
+)
+```
+
 For an unordered pair `(i,j)`, swap to `i > j` and index its protein vector at
 `i*(i-1)//2 + j`; no separate pair-index array is needed. For a full matrix,
 fill both lower/upper triangles from that vector and set the diagonal to zero.
@@ -277,9 +324,11 @@ The closest bounded four-family subgroup replay uses initial estimates of
 requests, with an initial array concurrency cap of 4 to limit input I/O.
 This workflow omits geometry but adds persistent NPY writes; 2 hours is a
 comparator estimate, not a measured requirement. Right-size from the first
-successful full layer before broad submission. Preparation and consolidation
+successful full layer before broad submission. Preparation and finalization
 use streaming hashes/metadata, with provisional `2g` / `00:15:00` each;
 verify the actual working set and update both guides when adding launchers.
+Account for the extra file creation, stat, and hashing work when measuring
+elapsed time; do not assume the same timing as a 192-file layout.
 
 Deploy entrypoints and every imported helper to the flat
 `$HOME/openfold_interpretability_canonical/` directory; retain the frozen master

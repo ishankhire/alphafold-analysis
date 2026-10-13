@@ -2027,3 +2027,10 @@ Mapped and checksum-verified the four saved fivefold model inventories and
 documented an OOF replay exporter for all 552 proteins and 48 layers. The
 agreed packed float32 layout uses 192 NPY arrays (12.96 GB) beside the model
 families, with protein offsets, validation, provenance, and resumable layers.
+
+## Session: 2026-10-13 — Simplify predicted-distance file layout
+
+Revised the export plan to one packed float32 NPY per protein/layer/probe
+(105,984 files, the same 12.96 GB numeric payload). Checkpoints track completed
+files; finalization combines CSV metadata only and never duplicates model
+artifacts or aggregates prediction arrays.
