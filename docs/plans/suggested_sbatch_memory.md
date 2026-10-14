@@ -9,6 +9,23 @@ headroom and recheck MaxRSS after the first canonical run.
 
 ## Fivefold OOF comparator-derived estimates
 
+### Saved-distance TM-score rescoring estimates
+
+The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) uses
+completed packed arrays and does not load pair tensors or model artifacts.
+These estimates require a first successful allocation measurement before broad
+submission. Local loading of all four source geometry tables peaked at 408 MiB;
+residue metadata, one layer manifest, and one 794-residue float64 MDS working
+set give an estimated worker peak of 0.5–0.65 GiB. Finalization also retains the
+105,984-row score ledger and replacement/summary rows.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| One-layer four-probe rescoring | `1g` | About 1.5–2x the estimated 0.5–0.65 GiB peak; one protein at a time and one BLAS thread. |
+| Finalization | `2g` | Estimated 1–1.2 GiB for source geometry, the full score ledger, residue metadata, and derived output rows; no dense cohort arrays. |
+
+Record successful allocation MaxRSS for both stages and replace the estimates.
+
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)

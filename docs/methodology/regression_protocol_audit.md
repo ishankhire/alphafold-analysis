@@ -1,5 +1,15 @@
 # Regression Protocol Audit and Methodology Gaps
 
+## 2026-10-13 TM-score scoring update
+
+The shared geometry helper and two standalone MDS diagnostics now search the
+standard TMscore objective with fixed correspondence and both reflections.
+Minimum Kabsch RMSD remains independent. Frozen regression fits, predictions,
+and OOF scopes are unchanged. Existing fivefold results still contain historical
+post-Kabsch TM-style scores until the separate packed-distance rescoring run
+completes. Local native integration and 60 existing PDB reconstructions were
+validated; production rescoring and publication refresh remain pending.
+
 ## Purpose and audit boundary
 
 This document compares the active regression implementations and saved result

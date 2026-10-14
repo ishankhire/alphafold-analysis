@@ -21,6 +21,13 @@ independently of the existing model-input `CSV_ROOT`.
 
 ## Delta prerequisites
 
+New reconstruction geometry requires the official `TMscore` executable beside
+the deployed shared helper or via `TMSCORE_BINARY`. See the
+[TM-score runbook](../tm_scores/README.md) for compilation and rescoring saved
+distances. Geometry CSV schemas are unchanged; completed historical checkpoints
+retain their original scores. Keep the distance export's deployed helper files
+frozen until its finalized export is complete.
+
 Recheck the live NCSA Delta
 [running-jobs](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/running_jobs.html),
 [data-management](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/data_mgmt.html),

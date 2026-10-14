@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 
-# SHA-256 values from the repository deployment inventory on 2026-09-01.
+# SHA-256 values from the 2026-09-01 inventory; TM-score helpers updated 2026-10-13.
 DEPLOYMENT_FILES = {
     "__init__.py": "46a9c0ea5ad6a7db3caddc16707aa2f4ea8e8af8a7e5b7fde9041a2beb12cfff",
     "aggregate_per_protein_ols_base256.py": "4d931d54175283a6ffbb18ba4146dcc98a48d98a23234192b647695fd0b6948a",
@@ -20,12 +20,12 @@ DEPLOYMENT_FILES = {
     "aggregate_shared_ols_base256.sbatch": "81416c6503743a21782684e9d8921dc0cf308aa936d036aab1825d93f95146d8",
     "aggregate_shared_xgboost_base256_fixed_s4.py": "8d6a24cd77759796d3e34ad8e5d630ed6b16dd739bfd7595d17d3866671135f4",
     "aggregate_shared_xgboost_base256_fixed_s4.sbatch": "0f538d63266ae622ae75c3a8bc5b3e8f861ca009b11ffcd08071239a8dd4b190",
-    "cluster_regression_helpers.py": "52aaf788044f1ee7434bfffcf6c85469b531cb6d7b773eed840bfd84f81377a7",
-    "cross_validation_common.py": "b1c686252d7508ad9a681e5d152a47b33ef57efaa156f1f684ef93147aee94eb",
+    "cluster_regression_helpers.py": "dd3e2e62116ba5e9b2c4f6122964b697b7009796d5ec5b773dde77ef71c4df01",
+    "cross_validation_common.py": "c449a00eaee14230e6fa3b2050753bd3b2324159ee85055cfb67ba409eb26b61",
     "per_protein_ols_base256_common.py": "eca523acb510900f90a73b62e52f356524bc13e93e4e5aba353ec3c85fdc1d60",
     "per_protein_ols_base256_layer.py": "f65de917e64cd989322224d9476301017a443407df160c7f0d12ae0c69ef1131",
     "per_protein_ols_base256_layer.sbatch": "578588ca63645feee4e1d76030796cd11a648ac0c667e4c9f94c006467553f6d",
-    "regression_output_helpers.py": "5bf381690d84e9ecf1777d2a3e2f95741100b6f8aac40158c23af44638d3159c",
+    "regression_output_helpers.py": "0c054fe56b00254e48d859247133b217860189d6fa2f68845dfe61b830aae94f",
     "regression_protocol.py": "88c460f77fc590f30891e8e2d9e9f3d7dcf36dbf96781300ef4c1a83572c664e",
     "regression_protocol_data/regression_master_split_v1.csv": "16cbb0b976bd76aabfa67ce032e009416b095117016225403fc3348d58f2cdf3",
     "sequence_gated_ols_base256_common.py": "928781e14bbd0b06318abdd66324a6ec6208502cc81f57636212007889faf52e",

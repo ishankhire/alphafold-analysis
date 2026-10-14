@@ -7,6 +7,12 @@ not required to adopt it immediately.
 """
 
 import os
+import hashlib
+import re
+import shutil
+import subprocess
+import tempfile
+from functools import lru_cache
 from itertools import combinations_with_replacement
 from pathlib import Path
 
@@ -68,6 +74,46 @@ ECOD_PAIR_BLOCKS_ROOT = Path(
 ECOD_PDB_ROOT = Path(
     "/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm"
 )
+
+TM_SCORE_METHOD = "tmscore_fixed_correspondence_best_mds_reflection_v1"
+
+
+class TMScoreError(RuntimeError):
+    """The required TMscore backend failed; do not substitute a legacy score."""
+
+
+def resolve_tmscore_binary():
+    """Resolve an explicit binary, a flat-deployment binary, or PATH."""
+    explicit = os.environ.get("TMSCORE_BINARY")
+    candidate = (Path(explicit).expanduser() if explicit else
+                 Path(__file__).resolve().parent / "TMscore")
+    if not explicit and not candidate.is_file():
+        found = shutil.which("TMscore")
+        candidate = Path(found) if found else candidate
+    if not candidate.is_file() or not os.access(candidate, os.X_OK):
+        raise TMScoreError(
+            "TMscore executable unavailable: set TMSCORE_BINARY, install TMscore "
+            "on PATH, or place it beside cluster_regression_helpers.py"
+        )
+    return candidate.resolve()
+
+
+@lru_cache(maxsize=8)
+def _tmscore_checksum(path, mtime_ns, size):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def tmscore_provenance():
+    binary = resolve_tmscore_binary()
+    stat = binary.stat()
+    return {
+        "method": TM_SCORE_METHOD, "executable": str(binary),
+        "binary_sha256": _tmscore_checksum(str(binary), stat.st_mtime_ns, stat.st_size),
+        "correspondence": "fixed_array_index", "normalization": "reference_length",
+        "reflection": "best_of_original_and_z_reflection",
+        "precision": "float64_formula_at_executable_transform_with_kabsch_floor",
+        "search_input_precision_angstrom": 0.001,
+    }
 
 
 def _get_pdb_root():
@@ -272,6 +318,98 @@ def compute_tm_score(fixed_coords, transformed_coords, length_target):
     return float(np.sum(scores) / length_target)
 
 
+def _write_tmscore_trace(path, coordinates):
+    def field(value):
+        formatted = f"{value:8.3f}"
+        if len(formatted) == 8:
+            return formatted
+        # TMscore's parser uses atof on each eight-character field. Scientific
+        # notation also handles large coordinates in scale-invariance checks.
+        for precision in (3, 2, 1, 0):
+            formatted = f"{value:8.{precision}e}"
+            if len(formatted) == 8:
+                return formatted
+        raise ValueError("Coordinates exceed the temporary trace coordinate field")
+
+    lines = []
+    for index, (x, y, z) in enumerate(coordinates, start=1):
+        lines.append(
+            f"ATOM  {index:5d}  CA  ALA A{index:4d}    "
+            f"{field(x)}{field(y)}{field(z)}  1.00  0.00           C\n"
+        )
+    path.write_text("".join(lines) + "END\n")
+
+
+def optimize_tm_score(fixed_coords, moving_coords, length_target):
+    """Search a proper rigid superposition with the standard TMscore executable.
+
+    The executable searches rounded PDB coordinates. Its transformation is
+    evaluated on the original float64 coordinates, with Kabsch retained as a
+    candidate. This is a heuristic search, not a global optimality guarantee.
+    """
+    fixed = np.asarray(fixed_coords, dtype=np.float64)
+    moving = np.asarray(moving_coords, dtype=np.float64)
+    if (fixed.ndim != 2 or fixed.shape[1:] != (3,) or moving.shape != fixed.shape
+            or not np.all(np.isfinite(fixed)) or not np.all(np.isfinite(moving))):
+        raise ValueError("TMscore requires matching finite (R, 3) coordinate arrays")
+    n = len(fixed)
+    if not 3 <= n <= 9999:
+        raise ValueError("TMscore PDB input requires between 3 and 9999 residues")
+    if int(length_target) != length_target or length_target < n:
+        raise ValueError("TMscore normalization length must be an integer >= R")
+    binary = resolve_tmscore_binary()
+    # Independent centering keeps coordinates inside PDB fields and does not
+    # constrain the translation searched by the executable.
+    fixed = fixed - fixed.mean(axis=0)
+    moving = moving - moving.mean(axis=0)
+    with tempfile.TemporaryDirectory(prefix="protein-tmscore-") as directory:
+        directory = Path(directory)
+        model, reference, matrix = (directory / name for name in (
+            "model.pdb", "reference.pdb", "transform.txt",
+        ))
+        _write_tmscore_trace(model, moving)
+        _write_tmscore_trace(reference, fixed)
+        command = [str(binary), str(model), str(reference), "-m", str(matrix),
+                   "-mol", "protein", "-atom", " CA "]
+        if length_target != n:
+            command.extend(["-l", str(int(length_target))])
+        try:
+            result = subprocess.run(command, capture_output=True, text=True,
+                                    check=True, timeout=300)
+            common = re.search(r"Number of residues in common\s*=\s*(\d+)", result.stdout)
+            reported = re.search(r"TM-score\s*=\s*([\d.eE+-]+)", result.stdout)
+            if (not common or int(common.group(1)) != n or not reported
+                    or not 0 <= float(reported.group(1)) <= 1):
+                raise ValueError("TMscore output lacks a valid score or complete residue correspondence")
+            rows = []
+            for line in matrix.read_text().splitlines():
+                fields = line.split()
+                if len(fields) == 5 and fields[0] in {"0", "1", "2"}:
+                    rows.append([float(value) for value in fields[1:]])
+            transform = np.asarray(rows, dtype=np.float64)
+            if transform.shape != (3, 4) or not np.all(np.isfinite(transform)):
+                raise ValueError("TMscore returned an invalid transformation matrix")
+            translation, rotation = transform[:, 0], transform[:, 1:]
+            if (not np.allclose(rotation @ rotation.T, np.eye(3), atol=1e-7, rtol=0)
+                    or not np.isclose(np.linalg.det(rotation), 1, atol=1e-7, rtol=0)):
+                raise ValueError("TMscore transformation is not a proper rigid rotation")
+        except (OSError, subprocess.SubprocessError, ValueError) as exc:
+            detail = (exc.stderr or "")[-1000:] if isinstance(exc, subprocess.CalledProcessError) else str(exc)
+            raise TMScoreError(f"TMscore search failed: {detail}") from exc
+    transformed = moving @ rotation.T + translation
+    kabsch, _ = superimpose_structures(fixed, moving)
+    return max(compute_tm_score(fixed, transformed, length_target),
+               compute_tm_score(fixed, kabsch, length_target))
+
+
+def compute_mds_tm_score(fixed_coords, mds_coords, length_target):
+    """Optimize both MDS handedness choices while preserving residue identity."""
+    reflected = np.asarray(mds_coords, dtype=np.float64).copy()
+    reflected[:, 2] *= -1
+    return max(optimize_tm_score(fixed_coords, mds_coords, length_target),
+               optimize_tm_score(fixed_coords, reflected, length_target))
+
+
 def make_triangle_violation_metrics(fill_value=0.0):
     """Return a complete triangle-violation metric dictionary."""
     return {key: float(fill_value) for key in TRIANGLE_VIOLATION_KEYS}
@@ -363,7 +501,7 @@ def analyze_protein_geometry(n_residues, true_coords, pb_i, pb_j, y_pred):
     else:
         transformed, rmsd = transformed_orig, rmsd_orig
 
-    tm_score = compute_tm_score(true_coords, transformed, n_residues)
+    tm_score = compute_mds_tm_score(true_coords, mds_coords, n_residues)
 
     mds_dist = compute_distance_matrix(transformed)
     triu_i, triu_j = np.triu_indices(n_residues, k=1)
@@ -417,6 +555,12 @@ __all__ = [
     "classical_mds",
     "compute_distance_matrix",
     "compute_tm_score",
+    "compute_mds_tm_score",
+    "optimize_tm_score",
+    "resolve_tmscore_binary",
+    "tmscore_provenance",
+    "TMScoreError",
+    "TM_SCORE_METHOD",
     "compute_triangle_violations",
     "discover_proteins",
     "extract_ca_coordinates",

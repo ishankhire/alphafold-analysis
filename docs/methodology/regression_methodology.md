@@ -24,6 +24,10 @@ storage policy are specified in `regression_outputs.md`. This document fixes
 what is fitted, which observations are used, and what kind of generalization
 each analysis measures.
 
+Reconstruction TM-score now uses the standard executable's fixed-correspondence
+superposition search, as defined in `regression_outputs.md`. This changes
+geometry evaluation only; frozen fits, distances, and OOF scopes are unchanged.
+
 ## Scientific interpretation
 
 At each OpenFold Evoformer layer, a probe predicts the final C-alpha distance

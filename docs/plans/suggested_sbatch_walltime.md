@@ -27,6 +27,19 @@ from fitting into backfill windows.
 
 ## Fivefold OOF comparator-derived estimates
 
+### Saved-distance TM-score rescoring estimates
+
+The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) requires
+measuring the first complete layer before broad submission.
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| One-layer four-probe rescoring | `02:00:00` | Closest full-cohort downstream replay estimate is two hours; this stage replaces inference with 2,208 MDS reconstructions and 4,416 standard TMscore searches. Native search cost on long proteins and shared-filesystem latency remain unmeasured on Delta. |
+| Finalization | `00:30:00` | Twice the packed-export finalization estimate, adding 105,984 score rows and four replacement geometry/summary tables; unmeasured. |
+
+Replace with 1.5–2x representative successful allocation times, excluding
+checkpoint-skipped and local smoke runs.
+
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)

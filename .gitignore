@@ -5,6 +5,7 @@
 .cache/
 .mplconfig/
 .claude/settings.local.json
+scripts/cluster_scripts/TMscore
 
 # macOS
 .DS_Store
@@ -90,6 +91,7 @@ overleaf/
 # Generated outputs
 feature_magnitudes_layer10_matrix.npy
 delta_files/regression_5fold_v1/predicted_distances_5fold_v1/
+delta_files/regression_5fold_v1/tm_score_optimized_v1/
 
 # Generated analysis artifacts (>=10 MB)
 delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/length_bin_summary.csv

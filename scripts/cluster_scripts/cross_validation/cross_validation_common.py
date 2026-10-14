@@ -21,7 +21,7 @@ from typing import Iterable, Mapping, Sequence
 
 import numpy as np
 
-from cluster_regression_helpers import analyze_protein_geometry
+from cluster_regression_helpers import analyze_protein_geometry, TMScoreError
 from regression_output_helpers import (
     FIVEFOLD_OUTPUT_SCHEMA_VERSION,
     GEOMETRY_METRIC_NAMES,
@@ -1801,6 +1801,8 @@ def build_geometry_row(
             **identity, "geometry_status": "complete", "geometry_exclusion_reason": "",
             **metrics,
         }
+    except TMScoreError:
+        raise
     except Exception as exc:
         row = {
             **identity, "geometry_status": "geometry_failed",

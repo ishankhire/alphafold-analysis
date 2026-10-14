@@ -36,6 +36,9 @@ from cluster_regression_helpers import (  # noqa: E402
     classical_mds,
     compute_distance_matrix,
     compute_tm_score,
+    compute_mds_tm_score,
+    TM_SCORE_METHOD,
+    tmscore_provenance,
     extract_ca_coordinates,
     resolve_combined_pair_block_path,
     resolve_combined_pdb_path,
@@ -411,7 +414,7 @@ def reconstruct_mds_coordinates(
         coordinates=aligned,
         deviations=np.asarray(deviations, dtype=np.float64),
         rmsd=rmsd,
-        tm_score=compute_tm_score(true_coordinates, aligned, n_residues),
+        tm_score=compute_mds_tm_score(true_coordinates, mds_coordinates, n_residues),
         frac_top3_eigenvalues=frac_top3,
         n_negative_eigenvalues=n_negative_eigenvalues,
         negative_eigenvalue_fraction=negative_fraction,
@@ -430,6 +433,7 @@ def validate_saved_metrics(
     n_negative_predictions: int,
     saved_per_protein: Mapping[tuple[int, str], Mapping[str, str]],
     saved_geometry: Mapping[tuple[int, str], Mapping[str, str]],
+    saved_tm_score_method: str = "legacy_or_optimized",
 ) -> None:
     key = (int(layer), record.protein_id)
     if key not in saved_per_protein or key not in saved_geometry:
@@ -458,6 +462,16 @@ def validate_saved_metrics(
         "negative_eigenvalue_fraction": reconstruction.negative_eigenvalue_fraction,
         "stress": reconstruction.stress,
     }
+    if saved_tm_score_method == "kabsch" or (
+        saved_tm_score_method == "legacy_or_optimized" and not np.isclose(
+            reconstruction.tm_score, float(geometry_row["tm_score"]), rtol=1e-8, atol=1e-8
+        )
+    ):
+        geometry_values["tm_score"] = compute_tm_score(
+            record.coordinates, reconstruction.coordinates, record.n_residues
+        )
+    elif saved_tm_score_method not in {TM_SCORE_METHOD, "legacy_or_optimized"}:
+        raise ValueError(f"Unknown saved TM-score method: {saved_tm_score_method}")
     for name, value in geometry_values.items():
         if not np.isclose(
             value, float(geometry_row[name]), rtol=1e-8, atol=1e-8
@@ -618,6 +632,9 @@ def main() -> int:
             "n_negative_predictions",
         ),
     )
+    saved_tm_score_method = json.loads((family_root / "run_manifest.json").read_text()).get(
+        "tm_score_method", "legacy_or_optimized"
+    )
     destination.mkdir(parents=True, exist_ok=True)
     write_reference_pdbs(destination, records)
 
@@ -666,6 +683,7 @@ def main() -> int:
                 n_negative_predictions=n_negative_predictions,
                 saved_per_protein=saved_per_protein,
                 saved_geometry=saved_geometry,
+                saved_tm_score_method=saved_tm_score_method,
             )
 
             protein_dir = destination / "pdb_files" / protein_id
@@ -761,6 +779,8 @@ def main() -> int:
             "python_version": platform.python_version(),
             "numpy_version": np.__version__,
             "code_revision": code_revision(),
+            "tm_score_method": TM_SCORE_METHOD,
+            "tm_score_backend": tmscore_provenance(),
             "elapsed_seconds": elapsed,
             "completed_at": datetime.now(timezone.utc).isoformat(),
             "run_status": "complete",

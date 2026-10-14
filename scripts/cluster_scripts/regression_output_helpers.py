@@ -21,7 +21,7 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
-from cluster_regression_helpers import analyze_protein_geometry
+from cluster_regression_helpers import analyze_protein_geometry, TMScoreError
 from regression_protocol import (
     FEATURE_NAMES,
     FLOAT_EPS,
@@ -608,6 +608,8 @@ def build_geometry_row(
         return {
             **identity, "geometry_status": "complete", "geometry_exclusion_reason": "", **metrics,
         }
+    except TMScoreError:
+        raise
     except Exception as exc:
         return {
             **identity, "geometry_status": "geometry_failed",

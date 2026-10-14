@@ -335,12 +335,28 @@ B=-\frac{1}{2}J\hat D^{\circ 2}J,
 eigendecomposes $B$, and constructs three-dimensional coordinates from the
 three largest nonnegative eigenvalues. Both the original and reflected
 three-dimensional solutions are aligned to the predicted-PDB C-alpha
-coordinates using the Kabsch algorithm; the lower-RMSD alignment is retained.
+coordinates using the Kabsch algorithm; the lower-RMSD alignment supplies RMSD.
+TM-score is optimized independently with the standard `TMscore` executable,
+using fixed residue-array correspondence, reference-length protein
+normalization, and both MDS reflections. The highest score is retained.
+The executable searches temporary C-alpha traces and returns a rigid
+transformation, which is evaluated on the original `float64` coordinates with
+the existing TM-score formula. Kabsch is also retained as a candidate, so the
+score cannot decrease for the same input coordinates. The standard search is
+heuristic and does not guarantee a global maximum.
+
+The executable is required for new geometry calculations; missing or failed
+backends abort scoring without reverting to the historical metric. Fewer than
+three residues are unsupported by the executable. This does not affect the
+current frozen cohort, whose minimum length is 30. Historical outputs retain
+their original TM-style scores after Kabsch alignment until explicitly rescored.
+Installation and saved-distance rescoring are documented in the
+[TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md).
 
 The MDS geometry metrics are:
 
 - `rmsd`: aligned coordinate RMSD in angstroms;
-- `tm_score`: TM-score of the aligned MDS reconstruction;
+- `tm_score`: optimized reconstruction TM-score, independent of RMSD alignment;
 - `frac_top3_eigenvalues`: fraction of positive eigenvalue mass in the largest
   three nonnegative eigenvalues;
 - `n_negative_eigenvalues`: number of negative Gram-matrix eigenvalues;

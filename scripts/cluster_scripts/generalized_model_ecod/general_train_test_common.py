@@ -26,6 +26,7 @@ if str(CLUSTER_SCRIPTS_DIR) not in sys.path:
 
 from cluster_regression_helpers import (  # noqa: E402
     analyze_protein_geometry,
+    TMScoreError,
     compute_distance_matrix,
     extract_ca_coordinates,
 )
@@ -1057,6 +1058,8 @@ def collect_geometry_rows_for_split(variant, layer, split_name, split_offsets, y
                     **metrics,
                 }
             )
+        except TMScoreError:
+            raise
         except Exception:
             rows.append(make_failed_geometry_row(variant, layer, split_name, record, per_r2))
     return rows

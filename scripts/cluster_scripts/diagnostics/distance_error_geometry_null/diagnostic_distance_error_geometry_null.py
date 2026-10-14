@@ -59,7 +59,7 @@ for helper_dir in CLUSTER_HELPER_DIR_CANDIDATES:
 from cluster_regression_helpers import (  # noqa: E402
     classical_mds,
     compute_distance_matrix,
-    compute_tm_score,
+    compute_mds_tm_score,
     extract_ca_coordinates,
     superimpose_structures,
 )
@@ -549,7 +549,7 @@ def reconstruct_geometry(true_coords, pred_dist):
     return {
         "transformed_coords": transformed,
         "deviations": deviations,
-        "tm_score": compute_tm_score(true_coords, transformed, len(true_coords)),
+        "tm_score": compute_mds_tm_score(true_coords, mds_coords, len(true_coords)),
         "rmsd": rmsd,
         "stress": stress,
         "frac_top3_eigenvalues": frac_top3,

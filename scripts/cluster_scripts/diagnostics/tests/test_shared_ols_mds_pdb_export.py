@@ -4,6 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
 
 MODULE = (
@@ -92,6 +93,32 @@ def test_pdb_writer_breaks_connections_at_chain_boundaries(tmp_path):
     assert "CONECT    1    2" in text
     assert "CONECT    2    3" not in text
     assert text.endswith("END\n")
+
+
+def test_saved_geometry_parity_accepts_legacy_and_optimized_scores():
+    fixed = np.random.default_rng(9).normal(size=(30, 3))
+    moving = fixed.copy()
+    moving[-5:] += 15
+    pair_i, pair_j = diagnostic.strict_lower_triangle_indices(30)
+    distances = diagnostic.compute_distance_matrix(moving)[pair_i, pair_j]
+    reconstruction, negatives = diagnostic.reconstruct_mds_coordinates(30, fixed, pair_i, pair_j, distances)
+    record = SimpleNamespace(protein_id="toy", coordinates=fixed, n_residues=30)
+    regression = {name: 0.0 for name in ("r2", "mae", "rmse", "bias_pred_minus_true", "mean_predicted_distance")}
+    saved = dict(geometry_status="complete", rmsd=reconstruction.rmsd,
+                 tm_score=diagnostic.compute_tm_score(fixed, reconstruction.coordinates, 30),
+                 frac_top3_eigenvalues=reconstruction.frac_top3_eigenvalues,
+                 negative_eigenvalue_fraction=reconstruction.negative_eigenvalue_fraction,
+                 stress=reconstruction.stress, n_negative_eigenvalues=reconstruction.n_negative_eigenvalues,
+                 n_negative_predictions=negatives)
+    arguments = dict(layer=0, record=record, regression=regression, reconstruction=reconstruction,
+                     n_negative_predictions=negatives, saved_per_protein={(0,"toy"): dict(
+                         regression, prediction_status="complete")}, saved_geometry={(0,"toy"): saved})
+    diagnostic.validate_saved_metrics(**arguments)
+    saved["tm_score"] = reconstruction.tm_score
+    diagnostic.validate_saved_metrics(**arguments, saved_tm_score_method=diagnostic.TM_SCORE_METHOD)
+    saved["tm_score"] = -1
+    with pytest.raises(ValueError, match="tm_score"):
+        diagnostic.validate_saved_metrics(**arguments)
 
 
 def test_launcher_has_required_resources_and_interface():

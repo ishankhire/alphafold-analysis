@@ -1,5 +1,15 @@
 # Regression Output Audit and Gaps
 
+## 2026-10-13 TM-score scoring update
+
+Geometry CSV columns and schema version remain unchanged. New geometry uses
+standard TMscore searches; completed historical checkpoints are not rewritten.
+The saved-distance rescorer writes separate replacement geometry and summary
+tables under `tm_score_optimized_v1/`, preserving all source files and non-TM
+columns. Its ledger records the old saved score, Kabsch score on exported
+distances, optimized score, and both differences. Synthetic full-pipeline and
+local PDB checks passed; the complete packed-export production run is pending.
+
 ## Purpose and audit boundary
 
 This document compares the active regression implementations and saved result

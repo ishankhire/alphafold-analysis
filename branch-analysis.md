@@ -2050,3 +2050,12 @@ Moved all exporter output/log defaults and documentation to
 `/work/hdd/bfna/ikhire` after preparation failed on the bekh allocation quota.
 Raised preparation memory to 3 GiB for headroom over its observed 1.79 GiB
 partial-run peak and recorded the user's full-array, no-pilot preference.
+
+## Session: 2026-10-13 — Optimize reconstruction TM-scores
+
+Added standard TMscore searches to shared geometry and MDS diagnostics while
+preserving regression CSV schemas and independent Kabsch RMSD. Added a
+resumable packed-distance rescorer producing separate replacement geometry
+tables without inference or fitting. Native tests and 60 local PDB checks passed;
+mean score increased from 0.612 to 0.635. Full exported-distance scoring and
+publication refresh remain pending on Delta.
