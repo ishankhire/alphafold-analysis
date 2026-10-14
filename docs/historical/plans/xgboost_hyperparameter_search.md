@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 A previous agent produced the plan below to accomplish the user's task. Implement the plan in a fresh context. Treat the plan as the source of user intent, re-read files as needed, and carry the work through implementation and verification.
 
 # Combined CAMEO+ECOD XGBoost Hyperparameter Searches

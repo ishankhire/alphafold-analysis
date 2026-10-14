@@ -4,8 +4,8 @@
 
 This document defines the common methodology for the paper's residue-pair
 distance regressions. It is a normative experimental protocol rather than a
-description of every historical script. Existing implementations are assessed
-against it in `regression_protocol_audit.md`.
+description of every script. See [current sources and status](../project_status.md)
+for available results and pending updates.
 
 The current canonical protocol version is **2.0**. It uses fivefold
 out-of-fold (OOF) evaluation. Protocol 1.0 and its fixed 80/20 implementations

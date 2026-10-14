@@ -354,9 +354,9 @@ for that protein rather than averaging chunk quantiles.
 
 ## 8. Delta resources and execution policy
 
-There will be no separate one-layer timing calibration. This is a fixed user
-decision and an explicit workflow-specific exception to the repository's usual
-unmeasured-workflow pilot. Freeze the 20,000-triplet cap before production and
+Submit the full array after authorization, following the
+[cluster guide](../cluster/README.md); no separate timing pilot is required.
+Freeze the 20,000-triplet cap before production and
 do not adapt it by layer, protein length, observed values, or task timing.
 
 Use these initial launcher requests, based on the closest completed workflows

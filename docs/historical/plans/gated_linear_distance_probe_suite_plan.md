@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Gated Linear Distance Probe Suite Plan
 
 ## 1. Goal and settled decisions

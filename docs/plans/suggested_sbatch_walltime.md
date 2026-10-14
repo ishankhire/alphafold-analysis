@@ -20,17 +20,17 @@ from fitting into backfill windows.
 - Treat a timeout as a lower bound rather than a usable runtime measurement.
 - When no exact reference exists, estimate from the closest completed workflow
   and account explicitly for additional proteins, layers, features, folds,
-  models, or sequential stages. Measure the first representative task and add
-  or revise the row here before broad submission.
+  models, or sequential stages. Submit the authorized full array, then use
+  successful allocation times to refine the estimate for subsequent runs.
 - For heterogeneous pipelines, size preparation, layer, and consolidation jobs
   separately rather than applying the slowest stage's limit to every stage.
 
-## Fivefold OOF comparator-derived estimates
+## Fivefold OOF resource references
 
 ### Saved-distance TM-score rescoring estimates
 
-The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) requires
-measuring the first complete layer before broad submission.
+The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) submits
+the authorized full array using these estimates, without a separate pilot.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
@@ -43,10 +43,8 @@ checkpoint-skipped and local smoke runs.
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-uses the user's explicit decision to submit the full array without a separate
-one-layer pilot. These requests remain unmeasured estimates; preparation job
-`22876444` failed on storage quota and its elapsed time is not a valid basis
-for sizing successful execution.
+uses full-array submission. Allocation timings for the export have
+not been copied into this guide; the retained requests remain estimates.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
@@ -57,28 +55,19 @@ for sizing successful execution.
 Replace these estimates with 1.5–2x representative successful elapsed times
 before repeat runs; exclude failed, smoke, skipped, and no-op tasks.
 
-### Original regression refactor estimates
+### Regression worker observations
 
-The fivefold OOF refactor has an explicit project-level no-pilot decision. The
-limits below are conservative estimates from completed same-family tasks, not
-new measurements. They override the usual exact-workflow pilot requirement for
-this project only; implementation does not deploy or submit jobs.
+Successful process elapsed times come from family `runtime.csv` files under
+`delta_files/regression_5fold_v1/`. They are not allocation walltimes and may
+omit startup/finalization. Requests below are the unchanged launcher values;
+use allocation accounting before revising them.
 
-| Fivefold workflow | Comparator basis | Estimated `--time` | Status |
-|---|---|---:|---|
-| Shared OLS, one outer-fold/layer task | Historical single-layer shared OLS completed well within 30 minutes | `00:30:00` | Comparator-derived, not measured |
-| Per-protein OLS, five pair folds per layer | Historical one-split layers used up to about 14 minutes; five fits reuse loaded features and geometry | `02:00:00` | Comparator-derived, not measured |
-| Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated maximum `01:37:20` | `03:00:00` | Comparator-derived, not measured |
-| Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 maximum near `00:16:06` while evaluating all proteins | `00:30:00` | Comparator-derived; v2 evaluates one fold |
-
-Stage 7 confirmed that the four checked-in launchers request exactly
-`00:30:00`, `02:00:00`, `03:00:00`, and `00:30:00`, respectively, with the
-locked `240`, `48`, `240`, and `240` task mappings. No fivefold elapsed-time
-measurement was produced, so the limits remain comparator-derived and the
-explicit no-pilot decision remains in force.
-
-Measured production elapsed times may replace these estimates later, but a
-pre-production pilot is not required by this project's locked plan.
+| Workflow | Tasks | Maximum process elapsed | Existing `--time` |
+|---|---:|---:|---:|
+| Shared OLS, outer-fold/layer | 240 | `00:22:28` | `00:30:00` |
+| Per-protein OLS, five pair folds/layer | 48 | `01:39:34` | `02:00:00` |
+| Sequence-gated OLS, outer-fold/layer | 240 | `00:12:57` | `03:00:00` |
+| Fixed shared XGBoost, outer-fold/layer | 240 | `00:13:50` | `00:30:00` |
 
 ### Fivefold aggregation estimates
 
@@ -89,27 +78,27 @@ pre-production pilot is not required by this project's locked plan.
 | Sequence-gated OLS aggregation | Validate 240 shards and copy/check 1,440 coefficient artifacts | `00:30:00` | Comparator-derived, not measured |
 | Fixed shared XGBoost aggregation | Validate 240 shards and copy/check 240 native boosters | `00:30:00` | Comparator-derived, not measured |
 
-Record allocation-level elapsed time from each first successful production
-aggregation and replace these estimates before future broad reruns.
+Record successful allocation-level aggregation times to refine these estimates
+for subsequent runs.
 
 ### Fivefold OOF triangle-subgroup replay estimates
 
-The versioned `triangle_violation_subgroups_5fold_v1` stages are unmeasured.
-Their initial limits are conservative plan estimates and must be updated from
-successful representative allocations before broad reruns.
+The fivefold triangle replay has complete local outputs and process timings
+in its `runtime.csv`. Allocation walltimes are not recorded here; the limits
+below remain existing estimates, pending allocation accounting.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | Reference preparation | `06:00:00` | Exact reference enumeration for 552 proteins with per-protein checkpoints. |
 | One-layer four-family OOF replay | `06:00:00` | Approximately five times the historical 111-protein cohort, with all four OOF families replayed sequentially per protein. |
-| Streaming aggregation | `02:00:00` | Layer-bounded validation and derivation of 2,729,088 consolidated rows; unmeasured. |
+| Streaming aggregation | `02:00:00` | Layer-bounded validation and derivation of 2,729,088 consolidated rows; allocation timing not recorded here. |
 
 ### Publication per-protein subgroup-MAE replay estimates
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | One-layer four-family subgroup replay | `02:00:00` | Replays all 552 proteins but omits the triangle enumeration performed by the closest fivefold replay comparator. |
-| Streaming aggregation and pooled reconciliation | `00:30:00` | Streams 1,165,824 rows and validates 2,112 additive comparisons; no production measurement yet. |
+| Streaming aggregation and pooled reconciliation | `00:30:00` | Streams 1,165,824 rows and validates 2,112 additive comparisons; allocation timing not recorded here. |
 
 ## Measured references
 

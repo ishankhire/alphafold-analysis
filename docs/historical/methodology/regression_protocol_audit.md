@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Regression Protocol Audit and Methodology Gaps
 
 ## 2026-10-13 TM-score scoring update

@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Canonical Shared XGBoost Final-Model Plan
 
 ## 1. Goal and scope

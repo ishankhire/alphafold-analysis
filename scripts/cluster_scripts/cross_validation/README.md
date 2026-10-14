@@ -1,12 +1,9 @@
 # Fivefold OOF regression release runbook
 
-This directory contains the production-ready protocol-2.0 implementation for
-the four fivefold out-of-fold regression families. Stage 7 release hardening
-validated the task mappings, exact shard inventories, aggregation failure
-policy, worker launchers, and replay contract. Simple aggregation launchers are
-also provided for the four completed shard families. The copied canonical
-protocol-2.0 results are under `delta_files/regression_5fold_v1/`; cluster
-deployment and submission remain separate operational steps.
+This directory contains the protocol-2.0 implementations, launchers, and strict
+aggregators for the four fivefold out-of-fold regression families. Copied results
+are under `delta_files/regression_5fold_v1/`; see
+[current sources and status](../../../docs/project_status.md).
 
 The scientific protocol and output contract remain authoritative in
 `docs/methodology/regression_methodology.md` and
@@ -20,6 +17,9 @@ saved models and writes all generated predictions/checkpoints under
 independently of the existing model-input `CSV_ROOT`.
 
 ## Delta prerequisites
+
+Follow the [cluster guide](../../../docs/cluster/README.md); deployment and job
+submission require the user's permission.
 
 New reconstruction geometry requires the official `TMscore` executable beside
 the deployed shared helper or via `TMSCORE_BINARY`. See the
@@ -55,6 +55,7 @@ are read from `/work/hdd`.
 Copy the following to `$HOME/openfold_interpretability_canonical/` without
 preserving the repository's `cross_validation/` subdirectory:
 
+- this README as `fivefold_regression_README.md`;
 - every non-test `.py`, `.sbatch`, and `.json` file in this directory;
 - `scripts/cluster_scripts/cluster_regression_helpers.py`;
 - `scripts/cluster_scripts/regression_output_helpers.py`;
@@ -111,10 +112,9 @@ array; the local `.venv` intentionally tests that workflow with a mock.
 | Sequence-gated OLS | `sequence_gated_ols_base256_fold_layer.sbatch` | `task_id = outer_fold * 48 + layer` | 240 | 8 | `120g` | `03:00:00` |
 | Fixed shared XGBoost | `shared_xgboost_base256_fixed_s4_fold_layer.sbatch` | `task_id = outer_fold * 48 + layer` | 240 | 3 | `12g` | `00:30:00` |
 
-These requests are the plan's comparator-derived estimates, not measurements
-of the fivefold workflows. The explicit no-pilot decision is recorded in the
-shared memory and walltime guides. Do not silently change any request before
-submission.
+These are the existing launcher requests. The shared memory and walltime guides
+distinguish saved process measurements from allocation accounting. Submit full
+arrays after authorization; no separate resource pilot is required.
 
 ## Submission and restart
 

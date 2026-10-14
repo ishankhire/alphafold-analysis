@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Combined CAMEO+ECOD XGBoost Hyperparameter Search Plan
 
 ## Goal

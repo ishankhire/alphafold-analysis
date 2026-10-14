@@ -34,7 +34,7 @@ Earlier 80/20 analyses and amino-acid-pair gating remain useful exploratory comp
 
 ## From pair distances to 3D
 
-We reconstruct C-alpha traces by applying classical multidimensional scaling (MDS) to each protein's complete OOF distance matrix. At layer 47, mean TM-scores against OpenFold's final predicted structure are 0.842 for shared linear, 0.862 for sequence-gated linear, 0.925 for XGBoost, and 0.931 for per-protein linear. Each model reaches its best mean TM-score around layers 45–46 rather than necessarily at the final layer.
+We reconstruct C-alpha traces by applying classical multidimensional scaling (MDS) to each protein's complete OOF distance matrix. The saved results and September 2 figures evaluate the TM kernel after Kabsch alignment, rather than optimizing the alignment for TM-score. At layer 47, these mean post-Kabsch TM-style scores against OpenFold's final predicted structure are 0.842 for shared linear, 0.862 for sequence-gated linear, 0.925 for XGBoost, and 0.931 for per-protein linear. Each model reaches its best mean saved score around layers 45–46 rather than necessarily at the final layer. Optimized TM-score rescoring and the corresponding publication refresh are pending; these values do not yet use the updated scoring method.
 
 A strong distance score does not guarantee a valid three-dimensional geometry. At layer 47, the mean fraction of residue triples that violate the triangle inequality is 8.7% for shared linear, 6.3% for sequence-gated linear, 4.0% for XGBoost, and 4.9% for per-protein linear. MDS can still return a plausible trace because it projects an imperfect distance matrix into three dimensions.
 
@@ -46,4 +46,4 @@ These results support a progressively more accessible, partly conditional and no
 
 The most useful next steps are to test generalization across protein families and experimental structures, investigate which correlated distance errors obstruct 3D reconstruction, and compare the same questions in other folding models.
 
-For exact methods and files, see [the canonical regression methodology](docs/methodology/regression_methodology.md), [the output contract](docs/methodology/regression_outputs.md), [the fivefold results](delta_files/regression_5fold_v1/), and [the September 2 figure bundle](delta_files/publication_plots/sept_2_plots/README.md). The methodology and output audits describe implementation history; their August 29 production-status statements predate the checked-in fivefold results.
+For exact methods and files, see [the canonical regression methodology](docs/methodology/regression_methodology.md), [the output contract](docs/methodology/regression_outputs.md), [the fivefold results](delta_files/regression_5fold_v1/), and [the September 2 figure bundle](delta_files/publication_plots/sept_2_plots/README.md). [Current sources and status](docs/project_status.md) records available artifacts and pending updates.

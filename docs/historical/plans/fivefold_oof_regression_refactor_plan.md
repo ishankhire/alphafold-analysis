@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Fivefold OOF Regression Refactor Plan
 
 ## Summary

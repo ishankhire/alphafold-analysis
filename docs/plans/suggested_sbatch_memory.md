@@ -1,20 +1,21 @@
 # Suggested SBATCH memory
 
-These are per-job or per-array-task recommendations for the likely final
-implementations. Observed MaxRSS values come from Delta accounting, including
+These are per-job or per-array-task resource references and existing requests.
+Observed MaxRSS values come from Delta accounting, including
 the 2026 export in `delta_files/delta_usage_export_2026.tar.gz` and subsequent
 `sacct` measurements; they are converted to GiB. Because Delta can derive SU
 charges from requested memory, use the smallest request that retains reasonable
 headroom and recheck MaxRSS after the first canonical run.
 
-## Fivefold OOF comparator-derived estimates
+## Fivefold OOF resource references
 
 ### Saved-distance TM-score rescoring estimates
 
 The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) uses
 completed packed arrays and does not load pair tensors or model artifacts.
-These estimates require a first successful allocation measurement before broad
-submission. Local loading of all four source geometry tables peaked at 408 MiB;
+Submit the authorized full array using these estimates; record successful
+allocation measurements for subsequent runs. Local loading of all four source
+geometry tables peaked at 408 MiB;
 residue metadata, one layer manifest, and one 794-residue float64 MDS working
 set give an estimated worker peak of 0.5–0.65 GiB. Finalization also retains the
 105,984-row score ledger and replacement/summary rows.
@@ -29,46 +30,31 @@ Record successful allocation MaxRSS for both stages and replace the estimates.
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-uses the user's explicit decision to submit the full array without a separate
-one-layer pilot. Record representative successful measurements for subsequent
-runs. Preparation job `22876444` failed on disk quota after model validation
-and residue metadata extraction, with a Python-step peak of `1876272K`
-(approximately 1.79 GiB); this partial-run observation informs headroom but is
-not a completed preparation benchmark.
+uses full-array submission. Allocation measurements for the export
+have not been copied into this guide; the retained requests remain estimates.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
-| Export preparation | `3g` | Approximately 1.68x the 1.79 GiB peak observed before job `22876444` failed on disk quota while writing metadata. Final successful MaxRSS remains to be measured. |
+| Export preparation | `3g` | Approximately 1.68x a 1.79 GiB partial-run observation; successful allocation MaxRSS is not recorded here. |
 | One-layer four-family prediction export | `12g` | Closest completed replay peaked at 6.15 GiB (1.95x headroom). Keeps one protein feature working set and compact model state; maximum 794 residues implies about 308 MiB float32 tensor and 615 MiB float64 base256 features before temporaries. |
 | Export finalization | `2g` | Streams one layer's 2,208 array records/checksums and four pooled sufficient-statistic reductions at a time; no cohort feature matrices or concatenated predictions. |
 
 Record allocation MaxRSS after the first successful task of each stage and
 adjust requests before repeat runs.
 
-### Original regression refactor estimates
+### Regression worker observations
 
-The fivefold OOF refactor has an explicit project-level no-pilot decision. No
-new resource pilot is required before production submission. The requests below
-are planning estimates derived from completed same-family jobs plus conservative
-scaling, not measurements of the new workflows. This is the authorized override
-of the usual exact-workflow pilot rule in `AGENTS.md`; it does not authorize a
-deployment or submission during implementation.
+Saved family `runtime.csv` files under `delta_files/regression_5fold_v1/`
+record the following successful process peaks. These are process RSS, not
+Slurm allocation MaxRSS. Requests below are the unchanged launcher values;
+use allocation accounting before revising them.
 
-| Fivefold workflow | Comparator | Estimated `--mem` | Status |
-|---|---:|---:|---|
-| Shared OLS, one outer-fold/layer task | Historical shared OLS peak near 98 GiB | `120g` | Comparator-derived, not measured |
-| Per-protein OLS, five pair folds per layer | Historical one-split layer below 8 GiB | `12g` | Comparator-derived; loaded features are reused |
-| Sequence-gated OLS, one outer-fold/layer task | Historical sequence-gated peak 93.42 GiB | `120g` | Comparator-derived, not measured |
-| Fixed shared XGBoost S4/5k/700, one outer-fold/layer task | Completed final base256 peak near 6.4 GiB while evaluating all 552 proteins | `12g` | Comparator-derived; each v2 task evaluates one fold |
-
-Stage 7 confirmed that the four checked-in launchers request exactly `120g`,
-`12g`, `120g`, and `12g`, respectively. It also confirmed their planned
-concurrency caps and current Delta `scratch&work` filesystem constraints. No
-new MaxRSS observation was produced, so every value in this table remains an
-estimate and the explicit no-pilot decision remains in force.
-
-After production completes, measured MaxRSS may replace these estimates, but a
-pre-production pilot is not a prerequisite for this project.
+| Workflow | Tasks | Maximum process RSS (GiB) | Existing `--mem` |
+|---|---:|---:|---:|
+| Shared OLS, outer-fold/layer | 240 | 92.69 | `120g` |
+| Per-protein OLS, five pair folds/layer | 48 | 3.68 | `12g` |
+| Sequence-gated OLS, outer-fold/layer | 240 | 78.50 | `120g` |
+| Fixed shared XGBoost, outer-fold/layer | 240 | 6.15 | `12g` |
 
 ### Fivefold aggregation estimates
 
@@ -83,21 +69,20 @@ Their initial requests are:
 | Sequence-gated OLS aggregation | Measured gated aggregation plus validation and copying of 1,440 compact coefficient artifacts | `8g` | Comparator-derived, not measured |
 | Fixed shared XGBoost aggregation | Compact metrics plus validation and copying of 240 booster artifacts | `8g` | Comparator-derived, not measured |
 
-Record MaxRSS from each first successful production aggregation and replace
-these estimates before future broad reruns.
+Record allocation MaxRSS from successful aggregations to refine these estimates
+for subsequent runs.
 
 ### Fivefold OOF triangle-subgroup replay estimates
 
-The versioned `triangle_violation_subgroups_5fold_v1` replay is implemented but
-has not yet been measured on Delta. Its initial requests follow the approved
-implementation plan and must be replaced with allocation MaxRSS after the first
-representative run of each stage.
+The fivefold triangle replay has complete local outputs and process timings/RSS
+in its `runtime.csv`. Allocation MaxRSS is not recorded here; the requests below
+remain the existing estimates, pending allocation accounting.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
-| Reference preparation | `12g` | Bounded one-protein reference arrays and chunked digests; no 552-protein measurement yet. |
+| Reference preparation | `12g` | Bounded one-protein reference arrays and chunked digests; allocation MaxRSS not recorded here. |
 | One-layer four-family OOF replay | `12g` | Historical 111-protein replay peaked at 6.15 GiB; the new implementation retains one protein working set plus compact model state. |
-| Streaming aggregation | `16g` | One 56,856-row layer plus compact summaries and producer geometry indexes; no exact measurement yet. |
+| Streaming aggregation | `16g` | One 56,856-row layer plus compact summaries and producer geometry indexes; allocation MaxRSS not recorded here. |
 
 ### Publication per-protein subgroup-MAE replay estimates
 
@@ -107,13 +92,14 @@ triangle replay, but it does not materialize triangle geometry.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
-| One-layer four-family subgroup replay | `12g` | Same bounded model/pair working set as the unmeasured fivefold triangle replay; retain its initial request until a representative MaxRSS is recorded. |
-| Streaming aggregation and pooled reconciliation | `8g` | One 24,288-row shard plus 2,112 compact summary groups; no production measurement yet. |
+| One-layer four-family subgroup replay | `12g` | Same bounded model/pair working set as the fivefold triangle replay; allocation MaxRSS not recorded here. |
+| Streaming aggregation and pooled reconciliation | `8g` | One 24,288-row shard plus 2,112 compact summary groups; allocation MaxRSS not recorded here. |
+
+## Other workflow references
 
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
 |---|---:|---:|---|
 | Shared OLS, `general_base256_combined` | 97.96 GiB | `120g` | Completed base256 jobs peaked at 97.96 GiB for layers 0–23 and 94.63 GiB for layers 24–47. |
-| Final shared XGBoost, directional base256 | 27.43 GiB at 128 features | `64g` initially | The measured search used averaged 128-channel features. Straight doubling gives a conservative planning estimate of about 55 GiB for the final 256 features; measure one canonical layer before lowering this. |
 | Gated preparation | 13.39 GiB | `20g` | Measured preparation peak with the full combined cohort. |
 | Sequence-gated OLS | 93.42 GiB | `120g` | All six measured layer tasks peaked between 93.17 and 93.42 GiB. Full 48-layer coverage changes task count, not per-task matrix size. |
 | AA-pair-gated OLS | 28.48 GiB | `40g` | Maximum across the six completed layer tasks. |

@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Cross-Validation Adversarial Correctness Review Plan
 
 ## 1. Purpose and scope

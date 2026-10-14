@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Predicted-distance export plan
 
 ## Agreed scope
@@ -21,9 +23,9 @@ data on Delta. The exact export root is
 including prediction files, checkpoints, indexes, validation, and manifests.
 
 The experimental rules remain in
-[regression_methodology.md](../methodology/regression_methodology.md), and the
+[regression_methodology.md](../../methodology/regression_methodology.md), and the
 producer artifact contract remains in
-[regression_outputs.md](../methodology/regression_outputs.md). This export is
+[regression_outputs.md](../../methodology/regression_outputs.md). This export is
 an optional derived artifact: the producers currently retain models rather
 than raw predictions. It does not change their fitting or evaluation rules.
 
@@ -331,8 +333,8 @@ Include these examples in the generated README.
 
 ## Delta resources and deployment
 
-Consult the shared [memory](suggested_sbatch_memory.md) and
-[walltime](suggested_sbatch_walltime.md) guides again at implementation time.
+Consult the shared [memory](../../plans/suggested_sbatch_memory.md) and
+[walltime](../../plans/suggested_sbatch_walltime.md) guides again at implementation time.
 The closest bounded four-family subgroup replay uses initial estimates of
 `12g` and `02:00:00` with 8 CPUs. Its historical comparator peaked at 6.15 GiB;
 12 GiB is about 1.95x that observed peak. Use those as provisional worker

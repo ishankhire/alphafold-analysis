@@ -38,6 +38,9 @@ frozen 552-protein cohort, whose minimum length is 30.
 
 ## Rescore the packed export
 
+See the [cluster guide](../../../docs/cluster/README.md) for access and submission
+permissions. The commands below require authorization to change cluster state.
+
 Run only after the predicted-distance exporter is finalized. Keep its deployment
 frozen until it finishes: its restart identity includes helper-code hashes.
 The rescoring reader checks the export's saved checksums without requiring its
@@ -68,16 +71,12 @@ from the difference against the old saved score.
 ```bash
 mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs
 cd "$HOME/openfold_interpretability_canonical"
-sbatch --array=0 recompute_tm_scores.sbatch
+sbatch --array=0-47%4 recompute_tm_scores.sbatch
 ```
 
-Record the first complete layer's allocation MaxRSS and elapsed time in the
-shared resource guides and resize the provisional 1 GiB / 2 hour request before
-broad submission. Then:
-
-```bash
-sbatch --array=1-47%4 recompute_tm_scores.sbatch
-```
+Submit all 48 layers with concurrency four; no separate resource pilot is
+required. Record successful allocation MaxRSS and elapsed time in the shared
+resource guides to refine the provisional 1 GiB / 2 hour request for future runs.
 
 After all layers complete:
 

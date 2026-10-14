@@ -1,3 +1,5 @@
+> Archived storage audit (October 7, 2026); not a current cleanup request. See [current sources and status](../../../project_status.md).
+
 # Delta file dependencies and storage cleanup audit
 
 Audit date: October 7, 2026. This is a source audit, not a live Delta disk scan.
@@ -52,7 +54,7 @@ supplemental draft. No archive scripts were executed.
   line count, decoded-text SHA-256, and reference-line count. Notebook line
   numbers refer to concatenated code-cell sources, not output/image JSON.
 - [audit_summary.json](audit_summary.json): cohort counts and size calculations.
-- [inventory_delta_storage.py](../../../scripts/cluster_scripts/diagnostics/inventory_delta_storage.py):
+- [inventory_delta_storage.py](../../../../scripts/cluster_scripts/diagnostics/inventory_delta_storage.py):
   read-only Delta measurement tool. Its output is described below.
 
 Dynamic paths, environment overrides, command-line inputs, and other users'

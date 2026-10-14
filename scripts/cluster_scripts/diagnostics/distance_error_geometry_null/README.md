@@ -8,8 +8,11 @@ from the final OpenFold-predicted PDB. It adds IID Gaussian errors, carries over
 the probe's saved mean bias, clips negative distances to zero, and numerically
 rescales the errors until the perturbed distances have the saved probe R². It
 then runs classical MDS and compares the aligned reconstruction with the source
-PDB using the same fixed-correspondence, Kabsch-aligned TM-score calculation as
-the existing regression pipeline.
+PDB using the shared geometry helper's fixed-correspondence TM-score search.
+The launcher reads the historical 80/20 shared-OLS family, not the canonical
+fivefold results. Observed scores from before the scoring update are post-Kabsch
+TM-style values; observed and null scoring methods must match before their
+TM-score differences are interpreted.
 
 This is feasible from the saved results. `per_protein.csv` contains the needed
 layer/protein R², MSE/RMSE, target variance, and mean error, while
@@ -48,9 +51,14 @@ probe run that saves residuals or sufficient residual-bin/covariance summaries.
 
 ## Run on Delta
 
-Submit from this directory so `SLURM_SUBMIT_DIR` resolves the Python entrypoint:
+Deploy the Python entrypoint, its launcher, the shared geometry helper, and the
+`TMscore` executable flat to `$HOME/openfold_interpretability_canonical/`.
+Follow the [cluster guide](../../../../docs/cluster/README.md) and
+[TM-score installation instructions](../../tm_scores/README.md); deployment and
+submission require permission. Submit from the flat directory:
 
 ```bash
+cd "$HOME/openfold_interpretability_canonical"
 sbatch diagnostic_distance_error_geometry_null.sbatch
 ```
 

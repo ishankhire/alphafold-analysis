@@ -18,10 +18,11 @@ structures.
 ## Repository map
 
 - `datasets.md` — dataset membership, filtering, and local/Delta input layouts.
-- `docs/methodology/` — canonical regression protocol, output contract, and
-  implementation audits.
+- `docs/project_status.md` — current data sources, results, plots, and pending work.
+- `docs/methodology/` — canonical regression protocol and output contract.
 - `docs/cluster/` — Delta operating notes and links to live documentation.
-- `docs/plans/` — experiment and implementation plans.
+- `docs/plans/` — experiment specifications and resource references.
+- `docs/historical/` — completed/superseded plans and dated audits; not current instructions.
 - `scripts/cluster_scripts/` — all cluster-ready Python and SLURM entrypoints.
 - `scripts/multi_protein/` — local-only analysis and post-processing.
 - `delta_files/` — copied cluster results and current canonical result families.
@@ -35,9 +36,6 @@ documents in `docs/methodology/`:
 - `regression_methodology.md` is the normative experimental protocol, including
   cohort, split, feature, precision, weighting, fitting, and evaluation rules.
 - `regression_outputs.md` is the normative output and storage contract.
-- `regression_protocol_audit.md` records which implementations meet the
-  methodology and where reruns or decisions remain.
-- `regression_output_audit.md` records output coverage and remaining gaps.
 
 Do not duplicate these rules in script-specific documentation. Historical
 scripts and results remain useful, but they are not automatically compliant
@@ -45,13 +43,16 @@ with the current methodology or output contract.
 
 ## Data and outputs
 
-- The default analysis cohort is the combined TM-score > 0.7 CAMEO + ECOD pool
-  in `datasets.md`: 154 CAMEO plus 400 ECOD proteins, 554 unique proteins.
+- The input pool in `datasets.md` combines 154 CAMEO plus 400 ECOD proteins
+  with TM-score > 0.7. Canonical regressions use the frozen 552-protein
+  eligible cohort; its manifests are authoritative.
 - Treat CAMEO and ECOD as one analysis dataset. Use the source label only to
   resolve their different input layouts unless an experiment explicitly asks
   for a source comparison.
 - Current outputs belong under `delta_files/`; do not recreate the retired
   `proteins/multi_protein_results/` tree.
+- Clearly superseded outputs may be archived under `delta_files/historical_outputs/`.
+  Keep outputs referenced by existing analysis scripts at their established paths.
 
 ## Delta cluster workflows
 
@@ -62,6 +63,11 @@ Launchers are colocated with their workflows under directories including
 On Delta, deploy all analysis scripts to and run them from
 `$HOME/openfold_interpretability_canonical`.
 
+Agents may inspect cluster files and monitor jobs without asking. Obtain the
+user's permission before submitting or cancelling jobs, deploying files, or
+making any other cluster changes. Authorization to edit this checkout does not
+authorize cluster changes.
+
 Every script intended to run on the cluster, including aggregation and
 post-processing entrypoints, must live under `scripts/cluster_scripts/` and
 never under `scripts/multi_protein/`. Keep `scripts/multi_protein/` for scripts
@@ -69,14 +75,19 @@ that are explicitly intended to run locally.
 
 Before writing or modifying cluster scripts, consult:
 
-- `docs/cluster/slurm_array_notes.md`;
-- `docs/cluster/delta-job-cheatsheet.md`; and
+- `docs/cluster/README.md`; and
 - the live [NCSA Delta documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/)
   for current partitions, limits, accounting, modules, and filesystem behavior.
 
 When moving, renaming, or creating a cluster Python entrypoint, verify every
-sbatch reference under `scripts/cluster_scripts/`. Submit from the relevant
-script directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
+sbatch reference under `scripts/cluster_scripts/`. Submit from the flat Delta
+deployment directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
+
+Every new cluster experiment must have a short colocated `README.md` naming
+deployment files, input/output roots, exact submission commands, and dependent
+aggregation/finalization steps. After submission is authorized, submit the
+full arrays with appropriate concurrency caps; no separate one-task resource
+pilot is required by default. Preserve dependencies between stages.
 
 ### Memory and SU efficiency
 
@@ -87,10 +98,10 @@ observed peak MaxRSS; requests above 2x require a concrete, documented reason.
 When the exact workflow has no measurement, estimate its peak from the closest
 completed jobs, accounting for cohort size, feature width and dtype, dense
 matrix materialization, and per-task concurrency. Start from that estimate with
-reasonable headroom, measure the first representative task, and update
-`docs/plans/suggested_sbatch_memory.md` before broad submission. Preserve the
-existing regression pipeline while right-sizing, since Delta charges can be
-memory-derived.
+reasonable headroom and submit the authorized full array. Use successful task
+measurements to update `docs/plans/suggested_sbatch_memory.md` for subsequent
+runs. Preserve the regression pipeline while right-sizing, since Delta charges
+can be memory-derived.
 
 ### Walltime and scheduling efficiency
 
@@ -101,8 +112,9 @@ of representative successful tasks. Do not size from failed, cancelled,
 cached, restart-skipped, smoke, or no-op runs. When the exact workflow is
 unmeasured, estimate from the closest completed workflow and account for
 differences in cohort size, feature width, layers, folds, models, and sequential
-stages. Avoid excessive limits because Slurm schedules
-against requested walltime and shorter accurate jobs can backfill sooner.
+stages. Submit the authorized full array and record successful elapsed times
+for subsequent runs. Avoid excessive limits because Slurm schedules against
+requested walltime and shorter accurate jobs can backfill sooner.
 
 ### Launcher requirements
 

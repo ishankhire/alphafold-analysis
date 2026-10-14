@@ -2,8 +2,8 @@
 
 Replay the four frozen protocol-2.0 probes without fitting models. Scientific
 rules remain in [regression_methodology.md](../../../docs/methodology/regression_methodology.md).
-The [export plan](../../../docs/plans/predicted_distance_export_plan.md) documents
-the model artifact locations and schema.
+The [output contract](../../../docs/methodology/regression_outputs.md) defines
+its relationship to the canonical producer outputs.
 
 ## Paths and files
 
@@ -55,6 +55,10 @@ An invalid gate/fold/model or metric mismatch fails the layer without fallback.
 
 ## Deployment and submission
 
+Follow the [cluster guide](../../../docs/cluster/README.md); deployment and job
+submission require the user's permission. Current execution status lives in
+[current sources and status](../../../docs/project_status.md).
+
 Deploy files flat to `$HOME/openfold_interpretability_canonical/`:
 
 - All four `.py` and three `.sbatch` files in this directory.
@@ -89,9 +93,9 @@ After preparation succeeds, submit all 48 layers, with concurrency 4:
 sbatch export_predicted_distances_layer.sbatch
 ```
 
-The user explicitly chose full-array submission without a separate one-layer
-pilot. Record successful allocation MaxRSS and elapsed time in the shared
-guides and right-size the provisional 12 GiB / 2 hour worker requests for
+No separate one-layer pilot is required. Record successful allocation MaxRSS
+and elapsed time in the shared guides and right-size the provisional 12 GiB /
+2 hour worker requests for
 future runs.
 
 After all 48 layers succeed:

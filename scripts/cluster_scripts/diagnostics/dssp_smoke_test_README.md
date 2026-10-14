@@ -3,13 +3,17 @@
 This is a minimal one-structure check for the `mkdssp` installation and the
 final OpenFold-predicted PDB layout. It defaults to CAMEO protein `6tf4_A`.
 
-First install DSSP once on Delta, if needed:
+Deploy `setup_dssp_delta.sbatch`, `dssp_smoke_test_delta.sbatch`, and
+`dssp_smoke_test.py` flat to `$HOME/openfold_interpretability_canonical/`.
+Follow the [cluster guide](../../../docs/cluster/README.md); installation and
+job submission require permission. First install DSSP once, if needed:
 
 ```bash
+cd "$HOME/openfold_interpretability_canonical"
 sbatch setup_dssp_delta.sbatch
 ```
 
-Then submit the smoke test from this directory:
+After installation succeeds, submit the smoke test from the same deployment directory:
 
 ```bash
 sbatch dssp_smoke_test_delta.sbatch

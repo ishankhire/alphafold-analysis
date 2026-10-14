@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Fivefold OOF Triangle-Violation Subgroup Refactor Plan
 
 ## 1. Decision and scientific scope

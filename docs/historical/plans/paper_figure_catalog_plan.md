@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Paper Figure Catalog and Analysis Plan
 
 ## 1. Purpose

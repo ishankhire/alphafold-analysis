@@ -1,3 +1,5 @@
+> Historical reference; not current execution instructions. See [current sources and status](../../project_status.md).
+
 # Secondary-Structure Model Comparison Plan
 
 ## 1. Goal

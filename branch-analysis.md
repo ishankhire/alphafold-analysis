@@ -1,5 +1,13 @@
 # Branch Analysis
 
+## Session: 2026-10-14 — Consolidate current documentation and archive old material
+
+Added one current-source/status page, consolidated Delta guidance and agent
+permissions, and made full-array submission the default without a resource
+pilot. Archived completed plans, dated audits, and the old preprint bundle;
+kept dataset and analysis-dependent paths unchanged. Clarified pending TM-score
+rescoring and the saved figures' scoring method.
+
 ## Session: 2026-10-07 — Audit Delta storage dependencies
 
 Added a source/PDF/archive audit with protected cohort input paths and conditional
