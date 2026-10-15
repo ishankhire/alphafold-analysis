@@ -2118,3 +2118,11 @@ Updated the plotter to default to saved mean gain, writing figures and summaries
 under `analysis/xgboost_gain_dimensions/`; `--importance split_count` retains
 the original view. Verified gain averages/normalization against source values
 and byte-identical split-count CSV reproduction.
+
+## Session: 2026-10-15 — Shared linear coefficient layer similarities
+
+Added standardized and raw-scale 48 × 48 cosine heatmaps under
+`delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/`, averaging
+within-fold comparisons over five folds with intercepts excluded. Saved matrix
+CSVs, per-fold values, and source provenance; verified all 240 artifact hashes
+and every similarity against independent SciPy cosine calculations.
