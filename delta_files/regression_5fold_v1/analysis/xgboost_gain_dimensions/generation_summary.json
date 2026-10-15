@@ -1,0 +1,76 @@
+{
+  "source": "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/model_artifacts/feature_importance.csv",
+  "source_sha256": "51334cd884c2d68c80928c81be61c7890c7dfb1c346d85bc060661a5e4089e35",
+  "n_layers": 48,
+  "n_folds": 5,
+  "n_features": 256,
+  "importance_type": "gain",
+  "importance_definition": "Average training-objective improvement per split using a feature; XGBoost gain, not total_gain. Unused features have gain zero.",
+  "all_layers_aggregation": "Arithmetic mean gain over all 240 fitted models.",
+  "heatmap_aggregation": "Fold-mean gain divided by sum over features within each layer.",
+  "top_features_all_layers": [
+    {
+      "feature_index": 151,
+      "feature_name": "pair_ji_ch_023",
+      "mean_gain_per_model": 127.72891826430958
+    },
+    {
+      "feature_index": 186,
+      "feature_name": "pair_ji_ch_058",
+      "mean_gain_per_model": 125.97816538810729
+    },
+    {
+      "feature_index": 58,
+      "feature_name": "pair_ij_ch_058",
+      "mean_gain_per_model": 122.10702528953551
+    },
+    {
+      "feature_index": 23,
+      "feature_name": "pair_ij_ch_023",
+      "mean_gain_per_model": 105.05024232765038
+    },
+    {
+      "feature_index": 40,
+      "feature_name": "pair_ij_ch_040",
+      "mean_gain_per_model": 37.631794856364536
+    },
+    {
+      "feature_index": 47,
+      "feature_name": "pair_ij_ch_047",
+      "mean_gain_per_model": 32.364360462998356
+    },
+    {
+      "feature_index": 232,
+      "feature_name": "pair_ji_ch_104",
+      "mean_gain_per_model": 32.20909629128873
+    },
+    {
+      "feature_index": 104,
+      "feature_name": "pair_ij_ch_104",
+      "mean_gain_per_model": 26.859405484919748
+    },
+    {
+      "feature_index": 174,
+      "feature_name": "pair_ji_ch_046",
+      "mean_gain_per_model": 25.84759486860906
+    },
+    {
+      "feature_index": 140,
+      "feature_name": "pair_ji_ch_012",
+      "mean_gain_per_model": 25.84504305310547
+    }
+  ],
+  "layer47_top_features": [
+    151,
+    23,
+    64,
+    192,
+    186,
+    58,
+    201,
+    116,
+    244,
+    73
+  ],
+  "top10_normalized_gain_fraction_all_layers": 0.4130675749145882
+}

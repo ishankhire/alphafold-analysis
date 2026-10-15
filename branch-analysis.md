@@ -2113,3 +2113,8 @@ Added a local plotter for saved fivefold XGBoost split counts, with all-layer
 and final-layer histograms, a layer heatmap, and feature summaries under
 `delta_files/regression_5fold_v1/analysis/xgboost_split_dimensions/`. Validated
 complete 48 × 256 coverage, directional feature names, and integer split totals.
+
+Updated the plotter to default to saved mean gain, writing figures and summaries
+under `analysis/xgboost_gain_dimensions/`; `--importance split_count` retains
+the original view. Verified gain averages/normalization against source values
+and byte-identical split-count CSV reproduction.
