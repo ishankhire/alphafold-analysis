@@ -13,10 +13,10 @@ jobs without asking for permission. Use the configured `ssh delta` alias and an
 authenticated Kerberos/Duo session. Report authentication failures rather than
 assuming remote work is incomplete.
 
-Ask the user before submitting or cancelling jobs, deploying or editing files,
+Importantly, ask the user before submitting or cancelling jobs, deploying or editing files,
 creating directories, or otherwise changing cluster state. Permission to edit
 this local checkout does not authorize remote changes. Keep login-node inspection
-lightweight; analysis belongs in an authorized Slurm job.
+lightweight; analysis belongs in an authorized Slurm job. Thank you!
 
 ## Repository deployment layout on Delta
 

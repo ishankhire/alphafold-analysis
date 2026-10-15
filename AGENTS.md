@@ -65,7 +65,7 @@ Before adding or changing SBATCH memory or walltime, consult the corresponding
 
 Cluster entrypoints, including aggregation and post-processing, belong under
 `scripts/cluster_scripts/`; `scripts/multi_protein/` is for local-only scripts.
-Agents may inspect cluster files and monitor jobs without asking. Obtain the
+Agents may inspect cluster files and monitor jobs without asking. Importantly, obtain the
 user's permission before submitting or cancelling jobs, deploying files, or
 making any other cluster changes. Local edits do not authorize remote changes.
 
