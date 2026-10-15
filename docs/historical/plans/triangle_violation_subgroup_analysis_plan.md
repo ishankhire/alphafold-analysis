@@ -551,8 +551,8 @@ state. Use these initial estimates only for the first representative task:
 
 Run one representative replay task before broad submission, collect allocation
 MaxRSS and elapsed time, and update both
-`docs/plans/suggested_sbatch_memory.md` and
-`docs/plans/suggested_sbatch_walltime.md`. Normally retain 1.5--2x measured
+`docs/cluster/suggested_sbatch_memory.md` and
+`docs/cluster/suggested_sbatch_walltime.md`. Normally retain 1.5--2x measured
 headroom. Measure preparation and aggregation separately because their working
 sets differ. Do not inherit the historical `64g` preparation or `32g`
 aggregation requests without measurement.

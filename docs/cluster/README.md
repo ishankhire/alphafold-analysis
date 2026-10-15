@@ -20,6 +20,10 @@ lightweight; analysis belongs in an authorized Slurm job.
 
 ## Repository deployment layout on Delta
 
+Source launchers are colocated with workflows under `scripts/cluster_scripts/`,
+including `cross_validation/`, `generalized_model_ecod/`, `per_protein_scripts/`,
+`gated_linear_probes/`, `diagnostics/`, and `xgboost_search/`.
+
 Deploy cluster Python entrypoints, launchers, shared helpers, and configuration
 files flat into `$HOME/openfold_interpretability_canonical/`. Repository source
 subdirectories are for organization; do not reproduce them in the deployment.
@@ -55,6 +59,21 @@ Copy each workflow README under a distinct name, such as
 `predicted_distance_export_README.md`, so flat deployment does not overwrite
 another workflow's instructions.
 
+## Launcher requirements
+
+- When creating, moving, or renaming a cluster Python entrypoint, verify every
+  sbatch reference under `scripts/cluster_scripts/`.
+- Request memory and walltime according to the [memory](suggested_sbatch_memory.md)
+  and [walltime](suggested_sbatch_walltime.md) guides, with reasonable headroom.
+- Save outputs after every completed layer or similarly meaningful unit so
+  partial results survive timeouts.
+- Log timestamps and elapsed times for every major stage and layer.
+- Every new or modified sbatch file must include
+  `#SBATCH --mail-type=BEGIN,END,FAIL` and
+  `#SBATCH --mail-user=ikhire3@gatech.edu`.
+- Resolve Python entrypoints with `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and
+  `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
+
 ## Fivefold OOF regression deployment
 
 Before running protocol-2.0 arrays, place these frozen metadata files under
@@ -86,8 +105,8 @@ Every new cluster experiment needs a short colocated `README.md` containing:
 After the user authorizes submission, submit the full arrays with appropriate
 concurrency caps. A separate one-task resource pilot is not required by default.
 Use existing measurements or comparator-based estimates from the
-[memory](../plans/suggested_sbatch_memory.md) and
-[walltime](../plans/suggested_sbatch_walltime.md) guides; record successful
+[memory](suggested_sbatch_memory.md) and
+[walltime](suggested_sbatch_walltime.md) guides; record successful
 production measurements for subsequent runs. Independent arrays may be submitted
 together. Dependent stages must wait for their prerequisites or use Slurm
 `afterok` dependencies. Create required log directories only after authorization.

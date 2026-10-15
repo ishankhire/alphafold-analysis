@@ -333,8 +333,8 @@ Include these examples in the generated README.
 
 ## Delta resources and deployment
 
-Consult the shared [memory](../../plans/suggested_sbatch_memory.md) and
-[walltime](../../plans/suggested_sbatch_walltime.md) guides again at implementation time.
+Consult the shared [memory](../../cluster/suggested_sbatch_memory.md) and
+[walltime](../../cluster/suggested_sbatch_walltime.md) guides again at implementation time.
 The closest bounded four-family subgroup replay uses initial estimates of
 `12g` and `02:00:00` with 8 CPUs. Its historical comparator peaked at 6.15 GiB;
 12 GiB is about 1.95x that observed peak. Use those as provisional worker

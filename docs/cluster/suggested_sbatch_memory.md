@@ -7,6 +7,18 @@ the 2026 export in `delta_files/delta_usage_export_2026.tar.gz` and subsequent
 charges from requested memory, use the smallest request that retains reasonable
 headroom and recheck MaxRSS after the first canonical run.
 
+## Sizing rules
+
+- Normally request only 1.5–2x the observed peak MaxRSS for the workflow.
+  Requests above 2x require a concrete, documented reason.
+- When the exact workflow is unmeasured, estimate from the closest completed
+  jobs, accounting for cohort size, feature width and dtype, dense matrix
+  materialization, and per-task concurrency. Leave reasonable headroom.
+- Submit the authorized full array without a separate resource pilot by default;
+  use successful task measurements to refine requests for subsequent runs.
+- Preserve the regression pipeline while right-sizing; resource changes must
+  not alter experimental behavior.
+
 ## Fivefold OOF resource references
 
 ### Saved-distance TM-score rescoring estimates

@@ -20,8 +20,8 @@ structures.
 - `datasets.md` — dataset membership, filtering, and local/Delta input layouts.
 - `docs/project_status.md` — current data sources, results, plots, and pending work.
 - `docs/methodology/` — canonical regression protocol and output contract.
-- `docs/cluster/` — Delta operating notes and links to live documentation.
-- `docs/plans/` — experiment specifications and resource references.
+- `docs/cluster/` — deployment, launcher rules, resource guides, and Delta documentation.
+- `docs/plans/` — experiment specifications.
 - `docs/historical/` — completed/superseded plans and dated audits; not current instructions.
 - `scripts/cluster_scripts/` — all cluster-ready Python and SLURM entrypoints.
 - `scripts/multi_protein/` — local-only analysis and post-processing.
@@ -54,81 +54,20 @@ with the current methodology or output contract.
 - Clearly superseded outputs may be archived under `delta_files/historical_outputs/`.
   Keep outputs referenced by existing analysis scripts at their established paths.
 
-## Delta cluster workflows
+## Cluster work
 
-Launchers are colocated with their workflows under directories including
-`generalized_model_ecod/`, `per_protein_scripts/`, `gated_linear_probes/`,
-`diagnostics/`, and `xgboost_search/`.
+Before writing or modifying cluster scripts, read the required deployment,
+launcher, and submission rules in [the cluster guide](docs/cluster/README.md)
+and consult the live [Delta documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/).
+Before adding or changing SBATCH memory or walltime, consult the corresponding
+[memory](docs/cluster/suggested_sbatch_memory.md) or
+[walltime](docs/cluster/suggested_sbatch_walltime.md) guide.
 
-On Delta, deploy all analysis scripts to and run them from
-`$HOME/openfold_interpretability_canonical`.
-
+Cluster entrypoints, including aggregation and post-processing, belong under
+`scripts/cluster_scripts/`; `scripts/multi_protein/` is for local-only scripts.
 Agents may inspect cluster files and monitor jobs without asking. Obtain the
 user's permission before submitting or cancelling jobs, deploying files, or
-making any other cluster changes. Authorization to edit this checkout does not
-authorize cluster changes.
-
-Every script intended to run on the cluster, including aggregation and
-post-processing entrypoints, must live under `scripts/cluster_scripts/` and
-never under `scripts/multi_protein/`. Keep `scripts/multi_protein/` for scripts
-that are explicitly intended to run locally.
-
-Before writing or modifying cluster scripts, consult:
-
-- `docs/cluster/README.md`; and
-- the live [NCSA Delta documentation](https://docs.ncsa.illinois.edu/systems/delta/en/latest/)
-  for current partitions, limits, accounting, modules, and filesystem behavior.
-
-When moving, renaming, or creating a cluster Python entrypoint, verify every
-sbatch reference under `scripts/cluster_scripts/`. Submit from the flat Delta
-deployment directory so `SLURM_SUBMIT_DIR` resolves colocated scripts and helpers.
-
-Every new cluster experiment must have a short colocated `README.md` naming
-deployment files, input/output roots, exact submission commands, and dependent
-aggregation/finalization steps. After submission is authorized, submit the
-full arrays with appropriate concurrency caps; no separate one-task resource
-pilot is required by default. Preserve dependencies between stages.
-
-### Memory and SU efficiency
-
-Do not use or request excessive memory. Before adding or changing **any** SBATCH
-memory request, consult `docs/plans/suggested_sbatch_memory.md` and use its
-workflow-specific measurement when one exists. Normally target only 1.5–2x the
-observed peak MaxRSS; requests above 2x require a concrete, documented reason.
-When the exact workflow has no measurement, estimate its peak from the closest
-completed jobs, accounting for cohort size, feature width and dtype, dense
-matrix materialization, and per-task concurrency. Start from that estimate with
-reasonable headroom and submit the authorized full array. Use successful task
-measurements to update `docs/plans/suggested_sbatch_memory.md` for subsequent
-runs. Preserve the regression pipeline while right-sizing, since Delta charges
-can be memory-derived.
-
-### Walltime and scheduling efficiency
-
-Before adding or changing **any** SBATCH walltime request, consult
-`docs/plans/suggested_sbatch_walltime.md` and use its workflow-specific
-measurement when one exists. Normally target 1.5–2x the maximum elapsed time
-of representative successful tasks. Do not size from failed, cancelled,
-cached, restart-skipped, smoke, or no-op runs. When the exact workflow is
-unmeasured, estimate from the closest completed workflow and account for
-differences in cohort size, feature width, layers, folds, models, and sequential
-stages. Submit the authorized full array and record successful elapsed times
-for subsequent runs. Avoid excessive limits because Slurm schedules against
-requested walltime and shorter accurate jobs can backfill sooner.
-
-### Launcher requirements
-
-- Request walltime and memory from the shared MaxRSS and elapsed-time guides,
-  leaving reasonable headroom without substantially over-reserving.
-- Save outputs after every completed layer or similarly meaningful unit so
-  partial results survive timeouts.
-- Log timestamps and elapsed times for each major stage and layer.
-- Every new or modified sbatch file must include:
-  `#SBATCH --mail-type=BEGIN,END,FAIL` and
-  `#SBATCH --mail-user=ikhire3@gatech.edu`.
-- Resolve Python entrypoints with
-  `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and
-  `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
+making any other cluster changes. Local edits do not authorize remote changes.
 
 ## Implementation conventions
 

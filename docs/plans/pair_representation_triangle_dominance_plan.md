@@ -360,8 +360,8 @@ Freeze the 20,000-triplet cap before production and
 do not adapt it by layer, protein length, observed values, or task timing.
 
 Use these initial launcher requests, based on the closest completed workflows
-in `docs/plans/suggested_sbatch_memory.md` and
-`docs/plans/suggested_sbatch_walltime.md`:
+in `docs/cluster/suggested_sbatch_memory.md` and
+`docs/cluster/suggested_sbatch_walltime.md`:
 
 | Stage | Task shape | Initial request |
 |---|---|---|

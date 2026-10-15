@@ -145,7 +145,7 @@ sacct -X -j JOB_ID \
 
 Use step-level records when a batch allocation contains multiple meaningful
 steps, and preserve MaxRSS separately in
-`docs/plans/suggested_sbatch_memory.md`:
+`docs/cluster/suggested_sbatch_memory.md`:
 
 ```bash
 sacct -j JOB_ID \

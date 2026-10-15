@@ -108,7 +108,7 @@ there:
 - `regression_methodology.md`, `regression_protocol_audit.md`, and
   `regression_output_audit.md`: reconcile the frozen specification and update
   XGBoost status after implementation.
-- `docs/plans/suggested_sbatch_memory.md`: replace the preliminary XGBoost
+- `docs/cluster/suggested_sbatch_memory.md`: replace the preliminary XGBoost
   estimate with observed final-pilot MaxRSS when it is available.
 
 Do not change, revive, or publish the per-protein XGBoost workflow. It remains

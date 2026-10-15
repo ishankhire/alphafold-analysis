@@ -1,5 +1,11 @@
 # Branch Analysis
 
+## Session: 2026-10-14 — Shorten agent instructions and colocate cluster references
+
+Reduced `AGENTS.md` to 103 lines by moving launcher details into the cluster
+guide and memory-sizing rules into the resource guide. Moved both SBATCH
+resource guides to `docs/cluster/` and updated their references.
+
 ## Session: 2026-10-14 — Consolidate current documentation and archive old material
 
 Added one current-source/status page, consolidated Delta guidance and agent
