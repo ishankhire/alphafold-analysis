@@ -1,5 +1,15 @@
 # Branch Analysis
 
+## Session: 2026-10-15 — Deploy and submit the PDB-enabled TM-score rerun
+
+With user authorization, deployed checksum-verified scoring code from `511ab5b`,
+cancelled blocked finalizer `22908534`, and cleared only the disposable scoring
+output tree. Submitted full layer array `22923529` (`0-47%4`, 2 GiB / 2 hours)
+and finalizer `22923530` (`afterok:22923529`, 2 GiB / 4.5 hours). The finalized
+distance export and model inputs were preserved; four initial workers are
+running without tracebacks. Verified checksums and C-alpha counts for 16 saved
+reconstruction PDBs across those layers; full-run completion remains pending.
+
 ## Session: 2026-10-15 — Retain all TM-score reconstruction PDBs
 
 Added winning TM-aligned C-alpha PDBs and checksum indexes to packed-distance
