@@ -2067,3 +2067,11 @@ resumable packed-distance rescorer producing separate replacement geometry
 tables without inference or fitting. Native tests and 60 local PDB checks passed;
 mean score increased from 0.612 to 0.635. Full exported-distance scoring and
 publication refresh remain pending on Delta.
+
+## Session: 2026-10-14 — Verify exports and prepare Delta TM-score scoring
+
+Verified all 48 export tasks and complete 552-protein layer manifests, then
+submitted missing export finalization as job `22907683`. Built the pinned
+TMscore source for Linux on Delta; all 10 local scoring tests passed. SSH
+authentication was lost while finalization ran, before scoring deployment or
+submission; completion verification and the authorized scoring array remain.
