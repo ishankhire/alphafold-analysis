@@ -34,11 +34,13 @@ the authorized full array using these estimates, without a separate pilot.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
-| One-layer four-probe rescoring | `02:00:00` | Closest full-cohort downstream replay estimate is two hours; this stage replaces inference with 2,208 MDS reconstructions and 4,416 standard TMscore searches. Native search cost on long proteins and shared-filesystem latency remain unmeasured on Delta. |
-| Finalization | `04:30:00` | Rechecks the same 105,984 prediction files as export finalization, plus the score ledger, references, and replacement tables. Use the revised export-finalization whole-run estimate below with 1.5x headroom; successful scoring-finalization timing is still unmeasured. |
+| One-layer four-probe rescoring and PDB export | `02:00:00` | Retained provisionally for the new 2,208 atomic PDB writes per layer. Score-only array `22908533` completed 37 tasks in 9m23s–13m15s; PDB-enabled filesystem latency remains unmeasured. |
+| Finalization | `04:30:00` | Rechecks the same 105,984 prediction files as export finalization plus 105,984 reconstructed PDBs, score/PDB indexes, references, and replacement tables. Successful scoring/PDB-finalization timing is still unmeasured; retain the existing limit until measured. |
 
 Replace with 1.5–2x representative successful allocation times, excluding
 checkpoint-skipped and local smoke runs.
+The retained two-hour PDB-worker limit is deliberately conservative for the
+first durable PDB export; it is not a 1.5–2x estimate from the score-only run.
 
 The one-off dependency-gated deployment/validation job uses `00:10:00` for
 environment startup, archive/checksum checks, loading the worker's source

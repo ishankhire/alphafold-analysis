@@ -341,6 +341,11 @@ def _write_tmscore_trace(path, coordinates):
 
 
 def optimize_tm_score(fixed_coords, moving_coords, length_target):
+    """Return the optimized score, preserving the scalar geometry API."""
+    return optimize_tm_score_alignment(fixed_coords, moving_coords, length_target)[0]
+
+
+def optimize_tm_score_alignment(fixed_coords, moving_coords, length_target):
     """Search a proper rigid superposition with the standard TMscore executable.
 
     The executable searches rounded PDB coordinates. Its transformation is
@@ -360,7 +365,8 @@ def optimize_tm_score(fixed_coords, moving_coords, length_target):
     binary = resolve_tmscore_binary()
     # Independent centering keeps coordinates inside PDB fields and does not
     # constrain the translation searched by the executable.
-    fixed = fixed - fixed.mean(axis=0)
+    fixed_center = fixed.mean(axis=0)
+    fixed = fixed - fixed_center
     moving = moving - moving.mean(axis=0)
     with tempfile.TemporaryDirectory(prefix="protein-tmscore-") as directory:
         directory = Path(directory)
@@ -398,16 +404,24 @@ def optimize_tm_score(fixed_coords, moving_coords, length_target):
             raise TMScoreError(f"TMscore search failed: {detail}") from exc
     transformed = moving @ rotation.T + translation
     kabsch, _ = superimpose_structures(fixed, moving)
-    return max(compute_tm_score(fixed, transformed, length_target),
-               compute_tm_score(fixed, kabsch, length_target))
+    candidates = [(compute_tm_score(fixed, candidate, length_target), candidate)
+                  for candidate in (transformed, kabsch)]
+    score, aligned = max(candidates, key=lambda candidate: candidate[0])
+    return score, aligned + fixed_center
 
 
 def compute_mds_tm_score(fixed_coords, mds_coords, length_target):
     """Optimize both MDS handedness choices while preserving residue identity."""
+    return compute_mds_tm_score_alignment(fixed_coords, mds_coords, length_target)[0]
+
+
+def compute_mds_tm_score_alignment(fixed_coords, mds_coords, length_target):
+    """Return the winning score and coordinates in the reference PDB frame."""
     reflected = np.asarray(mds_coords, dtype=np.float64).copy()
     reflected[:, 2] *= -1
-    return max(optimize_tm_score(fixed_coords, mds_coords, length_target),
-               optimize_tm_score(fixed_coords, reflected, length_target))
+    candidates = (optimize_tm_score_alignment(fixed_coords, mds_coords, length_target),
+                  optimize_tm_score_alignment(fixed_coords, reflected, length_target))
+    return max(candidates, key=lambda candidate: candidate[0])
 
 
 def make_triangle_violation_metrics(fill_value=0.0):
@@ -556,7 +570,9 @@ __all__ = [
     "compute_distance_matrix",
     "compute_tm_score",
     "compute_mds_tm_score",
+    "compute_mds_tm_score_alignment",
     "optimize_tm_score",
+    "optimize_tm_score_alignment",
     "resolve_tmscore_binary",
     "tmscore_provenance",
     "TMScoreError",

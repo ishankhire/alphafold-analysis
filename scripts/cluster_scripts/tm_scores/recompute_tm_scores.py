@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import os
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -21,7 +23,7 @@ for directory in (DIRECTORY, CLUSTER_DIRECTORY, CLUSTER_DIRECTORY / "predicted_d
 
 import predicted_distance_export_common as export  # noqa: E402
 from cluster_regression_helpers import (  # noqa: E402
-    TM_SCORE_METHOD, classical_mds, compute_mds_tm_score, compute_tm_score,
+    TM_SCORE_METHOD, classical_mds, compute_mds_tm_score_alignment, compute_tm_score,
     superimpose_structures, tmscore_provenance,
 )
 from cross_validation_common import (  # noqa: E402
@@ -36,6 +38,9 @@ SCORE_COLUMNS = export.IDENTITY_COLUMNS + (
     "tm_score_method", "status",
 )
 RUNTIME_COLUMNS = ("layer", "started_at", "elapsed_seconds", "peak_rss_mb", "n_scores", "status")
+PDB_COLUMNS = ("protein_id", "analysis_name", "layer", "n_residues", "pdb_path",
+               "pdb_sha256", "array_sha256", "tm_score", "status")
+PDB_SCHEMA = "tm_score_aligned_ca_pdb_v1"
 
 
 def read_rows(path, columns=None):
@@ -74,6 +79,7 @@ def load_context(predictions_root, regression_root):
             raise ValueError(f"Inconsistent reference provenance: {pid}")
     geometry, inputs = {}, {
         "export_manifest_sha256": export.sha256_file(predictions_root / "run_manifest.json"),
+        "pdb_export_schema": PDB_SCHEMA,
         "predictions_root": str(predictions_root), "regression_root": str(regression_root),
         "tm_score_backend": tmscore_provenance(), "source_geometry_sha256": {},
         "code_sha256": {
@@ -108,6 +114,19 @@ def load_context(predictions_root, regression_root):
                            geometry=geometry, inputs=inputs, digest=export.semantic_digest(inputs))
 
 
+@contextmanager
+def preparation_lock(output_root):
+    """Serialize short manifest updates; concurrent layer starts must wait."""
+    directory = Path(output_root) / ".locks"
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / "prepare.lock").open("a") as handle:
+        fcntl.flock(handle, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+
+
 def ensure_output(output_root, context):
     output_root = Path(output_root).resolve()
     predictions_root = context.root
@@ -116,14 +135,15 @@ def ensure_output(output_root, context):
     if (output_root == regression_root or regression_root.is_relative_to(output_root)
             or any(output_root.is_relative_to(root) or root.is_relative_to(output_root) for root in protected)):
         raise ValueError("Output root must be separate from prediction and source family trees")
-    with export.task_lock(output_root, "prepare"):
+    with preparation_lock(output_root):
         path = output_root / "run_manifest.json"
         if path.exists():
             if export.load_json(path).get("identity_digest") != context.digest:
-                raise ValueError("Rescoring inputs/backend/code changed; use a new output root")
+                raise ValueError("Rescoring inputs/backend/code changed; use a new or explicitly cleared output root")
         else:
             export.atomic_write_json(path, {
                 "tm_score_method": TM_SCORE_METHOD, "run_status": "prepared",
+                "pdb_export_schema": PDB_SCHEMA,
                 "identity": context.inputs, "identity_digest": context.digest,
                 "created_at": export.utc_now(), "layers": list(LAYERS),
                 "n_proteins": len(context.proteins), "evaluation_scope": "oof_all_pairs",
@@ -180,7 +200,79 @@ def score_distances(reference, values):
     original_fit, original_rmsd = superimpose_structures(reference, coordinates)
     reflected_fit, reflected_rmsd = superimpose_structures(reference, reflected)
     kabsch = reflected_fit if reflected_rmsd < original_rmsd else original_fit
-    return compute_mds_tm_score(reference, coordinates, n), compute_tm_score(reference, kabsch, n)
+    score, aligned = compute_mds_tm_score_alignment(reference, coordinates, n)
+    return score, compute_tm_score(reference, kabsch, n), aligned
+
+
+def reconstruction_path(layer, pid, family):
+    return f"layers/layer_{layer:02d}/pdb_files/{family}/{pid}_reconstructed_ca.pdb"
+
+
+def write_reconstruction(output_root, context, layer, pid, family, coordinates, score, array_sha256):
+    """Atomically retain a CA trace with the frozen reference residue identity."""
+    residues = context.residues[pid]
+    coordinates = np.asarray(coordinates, dtype=np.float64)
+    if coordinates.shape != (len(residues), 3) or not np.all(np.isfinite(coordinates)):
+        raise ValueError("Reconstructed PDB requires matching finite coordinates")
+    relative = reconstruction_path(layer, pid, family)
+    path = export.checked_path(output_root, relative)
+    lines = ["REMARK CA-only MDS reconstruction; winning TM-score alignment\n",
+             f"REMARK protein_id={pid} analysis_name={family} layer={layer}\n",
+             f"REMARK tm_score_float64={score:.17g}; coordinates rounded to 0.001 Angstrom\n"]
+    previous_chain = None
+    for serial, (residue, point) in enumerate(zip(residues, coordinates), start=1):
+        chain, insertion, name = residue["chain_id"], residue["insertion_code"], residue["residue_name"]
+        number = int(residue["pdb_resseq"])
+        fields = [f"{value:8.3f}" for value in point]
+        if (len(chain) != 1 or len(insertion) > 1 or len(name) != 3
+                or not -999 <= number <= 9999 or serial > 99999
+                or any(len(field) != 8 for field in fields)):
+            raise ValueError(f"Reconstruction exceeds standard PDB fields: {pid}")
+        if previous_chain is not None and previous_chain != chain:
+            lines.append("TER\n")
+        lines.append(f"ATOM  {serial:5d}  CA  {name:3s} {chain}{number:4d}{insertion:1s}   "
+                     f"{''.join(fields)}  1.00  0.00           C\n")
+        previous_chain = chain
+    lines.extend(("TER\n", "END\n"))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    export.atomic_write_text(path, "".join(lines))
+    return dict(protein_id=pid, analysis_name=family, layer=layer, n_residues=len(residues),
+                pdb_path=relative, pdb_sha256=export.sha256_file(path),
+                array_sha256=array_sha256, tm_score=score, status="complete")
+
+
+def validate_pdb_rows(pdb_rows, score_rows, output_root):
+    """Validate index identity and return whether every physical artifact is intact."""
+    indexed = {(row["protein_id"], row["analysis_name"], int(row["layer"])): row for row in pdb_rows}
+    scores = {(row["protein_id"], row["analysis_name"], int(row["layer"])): row for row in score_rows}
+    if len(indexed) != len(pdb_rows) or set(indexed) != set(scores):
+        raise ValueError("PDB index coverage/uniqueness mismatch")
+    intact = True
+    for (pid, family, layer), row in indexed.items():
+        score = scores[pid, family, layer]
+        if (set(row) != set(PDB_COLUMNS) or row["status"] != "complete"
+                or row["pdb_path"] != reconstruction_path(layer, pid, family)
+                or int(row["n_residues"]) != int(score["n_residues"])
+                or row["array_sha256"] != score["array_sha256"]
+                or float(row["tm_score"]) != float(score["tm_score"])):
+            raise ValueError("PDB index identity/score mismatch")
+        path = export.checked_path(output_root, row["pdb_path"])
+        if not path.is_file() or export.sha256_file(path) != row["pdb_sha256"]:
+            intact = False
+    return intact
+
+
+def invalidate_completion(output_root, directory=None):
+    """A repair must not leave old completion claims visible after interruption."""
+    with preparation_lock(output_root):
+        path = output_root / "run_manifest.json"
+        run = export.load_json(path)
+        run["run_status"] = "prepared"
+        for field in ("completed_at", "n_scores", "n_pdbs", "output_sha256", "layer_manifest_sha256"):
+            run.pop(field, None)
+        export.atomic_write_json(path, run)
+        if directory is not None:
+            (directory / "layer_manifest.json").unlink(missing_ok=True)
 
 
 def validate_score_rows(rows, context, layer, protein_ids):
@@ -204,6 +296,7 @@ def validate_score_rows(rows, context, layer, protein_ids):
 
 
 def run_layer(context, output_root, layer):
+    output_root = Path(output_root).resolve()
     if layer not in LAYERS:
         raise ValueError("Unknown layer")
     ensure_output(output_root, context)
@@ -211,7 +304,18 @@ def run_layer(context, output_root, layer):
         started, timestamp = time.perf_counter(), export.utc_now()
         manifest = load_layer(context, layer)
         directory = output_root / "layers" / f"layer_{layer:02d}"
-        rows = []
+        completed = directory / "layer_manifest.json"
+        previous = None
+        if completed.exists():
+            previous = export.load_json(completed)
+            if (previous["identity_digest"] != context.digest or previous["status"] != "complete"
+                    or previous["layer"] != layer
+                    or export.sha256_file(directory / "tm_scores.csv") != previous["tm_scores_sha256"]
+                    or export.sha256_file(directory / "pdb_index.csv") != previous["pdb_index_sha256"]
+                    or previous["n_pdbs"] != len(context.proteins) * len(export.FAMILY_SPECS)):
+                raise ValueError("Completed scoring layer changed")
+        rows, pdb_rows = [], []
+        regenerated = False
         for number, pid in enumerate(sorted(context.proteins), start=1):
             reference = read_reference(context, pid)
             protein = context.proteins[pid]
@@ -226,6 +330,7 @@ def run_layer(context, output_root, layer):
                 arrays.append((spec, index, values))
             checkpoint = directory / "progress" / f"{pid}.json"
             checksums = {spec.analysis_name: index["array_sha256"] for spec, index, _ in arrays}
+            reusable = False
             if checkpoint.exists():
                 progress = export.load_json(checkpoint)
                 if progress["identity_digest"] != context.digest or progress["array_sha256"] != checksums:
@@ -234,10 +339,15 @@ def run_layer(context, output_root, layer):
                 validate_score_rows(protein_rows, context, layer, [pid])
                 if any(row["array_sha256"] != checksums[row["analysis_name"]] for row in protein_rows):
                     raise ValueError("Checkpoint prediction checksum mismatch")
-            else:
-                protein_rows = []
+                protein_pdb_rows = progress["pdb_rows"]
+                reusable = validate_pdb_rows(protein_pdb_rows, protein_rows, output_root)
+            if not reusable:
+                if not regenerated:
+                    invalidate_completion(output_root, directory)
+                    regenerated = True
+                protein_rows, protein_pdb_rows = [], []
                 for spec, index, values in arrays:
-                    score, baseline = score_distances(reference, values)
+                    score, baseline, aligned = score_distances(reference, values)
                     source = context.geometry[spec.analysis_name][(layer, pid)]
                     saved = float(source["tm_score"])
                     protein_rows.append({
@@ -248,46 +358,57 @@ def run_layer(context, output_root, layer):
                         "array_sha256": index["array_sha256"], "tm_score_method": TM_SCORE_METHOD,
                         "status": "complete",
                     })
+                    protein_pdb_rows.append(write_reconstruction(
+                        output_root, context, layer, pid, spec.analysis_name, aligned,
+                        score, index["array_sha256"]))
                 validate_score_rows(protein_rows, context, layer, [pid])
                 export.atomic_write_json(checkpoint, {"identity_digest": context.digest,
-                    "array_sha256": checksums, "rows": protein_rows})
+                    "array_sha256": checksums, "rows": protein_rows, "pdb_rows": protein_pdb_rows})
             rows.extend(protein_rows)
+            pdb_rows.extend(protein_pdb_rows)
             export.log(f"layer={layer} proteins={number}/{len(context.proteins)} elapsed={time.perf_counter()-started:.2f}s")
         validate_score_rows(rows, context, layer, context.proteins)
-        completed = directory / "layer_manifest.json"
-        if completed.exists():
-            previous = export.load_json(completed)
-            if (previous["identity_digest"] != context.digest or previous["status"] != "complete"
-                    or previous["layer"] != layer
-                    or export.sha256_file(directory / "tm_scores.csv") != previous["tm_scores_sha256"]
-                    or read_rows(directory / "tm_scores.csv", SCORE_COLUMNS) != export.read_csv_rows(SCORE_COLUMNS, rows)):
+        if previous is not None and not regenerated:
+            if (read_rows(directory / "tm_scores.csv", SCORE_COLUMNS) != export.read_csv_rows(SCORE_COLUMNS, rows)
+                    or read_rows(directory / "pdb_index.csv", PDB_COLUMNS) != export.read_csv_rows(PDB_COLUMNS, pdb_rows)):
                 raise ValueError("Completed scoring layer changed")
             export.log(f"layer={layer} completed checkpoint verified; retaining original runtime")
             return
         export.atomic_write_csv(directory / "tm_scores.csv", SCORE_COLUMNS, rows)
+        export.atomic_write_csv(directory / "pdb_index.csv", PDB_COLUMNS, pdb_rows)
         runtime = dict(layer=layer, started_at=timestamp, elapsed_seconds=time.perf_counter()-started,
                        peak_rss_mb=export.peak_rss_mb(), n_scores=len(rows), status="complete")
         export.atomic_write_json(directory / "layer_manifest.json", {
             "identity_digest": context.digest, "status": "complete", "layer": layer,
             "tm_scores_sha256": export.sha256_file(directory / "tm_scores.csv"), "runtime": runtime,
+            "pdb_index_sha256": export.sha256_file(directory / "pdb_index.csv"), "n_pdbs": len(pdb_rows),
         })
         export.log(f"layer={layer} complete: {len(rows)} scores")
 
 
 def finalize(context, output_root):
+    output_root = Path(output_root).resolve()
     ensure_output(output_root, context)
     with export.task_lock(output_root, "finalize"):
-        rows, runtimes = [], []
+        # Invalidate a previous finalization before checking possibly damaged artifacts.
+        invalidate_completion(output_root)
+        started = time.perf_counter()
+        rows, runtimes, pdb_rows, layer_hashes = [], [], [], {}
         for layer in LAYERS:
             source = load_layer(context, layer)
             directory = output_root / "layers" / f"layer_{layer:02d}"
             manifest = export.load_json(directory / "layer_manifest.json")
             if (manifest["identity_digest"] != context.digest or manifest["status"] != "complete"
                     or manifest["layer"] != layer
-                    or export.sha256_file(directory / "tm_scores.csv") != manifest["tm_scores_sha256"]):
+                    or export.sha256_file(directory / "tm_scores.csv") != manifest["tm_scores_sha256"]
+                    or export.sha256_file(directory / "pdb_index.csv") != manifest["pdb_index_sha256"]):
                 raise ValueError("Incomplete or changed scoring layer")
             layer_rows = read_rows(directory / "tm_scores.csv", SCORE_COLUMNS)
             validate_score_rows(layer_rows, context, layer, context.proteins)
+            layer_pdb_rows = read_rows(directory / "pdb_index.csv", PDB_COLUMNS)
+            if (manifest["n_pdbs"] != len(layer_rows)
+                    or not validate_pdb_rows(layer_pdb_rows, layer_rows, output_root)):
+                raise ValueError(f"Missing or changed reconstructed PDBs: layer={layer}")
             for row in layer_rows:
                 pid, family = row["protein_id"], row["analysis_name"]
                 index = source["records"][pid]["families"][family]["index"]
@@ -297,10 +418,14 @@ def finalize(context, output_root):
                 export.check_array(context.root, index, SimpleNamespace(
                     protein_id=pid, n_pairs=int(context.proteins[pid]["n_pairs"])), spec, layer)
             rows.extend(layer_rows)
+            pdb_rows.extend(layer_pdb_rows)
             runtimes.append(manifest["runtime"])
+            layer_hashes[str(layer)] = export.sha256_file(directory / "layer_manifest.json")
+            export.log(f"finalize layer={layer} verified {len(layer_pdb_rows)} PDBs elapsed={time.perf_counter()-started:.2f}s")
         for pid in context.proteins:
             read_reference(context, pid)
         export.atomic_write_csv(output_root / "tm_scores.csv", SCORE_COLUMNS, rows)
+        export.atomic_write_csv(output_root / "pdb_index.csv", PDB_COLUMNS, pdb_rows)
         export.atomic_write_csv(output_root / "runtime.csv", RUNTIME_COLUMNS, runtimes)
         output_hashes = {}
         for spec in export.FAMILY_SPECS:
@@ -325,13 +450,15 @@ def finalize(context, output_root):
             for name in ("geometry_metrics.csv", "geometry_summary.csv", "run_manifest.json"):
                 relative = f"{spec.family_dir}/{name}"
                 output_hashes[relative] = export.sha256_file(output_root / relative)
-        for name in ("tm_scores.csv", "runtime.csv"):
+        for name in ("tm_scores.csv", "runtime.csv", "pdb_index.csv"):
             output_hashes[name] = export.sha256_file(output_root / name)
         run = export.load_json(output_root / "run_manifest.json")
         run.update(run_status="complete", completed_at=export.utc_now(), n_scores=len(rows),
-                   output_sha256=output_hashes)
+                   n_pdbs=len(pdb_rows), output_sha256=output_hashes,
+                   layer_manifest_sha256=layer_hashes)
         export.atomic_write_json(output_root / "run_manifest.json", run)
-        export.log(f"finalized {len(rows)} optimized scores: {output_root}")
+        export.log(f"finalized {len(rows)} optimized scores and {len(pdb_rows)} PDBs: "
+                   f"{output_root} elapsed={time.perf_counter()-started:.2f}s")
 
 
 def main():

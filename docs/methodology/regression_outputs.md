@@ -353,6 +353,13 @@ their original TM-style scores after Kabsch alignment until explicitly rescored.
 Installation and saved-distance rescoring are documented in the
 [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md).
 
+The saved-distance rescoring workflow also retains one reconstructed C-alpha
+PDB per protein, probe, and layer, using the winning TM-score reflection and
+superposition in the original reference PDB frame. Residue identities follow
+the frozen export metadata. These supplementary PDBs use standard 0.001 Å
+coordinate precision; reported scores are evaluated before that rounding.
+The runbook defines their layout, checksum index, and completion checks.
+
 The MDS geometry metrics are:
 
 - `rmsd`: aligned coordinate RMSD in angstroms;

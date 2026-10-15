@@ -1,5 +1,15 @@
 # Branch Analysis
 
+## Session: 2026-10-15 — Retain all TM-score reconstruction PDBs
+
+Added winning TM-aligned C-alpha PDBs and checksum indexes to packed-distance
+rescoring, with artifact-aware resume/repair and finalization. Fixed the
+preparation-lock race responsible for 11 failed layers of `22908533`; raised
+worker memory to 2 GiB from observed usage. Documented the clean rerun at the
+existing output root; cluster deployment, cleanup, cancellation, and submission
+await separate authorization. Validation: 74 tests passed (four existing
+expected failures); eight native parity cases retained identical scores.
+
 ## Session: 2026-10-14 — Shorten agent instructions and colocate cluster references
 
 Reduced `AGENTS.md` to 103 lines by moving launcher details into the cluster

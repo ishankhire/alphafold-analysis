@@ -63,10 +63,13 @@ Outputs go to `/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/`
 For local copies use `delta_files/regression_5fold_v1/tm_score_optimized_v1/`.
 The inputs are read-only; model artifacts and pair tensors are never loaded.
 Each layer processes all four probes and 552 proteins, reconstructing only MDS
-and TM-scores. Existing non-TM geometry metrics are copied rather than recomputed.
-Float32 distance storage and PDB rounding can cause small differences from the
-original full-precision reconstruction. The ledger separates alignment gain
-from the difference against the old saved score.
+and TM-scores, and saving every reconstructed C-alpha trace in the winning
+TM-score alignment and the original reference PDB coordinate frame. Existing
+non-TM geometry metrics are copied rather than recomputed. Float32 distance
+storage can cause small differences from the original full-precision
+reconstruction. Saved PDBs use 0.001 Å precision; the ledger retains scores
+evaluated before PDB rounding. The ledger separates alignment gain from the
+difference against the old saved score.
 
 ```bash
 mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs
@@ -76,7 +79,9 @@ sbatch --array=0-47%4 recompute_tm_scores.sbatch
 
 Submit all 48 layers with concurrency four; no separate resource pilot is
 required. Record successful allocation MaxRSS and elapsed time in the shared
-resource guides to refine the provisional 1 GiB / 2 hour request for future runs.
+resource guides to refine the 2 GiB / 2 hour request for future runs. The prior
+score-only run reached 0.975 GiB allocation-step MaxRSS, leaving little headroom
+under its original 1 GiB request; PDB export and indexing add a small working set.
 
 After all layers complete:
 
@@ -85,11 +90,12 @@ sbatch --array=0 --mem=2g --time=04:30:00 --export=ALL,TMSCORE_FINALIZE=1 recomp
 ```
 
 Finalization's 2 GiB / 4.5 hour request is provisional; it holds the complete
-score ledger and source geometry tables while deriving replacement summaries.
+score/PDB indexes and source geometry tables while deriving replacement summaries.
 The walltime uses the revised whole-run export validation estimate because
 this stage rechecks the same 105,984 physical prediction files.
-Outputs are marked complete only after all 105,984 predictions and reference
-checksums have been verified. Measure this stage before subsequent broad runs.
+Outputs are marked complete only after all 105,984 predictions, 105,984 saved
+PDBs, and reference checksums have been verified. Measure this stage before
+subsequent broad runs.
 
 For a local run, override roots explicitly:
 
@@ -114,21 +120,84 @@ row per probe/protein/layer. Principal fields are the existing OOF identity,
 `delta_tm_score_saved`, `delta_tm_score_alignment`, `array_sha256`,
 `tm_score_method`, and `status`. Protein IDs remain strings.
 
+All 105,984 reconstructed C-alpha PDBs are saved under
+`layers/layer_<LL>/pdb_files/<analysis_name>/<protein_id>_reconstructed_ca.pdb`.
+The files preserve residue names, chain IDs, PDB numbers, and insertion codes
+from `metadata/residue_index.csv`. Chain boundaries have `TER` records;
+occupancy is 1 and B factors are 0. They contain the winning reflection and
+superposition, including a Kabsch winner when it scores best. No all-atom
+coordinates or additional original/reflected candidate files are inferred.
+
+`layers/layer_<LL>/pdb_index.csv` and consolidated `pdb_index.csv` contain one
+row per reconstruction: `protein_id`, `analysis_name`, `layer`, `n_residues`,
+`pdb_path` (relative to the output root), `pdb_sha256`, `array_sha256`,
+`tm_score`, and `status`. The consolidated index has 105,984 rows.
+
 Per-protein JSON checkpoints under `layers/layer_<LL>/progress/` retain four
-completed scores and prediction hashes. Resume validates predictions and PDBs
-and skips native scoring for those proteins. Changed inputs, code, or executable
-identity require a new output root. The layer manifest checksums its CSV.
+completed scores, prediction hashes, and PDB index records. Checkpoints are
+committed only after all four PDB writes succeed. Resume validates predictions,
+references, and saved PDB checksums before skipping native scoring. Missing or
+corrupted reconstructed PDBs regenerate the affected protein's four scores/PDBs;
+completion is invalidated before any repair writes. Changed inputs, code, or
+executable identity require a new or explicitly cleared output root. The layer
+manifest checksums both CSVs and records the PDB count. Preparation waits for
+concurrent starts; duplicate workers for the same layer remain rejected.
 
 Finalization writes each `<probe>/geometry_metrics.csv` and
 `<probe>/geometry_summary.csv` using the existing column schemas, plus a small
 scoring provenance manifest per probe. Root `run_manifest.json` records input
-hashes, executable identity, scoring policy, completion, and output hashes;
+hashes, executable identity, scoring/PDB policy, completion, `n_pdbs`, output
+hashes, and checksums of all 48 layer manifests;
 `runtime.csv` records each layer's elapsed time and process peak memory.
 
 These are replacement geometry tables, not complete regression result families.
 They are ready for the later publication refresh; source model manifests and
 canonical inputs are preserved. This change does not regenerate figures or edit
 the paper.
+
+## Clean PDB-enabled rerun of the October 14 array
+
+Read-only inspection on October 15 found 37 completed layers in `22908533`.
+Layers 16, 17, 18, 23, 33, 38, 39, 40, 43, 45, and 47 all failed with
+`Another prepare task is running`; finalizer `22908534` is pending with
+`DependencyNeverSatisfied`. The waiting preparation lock fixes this race.
+The user chose to discard these partial scoring outputs and rerun at the same
+path. No prediction export or model fitting is needed.
+
+**These commands change Delta state and require separate user authorization.**
+Before executing, confirm no scoring workers are active and the export root
+manifest is complete. From the local repository, deploy only these changed
+files; retain the existing Linux `TMscore` binary and exporter dependencies:
+
+```bash
+scp scripts/cluster_scripts/tm_scores/recompute_tm_scores.py \
+  scripts/cluster_scripts/tm_scores/recompute_tm_scores.sbatch \
+  scripts/cluster_scripts/cluster_regression_helpers.py \
+  delta:openfold_interpretability_canonical/
+scp scripts/cluster_scripts/tm_scores/README.md \
+  delta:openfold_interpretability_canonical/tm_scores_README.md
+```
+
+On Delta, cancel the blocked finalizer if it is still queued, remove only the
+disposable scoring tree, recreate its logs, and submit the full array and a
+success-dependent finalizer:
+
+```bash
+scancel 22908534
+rm -rf -- /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1
+mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs
+cd "$HOME/openfold_interpretability_canonical"
+unset TMSCORE_FINALIZE
+tm_array_id=$(sbatch --parsable --array=0-47%4 recompute_tm_scores.sbatch)
+tm_array_id=${tm_array_id%%;*}
+sbatch --array=0 --mem=2g --time=04:30:00 \
+  --export=ALL,TMSCORE_FINALIZE=1 --dependency="afterok:$tm_array_id" \
+  recompute_tm_scores.sbatch
+```
+
+Confirm the root manifest is complete with `n_scores == n_pdbs == 105984` and
+48 layer-manifest hashes. The finalizer checks actual PDB checksums, not just
+index counts. Do not reuse the old finalizer's failed dependency.
 
 ```bash
 ./.venv/bin/python -m pytest scripts/cluster_scripts/tm_scores/tests -q

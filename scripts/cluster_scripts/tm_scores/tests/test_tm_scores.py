@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Event
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -45,6 +48,40 @@ def test_native_search_improves_outliers_and_keeps_correspondence(backend):
     permutation = fixed.copy()
     permutation[[0, 1, 2, 3]] = permutation[[3, 2, 1, 0]]
     assert geometry.optimize_tm_score(fixed, permutation, 30) < 0.999
+
+
+def test_winning_coordinates_preserve_reference_frame_and_reflection(backend):
+    rng = np.random.default_rng(18)
+    reference = rng.normal(size=(30, 3)) * 8 + [110, -210, 70]
+    moving = reference.copy()
+    moving[:, 2] *= -1
+    moving += [-300, 40, 90]
+    score, aligned = geometry.compute_mds_tm_score_alignment(reference, moving, 30)
+    assert score == pytest.approx(1, abs=1e-12)
+    np.testing.assert_allclose(aligned, reference, atol=1e-8)
+    assert geometry.compute_tm_score(reference, aligned, 30) == pytest.approx(score, abs=1e-12)
+
+
+def test_winning_coordinates_use_native_search_for_outliers(backend):
+    reference = np.random.default_rng(9).normal(size=(30, 3)) + [110, -210, 70]
+    moving = reference.copy()
+    moving[-5:] += 15
+    kabsch, _ = geometry.superimpose_structures(reference, moving)
+    score, aligned = geometry.optimize_tm_score_alignment(reference, moving, 30)
+    assert score > geometry.compute_tm_score(reference, kabsch, 30) + 0.5
+    assert geometry.compute_tm_score(reference, aligned, 30) == pytest.approx(score, abs=1e-12)
+
+
+def test_winning_coordinates_keep_kabsch_when_native_candidate_is_worse(monkeypatch):
+    monkeypatch.setattr(geometry, "resolve_tmscore_binary", lambda: Path("/fake/TMscore"))
+    def poor_native_search(command, **kwargs):
+        Path(command[4]).write_text("0 100 1 0 0\n1 100 0 1 0\n2 100 0 0 1\n")
+        return SimpleNamespace(stdout="Number of residues in common = 30\nTM-score = 0.1\n")
+    monkeypatch.setattr(geometry.subprocess, "run", poor_native_search)
+    reference = np.random.default_rng(3).normal(size=(30, 3)) + [110, -210, 70]
+    score, aligned = geometry.optimize_tm_score_alignment(reference, reference + 100, 30)
+    assert score == pytest.approx(1, abs=1e-12)
+    np.testing.assert_allclose(aligned, reference, atol=1e-10)
 
 
 def test_backend_matches_native_report_with_coordinate_rounding(backend, tmp_path):
@@ -166,6 +203,24 @@ def test_packed_rescoring_and_finalization_preserve_inputs_and_csv_schema(packed
     assert inputs == {path: worker.export.sha256_file(path) for path in inputs}
     rows = worker.read_rows(output / "tm_scores.csv", worker.SCORE_COLUMNS)
     assert len(rows) == 16
+    pdb_rows = worker.read_rows(output / "pdb_index.csv", worker.PDB_COLUMNS)
+    assert len(pdb_rows) == len(rows)
+    assert len(list(output.glob("layers/*/pdb_files/*/*.pdb"))) == len(rows)
+    assert worker.validate_pdb_rows(pdb_rows, rows, output)
+    for row in pdb_rows:
+        pid = row["protein_id"]
+        path = output / row["pdb_path"]
+        structure = geometry.PDBParser(QUIET=True).get_structure(pid, str(path))[0]
+        residues = [residue for chain in structure for residue in chain]
+        assert [(residue.parent.id, residue.id[1], residue.id[2].strip(), residue.resname)
+                for residue in residues] == [
+                    (r["chain_id"], int(r["pdb_resseq"]), r["insertion_code"], r["residue_name"])
+                    for r in context.residues[pid]]
+        assert all(len(residue) == 1 and "CA" in residue for residue in residues)
+        coordinates = np.asarray([r["CA"].coord for r in residues], dtype=np.float64)
+        assert np.all(np.isfinite(coordinates))
+        assert geometry.compute_tm_score(worker.read_reference(context, pid), coordinates, len(residues)) == pytest.approx(
+            float(row["tm_score"]), abs=0.002)
     assert {r["protein_id"] for r in rows} == {"000000022", "toy_B"}
     for spec in worker.export.FAMILY_SPECS:
         for row in worker.read_rows(output / spec.family_dir / "geometry_metrics.csv", worker.GEOMETRY_METRICS_COLUMNS):
@@ -173,7 +228,11 @@ def test_packed_rescoring_and_finalization_preserve_inputs_and_csv_schema(packed
             assert {k: v for k, v in row.items() if k != "tm_score"} == {k: v for k, v in original.items() if k != "tm_score"}
         summary = worker.read_rows(output / spec.family_dir / "geometry_summary.csv", worker.GEOMETRY_SUMMARY_COLUMNS)
         assert len([r for r in summary if r["geometry_metric"] == "tm_score"]) == 2
-    assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "complete"
+    manifest = worker.export.load_json(output / "run_manifest.json")
+    assert manifest["run_status"] == "complete"
+    assert manifest["n_pdbs"] == len(rows)
+    assert manifest["output_sha256"]["pdb_index.csv"] == worker.export.sha256_file(output / "pdb_index.csv")
+    assert set(manifest["layer_manifest_sha256"]) == {"0", "1"}
 
 
 def test_checkpoint_resume_skips_scoring_and_finalizer_rejects_missing_layers(packed, monkeypatch):
@@ -186,6 +245,90 @@ def test_checkpoint_resume_skips_scoring_and_finalizer_rejects_missing_layers(pa
     with pytest.raises(FileNotFoundError):
         worker.finalize(context, output)
     assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "prepared"
+
+
+@pytest.mark.parametrize("damage", ["missing", "corrupted"])
+def test_damaged_pdb_rejects_finalization_and_regenerates_only_affected_protein(packed, monkeypatch, damage):
+    context, output = packed
+    for layer in worker.LAYERS:
+        worker.run_layer(context, output, layer)
+    worker.finalize(context, output)
+    rows = worker.read_rows(output / "pdb_index.csv", worker.PDB_COLUMNS)
+    target = output / rows[0]["pdb_path"]
+    original = target.read_bytes()
+    if damage == "missing":
+        target.unlink()
+    else:
+        target.write_bytes(b"corrupted PDB\n")
+    with pytest.raises(ValueError, match="reconstructed PDBs"):
+        worker.finalize(context, output)
+    assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "prepared"
+    actual, calls = worker.score_distances, []
+    def counted(*args):
+        calls.append(1)
+        return actual(*args)
+    monkeypatch.setattr(worker, "score_distances", counted)
+    worker.run_layer(context, output, 0)
+    assert len(calls) == 4
+    assert target.read_bytes() == original
+    worker.finalize(context, output)
+    assert worker.export.load_json(output / "run_manifest.json")["n_pdbs"] == 16
+
+
+def test_interrupted_pdb_repair_invalidates_completion_before_writing(packed, monkeypatch):
+    context, output = packed
+    for layer in worker.LAYERS:
+        worker.run_layer(context, output, layer)
+    worker.finalize(context, output)
+    target = next(output.glob("layers/layer_00/pdb_files/*/*.pdb"))
+    target.unlink()
+    def interrupt(*args):
+        assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "prepared"
+        assert not (output / "layers/layer_00/layer_manifest.json").exists()
+        raise RuntimeError("interrupted repair")
+    monkeypatch.setattr(worker, "write_reconstruction", interrupt)
+    with pytest.raises(RuntimeError, match="interrupted repair"):
+        worker.run_layer(context, output, 0)
+
+
+def test_pdb_write_failure_does_not_checkpoint_partial_protein(packed, monkeypatch):
+    context, output = packed
+    actual, written = worker.write_reconstruction, []
+    def interrupt(*args):
+        if len(written) == 2:
+            raise RuntimeError("interrupted PDB export")
+        written.append(actual(*args))
+        return written[-1]
+    monkeypatch.setattr(worker, "write_reconstruction", interrupt)
+    with pytest.raises(RuntimeError, match="interrupted PDB export"):
+        worker.run_layer(context, output, 0)
+    assert len(list(output.glob("layers/layer_00/pdb_files/*/*.pdb"))) == 2
+    assert not list(output.glob("layers/layer_00/progress/*.json"))
+    monkeypatch.setattr(worker, "write_reconstruction", actual)
+    worker.run_layer(context, output, 0)
+    assert len(list(output.glob("layers/layer_00/pdb_files/*/*.pdb"))) == 8
+
+
+def test_preparation_contention_waits_and_duplicate_layer_guard_remains_exclusive(tmp_path):
+    output = tmp_path / "scores"
+    context = SimpleNamespace(root=tmp_path / "predictions", digest="frozen", proteins={"toy": {}},
+                              inputs={"regression_root": str(tmp_path / "regressions")})
+    ready = [Event(), Event()]
+    def prepare(index):
+        ready[index].set()
+        worker.ensure_output(output, context)
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        with worker.preparation_lock(output):
+            futures = [executor.submit(prepare, index) for index in range(2)]
+            assert all(event.wait(timeout=5) for event in ready)
+            assert all(not future.done() for future in futures)
+        for future in futures:
+            future.result(timeout=5)
+    assert worker.export.load_json(output / "run_manifest.json")["identity_digest"] == "frozen"
+    with worker.export.task_lock(output, "layer_00"):
+        with pytest.raises(RuntimeError, match="Another layer_00 task"):
+            with worker.export.task_lock(output, "layer_00"):
+                pytest.fail("Duplicate layer guard was bypassed")
 
 
 def test_rescoring_rejects_changed_predictions_references_and_input_output_overlap(packed):

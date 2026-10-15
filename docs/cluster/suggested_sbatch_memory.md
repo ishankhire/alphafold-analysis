@@ -26,18 +26,19 @@ headroom and recheck MaxRSS after the first canonical run.
 The [TM-score runbook](../../scripts/cluster_scripts/tm_scores/README.md) uses
 completed packed arrays and does not load pair tensors or model artifacts.
 Submit the authorized full array using these estimates; record successful
-allocation measurements for subsequent runs. Local loading of all four source
-geometry tables peaked at 408 MiB;
-residue metadata, one layer manifest, and one 794-residue float64 MDS working
-set give an estimated worker peak of 0.5–0.65 GiB. Finalization also retains the
-105,984-row score ledger and replacement/summary rows.
+allocation measurements for subsequent runs. In score-only array `22908533`,
+37 successful tasks reached a maximum Python-step MaxRSS of 1,022,276 KiB
+(0.975 GiB, layer 11); the original 1 GiB allocation had little headroom.
+The PDB-enabled worker adds residue formatting and a per-layer PDB index.
+Finalization also retains the 105,984-row score/PDB indexes and replacement/
+summary rows. PDB-enabled resource measurements remain pending.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
-| One-layer four-probe rescoring | `1g` | About 1.5–2x the estimated 0.5–0.65 GiB peak; one protein at a time and one BLAS thread. |
-| Finalization | `2g` | Estimated 1–1.2 GiB for source geometry, the full score ledger, residue metadata, and derived output rows; no dense cohort arrays. |
+| One-layer four-probe rescoring and PDB export | `2g` | About 2x the observed 0.975 GiB score-only peak, with additional PDB/index working memory explaining the slight excess over 2x; one protein at a time and one BLAS thread. |
+| Finalization | `2g` | Provisional estimate for source geometry, full score/PDB indexes, residue metadata, and derived output rows; no dense cohort arrays. |
 
-Record successful allocation MaxRSS for both stages and replace the estimates.
+Record successful PDB-enabled step MaxRSS for both stages and replace the estimates.
 
 The one-off dependency-gated TM-score deployment/validation job uses `1g`,
 matching the scoring worker's metadata-loading estimate. It validates the
