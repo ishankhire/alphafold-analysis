@@ -1,0 +1,26 @@
+{
+  "source_family": "delta_files/regression_5fold_v1/shared_ols_base256",
+  "n_layers": 48,
+  "n_outer_folds": 5,
+  "n_features": 256,
+  "intercept_included": false,
+  "primary_coefficient_space": "standardized",
+  "aggregation": "Arithmetic mean of five within-fold cosine similarities for each layer pair.",
+  "source_replay_index_sha256": "f946a4e173fa4f194f4c5f48b137f838c43f63108affc860a44d45fcdd33a296",
+  "versions": {
+    "numpy": "2.4.1",
+    "matplotlib": "3.10.8"
+  },
+  "statistics": {
+    "standardized": {
+      "mean_adjacent_layer_cosine": 0.9278239615420945,
+      "layer_0_vs_47_cosine": 0.17357843373731177,
+      "minimum_off_diagonal_cosine": 0.07671769513134727
+    },
+    "raw_scale": {
+      "mean_adjacent_layer_cosine": 0.9006104956623961,
+      "layer_0_vs_47_cosine": -0.026538352343363346,
+      "minimum_off_diagonal_cosine": -0.04446682573129807
+    }
+  }
+}

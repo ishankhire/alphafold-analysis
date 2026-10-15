@@ -25,6 +25,12 @@ delta_files/**/*predicted*
 
 # Generated coefficient artifacts
 delta_files/**/*coefficient*
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/*.png
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/*.pdf
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/*.csv
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/*.json
+!delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis/*.md
 historical_outputs/**/*coefficient*
 not_relevant_miscellaneous/**/*coefficient*
 
