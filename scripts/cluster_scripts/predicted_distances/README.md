@@ -105,8 +105,12 @@ sbatch finalize_predicted_distance_export.sbatch
 ```
 
 Preparation requests 3 GiB / 15 minutes, allowing 1.68x the approximately
-1.79 GiB peak observed before the original quota failure. Finalization initially
-requests 2 GiB / 15 minutes; it streams one layer's metadata at a time.
+1.79 GiB peak observed before the original quota failure. Finalization requests
+3 GiB / 4.5 hours; it streams one layer's metadata at a time. The original
+15-minute job timed out after four validated layers; the shared resource guides
+record the revised whole-run estimate and partial-run memory lower bound.
+Keep the deployed exporter README frozen through finalization because it is
+included in the existing export's preparation identity.
 The CPU partition, filesystem dependencies,
 and module setup follow the live
 [Delta running-jobs guide](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/running_jobs.html).

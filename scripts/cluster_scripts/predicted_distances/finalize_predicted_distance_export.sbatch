@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=2g
-#SBATCH --time=00:15:00
+#SBATCH --mem=3g
+#SBATCH --time=04:30:00
 #SBATCH --constraint="scratch&work"
 #SBATCH -o /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/finalize-%j.out
 #SBATCH -e /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs/finalize-%j.err

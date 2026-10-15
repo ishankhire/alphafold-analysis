@@ -27,17 +27,22 @@ set give an estimated worker peak of 0.5–0.65 GiB. Finalization also retains t
 
 Record successful allocation MaxRSS for both stages and replace the estimates.
 
+The one-off dependency-gated TM-score deployment/validation job uses `1g`,
+matching the scoring worker's metadata-loading estimate. It validates the
+completed export, deployment checksums, source geometry coverage, and native
+backend before the scoring array starts; it does not reconstruct a layer.
+
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-uses full-array submission. Allocation measurements for the export
-have not been copied into this guide; the retained requests remain estimates.
+uses full-array submission. Successful full-stage allocation measurements
+remain unrecorded here; finalization's partial-run lower bound is noted below.
 
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
 | Export preparation | `3g` | Approximately 1.68x a 1.79 GiB partial-run observation; successful allocation MaxRSS is not recorded here. |
 | One-layer four-family prediction export | `12g` | Closest completed replay peaked at 6.15 GiB (1.95x headroom). Keeps one protein feature working set and compact model state; maximum 794 residues implies about 308 MiB float32 tensor and 615 MiB float64 base256 features before temporaries. |
-| Export finalization | `2g` | Streams one layer's 2,208 array records/checksums and four pooled sufficient-statistic reductions at a time; no cohort feature matrices or concatenated predictions. |
+| Export finalization | `3g` | Job `22907683` timed out after four validated layers with a Python-step MaxRSS of 2,078,640 KiB (1.98 GiB). This is a partial-run lower bound, not a successful stage measurement; `3g` provides 1.51x that observed peak while retaining the streaming pipeline. |
 
 Record allocation MaxRSS after the first successful task of each stage and
 adjust requests before repeat runs.

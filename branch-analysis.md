@@ -2071,7 +2071,12 @@ publication refresh remain pending on Delta.
 ## Session: 2026-10-14 — Verify exports and prepare Delta TM-score scoring
 
 Verified all 48 export tasks and complete 552-protein layer manifests, then
-submitted missing export finalization as job `22907683`. Built the pinned
-TMscore source for Linux on Delta; all 10 local scoring tests passed. SSH
-authentication was lost while finalization ran, before scoring deployment or
-submission; completion verification and the authorized scoring array remain.
+submitted missing export finalization as job `22907683`. Its 15-minute limit
+expired after four validated layers; revised the finalizer to 3 GiB / 4.5 hours
+and documented the provisional whole-run estimate. Built pinned TMscore source
+for Linux; all 10 local scoring tests passed. Queued export finalization
+`22908531`, gated helper deployment/validation `22908532`, the 48-layer scoring
+array `22908533` (concurrency four), and score finalization `22908534` with
+success dependencies. Exporter helpers and deployed README remain frozen until
+its finalizer succeeds; score-finalization walltime now reflects the same
+105,984-file validation workload.

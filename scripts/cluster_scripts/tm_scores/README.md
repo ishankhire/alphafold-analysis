@@ -81,11 +81,13 @@ resource guides to refine the provisional 1 GiB / 2 hour request for future runs
 After all layers complete:
 
 ```bash
-sbatch --array=0 --mem=2g --time=00:30:00 --export=ALL,TMSCORE_FINALIZE=1 recompute_tm_scores.sbatch
+sbatch --array=0 --mem=2g --time=04:30:00 --export=ALL,TMSCORE_FINALIZE=1 recompute_tm_scores.sbatch
 ```
 
-Finalization's 2 GiB / 30 minute request is provisional; it holds the complete
+Finalization's 2 GiB / 4.5 hour request is provisional; it holds the complete
 score ledger and source geometry tables while deriving replacement summaries.
+The walltime uses the revised whole-run export validation estimate because
+this stage rechecks the same 105,984 physical prediction files.
 Outputs are marked complete only after all 105,984 predictions and reference
 checksums have been verified. Measure this stage before subsequent broad runs.
 

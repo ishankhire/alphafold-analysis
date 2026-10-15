@@ -35,22 +35,27 @@ the authorized full array using these estimates, without a separate pilot.
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | One-layer four-probe rescoring | `02:00:00` | Closest full-cohort downstream replay estimate is two hours; this stage replaces inference with 2,208 MDS reconstructions and 4,416 standard TMscore searches. Native search cost on long proteins and shared-filesystem latency remain unmeasured on Delta. |
-| Finalization | `00:30:00` | Twice the packed-export finalization estimate, adding 105,984 score rows and four replacement geometry/summary tables; unmeasured. |
+| Finalization | `04:30:00` | Rechecks the same 105,984 prediction files as export finalization, plus the score ledger, references, and replacement tables. Use the revised export-finalization whole-run estimate below with 1.5x headroom; successful scoring-finalization timing is still unmeasured. |
 
 Replace with 1.5–2x representative successful allocation times, excluding
 checkpoint-skipped and local smoke runs.
 
+The one-off dependency-gated deployment/validation job uses `00:10:00` for
+environment startup, archive/checksum checks, loading the worker's source
+metadata, and a small native-backend check. This is an unmeasured estimate at
+the usual minimum scheduling limit, not a scoring resource pilot.
+
 ### Packed predicted-distance export estimates
 
 The [export runbook](../../scripts/cluster_scripts/predicted_distances/README.md)
-uses full-array submission. Allocation timings for the export have
-not been copied into this guide; the retained requests remain estimates.
+uses full-array submission. Successful full-stage allocation timings remain
+unrecorded here; finalization's revised whole-run estimate is noted below.
 
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | Export preparation | `00:15:00` | Streaming hashes of approximately 1.35 GiB of unique models, compact producer tables, and 552 PDBs; no fitting or geometry. |
 | One-layer four-family prediction export | `02:00:00` | Matches the closest 552-protein subgroup-replay estimate; removes geometry, adds pair-input hashes, 2,208 per-protein NPY writes, and durable per-protein progress updates. |
-| Export finalization | `00:15:00` | Reads/checks 105,984 files (12.96 GB payload), checks model provenance, and streams layer metadata; no fitting, features, or geometry. File metadata latency must be measured. |
+| Export finalization | `04:30:00` | The original 15-minute estimate was disproved by timeout `22907683`; only four layers were verified. Their validation timestamps imply roughly 2.5–3.6 minutes per layer, giving an estimated 2–3 hours for 48 layers plus producer checks. The new provisional request adds about 1.5x headroom to that whole-run estimate; the timed-out allocation is only a lower bound, not a successful runtime reference. |
 
 Replace these estimates with 1.5–2x representative successful elapsed times
 before repeat runs; exclude failed, smoke, skipped, and no-op tasks.
