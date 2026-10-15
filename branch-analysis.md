@@ -2106,3 +2106,10 @@ array `22908533` (concurrency four), and score finalization `22908534` with
 success dependencies. Exporter helpers and deployed README remain frozen until
 its finalizer succeeds; score-finalization walltime now reflects the same
 105,984-file validation workload.
+
+## Session: 2026-10-15 — Plot XGBoost split dimensions
+
+Added a local plotter for saved fivefold XGBoost split counts, with all-layer
+and final-layer histograms, a layer heatmap, and feature summaries under
+`delta_files/regression_5fold_v1/analysis/xgboost_split_dimensions/`. Validated
+complete 48 × 256 coverage, directional feature names, and integer split totals.

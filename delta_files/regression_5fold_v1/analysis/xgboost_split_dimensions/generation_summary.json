@@ -1,0 +1,76 @@
+{
+  "source": "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/model_artifacts/feature_importance.csv",
+  "source_sha256": "51334cd884c2d68c80928c81be61c7890c7dfb1c346d85bc060661a5e4089e35",
+  "n_layers": 48,
+  "n_folds": 5,
+  "n_features": 256,
+  "count_definition": "Number of tree split nodes using a feature; XGBoost weight importance.",
+  "all_layers_aggregation": "Arithmetic mean split count over all 240 fitted models.",
+  "heatmap_aggregation": "Fold-mean counts divided by total fold-mean counts within each layer.",
+  "total_splits_all_models": 2500178,
+  "top_features_all_layers": [
+    {
+      "feature_index": 58,
+      "feature_name": "pair_ij_ch_058",
+      "mean_splits_per_model": 307.95
+    },
+    {
+      "feature_index": 186,
+      "feature_name": "pair_ji_ch_058",
+      "mean_splits_per_model": 266.21666666666664
+    },
+    {
+      "feature_index": 151,
+      "feature_name": "pair_ji_ch_023",
+      "mean_splits_per_model": 208.59583333333327
+    },
+    {
+      "feature_index": 80,
+      "feature_name": "pair_ij_ch_080",
+      "mean_splits_per_model": 187.74583333333337
+    },
+    {
+      "feature_index": 189,
+      "feature_name": "pair_ji_ch_061",
+      "mean_splits_per_model": 178.225
+    },
+    {
+      "feature_index": 140,
+      "feature_name": "pair_ji_ch_012",
+      "mean_splits_per_model": 178.0208333333333
+    },
+    {
+      "feature_index": 208,
+      "feature_name": "pair_ji_ch_080",
+      "mean_splits_per_model": 173.19166666666663
+    },
+    {
+      "feature_index": 61,
+      "feature_name": "pair_ij_ch_061",
+      "mean_splits_per_model": 159.80833333333325
+    },
+    {
+      "feature_index": 232,
+      "feature_name": "pair_ji_ch_104",
+      "mean_splits_per_model": 157.10833333333338
+    },
+    {
+      "feature_index": 23,
+      "feature_name": "pair_ij_ch_023",
+      "mean_splits_per_model": 156.83749999999995
+    }
+  ],
+  "layer47_top_features": [
+    53,
+    181,
+    71,
+    179,
+    58,
+    51,
+    13,
+    141,
+    199,
+    64
+  ],
+  "top10_split_fraction_all_layers": 0.18946171032622477
+}
