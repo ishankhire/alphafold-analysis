@@ -35,7 +35,7 @@ the authorized full array using these estimates, without a separate pilot.
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | One-layer four-probe rescoring and PDB export | `02:00:00` | Retained provisionally for the new 2,208 atomic PDB writes per layer. Score-only array `22908533` completed 37 tasks in 9m23s–13m15s; PDB-enabled filesystem latency remains unmeasured. |
-| Consolidation only | `00:30:00` | Checks compact manifests/tables and writes consolidated scores, PDB indexes, and geometry summaries. The full audit consumed only about 4m20s of CPU in its first three hours; allow roughly 10–15 minutes for complete table processing and small-file I/O, with 2x headroom. No individual arrays/PDBs are reopened. |
+| Consolidation only | `00:10:00` | Successful job `22930940` completed in 1m43s (Python step 1m36s). Retain the guide's minimum ten-minute allowance for startup/filesystem variability; the initial 30-minute request was oversized. No individual arrays/PDBs are reopened. |
 | Optional full-file audit | `09:00:00` | Job `22923530` verified 24/48 layers without errors before user-requested cancellation at 3h03m. Extrapolate about six hours plus 1.5x headroom; serial shared-filesystem reads dominate. The former 4.5-hour request was insufficient. |
 
 Replace with 1.5–2x representative successful allocation times, excluding

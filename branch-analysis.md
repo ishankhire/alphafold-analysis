@@ -8,6 +8,10 @@ checks layer-table coverage, checksums, and provenance while preserving the
 original scoring-code identity and all saved PDBs. Completion records the
 skipped physical-file audit explicitly. All 24 tests pass, including identical
 CSV output versus full finalization and rejection of inconsistent metadata.
+Deployed and completed consolidation `22930940` in 1m43s; verified all 16 output
+hashes, 105,984 rows in each root index, and four 26,496-row geometry tables.
+Recorded the 1.56 GiB step MaxRSS and reduced future consolidation walltime
+to the guide's ten-minute minimum; original scoring code/PDBs were preserved.
 
 ## Session: 2026-10-15 — Deploy and submit the PDB-enabled TM-score rerun
 

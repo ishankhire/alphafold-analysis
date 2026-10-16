@@ -90,7 +90,9 @@ After all layers complete, consolidate their compact tables:
 sbatch consolidate_tm_scores.sbatch
 ```
 
-Consolidation requests 3 GiB / 30 minutes provisionally. It verifies all 48
+Consolidation requests 3 GiB / 10 minutes. Production job `22930940` completed
+in 1m43s with Python-step MaxRSS 1,634,616 KiB (1.56 GiB); the request retains
+1.92x memory headroom and the guide's minimum scheduling allowance. It verifies all 48
 completed layer manifests, score/PDB index CSV checksums, identities, coverage,
 and prediction hashes recorded in the export manifests. It does not reopen
 individual prediction arrays, reconstructed PDBs, or reference PDBs. Original

@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=3g
-#SBATCH --time=00:30:00
+#SBATCH --time=00:10:00
 #SBATCH --constraint="scratch&work"
 #SBATCH -o /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs/consolidate-%j.out
 #SBATCH -e /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs/consolidate-%j.err
