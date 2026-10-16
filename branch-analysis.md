@@ -1,5 +1,14 @@
 # Branch Analysis
 
+## Session: 2026-10-15 — Compare optimized and saved TM-scores
+
+Added a local comparison of the checksum-verified 105,984-row score ledger,
+with model/layer summaries and PNG/PDF trajectories under
+`delta_files/regression_5fold_v1/analysis/tm_score_optimization_comparison_v1/`.
+Mean all-layer gains are +0.012–0.023; final-layer gains are +0.0026–0.0079.
+The predictions and overall model ranking are unchanged; no confidence
+intervals or hypothesis tests were produced.
+
 ## Session: 2026-10-15 — Replace the bulk TM-score audit with consolidation
 
 At the user's request, cancelled audit `22923530` after 24 verified layers and
