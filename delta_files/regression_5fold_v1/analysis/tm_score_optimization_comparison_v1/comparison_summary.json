@@ -8,6 +8,82 @@
     "reconstructed_pdbs": "not_revalidated",
     "reference_pdbs": "not_revalidated"
   },
+  "geometry_refresh": {
+    "applied": true,
+    "validated_at": "2026-10-16T02:45:05.746259+00:00",
+    "all_non_tm_checks_passed": true,
+    "non_tm_column_checks": 240,
+    "families": {
+      "shared_ols_base256": {
+        "source_manifest": "tm_score_optimized_v1/run_manifest.json",
+        "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+        "source_geometry_sha256": "c7ea36603d03666ece6aa6d16d09ffd45ed502cdc0bf99e1b6070c0c7f7d609b",
+        "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+        "validation": {
+          "layer_tables": "checksums_and_coverage_verified",
+          "mode": "consolidation_only",
+          "prediction_arrays": "not_revalidated",
+          "reconstructed_pdbs": "not_revalidated",
+          "reference_pdbs": "not_revalidated"
+        },
+        "output_sha256": {
+          "geometry_metrics.csv": "7774fc275780317eab55907dddb899fa6d469611aa3f3b7b72dcd73da6caf81d",
+          "geometry_summary.csv": "188a0b824c5b32530bd637b5377f6e2a44bd52b2f44419a578e74bbd49bf133a"
+        }
+      },
+      "per_protein_ols_base256": {
+        "source_manifest": "tm_score_optimized_v1/run_manifest.json",
+        "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+        "source_geometry_sha256": "0d215f875817cd14eb62a29b64c7bbffdea7bdb0aa4a604db7bf69858460ed47",
+        "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+        "validation": {
+          "layer_tables": "checksums_and_coverage_verified",
+          "mode": "consolidation_only",
+          "prediction_arrays": "not_revalidated",
+          "reconstructed_pdbs": "not_revalidated",
+          "reference_pdbs": "not_revalidated"
+        },
+        "output_sha256": {
+          "geometry_metrics.csv": "4660ef156bb8967fff471c2d63b86a613ca31c54ade4f172e0757e66527b3722",
+          "geometry_summary.csv": "0bfc185e0028604104c3e361fd86c5440e9defae36b64db4f7e07e276ec19cf0"
+        }
+      },
+      "sequence_gated_ols_base256": {
+        "source_manifest": "tm_score_optimized_v1/run_manifest.json",
+        "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+        "source_geometry_sha256": "2ece2e18726d6721a5a8980a0f2dda6d3d64cde89a360838e9ecba01fc8f2b68",
+        "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+        "validation": {
+          "layer_tables": "checksums_and_coverage_verified",
+          "mode": "consolidation_only",
+          "prediction_arrays": "not_revalidated",
+          "reconstructed_pdbs": "not_revalidated",
+          "reference_pdbs": "not_revalidated"
+        },
+        "output_sha256": {
+          "geometry_metrics.csv": "7a9f096c4d49ae428af7be0fcd3b6b3cdfd7f048196460683979a51e9512f29c",
+          "geometry_summary.csv": "3a2ba76fa07acc313d0b95a0cc425928081f364422ea82833bfe365a71ac209f"
+        }
+      },
+      "shared_xgboost_base256_fixed_s4": {
+        "source_manifest": "tm_score_optimized_v1/run_manifest.json",
+        "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+        "source_geometry_sha256": "f9da2dddeeb255ea484d462bfc0b904e2be493c1679d7e387d43ddf4fd8e1042",
+        "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+        "validation": {
+          "layer_tables": "checksums_and_coverage_verified",
+          "mode": "consolidation_only",
+          "prediction_arrays": "not_revalidated",
+          "reconstructed_pdbs": "not_revalidated",
+          "reference_pdbs": "not_revalidated"
+        },
+        "output_sha256": {
+          "geometry_metrics.csv": "a6760dd510af785dbae340282ac78f288d5bee1206c4f93079c314264394e76a",
+          "geometry_summary.csv": "270ff67c49ec3707f1c21b051c7648b05c5d7690891530f168cf490bce5eefb5"
+        }
+      }
+    }
+  },
   "aggregation": "equal proteins within each layer; equal layers for the overall descriptive mean",
   "improvement_tolerance": 1e-06,
   "notes": [

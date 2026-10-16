@@ -98,10 +98,10 @@
     "delta_files/regression_5fold_v1/per_protein_ols_base256/per_protein.csv": "dd1151131663c3f00b4d4a9b2da05ddc69d31bc220a59159c46ae963525c3319",
     "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/per_protein.csv": "1280eb5a96c370343e9fd21671734d1e481d895971684814ac9b88c822791722",
     "delta_files/regression_5fold_v1/sequence_gated_ols_base256/per_protein.csv": "52157d8c84c26685c7686c32c01b618eb74c2bcb10408706dcded265ad081c99",
-    "delta_files/regression_5fold_v1/shared_ols_base256/geometry_metrics.csv": "c7ea36603d03666ece6aa6d16d09ffd45ed502cdc0bf99e1b6070c0c7f7d609b",
-    "delta_files/regression_5fold_v1/per_protein_ols_base256/geometry_metrics.csv": "0d215f875817cd14eb62a29b64c7bbffdea7bdb0aa4a604db7bf69858460ed47",
-    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/geometry_metrics.csv": "f9da2dddeeb255ea484d462bfc0b904e2be493c1679d7e387d43ddf4fd8e1042",
-    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/geometry_metrics.csv": "2ece2e18726d6721a5a8980a0f2dda6d3d64cde89a360838e9ecba01fc8f2b68",
+    "delta_files/regression_5fold_v1/shared_ols_base256/geometry_metrics.csv": "7774fc275780317eab55907dddb899fa6d469611aa3f3b7b72dcd73da6caf81d",
+    "delta_files/regression_5fold_v1/per_protein_ols_base256/geometry_metrics.csv": "4660ef156bb8967fff471c2d63b86a613ca31c54ade4f172e0757e66527b3722",
+    "delta_files/regression_5fold_v1/shared_xgboost_base256_fixed_s4/geometry_metrics.csv": "a6760dd510af785dbae340282ac78f288d5bee1206c4f93079c314264394e76a",
+    "delta_files/regression_5fold_v1/sequence_gated_ols_base256/geometry_metrics.csv": "7a9f096c4d49ae428af7be0fcd3b6b3cdfd7f048196460683979a51e9512f29c",
     "delta_files/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv": "c4f35315ff336f486dcf9b727b3d1256dae6e2687ae9c924fa7ab204c7494698",
     "delta_files/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1/pooled_reconciliation.csv": "8b1589454434b9e9c7031de2888acf7ba9efee8e1217a76d68c942f67cf1aecf",
     "delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/per_protein_triangle_metrics.csv": "badc45f0f8f8765d1cdde59ba5504cb4cffda38d79c256179ab8da1a0b924c7f",
@@ -111,8 +111,8 @@
   "source_data": {
     "delta_files/publication_plots/sept_2_plots/source_data/r2_per_protein_values.csv": "894c817e26e6ef0d0bbd8562e867ec83ae4b042cbb6f8aeafec36c0f3f43725c",
     "delta_files/publication_plots/sept_2_plots/source_data/r2_plot_summary.csv": "1bcc318e143c5dae1f8e53574aff52766c418f54e3ea915494d17cb1f7f08903",
-    "delta_files/publication_plots/sept_2_plots/source_data/tm_score_per_protein_values.csv": "ccf702e181ef9b2871ed4e11bc962bbd41616e8fc83bdf89947b82763ee17835",
-    "delta_files/publication_plots/sept_2_plots/source_data/tm_score_plot_summary.csv": "78f970525f3569f9b4296a36ab7557ce9a840e7e785090ae63901628fd720d02",
+    "delta_files/publication_plots/sept_2_plots/source_data/tm_score_per_protein_values.csv": "2cf8a45e38f9c0627be9e7ee6f6346d55b8d3ad8ab2f016ac6f7a8cb87f621c8",
+    "delta_files/publication_plots/sept_2_plots/source_data/tm_score_plot_summary.csv": "191411e1f92bd360e1d0704e6f65113470f3d0e31f995d108910094f2ba5de96",
     "delta_files/publication_plots/sept_2_plots/source_data/top3_eigenvalue_fraction_per_protein_values.csv": "1e7c6810032cdfb3646f9fd8db3fbec55cbbe16dccdb00800fe4898e2dc62767",
     "delta_files/publication_plots/sept_2_plots/source_data/top3_eigenvalue_fraction_plot_summary.csv": "b2c643b32ac8bc889bbe5653a14dffa559d48fa710b747d7b017da0914d19bad",
     "delta_files/publication_plots/sept_2_plots/source_data/mds_stress_per_protein_values.csv": "822715cd214a505c98d1b7f7c1d118526384c2cf09952ca30f68c6b426c4c362",
@@ -262,5 +262,24 @@
     "derived_bin": "10-40",
     "method": "sum per-protein absolute-error totals and pair counts before recomputing MAE"
   },
-  "render_source": "existing validated source_data tables; canonical pooled_reconciliation.csv unavailable during typography-only rerender"
+  "render_source": "existing validated source_data tables; canonical pooled_reconciliation.csv unavailable during typography-only rerender",
+  "tm_score_refresh": {
+    "generated_at": "2026-10-16T02:45:28.011047+00:00",
+    "generator_version": "sept_2_publication_plots_v5",
+    "figure_ids": [
+      "main_figure_03_tm_score",
+      "supp_figure_individual_proteins_tm_score_by_model"
+    ],
+    "source_manifest": "delta_files/regression_5fold_v1/tm_score_optimized_v1/run_manifest.json",
+    "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+    "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+    "validation": {
+      "layer_tables": "checksums_and_coverage_verified",
+      "mode": "consolidation_only",
+      "prediction_arrays": "not_revalidated",
+      "reconstructed_pdbs": "not_revalidated",
+      "reference_pdbs": "not_revalidated"
+    },
+    "note": "Targeted refresh; original full-bundle generation timestamp and other artifacts retained."
+  }
 }

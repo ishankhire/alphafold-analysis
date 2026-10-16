@@ -1166,5 +1166,22 @@
     "numpy": "2.4.2",
     "python": "3.13.5",
     "xgboost": "3.2.0"
+  },
+  "tm_score_refresh": {
+    "source_manifest": "tm_score_optimized_v1/run_manifest.json",
+    "source_manifest_sha256": "433b94133f4ce392c236a00563511def03764cffc7870c7ca41621e9891b83eb",
+    "source_geometry_sha256": "f9da2dddeeb255ea484d462bfc0b904e2be493c1679d7e387d43ddf4fd8e1042",
+    "tm_score_method": "tmscore_fixed_correspondence_best_mds_reflection_v1",
+    "validation": {
+      "layer_tables": "checksums_and_coverage_verified",
+      "mode": "consolidation_only",
+      "prediction_arrays": "not_revalidated",
+      "reconstructed_pdbs": "not_revalidated",
+      "reference_pdbs": "not_revalidated"
+    },
+    "output_sha256": {
+      "geometry_metrics.csv": "a6760dd510af785dbae340282ac78f288d5bee1206c4f93079c314264394e76a",
+      "geometry_summary.csv": "270ff67c49ec3707f1c21b051c7648b05c5d7690891530f168cf490bce5eefb5"
+    }
   }
 }

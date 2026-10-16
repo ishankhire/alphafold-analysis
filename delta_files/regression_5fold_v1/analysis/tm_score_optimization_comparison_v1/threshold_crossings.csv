@@ -1,0 +1,13 @@
+analysis_name,threshold,n_proteins,saved_first_layer,optimized_first_layer
+shared_ols_base256,0.4,552,0,0
+shared_ols_base256,0.5,552,11,9
+shared_ols_base256,0.7,552,22,18
+per_protein_ols_base256,0.4,552,0,0
+per_protein_ols_base256,0.5,552,7,0
+per_protein_ols_base256,0.7,552,15,15
+sequence_gated_ols_base256,0.4,552,0,0
+sequence_gated_ols_base256,0.5,552,11,8
+sequence_gated_ols_base256,0.7,552,20,17
+shared_xgboost_base256_fixed_s4,0.4,552,0,0
+shared_xgboost_base256_fixed_s4,0.5,552,8,0
+shared_xgboost_base256_fixed_s4,0.7,552,16,16

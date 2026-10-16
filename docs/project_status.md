@@ -39,7 +39,7 @@ Paths below are relative to the repository unless they name a Delta root.
 | Per-protein subgroup MAE | [per_protein_subgroup_mae.csv](../delta_files/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv) supplies protein-equal sequence/spatial curves; do not substitute pooled MAE. |
 | Ablation CSVs | Delta: `/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`; copied inputs, when available, live under `delta_files/layerwise_ablation_csvs/`. The [ablation plot bundle](../delta_files/publication_plots/sept_2_plots/layerwise_ablation_trajectories/README.md) records selected trajectories. |
 | Packed OOF distances | Delta: `/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`; see the [export runbook](../scripts/cluster_scripts/predicted_distances/README.md). |
-| Optimized TM-score replacements and reconstructed PDBs | Delta: `/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/`; eventual local copy: `delta_files/regression_5fold_v1/tm_score_optimized_v1/`. All 48 tasks of `22923529` and consolidation `22930940` succeeded. The root manifest is complete with 105,984 score/PDB index rows and `validation.mode=consolidation_only`. |
+| Optimized TM-score replacements and reconstructed PDBs | Delta: `/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/`; local geometry tables, score ledger, and compact provenance: `delta_files/regression_5fold_v1/tm_score_optimized_v1/`. Reconstructed PDBs remain on Delta. All 48 tasks of `22923529` and consolidation `22930940` succeeded. The root manifest is complete with 105,984 score/PDB index rows and `validation.mode=consolidation_only`. |
 | Optimized versus saved TM-score comparison | [Local model/layer summaries and trajectories](../delta_files/regression_5fold_v1/analysis/tm_score_optimization_comparison_v1/), derived from a checksum-verified local copy of the complete score ledger. All-layer mean gains are +0.012–0.023 across the four probes; final-layer gains are +0.0026–0.0079. These quantify alignment changes for the same predictions. |
 
 The designated publication bundle is
@@ -50,18 +50,20 @@ inputs, plotted values, and output provenance. Generation metadata records the
 expected four models, 552 proteins, and 48 layers. Figures use protein-equal
 means and paired-protein bootstrap intervals.
 
-**The existing geometry tables and figures still use post-Kabsch TM-style
-scores.** Fresh geometry code optimizes the TM objective, but does not rewrite
-saved results. Rescoring and publication refresh are separate pending steps;
-current numerical values must be described with their saved scoring method.
+**The canonical geometry tables and both reconstruction TM-score figures now
+use optimized TM-scores.** Only TM-score cells and their summary statistics were
+replaced; all non-TM geometry values, including triangle violations, were
+preserved. The [refresh checks and threshold table](../delta_files/regression_5fold_v1/analysis/tm_score_optimization_comparison_v1/)
+record 240 passing column comparisons and input/output hashes. The active main
+draft and supplement use the refreshed figures and scoring description.
 
 ## Pending work and evidence limits
 
 | Workstream | Current state | Next step |
 |---|---|---|
 | Packed-distance export | Verified October 15: finalizer `22908531` completed in 2h09m25s, deployment check `22908532` succeeded, and the root manifest reports complete preparation/export with all 48 layers. | Reuse the finalized arrays for scoring and PDB export; no inference or fitting rerun is needed. |
-| Optimized TM-score and reconstructed PDBs | All 48 tasks of `22923529` succeeded. Audit `22923530` verified layers 0–23 without errors before user-requested cancellation at 3h03m. Consolidation `22930940` completed in 1m43s, preserving producer identity and explicitly recording skipped bulk revalidation. Verified all 16 consolidated output hashes, 105,984 rows in each score/PDB index, four 26,496-row geometry tables, and 48 layer-manifest hashes. All 24 local workflow tests pass. | Ready for the separate publication refresh. Retain `validation.mode=consolidation_only` when describing integrity checks; individual artifact files were not exhaustively reread. Future consolidation requests are 3 GiB / 10 minutes, based on the successful run. |
-| Publication refresh | September 2 is the current saved bundle, with the scoring limitation above. | Refresh after replacement scores are complete and checked. |
+| Optimized TM-score and reconstructed PDBs | All 48 tasks of `22923529` succeeded. Audit `22923530` verified layers 0–23 without errors before user-requested cancellation at 3h03m. Consolidation `22930940` completed in 1m43s, preserving producer identity and explicitly recording skipped bulk revalidation. Verified all 16 consolidated output hashes, 105,984 rows in each score/PDB index, four 26,496-row geometry tables, and 48 layer-manifest hashes. All 24 local workflow tests pass. | Compact outputs downloaded and canonical TM-scores refreshed locally. Retain `validation.mode=consolidation_only` when describing integrity checks; individual artifact files were not exhaustively reread. Future consolidation requests are 3 GiB / 10 minutes, based on the successful run. |
+| Publication refresh | Complete: canonical TM-scores and summaries replaced; September 2 main and individual-protein TM-score figures regenerated with the existing formatting and bootstrap settings. Active manuscript thresholds are now layers 9 (>0.5) and 18 (>0.7) across all four probes. | Other geometry and ablation figures retain their existing values. Validation remains consolidation-only; no new physical-artifact audit was performed. |
 | Adversarial review | [Saved August 30 review](../delta_files/analysis/cross_validation_adversarial_review_v1/review_findings.md) predates the production families. Its deferred production checks have not been established by the coverage checks above. | Retain the review as dated evidence; do not describe all production results as independently audited. |
 
 The geometry helper's defensive distance-matrix checks remain an unresolved

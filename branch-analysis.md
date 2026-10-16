@@ -1,5 +1,16 @@
 # Branch Analysis
 
+## Session: 2026-10-15 — Refresh canonical TM-scores and paper
+
+Downloaded compact optimized geometry outputs and promoted only TM-score cells
+and summary statistics into the four existing local result families. All 240
+non-TM column checks passed; original non-TM summary rows were preserved.
+Added repeatable validation/apply and targeted plotting commands, refreshed the
+two reconstruction TM-score figures, and updated the active Overleaf draft and
+supplement. All-probe thresholds moved from layers 11/22 to 9/18. Sixteen focused
+tests pass; figure checksums and Overleaf copies match. LaTeX compilation was
+unavailable locally. Detailed CSVs remain Git-ignored; Delta originals are intact.
+
 ## Session: 2026-10-15 — Compare optimized and saved TM-scores
 
 Added a local comparison of the checksum-verified 105,984-row score ledger,

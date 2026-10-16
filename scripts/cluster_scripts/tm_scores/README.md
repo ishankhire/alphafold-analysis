@@ -180,6 +180,27 @@ They are ready for the later publication refresh; source model manifests and
 canonical inputs are preserved. This change does not regenerate figures or edit
 the paper.
 
+## Local publication refresh
+
+After downloading the four families' geometry CSVs and scoring manifests plus
+the root score ledger and manifest to the local copy path above, run:
+
+```bash
+./.venv/bin/python scripts/multi_protein/analyze_tm_score_optimization.py --apply-geometry
+./.venv/bin/python scripts/multi_protein/generate_sept_2_publication_plots.py --tm-score-only
+```
+
+The first command validates all four families before replacing only canonical
+TM-score cells and their summary statistics. Omit `--apply-geometry` to produce
+comparison reports without modifying canonical tables. Checks and threshold
+crossings join the existing comparison outputs under
+`delta_files/regression_5fold_v1/analysis/tm_score_optimization_comparison_v1/`.
+The second command refreshes only the main and individual-protein TM-score
+figures and their source data/provenance in the September 2 publication bundle.
+Copy those two PDFs to the corresponding active Overleaf paths. Other plots and
+ablation scores are unaffected. Detailed geometry CSVs remain Git-ignored local
+artifacts; original tables remain available on Delta.
+
 ## Clean PDB-enabled rerun of the October 14 array
 
 Read-only inspection on October 15 found 37 completed layers in `22908533`.

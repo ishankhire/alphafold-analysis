@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import math
@@ -1336,7 +1337,70 @@ def manifest_row(
     }
 
 
+def refresh_tm_score_figures() -> None:
+    """Refresh two TM figures and their provenance without regenerating the bundle."""
+    manifest_path = OUTPUT_ROOT / "figure_manifest.csv"
+    generation_path = OUTPUT_ROOT / "generation_summary.json"
+    manifest = pd.read_csv(manifest_path, keep_default_na=False)
+    generation = json.loads(generation_path.read_text())
+    cohort = load_cohort()
+    raw, inputs = load_core_metric(cohort, "geometry_metrics.csv", "tm_score", "geometry_status")
+    scoring_manifest = REGRESSION_ROOT / "tm_score_optimized_v1/run_manifest.json"
+    scoring = json.loads(scoring_manifest.read_text())
+    if scoring["run_status"] != "complete":
+        raise ValueError("Optimized TM-score run is incomplete")
+    for path in inputs:
+        family_manifest = json.loads(path.with_name("run_manifest.json").read_text())
+        refresh = family_manifest.get("tm_score_refresh", {})
+        if (refresh.get("source_manifest_sha256") != sha256_file(scoring_manifest)
+                or refresh.get("output_sha256", {}).get("geometry_metrics.csv") != sha256_file(path)):
+            raise ValueError(f"Canonical geometry has no matching TM-score refresh provenance: {path}")
+    summary = bootstrap_summary(raw, cohort, bootstrap_counts())
+    ids = ("main_figure_03_tm_score", "supp_figure_individual_proteins_tm_score_by_model")
+    if len(manifest) != len(expected_figure_ids()) or set(manifest.figure_id) != set(expected_figure_ids()):
+        raise ValueError("Existing figure inventory differs from the expected publication bundle")
+    if any((manifest.figure_id == stem).sum() != 1 for stem in ids):
+        raise ValueError("Existing TM-score figure entries are missing or duplicated")
+    ensure_directories()
+    sources = [write_source_csv(raw, "tm_score_per_protein_values"),
+               write_source_csv(summary, "tm_score_plot_summary")]
+    configure_style(font_scale=MAIN_FIGURE_FONT_SCALE)
+    png, pdf = line_figure(summary, "Mean reconstruction TM-score", ids[0], MAIN_DIR,
+                           "unit", ylimits=(0, 1), show_legend=False)
+    outputs = [(png, pdf)]
+    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
+    outputs.append(individual_by_model_figure(raw, summary, "Reconstruction TM-score", "unit", ids[1]))
+    for stem, (png, pdf) in zip(ids, outputs):
+        index = manifest.index[manifest.figure_id.eq(stem)][0]
+        manifest.loc[index, "png_sha256"] = sha256_file(png)
+        manifest.loc[index, "pdf_sha256"] = sha256_file(pdf)
+    manifest.to_csv(manifest_path, index=False)
+    for path in inputs:
+        generation["inputs"][relative(path)] = sha256_file(path)
+    for path in sources:
+        generation["source_data"][relative(path)] = sha256_file(path)
+    generation["tm_score_refresh"] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generator_version": GENERATOR_VERSION,
+        "figure_ids": list(ids),
+        "source_manifest": relative(scoring_manifest),
+        "source_manifest_sha256": sha256_file(scoring_manifest),
+        "tm_score_method": scoring["tm_score_method"],
+        "validation": scoring["validation"],
+        "note": "Targeted refresh; original full-bundle generation timestamp and other artifacts retained.",
+    }
+    generation_path.write_text(json.dumps(generation, indent=2) + "\n")
+    print(f"Refreshed {len(ids)} TM-score figure pairs in {relative(OUTPUT_ROOT)}")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--tm-score-only", action="store_true",
+                        help="Refresh only the two reconstruction TM-score figures and their source data")
+    args = parser.parse_args()
+    if args.tm_score_only:
+        refresh_tm_score_figures()
+        return
     configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
     ensure_directories()
     generated_at = datetime.now(timezone.utc).isoformat()
