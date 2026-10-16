@@ -359,6 +359,11 @@ superposition in the original reference PDB frame. Residue identities follow
 the frozen export metadata. These supplementary PDBs use standard 0.001 Å
 coordinate precision; reported scores are evaluated before that rounding.
 The runbook defines their layout, checksum index, and completion checks.
+Routine consolidation verifies compact layer-table checksums, identities,
+and complete cohort/probe/layer coverage, relying on the workers' saved
+artifact checksums. A full reread of prediction arrays and PDBs is an optional
+integrity audit. Completion manifests explicitly distinguish consolidation-only
+validation from physical artifact revalidation.
 
 The MDS geometry metrics are:
 

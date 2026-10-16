@@ -13,6 +13,7 @@ import pytest
 DIRECTORY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(DIRECTORY))
 import recompute_tm_scores as worker
+import consolidate_tm_scores as consolidation
 import cluster_regression_helpers as geometry
 
 
@@ -379,3 +380,84 @@ def test_backend_failures_abort_geometry_rows(monkeypatch):
                               layer=0, protein_id="toy", source="ecod", outer_fold=0,
                               evaluation_design="protein_outer_5fold", oof_prediction_scope="heldout_proteins_all_pairs",
                               n_residues=3, true_coordinates=np.ones((3,3)), predictions=np.ones(3))
+
+
+def test_consolidation_matches_full_finalization_without_bulk_file_reads(packed, monkeypatch):
+    context, output = packed
+    for layer in worker.LAYERS:
+        worker.run_layer(context, output, layer)
+    worker.finalize(context, output)
+    csvs = ["tm_scores.csv", "pdb_index.csv", "runtime.csv"] + [
+        f"{spec.family_dir}/{name}" for spec in worker.export.FAMILY_SPECS
+        for name in ("geometry_metrics.csv", "geometry_summary.csv")]
+    expected = {name: (output / name).read_bytes() for name in csvs}
+    original_manifest = worker.export.load_json(output / "run_manifest.json")
+    layer_files = {path: worker.export.sha256_file(path) for path in (output / "layers").rglob("*") if path.is_file()}
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Consolidation must not reread individual arrays or PDBs")
+    actual_hash = worker.export.sha256_file
+    def metadata_hash(path):
+        if Path(path).suffix in {".npy", ".pdb"}:
+            forbidden()
+        return actual_hash(path)
+    monkeypatch.setattr(worker.export, "sha256_file", metadata_hash)
+    monkeypatch.setattr(worker.export, "check_array", forbidden)
+    monkeypatch.setattr(worker, "read_reference", forbidden)
+    monkeypatch.setattr(worker, "validate_pdb_rows", forbidden)
+    consolidation.consolidate(context, output)
+    assert expected == {name: (output / name).read_bytes() for name in csvs}
+    assert layer_files == {path: actual_hash(path) for path in layer_files}
+    manifest = worker.export.load_json(output / "run_manifest.json")
+    assert manifest["identity"] == original_manifest["identity"]
+    assert manifest["identity_digest"] == original_manifest["identity_digest"]
+    assert manifest["n_scores"] == manifest["n_pdbs"] == 16
+    assert manifest["run_status"] == "complete"
+    assert manifest["validation"]["mode"] == "consolidation_only"
+    assert manifest["validation"]["reconstructed_pdbs"] == "not_revalidated"
+    assert manifest["consolidation"]["code_sha256"] == actual_hash(Path(consolidation.__file__))
+
+
+def test_consolidation_rejects_missing_layers_and_changed_identity(packed):
+    context, output = packed
+    worker.run_layer(context, output, 0)
+    with pytest.raises(FileNotFoundError):
+        consolidation.consolidate(context, output)
+    assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "prepared"
+    with pytest.raises(ValueError, match="inputs/backend/code changed"):
+        consolidation.consolidate(SimpleNamespace(**{**vars(context), "digest": "changed"}), output)
+
+
+@pytest.mark.parametrize("damage", ["csv_bytes", "pdb_index_identity", "prediction_hash", "pdb_index_duplicate"])
+def test_consolidation_rejects_inconsistent_layer_tables(packed, damage):
+    context, output = packed
+    for layer in worker.LAYERS:
+        worker.run_layer(context, output, layer)
+    directory = output / "layers/layer_00"
+    manifest = worker.export.load_json(directory / "layer_manifest.json")
+    if damage == "csv_bytes":
+        path = directory / "tm_scores.csv"
+        path.write_bytes(path.read_bytes() + b"\n")
+    elif damage == "prediction_hash":
+        path = directory / "tm_scores.csv"
+        rows = worker.read_rows(path, worker.SCORE_COLUMNS)
+        rows[0]["array_sha256"] = "0" * 64
+        worker.export.atomic_write_csv(path, worker.SCORE_COLUMNS, rows)
+        manifest["tm_scores_sha256"] = worker.export.sha256_file(path)
+        path = directory / "pdb_index.csv"
+        rows = worker.read_rows(path, worker.PDB_COLUMNS)
+        rows[0]["array_sha256"] = "0" * 64
+        worker.export.atomic_write_csv(path, worker.PDB_COLUMNS, rows)
+        manifest["pdb_index_sha256"] = worker.export.sha256_file(path)
+    else:
+        path = directory / "pdb_index.csv"
+        rows = worker.read_rows(path, worker.PDB_COLUMNS)
+        if damage == "pdb_index_identity":
+            rows[0]["pdb_path"] = "wrong.pdb"
+        else:
+            rows[-1] = rows[0].copy()
+        worker.export.atomic_write_csv(path, worker.PDB_COLUMNS, rows)
+        manifest["pdb_index_sha256"] = worker.export.sha256_file(path)
+    worker.export.atomic_write_json(directory / "layer_manifest.json", manifest)
+    with pytest.raises(ValueError):
+        consolidation.consolidate(context, output)
+    assert worker.export.load_json(output / "run_manifest.json")["run_status"] == "prepared"

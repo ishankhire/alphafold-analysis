@@ -36,7 +36,8 @@ summary rows. PDB-enabled resource measurements remain pending.
 | Stage | Initial `--mem` | Basis |
 |---|---:|---|
 | One-layer four-probe rescoring and PDB export | `2g` | About 2x the observed 0.975 GiB score-only peak, with additional PDB/index working memory explaining the slight excess over 2x; one protein at a time and one BLAS thread. |
-| Finalization | `2g` | Provisional estimate for source geometry, full score/PDB indexes, residue metadata, and derived output rows; no dense cohort arrays. |
+| Consolidation only | `3g` | Retains the full score/PDB indexes and source tables. The cancelled full audit reached 1,297,384 KiB (1.24 GiB) after half the layers, a partial-run lower bound; allow for the remaining rows and summary materialization. Expected full peak is about 1.5–2 GiB. |
+| Optional full-file audit | `3g` | Same full-ledger memory requirements as consolidation; the former `2g` allocation was measured only through half the layers. |
 
 Record successful PDB-enabled step MaxRSS for both stages and replace the estimates.
 

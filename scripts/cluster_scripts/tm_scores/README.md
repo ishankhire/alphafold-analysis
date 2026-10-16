@@ -46,7 +46,8 @@ frozen until it finishes: its restart identity includes helper-code hashes.
 The rescoring reader checks the export's saved checksums without requiring its
 historical helper hashes to equal the new implementation.
 
-Deploy `recompute_tm_scores.py`, its `.sbatch`, and the changed shared helpers flat
+Deploy `recompute_tm_scores.py`, `consolidate_tm_scores.py`, both `.sbatch`
+launchers, and the changed shared helpers flat
 to `$HOME/openfold_interpretability_canonical`. Retain the predicted-distance
 exporter's existing Python dependency inventory, its deployed README, and frozen
 protocol data. Copy this README as `tm_scores_README.md`.
@@ -83,19 +84,33 @@ resource guides to refine the 2 GiB / 2 hour request for future runs. The prior
 score-only run reached 0.975 GiB allocation-step MaxRSS, leaving little headroom
 under its original 1 GiB request; PDB export and indexing add a small working set.
 
-After all layers complete:
+After all layers complete, consolidate their compact tables:
 
 ```bash
-sbatch --array=0 --mem=2g --time=04:30:00 --export=ALL,TMSCORE_FINALIZE=1 recompute_tm_scores.sbatch
+sbatch consolidate_tm_scores.sbatch
 ```
 
-Finalization's 2 GiB / 4.5 hour request is provisional; it holds the complete
-score/PDB indexes and source geometry tables while deriving replacement summaries.
-The walltime uses the revised whole-run export validation estimate because
-this stage rechecks the same 105,984 physical prediction files.
-Outputs are marked complete only after all 105,984 predictions, 105,984 saved
-PDBs, and reference checksums have been verified. Measure this stage before
-subsequent broad runs.
+Consolidation requests 3 GiB / 30 minutes provisionally. It verifies all 48
+completed layer manifests, score/PDB index CSV checksums, identities, coverage,
+and prediction hashes recorded in the export manifests. It does not reopen
+individual prediction arrays, reconstructed PDBs, or reference PDBs. Original
+scoring workers already validated the inputs and recorded PDB checksums at
+write time. The root and per-probe manifests explicitly record
+`validation.mode=consolidation_only` and the skipped bulk revalidation.
+
+The optional full-file audit remains available:
+
+```bash
+sbatch --array=0 --mem=3g --time=09:00:00 --export=ALL,TMSCORE_FINALIZE=1 recompute_tm_scores.sbatch
+```
+
+Audit job `22923530` verified layers 0–23 without validation errors before
+user-requested cancellation after 3h03m. It spent only about 4m20s of CPU time
+in nearly three hours; serial shared-filesystem access dominates. Its original
+4.5-hour estimate was insufficient. The optional audit's 9-hour request is
+based on an approximately six-hour whole-run extrapolation with 1.5x headroom.
+It does not checkpoint verified layers. Run only one audit/consolidation task
+at a time; both use the same exclusive finalization lock.
 
 For a local run, override roots explicitly:
 
@@ -107,7 +122,9 @@ For a local run, override roots explicitly:
   --output-root delta_files/regression_5fold_v1/tm_score_optimized_v1
 ```
 
-Replace `--layer 0` with `--finalize` after scoring all 48 layers. Environment
+After scoring all 48 layers, run `consolidate_tm_scores.py` with the same root
+arguments (without `--layer`). The scoring worker's `--finalize` mode retains
+the optional full-file audit. Environment
 overrides are `PREDICTED_DISTANCE_OUTPUT_ROOT`, `CSV_ROOT`, and
 `TMSCORE_OUTPUT_ROOT`. Changing the log destination requires matching `sbatch`
 `-o`/`-e` overrides pointing to an existing directory.
@@ -150,6 +167,12 @@ hashes, executable identity, scoring/PDB policy, completion, `n_pdbs`, output
 hashes, and checksums of all 48 layer manifests;
 `runtime.csv` records each layer's elapsed time and process peak memory.
 
+`consolidation_runtime.json` records consolidation elapsed time, peak RSS,
+score/PDB index row counts, and validation mode. Root `consolidation` records
+the consumer script's SHA-256 separately from the unchanged scoring
+`identity`/`identity_digest`. Deploying this additional consumer does not
+invalidate completed workers or require changing their frozen code hashes.
+
 These are replacement geometry tables, not complete regression result families.
 They are ready for the later publication refresh; source model manifests and
 canonical inputs are preserved. This change does not regenerate figures or edit
@@ -172,6 +195,8 @@ files; retain the existing Linux `TMscore` binary and exporter dependencies:
 ```bash
 scp scripts/cluster_scripts/tm_scores/recompute_tm_scores.py \
   scripts/cluster_scripts/tm_scores/recompute_tm_scores.sbatch \
+  scripts/cluster_scripts/tm_scores/consolidate_tm_scores.py \
+  scripts/cluster_scripts/tm_scores/consolidate_tm_scores.sbatch \
   scripts/cluster_scripts/cluster_regression_helpers.py \
   delta:openfold_interpretability_canonical/
 scp scripts/cluster_scripts/tm_scores/README.md \
@@ -190,14 +215,15 @@ cd "$HOME/openfold_interpretability_canonical"
 unset TMSCORE_FINALIZE
 tm_array_id=$(sbatch --parsable --array=0-47%4 recompute_tm_scores.sbatch)
 tm_array_id=${tm_array_id%%;*}
-sbatch --array=0 --mem=2g --time=04:30:00 \
-  --export=ALL,TMSCORE_FINALIZE=1 --dependency="afterok:$tm_array_id" \
-  recompute_tm_scores.sbatch
+sbatch --dependency="afterok:$tm_array_id" consolidate_tm_scores.sbatch
 ```
 
 Confirm the root manifest is complete with `n_scores == n_pdbs == 105984` and
-48 layer-manifest hashes. The finalizer checks actual PDB checksums, not just
-index counts. Do not reuse the old finalizer's failed dependency.
+48 layer-manifest hashes. Consolidation checks recorded artifact identities;
+only the optional audit checks physical PDB checksums again. Do not reuse the
+old finalizer's failed dependency. This clean-rerun procedure is unnecessary
+when merely replacing an audit with consolidation: preserve every layer/PDB
+and submit only `consolidate_tm_scores.sbatch` after stopping the audit.
 
 ```bash
 ./.venv/bin/python -m pytest scripts/cluster_scripts/tm_scores/tests -q

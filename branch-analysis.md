@@ -1,5 +1,14 @@
 # Branch Analysis
 
+## Session: 2026-10-15 — Replace the bulk TM-score audit with consolidation
+
+At the user's request, cancelled audit `22923530` after 24 verified layers and
+no validation errors. Added a separate consolidation entrypoint/launcher that
+checks layer-table coverage, checksums, and provenance while preserving the
+original scoring-code identity and all saved PDBs. Completion records the
+skipped physical-file audit explicitly. All 24 tests pass, including identical
+CSV output versus full finalization and rejection of inconsistent metadata.
+
 ## Session: 2026-10-15 — Deploy and submit the PDB-enabled TM-score rerun
 
 With user authorization, deployed checksum-verified scoring code from `511ab5b`,
