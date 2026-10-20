@@ -69,9 +69,12 @@ Before adding or changing SBATCH memory or walltime, consult the corresponding
 
 Cluster entrypoints, including aggregation and post-processing, belong under
 `scripts/cluster_scripts/`; `scripts/multi_protein/` is for local-only scripts.
-Agents may inspect cluster files and monitor jobs without asking. Importantly, obtain the
-user's permission before submitting or cancelling jobs, deploying files, or
-making any other cluster changes. Local edits do not authorize remote changes.
+Agents may inspect cluster files, monitor jobs, and make cluster changes needed
+for the user's task without asking, including submitting or cancelling jobs,
+deploying or editing files, and creating directories. Always ask the user's
+permission before deleting any files on the cluster. Clearly report the exact
+cluster changes made in chat, including affected paths and job IDs where
+applicable; documentation updates do not substitute for this chat report.
 
 ## Implementation conventions
 

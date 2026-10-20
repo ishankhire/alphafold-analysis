@@ -13,10 +13,13 @@ jobs without asking for permission. Use the configured `ssh delta` alias and an
 authenticated Kerberos/Duo session. Report authentication failures rather than
 assuming remote work is incomplete.
 
-Importantly, ask the user before submitting or cancelling jobs, deploying or editing files,
-creating directories, or otherwise changing cluster state. Permission to edit
-this local checkout does not authorize remote changes. Keep login-node inspection
-lightweight; analysis belongs in an authorized Slurm job. Thank you!
+Agents may make cluster changes needed for the user's task without asking,
+including submitting or cancelling jobs, deploying or editing files, and
+creating directories. Always ask the user's permission before deleting any
+files on the cluster. Clearly report the exact cluster changes made in chat,
+including affected paths and job IDs where applicable; documentation updates
+do not substitute for this chat report. Keep login-node inspection lightweight;
+analysis belongs in a Slurm job.
 
 ## Repository deployment layout on Delta
 
@@ -123,7 +126,7 @@ Every new cluster experiment needs a short colocated `README.md` containing:
 - Commands to submit the full arrays, their task mapping/concurrency, and any
   preparation, aggregation, or finalization dependencies.
 
-After the user authorizes submission, submit the full arrays with appropriate
+When the user's task calls for submission, submit the full arrays with appropriate
 concurrency caps. A separate one-task resource pilot is not required by default.
 Use existing measurements or comparator-based estimates from the
 [memory](suggested_sbatch_memory.md) and

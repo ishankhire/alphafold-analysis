@@ -2167,3 +2167,9 @@ Declared `/work/hdd/bfna/ikhire/` the default CSV output root, with
 `diagnostic_experiments/<experiment_name>/` for exploratory runs. Updated the
 dataset reference, agent guidance, cluster guide, output contract, and status;
 retained legacy input paths and documented older launcher compatibility.
+
+## Session: 2026-10-20 — Cluster change permissions
+
+Updated agent guidance and the cluster guide to allow task-related cluster
+changes without approval, require exact change reports in chat, and retain
+explicit permission before deleting cluster files.
