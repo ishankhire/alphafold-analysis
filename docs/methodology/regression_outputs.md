@@ -31,9 +31,15 @@ Outputs are divided into three tiers:
 
 ## Recommended result-family layout
 
-Each final regression variant should use the following layout. Search-only or
-diagnostic runs may live elsewhere, but they must not be confused with these
-final-model outputs.
+The default Delta CSV output root is `/work/hdd/bfna/ikhire/`. Final,
+analysis-ready results use `regression_5fold_v1/` below that root; exploratory
+and diagnostic outputs use `diagnostic_experiments/<experiment_name>/`.
+Local copies remain under `delta_files/`. Existing inputs under the legacy
+`$HOME/csv_files/` root retain their paths until explicitly migrated; see the
+[cluster storage conventions](../cluster/README.md#csv-and-result-storage).
+
+Each final regression variant should use the following layout relative to the
+output root. Diagnostic results must remain distinct from final-model outputs.
 
 ```text
 regression_5fold_v1/

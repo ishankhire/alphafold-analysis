@@ -34,7 +34,8 @@ Paths below are relative to the repository unless they name a Delta root.
 | Source | Location and use |
 |---|---|
 | Protein inputs | [datasets.md](../datasets.md): membership and CAMEO/ECOD pair-tensor/PDB layouts. |
-| Model outputs and retained models | `delta_files/regression_5fold_v1/<family>/`; Delta: `$HOME/csv_files/regression_5fold_v1/<family>/`. Use each `run_manifest.json` and `model_artifacts/replay_index.csv`. |
+| Model outputs and retained models | `delta_files/regression_5fold_v1/<family>/`; existing Delta inputs: `$HOME/csv_files/regression_5fold_v1/<family>/`. New final-result outputs default to `/work/hdd/bfna/ikhire/regression_5fold_v1/`. Use each `run_manifest.json` and `model_artifacts/replay_index.csv`. |
+| Exploratory and diagnostic experiments | New Delta outputs: `/work/hdd/bfna/ikhire/diagnostic_experiments/<experiment_name>/`. See the [storage conventions](cluster/README.md#csv-and-result-storage). |
 | Fivefold triangle subgroups | [producer](../delta_files/regression_5fold_v1/triangle_violation_subgroups_5fold_v1/) has a complete 48-layer, 552-protein manifest; [publication analysis tables](../delta_files/regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/) supply the plots. |
 | Per-protein subgroup MAE | [per_protein_subgroup_mae.csv](../delta_files/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1/per_protein_subgroup_mae.csv) supplies protein-equal sequence/spatial curves; do not substitute pooled MAE. |
 | Ablation CSVs | Delta: `/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`; copied inputs, when available, live under `delta_files/layerwise_ablation_csvs/`. The [ablation plot bundle](../delta_files/publication_plots/sept_2_plots/layerwise_ablation_trajectories/README.md) records selected trajectories. |

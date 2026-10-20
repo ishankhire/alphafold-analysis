@@ -35,17 +35,38 @@ $HOME/
     <entrypoints, launchers, helpers, configuration, workflow READMEs>
     regression_protocol_data/regression_master_split_v1.csv
   csv_files/
-    regression_5fold_v1/             # existing models and compact outputs
+    regression_5fold_v1/             # legacy models and compact outputs
 /work/hdd/bfna/ikhire/
-  regression_5fold_v1/
+  regression_5fold_v1/               # final, analysis-ready results and artifacts
     predicted_distances_5fold_v1/    # packed OOF distance exports
     tm_score_optimized_v1/          # optimized scoring outputs
+  diagnostic_experiments/
+    <experiment_name>/              # exploratory and diagnostic outputs
 ```
 
-Existing models remain under `$CSV_ROOT/regression_5fold_v1/`, normally with
-`CSV_ROOT=$HOME/csv_files`. New export/scoring workflows use the explicit HDD
-roots above; moving their outputs does not move their model inputs. Pair tensors
-and original PDBs remain at the locations in `datasets.md`.
+## CSV and result storage
+
+The default Delta CSV output root is `/work/hdd/bfna/ikhire/`:
+
+- `regression_5fold_v1/` holds final, analysis-ready regression results and their
+  associated model artifacts, exports, and provenance. Derived analysis tables
+  belong under `regression_5fold_v1/analysis/<analysis_name>/`.
+- `diagnostic_experiments/<experiment_name>/` holds exploratory runs and
+  diagnostic experiments, with a separate directory per experiment.
+
+New workflows must select the appropriate output directory explicitly.
+For workflows that append `regression_5fold_v1/` to `CSV_ROOT`, use
+`CSV_ROOT=/work/hdd/bfna/ikhire` for new final-result outputs. Diagnostics should
+resolve their output directory under `diagnostic_experiments/`.
+
+`$HOME/csv_files/` is the legacy root. Existing retained model inputs and compact
+outputs may still live there; this convention does not migrate them. Older
+launchers may still hard-code or default to that root, so verify their effective
+paths before running. If a workflow uses `CSV_ROOT` for both inputs and outputs,
+preserve the actual input paths and configure outputs separately when needed.
+Pair tensors and original PDBs remain at the locations in `datasets.md`.
+
+## Submission directory
 
 Submit from the flat deployment directory so `SLURM_SUBMIT_DIR` resolves
 colocated entrypoints and helpers:

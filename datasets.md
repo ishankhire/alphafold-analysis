@@ -19,7 +19,14 @@ pool.
 
 ## Delta Input Paths
 
-Default Delta CSV output directory: `$HOME/csv_files`.
+Default Delta CSV output root: `/work/hdd/bfna/ikhire/`.
+
+- `regression_5fold_v1/`: final, analysis-ready regression results and associated artifacts.
+- `diagnostic_experiments/<experiment_name>/`: exploratory and diagnostic experiment outputs.
+
+`$HOME/csv_files/` is the legacy root; existing inputs may still reside there.
+See the [cluster storage conventions](docs/cluster/README.md#csv-and-result-storage)
+for path selection and compatibility with older launchers.
 
 ### CAMEO
 

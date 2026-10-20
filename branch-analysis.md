@@ -2159,3 +2159,11 @@ Added standardized and raw-scale 48 × 48 cosine heatmaps under
 within-fold comparisons over five folds with intercepts excluded. Saved matrix
 CSVs, per-fold values, and source provenance; verified all 240 artifact hashes
 and every similarity against independent SciPy cosine calculations.
+
+## Session: 2026-10-20 — Default Delta CSV storage
+
+Declared `/work/hdd/bfna/ikhire/` the default CSV output root, with
+`regression_5fold_v1/` for final, analysis-ready results and
+`diagnostic_experiments/<experiment_name>/` for exploratory runs. Updated the
+dataset reference, agent guidance, cluster guide, output contract, and status;
+retained legacy input paths and documented older launcher compatibility.
