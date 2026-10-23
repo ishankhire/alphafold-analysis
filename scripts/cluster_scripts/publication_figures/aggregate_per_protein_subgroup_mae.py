@@ -32,6 +32,9 @@ from regression_output_helpers import atomic_write_csv, atomic_write_json, sha25
 from triangle_violation_subgroup_common import FAMILY_BY_NAME, FAMILY_SPECS  # noqa: E402
 
 
+from canonical_storage import assert_writable, csv_root as storage_csv_root, workflow_root, normalize_shared_tree
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -42,7 +45,7 @@ def peak_rss_mb() -> float:
 
 
 def csv_root() -> Path:
-    return Path(os.environ.get("CSV_ROOT", str(Path.home() / "csv_files"))).expanduser()
+    return storage_csv_root()
 
 
 def producer_root() -> Path:
@@ -50,7 +53,7 @@ def producer_root() -> Path:
 
 
 def output_root() -> Path:
-    return csv_root() / "analysis" / ANALYSIS_NAME
+    return workflow_root(ANALYSIS_NAME, "PUBLICATION_SUBGROUP_OUTPUT_ROOT", analysis=True)
 
 
 def convert_row(source: dict[str, str]) -> dict[str, object]:
@@ -85,6 +88,7 @@ def load_producer_metrics() -> dict[tuple[str, int, str, str], tuple[int, float]
 
 
 def main() -> None:
+    assert_writable(output_root())
     started = time.perf_counter()
     root = output_root()
     shards = root / "layer_shards"
@@ -196,6 +200,8 @@ def main() -> None:
         "files": {name: sha256_file(root / name) for name in output_files},
     })
     print(f"Consolidated {total_rows} rows into {destination}", flush=True)
+
+    normalize_shared_tree(output_root())
 
 
 if __name__ == "__main__":

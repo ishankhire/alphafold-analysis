@@ -10,6 +10,9 @@ from pathlib import Path
 import predicted_distance_export_common as common
 
 
+from canonical_storage import normalize_shared_tree
+
+
 def _finalize_locked(root):
     started = time.perf_counter()
     bundle = common.load_bundle()
@@ -69,6 +72,7 @@ def finalize():
     with common.task_lock(root, "finalize"):
         try:
             _finalize_locked(root)
+            normalize_shared_tree(root)
         except Exception:
             import traceback
             path = root / "run_manifest.json"

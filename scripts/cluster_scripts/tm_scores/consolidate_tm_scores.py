@@ -13,6 +13,9 @@ export = worker.export
 VALIDATION_MODE = "consolidation_only"
 
 
+from canonical_storage import assert_writable, result_root, workflow_root, normalize_shared_tree
+
+
 def validate_pdb_index(pdb_rows, score_rows):
     """Check recorded artifact identities without inspecting the physical PDBs."""
     scores = {(row["protein_id"], row["analysis_name"]): row for row in score_rows}
@@ -34,6 +37,7 @@ def validate_pdb_index(pdb_rows, score_rows):
 
 
 def consolidate(context, output_root):
+    assert_writable(output_root)
     output_root = Path(output_root).resolve()
     # The unchanged scoring worker verifies its original inputs/code identity.
     worker.ensure_output(output_root, context)
@@ -121,14 +125,14 @@ def consolidate(context, output_root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--predictions-root", type=Path, default=export.output_root())
-    local_results = worker.CLUSTER_DIRECTORY.parents[1] / "delta_files"
     parser.add_argument("--regression-root", type=Path,
-                        default=Path(os.environ.get("CSV_ROOT", str(local_results))) / "regression_5fold_v1")
-    parser.add_argument("--output-root", type=Path, default=Path(os.environ.get(
-        "TMSCORE_OUTPUT_ROOT", "/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1")))
+                        default=result_root())
+    parser.add_argument("--output-root", type=Path, default=workflow_root("tm_score_optimized_v1", "TMSCORE_OUTPUT_ROOT"))
     args = parser.parse_args()
+    assert_writable(args.output_root)
     context = worker.load_context(args.predictions_root, args.regression_root)
     consolidate(context, args.output_root.expanduser())
+    normalize_shared_tree(args.output_root)
 
 
 if __name__ == "__main__":

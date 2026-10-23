@@ -70,6 +70,9 @@ from triangle_violation_subgroup_common import (  # noqa: E402
 )
 
 
+from canonical_storage import assert_writable, csv_root as storage_csv_root, workflow_root
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -84,7 +87,7 @@ def log(message: str) -> None:
 
 
 def csv_root() -> Path:
-    return Path(os.environ.get("CSV_ROOT", str(Path.home() / "csv_files"))).expanduser()
+    return storage_csv_root()
 
 
 def producer_root() -> Path:
@@ -92,7 +95,7 @@ def producer_root() -> Path:
 
 
 def output_root() -> Path:
-    return csv_root() / "analysis" / ANALYSIS_NAME
+    return workflow_root(ANALYSIS_NAME, "TRIANGLE_OUTPUT_ROOT", analysis=False)
 
 
 def _artifact_path(root: Path, row: Mapping[str, str]) -> Path:
@@ -325,6 +328,7 @@ def checkpoint_valid_rows(path: Path, layer: int) -> tuple[list[dict[str, str]],
 
 
 def main() -> None:
+    assert_writable(output_root())
     layer = int(os.environ.get("SLURM_ARRAY_TASK_ID", "-1"))
     if layer not in LAYERS:
         raise ValueError(f"SLURM_ARRAY_TASK_ID must select layer 0..47; got {layer}")

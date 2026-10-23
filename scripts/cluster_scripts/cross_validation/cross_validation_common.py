@@ -201,6 +201,9 @@ V2_CSV_SCHEMAS = MappingProxyType({
 })
 
 
+from canonical_storage import result_root
+
+
 def semantic_digest(value: object) -> str:
     """Return a deterministic SHA-256 digest for JSON-compatible values."""
     return hashlib.sha256(canonical_json_bytes(value)).hexdigest()
@@ -225,13 +228,7 @@ def utc_now() -> str:
 
 def fivefold_result_root(csv_root: str | Path | None = None) -> Path:
     """Resolve the local or Delta v2 result root without creating it."""
-    if csv_root is not None:
-        root = Path(csv_root).expanduser()
-    elif os.environ.get("CSV_ROOT"):
-        root = Path(os.environ["CSV_ROOT"]).expanduser()
-    else:
-        root = Path(__file__).resolve().parents[3] / "delta_files"
-    return root.resolve() / RESULT_ROOT_NAME
+    return result_root(csv_root)
 
 
 @dataclass(frozen=True)
@@ -330,7 +327,7 @@ def load_cv_folds(
     master_manifest_path: str | Path = MASTER_MANIFEST_PATH,
 ) -> CVFoldBundle:
     """Load and cross-validate the master, outer-fold, pair-fold, and digest files."""
-    if metadata_dir is None and os.environ.get("CSV_ROOT"):
+    if metadata_dir is None and (os.environ.get("CSV_ROOT") or (result_root() / "metadata").is_dir()):
         metadata_dir = fivefold_result_root() / METADATA_DIR_NAME
     if metadata_dir is None:
         outer_path = OUTER_FOLD_MANIFEST_PATH

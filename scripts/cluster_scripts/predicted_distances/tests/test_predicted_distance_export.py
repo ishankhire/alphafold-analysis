@@ -328,7 +328,7 @@ def test_float32_overflow_and_escaping_path_are_rejected(pipeline):
 def test_independent_output_root_and_exclusive_task_lock(tmp_path, monkeypatch):
     monkeypatch.delenv("PREDICTED_DISTANCE_OUTPUT_ROOT", raising=False)
     monkeypatch.setenv("CSV_ROOT", str(tmp_path / "input_models"))
-    assert str(common.output_root()) == "/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1"
+    assert common.output_root() == tmp_path / "input_models/regression_5fold_v1/predicted_distances_5fold_v1"
     with common.task_lock(tmp_path, "layer_00"):
         with pytest.raises(RuntimeError, match="Another"):
             with common.task_lock(tmp_path, "layer_00"):

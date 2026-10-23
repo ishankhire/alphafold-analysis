@@ -63,8 +63,11 @@ POOLED_COLUMNS = ("analysis_name", "layer", "n_pairs", "validation_status") + tu
 )
 
 
+from canonical_storage import assert_writable, workflow_root
+
+
 def output_root() -> Path:
-    return Path(os.environ.get("PREDICTED_DISTANCE_OUTPUT_ROOT", str(DEFAULT_OUTPUT_ROOT))).expanduser().resolve()
+    return workflow_root(EXPORT_SCHEMA, "PREDICTED_DISTANCE_OUTPUT_ROOT")
 
 
 def producer_root() -> Path:
@@ -180,6 +183,7 @@ def checked_path(root: Path, relative: str) -> Path:
 
 @contextmanager
 def task_lock(root: Path, name: str):
+    assert_writable(root)
     lock_dir = root / ".locks"
     lock_dir.mkdir(parents=True, exist_ok=True)
     with (lock_dir / f"{name}.lock").open("a") as handle:

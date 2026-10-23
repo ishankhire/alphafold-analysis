@@ -43,6 +43,9 @@ PDB_COLUMNS = ("protein_id", "analysis_name", "layer", "n_residues", "pdb_path",
 PDB_SCHEMA = "tm_score_aligned_ca_pdb_v1"
 
 
+from canonical_storage import assert_writable, result_root, workflow_root, normalize_shared_tree
+
+
 def read_rows(path, columns=None):
     return export.read_csv(path, columns)
 
@@ -117,6 +120,7 @@ def load_context(predictions_root, regression_root):
 @contextmanager
 def preparation_lock(output_root):
     """Serialize short manifest updates; concurrent layer starts must wait."""
+    assert_writable(output_root)
     directory = Path(output_root) / ".locks"
     directory.mkdir(parents=True, exist_ok=True)
     with (directory / "prepare.lock").open("a") as handle:
@@ -128,6 +132,7 @@ def preparation_lock(output_root):
 
 
 def ensure_output(output_root, context):
+    assert_writable(output_root)
     output_root = Path(output_root).resolve()
     predictions_root = context.root
     regression_root = Path(context.inputs["regression_root"])
@@ -296,6 +301,7 @@ def validate_score_rows(rows, context, layer, protein_ids):
 
 
 def run_layer(context, output_root, layer):
+    assert_writable(output_root)
     output_root = Path(output_root).resolve()
     if layer not in LAYERS:
         raise ValueError("Unknown layer")
@@ -387,6 +393,7 @@ def run_layer(context, output_root, layer):
 
 
 def finalize(context, output_root):
+    assert_writable(output_root)
     output_root = Path(output_root).resolve()
     ensure_output(output_root, context)
     with export.task_lock(output_root, "finalize"):
@@ -467,16 +474,16 @@ def main():
     mode.add_argument("--layer", type=int)
     mode.add_argument("--finalize", action="store_true")
     parser.add_argument("--predictions-root", type=Path, default=export.output_root())
-    local_results = CLUSTER_DIRECTORY.parents[1] / "delta_files"
     parser.add_argument("--regression-root", type=Path,
-                        default=Path(os.environ.get("CSV_ROOT", str(local_results))) / "regression_5fold_v1")
-    parser.add_argument("--output-root", type=Path, default=Path(os.environ.get(
-        "TMSCORE_OUTPUT_ROOT", "/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1")))
+                        default=result_root())
+    parser.add_argument("--output-root", type=Path, default=workflow_root("tm_score_optimized_v1", "TMSCORE_OUTPUT_ROOT"))
     args = parser.parse_args()
     output_root = args.output_root.expanduser().resolve()
+    assert_writable(output_root)
     context = load_context(args.predictions_root, args.regression_root)
     if args.finalize:
         finalize(context, output_root)
+        normalize_shared_tree(output_root)
     else:
         run_layer(context, output_root, args.layer)
 

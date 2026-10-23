@@ -104,6 +104,9 @@ TASK_PAYLOAD_VERSION = "shared_xgboost_base256_fixed_s4_task_payload_v1"
 IMPORTANCE_ARTIFACT_VERSION = "shared_xgboost_base256_fixed_s4_importance_v1"
 
 
+from canonical_storage import assert_writable, deployment_revision
+
+
 def configuration_payload(config: Mapping[str, object]) -> dict[str, object]:
     return {key: value for key, value in config.items() if key != "configuration_digest"}
 
@@ -299,13 +302,7 @@ def version_payload() -> dict[str, str]:
 
 
 def code_revision() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=SCRIPT_DIR,
-            text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return ""
+    return deployment_revision(SCRIPT_DIR)
 
 
 def _input_identity(path: Path) -> dict[str, object]:
@@ -676,6 +673,7 @@ def execute_fold_layer_task(
     n_jobs: int = 1,
 ) -> Path:
     """Fit/checkpoint a booster, then open and evaluate its held-out fold."""
+    assert_writable(root)
     started = time.monotonic()
     shard = task_shard_path(root, task)
     invariants = task_invariants(
@@ -882,6 +880,7 @@ def run_fold_layer_task(
     *,
     root: str | Path | None = None,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     if task_id is None:
         raw = os.environ.get("SLURM_ARRAY_TASK_ID")
         if raw is None:

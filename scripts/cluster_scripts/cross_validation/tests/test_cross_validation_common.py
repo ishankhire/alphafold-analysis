@@ -447,10 +447,10 @@ class AggregationLauncherTests(unittest.TestCase):
             "#SBATCH --partition=cpu",
             "#SBATCH --cpus-per-task=1",
             "#SBATCH --mem=8g",
-            '#SBATCH --constraint="scratch"',
+            '#SBATCH --constraint="scratch&work"',
             "#SBATCH --mail-type=BEGIN,END,FAIL",
             "#SBATCH --mail-user=ikhire3@gatech.edu",
-            "export CSV_ROOT=${CSV_ROOT:-$HOME/csv_files}",
+            "export CSV_ROOT=${CSV_ROOT:-/work/hdd/bfna/ikhire}",
             "SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}",
         )
         for filename, (entrypoint, walltime, family) in launchers.items():
@@ -461,7 +461,7 @@ class AggregationLauncherTests(unittest.TestCase):
                 self.assertIn(f"regression_5fold_v1/{family}/logs", launcher)
                 self.assertIn(f'srun python3 -u "$SCRIPT_DIR/{entrypoint}"', launcher)
                 self.assertNotIn("#SBATCH --array", launcher)
-                self.assertNotIn('constraint="scratch&work"', launcher)
+                self.assertLess(launcher.index('--check-write'), launcher.index('mkdir -p'))
 
 
 if __name__ == "__main__":

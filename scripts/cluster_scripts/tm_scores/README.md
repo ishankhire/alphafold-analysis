@@ -1,5 +1,16 @@
 # Reconstruction TM-score optimization
 
+The published collection is protected by `collection_manifest.json`. Reading
+retained artifacts uses relative indexes and historical checksums. New runs
+require explicit fresh output roots; existing checkpoint identities remain
+unchanged. `canonical_storage.py` defaults repository runs to `delta_files`
+and flat Delta deployments to `/work/hdd/bfna/ikhire`; `CSV_ROOT` is the
+parent of `regression_5fold_v1`. Include `canonical_storage.py` with the
+shared helpers. `canonical_deployment.py` builds the runtime allowlist and
+`deployment_manifest.json` (Git revision, mapping, hashes, binary provenance).
+Slurm stdout/stderr stay in the deployment directory, so rejected launches
+cannot write inside protected results.
+
 Scientific scope and geometry definitions live in
 [regression_outputs.md](../../../docs/methodology/regression_outputs.md).
 The existing regression geometry CSV schemas are unchanged. Fresh geometry
@@ -20,7 +31,7 @@ g++ -O3 -o scripts/cluster_scripts/TMscore .cache/tmscore-source/TMscore.cpp
 ```
 
 The compiled binary is ignored by Git. On Delta, compile the same source into
-`$HOME/openfold_interpretability_canonical/TMscore`. A Linux build is required;
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/TMscore`. A Linux build is required;
 do not deploy the local macOS binary. `TMSCORE_BINARY=/absolute/path/TMscore`
 overrides the colocated binary; PATH is searched last. Missing or failed
 executables abort scoring without substituting a historical score.
@@ -39,7 +50,7 @@ frozen 552-protein cohort, whose minimum length is 30.
 ## Rescore the packed export
 
 See the [cluster guide](../../../docs/cluster/README.md) for access and submission
-permissions. The commands below require authorization to change cluster state.
+permissions. Task-related deployment and submission follow the repository authorization rules.
 
 Run only after the predicted-distance exporter is finalized. Keep its deployment
 frozen until it finishes: its restart identity includes helper-code hashes.
@@ -48,7 +59,7 @@ historical helper hashes to equal the new implementation.
 
 Deploy `recompute_tm_scores.py`, `consolidate_tm_scores.py`, both `.sbatch`
 launchers, and the changed shared helpers flat
-to `$HOME/openfold_interpretability_canonical`. Retain the predicted-distance
+to `/work/hdd/bfna/ikhire/openfold_interpretability_canonical`. Retain the predicted-distance
 exporter's existing Python dependency inventory, its deployed README, and frozen
 protocol data. Copy this README as `tm_scores_README.md`.
 
@@ -56,7 +67,7 @@ Default inputs:
 
 - Packed arrays: `/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/`.
 - Source geometry CSVs: `$CSV_ROOT/regression_5fold_v1/`, with
-  `CSV_ROOT=$HOME/csv_files` on Delta.
+  `CSV_ROOT=/work/hdd/bfna/ikhire` on Delta.
 - References: original PDB paths recorded in `metadata/proteins.csv`, with
   residue identities and insertion codes checked against `metadata/residue_index.csv`.
 
@@ -73,8 +84,8 @@ evaluated before PDB rounding. The ledger separates alignment gain from the
 difference against the old saved score.
 
 ```bash
-mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs
-cd "$HOME/openfold_interpretability_canonical"
+export TMSCORE_OUTPUT_ROOT=/work/hdd/bfna/ikhire/diagnostic_experiments/tm_score_rerun_v2
+cd "/work/hdd/bfna/ikhire/openfold_interpretability_canonical"
 sbatch --array=0-47%4 recompute_tm_scores.sbatch
 ```
 
@@ -201,56 +212,9 @@ Copy those two PDFs to the corresponding active Overleaf paths. Other plots and
 ablation scores are unaffected. Detailed geometry CSVs remain Git-ignored local
 artifacts; original tables remain available on Delta.
 
-## Clean PDB-enabled rerun of the October 14 array
+## Historical October 14 rerun
 
-Read-only inspection on October 15 found 37 completed layers in `22908533`.
-Layers 16, 17, 18, 23, 33, 38, 39, 40, 43, 45, and 47 all failed with
-`Another prepare task is running`; finalizer `22908534` is pending with
-`DependencyNeverSatisfied`. The waiting preparation lock fixes this race.
-The user chose to discard these partial scoring outputs and rerun at the same
-path. No prediction export or model fitting is needed.
-
-**These commands change Delta state and require separate user authorization.**
-Before executing, confirm no scoring workers are active and the export root
-manifest is complete. From the local repository, deploy only these changed
-files; retain the existing Linux `TMscore` binary and exporter dependencies:
-
-```bash
-scp scripts/cluster_scripts/tm_scores/recompute_tm_scores.py \
-  scripts/cluster_scripts/tm_scores/recompute_tm_scores.sbatch \
-  scripts/cluster_scripts/tm_scores/consolidate_tm_scores.py \
-  scripts/cluster_scripts/tm_scores/consolidate_tm_scores.sbatch \
-  scripts/cluster_scripts/cluster_regression_helpers.py \
-  delta:openfold_interpretability_canonical/
-scp scripts/cluster_scripts/tm_scores/README.md \
-  delta:openfold_interpretability_canonical/tm_scores_README.md
-```
-
-On Delta, cancel the blocked finalizer if it is still queued, remove only the
-disposable scoring tree, recreate its logs, and submit the full array and a
-success-dependent finalizer:
-
-```bash
-scancel 22908534
-rm -rf -- /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1
-mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1/logs
-cd "$HOME/openfold_interpretability_canonical"
-unset TMSCORE_FINALIZE
-tm_array_id=$(sbatch --parsable --array=0-47%4 recompute_tm_scores.sbatch)
-tm_array_id=${tm_array_id%%;*}
-sbatch --dependency="afterok:$tm_array_id" consolidate_tm_scores.sbatch
-```
-
-Confirm the root manifest is complete with `n_scores == n_pdbs == 105984` and
-48 layer-manifest hashes. Consolidation checks recorded artifact identities;
-only the optional audit checks physical PDB checksums again. Do not reuse the
-old finalizer's failed dependency. This clean-rerun procedure is unnecessary
-when merely replacing an audit with consolidation: preserve every layer/PDB
-and submit only `consolidate_tm_scores.sbatch` after stopping the audit.
-
-```bash
-./.venv/bin/python -m pytest scripts/cluster_scripts/tm_scores/tests -q
-```
-
-Native tests need the installed executable. Local PDB smoke results are retained
-under `delta_files/analysis/tm_score_optimization_validation_v1/`.
+The October 15 PDB-enabled rerun is complete. Its former deletion and
+in-place restart procedure is superseded by the preserved canonical
+collection. Any future run requires a new `TMSCORE_OUTPUT_ROOT`;
+do not regenerate historical manifests to match the current deployment.

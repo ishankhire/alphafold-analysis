@@ -157,3 +157,12 @@ sacct -j JOB_ID \
 
 The accounting export currently ends on 2026-08-18. Measurements from newer
 jobs must therefore be collected from live `sacct` output and recorded here.
+
+## Canonical collection migration
+
+`canonical_migration/verify_canonical_results.sbatch` provisionally requests
+`01:00:00`: TM-score consolidation took 1m43s, but this one-off job additionally
+copies and hashes approximately 9 GiB of HOME bundles, verifies retained model
+artifacts and table identities, and audits shared-tree ACLs. Record its actual
+allocation elapsed time after execution. No fitting or physical full-file
+prediction/PDB audit is included.

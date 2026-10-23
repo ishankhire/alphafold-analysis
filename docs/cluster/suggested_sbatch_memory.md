@@ -137,3 +137,11 @@ request.
 These values assume the current dense float64 OLS implementations. A future
 streaming or bounded-memory solver should be benchmarked separately rather
 than inheriting these requests.
+
+## Canonical collection migration
+
+`canonical_migration/verify_canonical_results.sbatch` provisionally requests
+one CPU and `3g`. The closest comparator is TM-score consolidation (1.56 GiB
+Python-step MaxRSS). The migration streams copied-file hashing and CSV rows,
+retaining compact uniqueness identities rather than full triangle tables.
+Record successful allocation MaxRSS after execution; this is an estimate.

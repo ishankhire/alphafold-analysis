@@ -2173,3 +2173,11 @@ retained legacy input paths and documented older launcher compatibility.
 Updated agent guidance and the cluster guide to allow task-related cluster
 changes without approval, require exact change reports in chat, and retain
 explicit permission before deleting cluster files.
+
+## Session: 2026-10-23 — Canonical results migration tooling
+
+Centralized active canonical storage defaults, added pre-write publication
+protection and fresh-root overrides, and replaced stale deployment hashes with
+a Git/source inventory. Added an allowlisted copy/verification/cutover job that
+preserves originals and historical identities, plus local analysis root options.
+The Delta migration and access audit are pending execution.

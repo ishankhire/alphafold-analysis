@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,14 +35,30 @@ INPUT = ROOT / "delta_files/regression_5fold_v1" / FAMILY / "model_artifacts/fea
 ANALYSIS_ROOT = ROOT / "delta_files/regression_5fold_v1/analysis"
 
 
+def validate_output(path):
+    sys.path.insert(0, str(ROOT / "scripts/cluster_scripts"))
+    from canonical_storage import assert_writable
+    assert_writable(path)
+
+
+def provenance_path(path, root=ROOT):
+    path = Path(path).resolve()
+    return str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--importance", choices=("gain", "split_count"), default="gain")
-    metric = parser.parse_args().importance
+    parser.add_argument("--input-root", type=Path, default=INPUT.parent.parent, help="XGBoost family directory")
+    parser.add_argument("--output-root", type=Path, help="Derived output directory")
+    args = parser.parse_args()
+    input_path = args.input_root.expanduser().resolve() / "model_artifacts/feature_importance.csv"
+    metric = args.importance
     is_gain = metric == "gain"
     stem = "xgboost_gain_dimensions" if is_gain else "xgboost_split_dimensions"
-    output = ANALYSIS_ROOT / stem
-    with INPUT.open(newline="") as handle:
+    output = args.output_root.expanduser().resolve() if args.output_root else ANALYSIS_ROOT / stem
+    validate_output(output)
+    with input_path.open(newline="") as handle:
         rows = list(csv.DictReader(handle))
     importance = np.full((48, 256), np.nan)
     names = [f"pair_{direction}_ch_{channel:03d}" for direction in ("ij", "ji") for channel in range(128)]
@@ -100,8 +117,8 @@ def main() -> None:
         fig.savefig(output / f"{stem}.{suffix}", dpi=180)
     plt.close(fig)
     summary = {
-        "source": str(INPUT.relative_to(ROOT)),
-        "source_sha256": hashlib.sha256(INPUT.read_bytes()).hexdigest(),
+        "source": provenance_path(input_path),
+        "source_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
         "n_layers": 48, "n_folds": 5, "n_features": 256,
         "importance_type": metric,
         "importance_definition": (

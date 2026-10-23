@@ -12,6 +12,9 @@ from Bio.PDB import PDBParser
 import predicted_distance_export_common as common
 
 
+from canonical_storage import deployment_revision
+
+
 def residue_metadata(outer, pair_entry):
     pdb_path = common.replay.resolve_combined_pdb_path(outer.protein_id, outer.source).resolve()
     before = common.sha256_file(pdb_path)
@@ -62,11 +65,7 @@ def prepare():
         common.atomic_write_csv(root / "metadata/residue_index.csv", common.RESIDUE_COLUMNS, residues)
         readme = common.readme_source().read_text()
         common.atomic_write_text(root / "README.md", readme)
-        try:
-            revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path(__file__).parent,
-                                               stderr=subprocess.DEVNULL, text=True).strip()
-        except (OSError, subprocess.CalledProcessError):
-            revision = "unavailable_in_flat_deployment"
+        revision = deployment_revision(Path(__file__).parent)
         manifest = {
             "export_schema": common.EXPORT_SCHEMA, "preparation_status": "complete",
             "run_status": "prepared", "created_at": common.utc_now(), "completed_layers": [],

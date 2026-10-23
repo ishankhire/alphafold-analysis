@@ -12,10 +12,12 @@ cosines over five folds; intercepts are excluded. No fitting or evaluation runs.
 
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,6 +33,17 @@ import matplotlib.pyplot as plt
 FAMILY = ROOT / "delta_files/regression_5fold_v1/shared_ols_base256"
 OUTPUT = ROOT / "delta_files/regression_5fold_v1/analysis/linear_coefficients_analysis"
 SPACES = ("standardized", "raw_scale")
+
+
+def validate_output(path):
+    sys.path.insert(0, str(ROOT / "scripts/cluster_scripts"))
+    from canonical_storage import assert_writable
+    assert_writable(path)
+
+
+def provenance_path(path, root=ROOT):
+    path = Path(path).resolve()
+    return str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
 
 
 def write_csv(path: Path, columns, rows) -> None:
@@ -81,16 +94,23 @@ def load_coefficients():
                 if values.shape != (256,):
                     raise ValueError(f"Unexpected coefficient shape: {path}")
                 coefficients[space][fold, layer] = values
-            sources.append((fold, layer, str(path.relative_to(ROOT)), digest, str(archive["fit_status"])))
+            sources.append((fold, layer, provenance_path(path), digest, str(archive["fit_status"])))
     return coefficients, sorted(sources)
 
 
 def main() -> None:
+    global FAMILY, OUTPUT
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input-root", type=Path, default=FAMILY)
+    parser.add_argument("--output-root", type=Path, default=OUTPUT)
+    args = parser.parse_args()
+    FAMILY, OUTPUT = args.input_root.expanduser().resolve(), args.output_root.expanduser().resolve()
+    validate_output(OUTPUT)
     coefficients, sources = load_coefficients()
     similarities = {space: np.stack([layer_cosines(v) for v in coefficients[space]]) for space in SPACES}
     OUTPUT.mkdir(parents=True, exist_ok=True)
     summary = {
-        "source_family": str(FAMILY.relative_to(ROOT)),
+        "source_family": provenance_path(FAMILY),
         "n_layers": 48, "n_outer_folds": 5, "n_features": 256,
         "intercept_included": False,
         "primary_coefficient_space": "standardized",

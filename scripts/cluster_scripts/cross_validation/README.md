@@ -1,5 +1,16 @@
 # Fivefold OOF regression release runbook
 
+The published collection is protected by `collection_manifest.json`. Reading
+retained artifacts uses relative indexes and historical checksums. New runs
+require explicit fresh output roots; existing checkpoint identities remain
+unchanged. `canonical_storage.py` defaults repository runs to `delta_files`
+and flat Delta deployments to `/work/hdd/bfna/ikhire`; `CSV_ROOT` is the
+parent of `regression_5fold_v1`. Include `canonical_storage.py` with the
+shared helpers. `canonical_deployment.py` builds the runtime allowlist and
+`deployment_manifest.json` (Git revision, mapping, hashes, binary provenance).
+Slurm stdout/stderr stay in the deployment directory, so rejected launches
+cannot write inside protected results.
+
 This directory contains the protocol-2.0 implementations, launchers, and strict
 aggregators for the four fivefold out-of-fold regression families. Copied results
 are under `delta_files/regression_5fold_v1/`; see
@@ -18,8 +29,7 @@ independently of the existing model-input `CSV_ROOT`.
 
 ## Delta prerequisites
 
-Follow the [cluster guide](../../../docs/cluster/README.md); deployment and job
-submission require the user's permission.
+Follow the [cluster guide](../../../docs/cluster/README.md); cluster changes follow its task authorization and deletion rules.
 
 New reconstruction geometry requires the official `TMscore` executable beside
 the deployed shared helper or via `TMSCORE_BINARY`. See the
@@ -40,19 +50,18 @@ run through Slurm rather than on a login node.
 Use the repository's flat deployment root and output convention:
 
 ```text
-$HOME/openfold_interpretability_canonical/
-$HOME/csv_files/regression_5fold_v1/
+/work/hdd/bfna/ikhire/openfold_interpretability_canonical/
+/work/hdd/bfna/ikhire/regression_5fold_v1/
 ```
 
 The account in the checked-in launchers is `bekh-delta-cpu`. Confirm that it is
-still returned by `accounts` before submission. Confirm available HOME quota
-with `quota`, because the locked project convention writes compact shards and
-final outputs under `$HOME/csv_files` even though pair tensors and PDB inputs
-are read from `/work/hdd`.
+still returned by `accounts` before submission. Confirm allocation byte/file quota with `quota`. New worker runs use an
+explicit fresh `CSV_ROOT` and copies of the three frozen metadata files.
+The published root is available for reading only.
 
 ## Flat deployment inventory
 
-Copy the following to `$HOME/openfold_interpretability_canonical/` without
+Copy the following to `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` without
 preserving the repository's `cross_validation/` subdirectory:
 
 - this README as `fivefold_regression_README.md`;
@@ -71,8 +80,8 @@ The frozen XGBoost selection table is not a runtime input. Its repository path
 and SHA-256 digest are embedded in and validated by the portable fixed
 configuration.
 
-Copy these three checked-in metadata files to
-`$HOME/csv_files/regression_5fold_v1/metadata/`:
+For a new run, copy these three checked-in metadata files to
+`$CSV_ROOT/regression_5fold_v1/metadata/` beneath a fresh explicit `CSV_ROOT`:
 
 ```text
 regression_outer_folds_v1.csv
@@ -89,11 +98,11 @@ not from the local repository copy.
 From the flat deployment directory:
 
 ```bash
-cd "$HOME/openfold_interpretability_canonical"
+cd "/work/hdd/bfna/ikhire/openfold_interpretability_canonical"
 module reset
 module load python
 source ~/protein_venv/bin/activate
-export CSV_ROOT=${CSV_ROOT:-$HOME/csv_files}
+export CSV_ROOT=${CSV_ROOT:-/work/hdd/bfna/ikhire}
 python3 -c 'from cross_validation_common import load_cv_folds; b=load_cv_folds(); print(len(b.eligible_protein_ids), [len(b.protein_ids_for_outer_fold(f)) for f in range(5)])'
 python3 -c 'import xgboost; print(xgboost.__version__)'
 bash -n ./*.sbatch
@@ -220,7 +229,11 @@ The versioned downstream implementation is
 `triangle_violation_subgroups_5fold_v1`. Run its preparation job after all four
 family manifests are complete, then its 48-task layer array, then its streaming
 aggregator. It writes beneath
-`$CSV_ROOT/analysis/triangle_violation_subgroups_5fold_v1/` and leaves the
+`$CSV_ROOT/regression_5fold_v1/triangle_violation_subgroups_5fold_v1/` and leaves the
 historical protocol-1.0 result tree unchanged. The per-protein OLS replay also
 reports the separate `1_model`/`2_models`/`3_models` cross-fit stitching
 diagnostic; it is not crossed with the seven reference-geometry systems.
+
+Triangle reruns can use `TRIANGLE_OUTPUT_ROOT` independently of producer inputs.
+The published `analysis/triangle_violation_subgroups_5fold_v1` is a relative
+alias to the complete producer bundle.

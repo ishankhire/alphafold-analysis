@@ -54,6 +54,9 @@ from triangle_violation_subgroup_common import (  # noqa: E402
 )
 
 
+from canonical_storage import assert_writable, csv_root as storage_csv_root, workflow_root
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -68,7 +71,7 @@ def peak_rss_mb() -> float:
 
 
 def csv_root() -> Path:
-    return Path(os.environ.get("CSV_ROOT", str(Path.home() / "csv_files"))).expanduser()
+    return storage_csv_root()
 
 
 def producer_root() -> Path:
@@ -76,7 +79,7 @@ def producer_root() -> Path:
 
 
 def output_root() -> Path:
-    return csv_root() / "analysis" / ANALYSIS_NAME
+    return workflow_root(ANALYSIS_NAME, "TRIANGLE_OUTPUT_ROOT", analysis=False)
 
 
 def validate_producers(fold_bundle) -> dict[str, object]:
@@ -176,6 +179,7 @@ def prepare_one(outer, pair, temp_parent: Path) -> tuple[dict[str, object], list
 
 
 def main() -> None:
+    assert_writable(output_root())
     started = time.perf_counter()
     started_at = utc_now()
     root = output_root()

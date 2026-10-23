@@ -139,6 +139,9 @@ TASK_PAYLOAD_PATH = "task_payload.json"
 TASK_CHECKPOINT_FILENAME = "checkpoint.json"
 
 
+from canonical_storage import assert_writable
+
+
 def log(message: str) -> None:
     print(f"[{datetime.now().astimezone().isoformat(timespec='seconds')}] {message}", flush=True)
 
@@ -495,6 +498,7 @@ def execute_fold_layer_task(
     feature_loader: Callable[[ProteinLayerRecord], np.ndarray] = load_feature_block,
 ) -> Path:
     """Fit six isolated gates, recombine held-out predictions, and checkpoint."""
+    assert_writable(root)
     started = time.monotonic()
     shard = task_shard_path(root, task)
     invariants = task_invariants(task, fold_digests=fold_digests, input_digest=input_digest)
@@ -703,6 +707,7 @@ def run_fold_layer_task(
     *,
     root: str | Path | None = None,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     if task_id is None:
         raw = os.environ.get("SLURM_ARRAY_TASK_ID")
         if raw is None:

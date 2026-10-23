@@ -130,6 +130,9 @@ TASK_MODEL_PATH = "model_artifacts/coefficient_shard.npz"
 TASK_CHECKPOINT_FILENAME = "checkpoint.json"
 
 
+from canonical_storage import assert_writable
+
+
 def family_output_root(csv_root: str | Path | None = None) -> Path:
     return fivefold_result_root(csv_root) / FAMILY_DIR_NAME
 
@@ -436,6 +439,7 @@ def execute_layer_task(
     feature_loader: Callable[[ProteinLayerRecord], np.ndarray] = load_feature_block,
 ) -> Path:
     """Fit five pair-fold models per protein and checkpoint one complete layer."""
+    assert_writable(root)
     started = time.monotonic()
     task_layer = map_layer_task(int(layer))
     shard = task_shard_path(root, task_layer)
@@ -653,6 +657,7 @@ def run_layer_task(
     *,
     root: str | Path | None = None,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     if task_id is None:
         raw = os.environ.get("SLURM_ARRAY_TASK_ID")
         if raw is None:

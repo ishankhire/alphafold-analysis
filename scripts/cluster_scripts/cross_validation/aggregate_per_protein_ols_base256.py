@@ -83,6 +83,9 @@ from regression_protocol import (  # noqa: E402
 from shared_ols_base256_common import code_revision, log, version_payload  # noqa: E402
 
 
+from canonical_storage import assert_writable, normalize_shared_tree
+
+
 def _float(row: Mapping[str, object], key: str) -> float:
     return float(row[key])
 
@@ -431,6 +434,7 @@ def aggregate_per_protein_ols(
     layers: Sequence[int] = LAYERS,
     allow_partial: bool = False,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     destination = family_output_root() if root is None else Path(root)
     bundle = load_cv_folds() if fold_bundle is None else fold_bundle
     requested_layers = tuple(int(layer) for layer in layers)
@@ -612,6 +616,7 @@ def aggregate_per_protein_ols(
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     log(f"published {len(requested_layers)} per-protein OLS layers to {destination}")
+    normalize_shared_tree(destination)
     return destination
 
 

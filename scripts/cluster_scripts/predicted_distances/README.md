@@ -1,5 +1,16 @@
 # Packed OOF predicted-distance export
 
+The published collection is protected by `collection_manifest.json`. Reading
+retained artifacts uses relative indexes and historical checksums. New runs
+require explicit fresh output roots; existing checkpoint identities remain
+unchanged. `canonical_storage.py` defaults repository runs to `delta_files`
+and flat Delta deployments to `/work/hdd/bfna/ikhire`; `CSV_ROOT` is the
+parent of `regression_5fold_v1`. Include `canonical_storage.py` with the
+shared helpers. `canonical_deployment.py` builds the runtime allowlist and
+`deployment_manifest.json` (Git revision, mapping, hashes, binary provenance).
+Slurm stdout/stderr stay in the deployment directory, so rejected launches
+cannot write inside protected results.
+
 Replay the four frozen protocol-2.0 probes without fitting models. Scientific
 rules remain in [regression_methodology.md](../../../docs/methodology/regression_methodology.md).
 The [output contract](../../../docs/methodology/regression_outputs.md) defines
@@ -9,7 +20,7 @@ its relationship to the canonical producer outputs.
 
 Existing model inputs are read from
 `$CSV_ROOT/regression_5fold_v1/`, normally
-`$HOME/csv_files/regression_5fold_v1/`. All export files, including temporary
+`/work/hdd/bfna/ikhire/regression_5fold_v1/`. All export files, including temporary
 files and checkpoints, default to:
 
 ```text
@@ -55,11 +66,10 @@ An invalid gate/fold/model or metric mismatch fails the layer without fallback.
 
 ## Deployment and submission
 
-Follow the [cluster guide](../../../docs/cluster/README.md); deployment and job
-submission require the user's permission. Current execution status lives in
+Follow the [cluster guide](../../../docs/cluster/README.md); cluster changes follow its task authorization and deletion rules. Current execution status lives in
 [current sources and status](../../../docs/project_status.md).
 
-Deploy files flat to `$HOME/openfold_interpretability_canonical/`:
+Deploy files flat to `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`:
 
 - All four `.py` and three `.sbatch` files in this directory.
 - Copy this README as `predicted_distance_export_README.md` in the flat directory.
@@ -77,13 +87,12 @@ per-protein/geometry/pooled CSVs must already exist under the model input root.
 3.2.0). Preparation and workers must use the same environment/code. A changed
 environment, producer, PDB, or checkpointed pair tensor is rejected on resume.
 
-Check `accounts`, filesystem byte/file quota, and write access first. Create
-the Slurm log directory before submission because Slurm opens stdout before
-the script starts:
+Check `accounts`, filesystem byte/file quota, and write access first.
+Choose a fresh output root before submitting:
 
 ```bash
-mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/logs
-cd "$HOME/openfold_interpretability_canonical"
+export PREDICTED_DISTANCE_OUTPUT_ROOT=/work/hdd/bfna/ikhire/diagnostic_experiments/predicted_distances_rerun_v2
+cd "/work/hdd/bfna/ikhire/openfold_interpretability_canonical"
 sbatch prepare_predicted_distance_export.sbatch
 ```
 
@@ -115,10 +124,9 @@ The CPU partition, filesystem dependencies,
 and module setup follow the live
 [Delta running-jobs guide](https://docs.ncsa.illinois.edu/systems/delta/en/latest/user_guide/running_jobs.html).
 
-`CSV_ROOT` controls existing model inputs. `PREDICTED_DISTANCE_OUTPUT_ROOT`
-independently overrides the export root if needed. The launchers' Slurm log
-paths explicitly target the agreed `/work/hdd` root; overriding the export
-root also requires `sbatch -o ... -e ...` pointing at an existing log directory.
+`CSV_ROOT` controls model inputs and the default export parent.
+`PREDICTED_DISTANCE_OUTPUT_ROOT` independently selects a fresh export root.
+Slurm logs stay in the deployment directory for every root.
 
 ## Restart and validation
 

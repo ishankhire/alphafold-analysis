@@ -53,6 +53,9 @@ from triangle_violation_subgroup_common import (  # noqa: E402
 )
 
 
+from canonical_storage import assert_writable, csv_root as storage_csv_root, workflow_root, normalize_shared_tree
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -67,7 +70,7 @@ def log(message: str) -> None:
 
 
 def csv_root() -> Path:
-    return Path(os.environ.get("CSV_ROOT", str(Path.home() / "csv_files"))).expanduser()
+    return storage_csv_root()
 
 
 def producer_root() -> Path:
@@ -75,7 +78,7 @@ def producer_root() -> Path:
 
 
 def output_root() -> Path:
-    return csv_root() / "analysis" / ANALYSIS_NAME
+    return workflow_root(ANALYSIS_NAME, "TRIANGLE_OUTPUT_ROOT", analysis=False)
 
 
 INTEGER_COLUMNS = {
@@ -456,6 +459,7 @@ class AtomicCSVStream:
 
 
 def main() -> None:
+    assert_writable(output_root())
     started = time.perf_counter()
     started_wall = utc_now()
     root = output_root()
@@ -561,6 +565,8 @@ def main() -> None:
     }
     atomic_write_json(root / "run_manifest.json", manifest)
     log(f"aggregation complete elapsed={manifest['aggregation_elapsed_seconds']:.1f}s")
+
+    normalize_shared_tree(output_root())
 
 
 if __name__ == "__main__":

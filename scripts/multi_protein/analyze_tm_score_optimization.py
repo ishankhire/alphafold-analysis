@@ -8,6 +8,7 @@ import hashlib
 import io
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -30,6 +31,17 @@ MODELS = {
 }
 TOLERANCE = 1e-6
 SUMMARY_STATISTICS = ("mean", "std", "median", "q25", "q75")
+
+
+def validate_output(path):
+    sys.path.insert(0, str(ROOT / "scripts/cluster_scripts"))
+    from canonical_storage import assert_writable
+    assert_writable(path)
+
+
+def provenance_path(path, root=ROOT):
+    path = Path(path).resolve()
+    return str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
 
 
 def sha256(path):
@@ -163,7 +175,7 @@ def prepare_geometry_refresh(regression_root, optimized_root, ledger, manifest, 
             outputs[name] = hashlib.sha256(contents).hexdigest()
             updates[path] = contents
         provenance[family] = dict(
-            source_manifest=str((optimized_root / "run_manifest.json").relative_to(regression_root)),
+            source_manifest=provenance_path(optimized_root / "run_manifest.json", regression_root),
             source_manifest_sha256=manifest_hash, source_geometry_sha256=original_hash,
             tm_score_method=manifest["tm_score_method"], validation=manifest["validation"],
             output_sha256=outputs,
@@ -178,6 +190,11 @@ def prepare_geometry_refresh(regression_root, optimized_root, ledger, manifest, 
 
 
 def apply_geometry_refresh(updates):
+    import sys
+    sys.path.insert(0, str(ROOT / "scripts/cluster_scripts"))
+    from canonical_storage import assert_writable
+    for path in updates:
+        assert_writable(path)
     """Write only validated changes; repeated application leaves files untouched."""
     for path, contents in updates.items():
         if path.read_bytes() != contents:
@@ -207,10 +224,15 @@ def statistics(old, new):
 
 
 def main():
+    global INPUT, OUTPUT
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply-geometry", action="store_true",
                         help="After validating all families, replace canonical TM-score cells in place")
+    parser.add_argument("--input-root", type=Path, default=INPUT)
+    parser.add_argument("--output-root", type=Path, default=OUTPUT)
     args = parser.parse_args()
+    INPUT, OUTPUT = args.input_root.expanduser().resolve(), args.output_root.expanduser().resolve()
+    validate_output(OUTPUT)
     manifest = json.loads((INPUT / "run_manifest.json").read_text())
     checksum = hashlib.sha256((INPUT / "tm_scores.csv").read_bytes()).hexdigest()
     if manifest["run_status"] != "complete" or checksum != manifest["output_sha256"]["tm_scores.csv"]:
@@ -284,7 +306,7 @@ def main():
     figure.savefig(OUTPUT / "tm_score_comparison.pdf")
     plt.close(figure)
     summary = {
-        "source_ledger": str((INPUT / "tm_scores.csv").relative_to(ROOT)),
+        "source_ledger": provenance_path(INPUT / "tm_scores.csv"),
         "source_sha256": checksum,
         "source_validation": manifest.get("validation"),
         "geometry_refresh": {

@@ -85,6 +85,9 @@ from shared_xgboost_base256_fixed_s4_common import (  # noqa: E402
 )
 
 
+from canonical_storage import assert_writable, normalize_shared_tree
+
+
 def _float(row: Mapping[str, object], key: str) -> float:
     return float(row[key])
 
@@ -370,6 +373,7 @@ def aggregate_shared_xgboost(
     layers: Sequence[int] = LAYERS,
     allow_partial: bool = False,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     destination = family_output_root() if root is None else Path(root)
     bundle = load_cv_folds() if fold_bundle is None else fold_bundle
     requested_layers = tuple(int(layer) for layer in layers)
@@ -587,6 +591,7 @@ def aggregate_shared_xgboost(
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     log(f"published {len(requested_layers)} shared-XGBoost layers to {destination}")
+    normalize_shared_tree(destination)
     return destination
 
 

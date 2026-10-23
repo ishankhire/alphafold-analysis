@@ -19,6 +19,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping, Sequence
 
+from canonical_storage import assert_writable, SHARED_PARENT
+
 import numpy as np
 
 from cluster_regression_helpers import analyze_protein_geometry, TMScoreError
@@ -773,6 +775,7 @@ def atomic_write_csv(
     fieldnames: Sequence[str],
     rows: Sequence[Mapping[str, object]],
 ) -> None:
+    assert_writable(path)
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     expected = set(fieldnames)
@@ -794,6 +797,8 @@ def atomic_write_csv(
                 writer.writerow({field: _csv_value(row[field]) for field in fieldnames})
             handle.flush()
             os.fsync(handle.fileno())
+        if destination.resolve().is_relative_to(SHARED_PARENT):
+            os.chmod(temporary_name, 0o640)
         os.replace(temporary_name, destination)
     except Exception:
         try:
@@ -804,6 +809,7 @@ def atomic_write_csv(
 
 
 def atomic_write_json(path: str | Path, payload: object) -> None:
+    assert_writable(path)
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n"
@@ -815,6 +821,8 @@ def atomic_write_json(path: str | Path, payload: object) -> None:
             handle.write(encoded)
             handle.flush()
             os.fsync(handle.fileno())
+        if destination.resolve().is_relative_to(SHARED_PARENT):
+            os.chmod(temporary_name, 0o640)
         os.replace(temporary_name, destination)
     except Exception:
         try:
@@ -825,6 +833,7 @@ def atomic_write_json(path: str | Path, payload: object) -> None:
 
 
 def atomic_savez_compressed(path: str | Path, **arrays: np.ndarray) -> None:
+    assert_writable(path)
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
@@ -833,6 +842,8 @@ def atomic_savez_compressed(path: str | Path, **arrays: np.ndarray) -> None:
     os.close(descriptor)
     try:
         np.savez_compressed(temporary_name, **arrays)
+        if destination.resolve().is_relative_to(SHARED_PARENT):
+            os.chmod(temporary_name, 0o640)
         os.replace(temporary_name, destination)
     except Exception:
         try:

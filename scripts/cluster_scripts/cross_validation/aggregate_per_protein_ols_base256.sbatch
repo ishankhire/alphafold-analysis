@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8g
 #SBATCH --time=01:00:00
-#SBATCH --constraint="scratch"
+#SBATCH --constraint="scratch&work"
 #SBATCH -o aggregate_per_protein_ols_5fold_%j.out
 #SBATCH -e aggregate_per_protein_ols_5fold_%j.err
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -20,7 +20,9 @@ module load python
 source ~/protein_venv/bin/activate
 module list
 
-export CSV_ROOT=${CSV_ROOT:-$HOME/csv_files}
+export CSV_ROOT=${CSV_ROOT:-/work/hdd/bfna/ikhire}
+SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
+python3 "$SCRIPT_DIR/canonical_storage.py" --check-write "$CSV_ROOT/regression_5fold_v1" || exit $?
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 export OPENBLAS_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
 export MKL_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
@@ -33,6 +35,6 @@ exec > >(tee -a "$LOG_DIR/aggregate_${RUN_TIMESTAMP}_${SLURM_JOB_ID}.log") 2>&1
 
 START_SECONDS=$SECONDS
 echo "[$(date --iso-8601=seconds)] per-protein OLS aggregation starting on $(hostname)"
-SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
+
 srun python3 -u "$SCRIPT_DIR/aggregate_per_protein_ols_base256.py"
 echo "[$(date --iso-8601=seconds)] per-protein OLS aggregation finished; elapsed_seconds=$((SECONDS - START_SECONDS))"

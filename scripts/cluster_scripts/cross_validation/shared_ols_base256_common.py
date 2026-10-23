@@ -136,6 +136,9 @@ TASK_MODEL_PATH = "model_artifacts/coefficients.npz"
 TASK_CHECKPOINT_FILENAME = "checkpoint.json"
 
 
+from canonical_storage import assert_writable, deployment_revision
+
+
 def log(message: str) -> None:
     print(f"[{datetime.now().astimezone().isoformat(timespec='seconds')}] {message}", flush=True)
 
@@ -213,13 +216,7 @@ def version_payload() -> dict[str, str]:
 
 
 def code_revision() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "HEAD"], cwd=SCRIPT_DIR,
-            text=True, stderr=subprocess.DEVNULL,
-        ).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return ""
+    return deployment_revision(SCRIPT_DIR)
 
 
 def _input_identity(path: Path) -> dict[str, object]:
@@ -524,6 +521,7 @@ def execute_fold_layer_task(
     feature_loader: Callable[[ProteinLayerRecord], np.ndarray] = load_feature_block,
 ) -> Path:
     """Fit, stream held-out evaluation, and atomically checkpoint one task."""
+    assert_writable(root)
     started = time.monotonic()
     shard = task_shard_path(root, task)
     invariants = task_invariants(task, fold_digests=fold_digests, input_digest=input_digest)
@@ -721,6 +719,7 @@ def run_fold_layer_task(
     *,
     root: str | Path | None = None,
 ) -> Path:
+    assert_writable(family_output_root() if root is None else root)
     if task_id is None:
         raw = os.environ.get("SLURM_ARRAY_TASK_ID")
         if raw is None:
