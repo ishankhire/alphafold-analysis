@@ -166,3 +166,13 @@ copies and hashes approximately 9 GiB of HOME bundles, verifies retained model
 artifacts and table identities, and audits shared-tree ACLs. Record its actual
 allocation elapsed time after execution. No fitting or physical full-file
 prediction/PDB audit is included.
+
+Job `23142906` timed out at 1h00m01s. Copying ended after about 14m18s,
+inventory rechecks after 37m06s, and all 40,341 pre-publication checks after
+42m06s. Cutover finished, but shared-tree permission normalization was still
+running at timeout. Recovery requests `04:00:00` for about 28 minutes of
+repeated integrity/protocol checks plus two permission passes and complete
+access audits over resident exports and copied trees. ACL updates now batch
+across directories. This is a provisional filesystem-work estimate with
+headroom, not a multiplier of a successful runtime; record successful
+recovery elapsed time before refining it.

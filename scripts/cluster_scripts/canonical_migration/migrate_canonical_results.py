@@ -372,11 +372,12 @@ def verify_tables(stage_root, resident_root, authority, audit):
         audit.check(f'pdb_read:{family}/{layer}/{pid}', int(row['n_residues']), len(coordinates))
 
 
-def verify_inventory(args, audit):
+def verify_inventory(args, audit, *, content_root=None):
+    content_root = args.stage if content_root is None else Path(content_root)
     count = 0
-    for row in rows(args.stage / '_migration_v1/inventory.csv'):
+    for row in rows(content_root / '_migration_v1/inventory.csv'):
         relative = Path(row['destination']).relative_to(args.root)
-        destination = args.stage / relative
+        destination = safe_path(content_root, relative)
         audit.check(f'copy_hash:{relative}', row['sha256'], sha256(destination))
         audit.check(f'copy_bytes:{relative}', int(row['byte_count']), destination.stat().st_size)
         if row['authority'] == 'original_HOME':
@@ -468,12 +469,27 @@ def publish(args, authority, sources, started, count):
                 'resident_physical_artifacts': 'representative_reads_only_layers_0_23_47_all_four_probes'},
                 'no_deletions': True, 'original_HOME_preserved': True}
     write_json(audit_root / 'migration_manifest.json', manifest)
+    finish_publication(args, manifest, started, audit_root)
+
+
+def append_checks(destination, source):
+    with Path(destination).open('a', newline='') as output:
+        writer = csv.DictWriter(output, fieldnames=('check', 'expected', 'observed', 'passed'))
+        writer.writerows(rows(source))
+
+
+def finish_publication(args, manifest, started, attempt_root):
+    """Finish access checks after cutover, without copying or renaming results."""
+    audit_root = args.root / '_migration_v1'
+    alias = args.root / 'analysis' / TRIANGLE
+    log('Normalizing published result permissions (including resident exports)')
     normalize_shared_tree(args.root)
+    log('Normalizing deployment permissions')
     normalize_shared_tree(args.deployment)
     # Repair only the user-owned ancestor; allocation ancestors are audited, never rewritten.
     os.chmod(args.root.parent, 0o2750)
     subprocess.run(['setfacl', '-m', 'g::r-x,m::r-x,d:g::r-x,d:m::r-x', str(args.root.parent)], check=True)
-    audit = Audit(audit_root / 'access_verification.csv')
+    audit = Audit(attempt_root / 'access_verification.csv')
     try:
         access_audit(args.root, audit)
         access_audit(args.deployment, audit)
@@ -484,9 +500,7 @@ def publish(args, authority, sources, started, count):
     finally:
         audit.close()
     # Merge the access checks into the normative single verification table.
-    with (audit_root / 'verification.csv').open('a', newline='') as output:
-        writer = csv.DictWriter(output, fieldnames=('check', 'expected', 'observed', 'passed'))
-        writer.writerows(rows(audit_root / 'access_verification.csv'))
+    append_checks(audit_root / 'verification.csv', attempt_root / 'access_verification.csv')
     manifest.update(status='verifying_final_access', completed_at=datetime.now(timezone.utc).isoformat(),
                     elapsed_seconds=time.perf_counter() - started,
                     process_peak_rss_mb=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024)
@@ -506,23 +520,95 @@ def publish(args, authority, sources, started, count):
         log('Published-root write refusal passed')
     else:
         raise ValueError('Published-root write guard did not refuse')
-    final_audit = Audit(audit_root / 'final_access_verification.csv')
+    final_audit = Audit(attempt_root / 'final_access_verification.csv')
+    log('Normalizing final audit files and checking final collection access')
     normalize_shared_tree(args.root)
     try:
         access_audit(args.root, final_audit)
         final_audit.check('published_root_write_refusal', True, True)
     finally:
         final_audit.close()
-    with (audit_root / 'verification.csv').open('a', newline='') as output:
-        writer = csv.DictWriter(output, fieldnames=('check', 'expected', 'observed', 'passed'))
-        writer.writerows(rows(audit_root / 'final_access_verification.csv'))
+    append_checks(audit_root / 'verification.csv', attempt_root / 'final_access_verification.csv')
     manifest.update(status='complete', elapsed_seconds=time.perf_counter() - started,
                     process_peak_rss_mb=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024)
     collection['status'] = 'complete'
     write_json(audit_root / 'migration_manifest.json', manifest)
     write_json(args.root / 'collection_manifest.json', collection)
-    os.chmod(audit_root / 'final_access_verification.csv', 0o640)
-    log(f'COMPLETE: published {count} copied files at {args.root}')
+    os.chmod(attempt_root / 'final_access_verification.csv', 0o640)
+    log(f'COMPLETE: published {manifest["copied_files"]} copied files at {args.root}')
+
+
+def inspect_published_resume(args, authority):
+    """Admit only a fully cut-over, incomplete migration with retained evidence."""
+    audit_root = args.root / '_migration_v1'
+    collection = read_json(args.root / 'collection_manifest.json')
+    manifest = read_json(audit_root / 'migration_manifest.json')
+    if (collection.get('collection_version') != 'regression_5fold_v1_migration_v1'
+            or collection.get('status') not in ('publishing', 'verifying_final_access')
+            or manifest.get('schema') != 'canonical_results_migration_v1'
+            or manifest.get('status') not in ('verifying_access', 'verifying_final_access')):
+        raise ValueError('Resume requires an incomplete, already-published migration')
+    expected = {'result_root': str(args.root), 'stage_root': str(args.stage),
+                'deployment_root': str(args.deployment), 'authority': authority,
+                'source_mapping': {k: str(v) for k, v in source_mapping(args.home).items()}}
+    for key, value in expected.items():
+        if manifest.get(key) != value:
+            raise ValueError(f'Resume identity mismatch: {key}')
+    if read_json(audit_root / 'authority.json') != authority:
+        raise ValueError('Preserved authority mismatch')
+    for name in (*FAMILIES, 'metadata', TRIANGLE, PUBLICATION, *RESIDENT):
+        if not (args.root / name).is_dir() or (args.root / name).is_symlink():
+            raise ValueError(f'Incomplete cutover: {name}')
+        if (args.stage / name).exists():
+            raise ValueError(f'Unexpected staged component after cutover: {name}')
+    if (args.stage / '_migration_v1').exists():
+        raise ValueError('Audit directory has not been published')
+    alias = args.root / 'analysis' / TRIANGLE
+    if not alias.is_symlink() or os.readlink(alias) != f'../{TRIANGLE}':
+        raise ValueError('Missing or conflicting triangle alias')
+    checks = list(rows(audit_root / 'verification.csv'))
+    if not checks or any(r['passed'] != 'True' for r in checks):
+        raise ValueError('Prior verification is missing or contains failed checks')
+    if not any(r['check'].startswith('deployment:') for r in checks):
+        raise ValueError('Prior pre-publication verification did not finish')
+    return manifest
+
+
+def resume_published(args, authority, started):
+    manifest = inspect_published_resume(args, authority)
+    audit_root = args.root / '_migration_v1'
+    attempt = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+    attempt_root = audit_root / f'recovery_{attempt}_{os.environ.get("SLURM_JOB_ID", "local")}'
+    attempt_root.mkdir()
+    for name, source in (('previous_collection_manifest.json', args.root / 'collection_manifest.json'),
+                         ('previous_migration_manifest.json', audit_root / 'migration_manifest.json'),
+                         ('previous_verification.csv', audit_root / 'verification.csv'),
+                         ('deployment_manifest.json', args.deployment / 'deployment_manifest.json')):
+        copy_file(source, attempt_root / name)
+    audit = Audit(attempt_root / 'verification.csv')
+    try:
+        log('Recovery: rechecking published copied-file hashes and original HOME sources')
+        count = verify_inventory(args, audit, content_root=args.root)
+        audit.check('recovery_inventory_count', manifest['copied_files'], count)
+        log('Recovery: rechecking protocol tables, retained models and optimized geometry')
+        verify_tables(args.root, args.root, authority, audit)
+        verify_geometry(args.root, args.root, authority, audit)
+        for relative, checksum in read_json(audit_root / 'resident_snapshot.json').items():
+            audit.check(f'resident_unchanged:{relative}', checksum, sha256(args.root / relative))
+        for path, expected, observed, _ in verify_deployment(args.deployment, args.root / 'metadata'):
+            audit.check(f'deployment:{path}', expected, observed)
+        log(f'Recovery pre-access verification passed: {audit.count} checks')
+    finally:
+        audit.close()
+    append_checks(audit_root / 'verification.csv', attempt_root / 'verification.csv')
+    manifest.setdefault('initial_verification_job_id', manifest['verification_job_id'])
+    manifest.setdefault('recovery_attempts', []).append({
+        'job_id': os.environ.get('SLURM_JOB_ID'), 'started_at': attempt,
+        'audit_directory': str(attempt_root.relative_to(args.root)),
+        'git_commit': read_json(args.deployment / 'deployment_manifest.json')['git_commit']})
+    manifest.update(status='verifying_access', verification_job_id=os.environ.get('SLURM_JOB_ID'))
+    write_json(audit_root / 'migration_manifest.json', manifest)
+    finish_publication(args, manifest, started, attempt_root)
 
 
 def main():
@@ -534,6 +620,8 @@ def main():
     parser.add_argument('--authority', type=Path, required=True)
     parser.add_argument('--replacements', type=Path, required=True)
     parser.add_argument('--execute', action='store_true', required=True)
+    parser.add_argument('--resume-published', action='store_true',
+                        help='Revalidate a fully cut-over incomplete migration and finish access checks')
     args = parser.parse_args()
     for name in ('root', 'stage', 'deployment', 'home', 'authority', 'replacements'):
         setattr(args, name, getattr(args, name).expanduser().resolve())
@@ -545,6 +633,9 @@ def main():
     jobs = subprocess.check_output(['squeue', '-h', '-u', os.environ['USER'], '-o', '%A'], text=True).split()
     if set(jobs) - {os.environ.get('SLURM_JOB_ID', '')}:
         raise ValueError(f'Active jobs must finish before migration: {jobs}')
+    if args.resume_published:
+        resume_published(args, authority, started)
+        return
     sources = stage(args, authority)
     audit = Audit(args.stage / '_migration_v1/verification.csv')
     try:

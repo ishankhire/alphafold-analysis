@@ -62,13 +62,15 @@ draft and supplement use the refreshed figures and scoring description.
 
 Implementation `d18b486` is pushed and the active flat runtime is deployed at
 `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` with a Git/source
-inventory and retained Linux TMscore binary. Migration job `23142906` is running
-against staging `/work/hdd/bfna/ikhire/.regression_5fold_v1_migration_v1/`.
-All 13,312 copied files passed integrity checks at the last inspection; final
-protocol, geometry, publication, and access checks remain unconfirmed.
-Monitoring stopped at the user's request. Check the terminal job state and
-final collection/audit manifests before treating the shared family tables as
-published or marking this migration complete. See the
+inventory and retained Linux TMscore binary. Migration job `23142906` timed
+out at 1h00m01s on October 24 (UTC). All 13,312 copied files and all 40,341
+pre-publication checks passed, and the copied components reached the final
+root. Permission normalization was interrupted; collection status remains
+`publishing` and migration status `verifying_access`. An explicit recovery
+path revalidates the published files before finishing permissions and access
+checks, preserving the original audits and staging remnants. The shared
+collection is still incomplete. Confirm recovery success and final
+collection/audit manifests before switching readers or marking it complete. See the
 [execution handoff](plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
 
 ## Pending work and evidence limits

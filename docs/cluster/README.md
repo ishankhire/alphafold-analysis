@@ -170,8 +170,11 @@ The new flat runtime is deployed at
 `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`;
 `deployment_manifest.json` records Git revision, source mapping, hashes, and
 Linux binary provenance. The HOME deployment remains preserved. Migration job
-`23142906` has not yet been confirmed complete; use its logs and final
-collection/audit manifests before switching readers to the migrated families.
+`23142906` timed out during permissions after full cutover and all 40,341
+pre-publication checks. The collection remains incomplete. Use the inspected
+`resume_canonical_results.sbatch` recovery path, preserving previous deployment
+files/inventory, rather than rerunning the original migration launcher. Verify
+recovery logs and final collection/access manifests before switching readers.
 See the [execution handoff](../plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
 
 Mutating entrypoints refuse a collection with `collection_manifest.json`

@@ -145,3 +145,10 @@ one CPU and `3g`. The closest comparator is TM-score consolidation (1.56 GiB
 Python-step MaxRSS). The migration streams copied-file hashing and CSV rows,
 retaining compact uniqueness identities rather than full triangle tables.
 Record successful allocation MaxRSS after execution; this is an estimate.
+
+Migration `23142906` timed out with Python-step MaxRSS 3,129,088 KiB
+(2.984 GiB), nearly exhausting its 3 GiB request. The inspected publication
+recovery (`resume_canonical_results.sbatch`) requests `6g`, about 2.01x this
+partial-run peak; the small excess over 2x covers preserved-audit inspection
+and recovery bookkeeping. Record successful recovery MaxRSS before further
+changes; the timed-out run is not a completed-workflow reference.

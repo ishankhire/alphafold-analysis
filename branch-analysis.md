@@ -2185,3 +2185,14 @@ job `23142906`; all 13,312 copied files passed integrity checks at last inspecti
 Monitoring stopped at the user's request; final publication/access checks and
 resource accounting remain pending. All 135 focused tests pass, with four
 expected failures; external-root analyses reproduce existing numeric reports.
+
+## Session: 2026-10-24 — Resume interrupted canonical publication
+
+Confirmed migration `23142906` timed out during permissions after all 40,341
+pre-publication checks and full cutover. Added an explicit publication recovery
+that preserves prior audit/provenance, revalidates copied and resident compact
+outputs, and finishes access checks without recopying results. Batched shared
+ACL updates and added a 6 GiB / four-hour recovery launcher based on the
+observed 2.984 GiB peak and unfinished filesystem work. Completion remains
+unconfirmed until the recovery job and final audits pass. Focused validation:
+143 passed, four documented expected failures retained.

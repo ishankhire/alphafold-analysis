@@ -1,10 +1,12 @@
 # Delta canonical-results migration and refactor
 
-Status: implementation committed and pushed as `d18b486`; migration job
-`23142906` is running. Monitoring stopped at the user's request. Publication,
-access-audit completion, resource accounting, and final runbook/status cutover
-must be confirmed after the job finishes; do not describe the collection as
-complete yet. The approved scope below remains authoritative.
+Status: migration job `23142906` timed out after 1h00m01s. All 40,341
+pre-publication checks passed and the copied components reached the final
+root, but permissions/access verification did not finish. Collection status
+remains `publishing`; migration status is `verifying_access`. An explicit
+publication-recovery path is being prepared; do not rerun the original
+launcher or describe the collection as complete. The approved scope below
+remains authoritative.
 
 ## Goal and operating conditions
 

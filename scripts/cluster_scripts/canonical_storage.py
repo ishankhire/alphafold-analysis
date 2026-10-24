@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import stat
 import subprocess
 from pathlib import Path
 
@@ -62,25 +63,46 @@ def normalize_shared_tree(root):
         return
     import grp
     gid = grp.getgrnam('delta_bfna').gr_gid
+    directories, ordinary, executables = [], [], []
+
+    def apply_acl(paths, acl, *, default=False):
+        if paths:
+            subprocess.run(['setfacl', *(['--default'] if default else []),
+                            '--set', acl, *paths], check=True)
+
     for directory, _, files in os.walk(root):
         path = Path(directory)
-        os.chown(path, -1, gid)
-        os.chmod(path, 0o2750)
-        subprocess.run(['setfacl', '--set', 'u::rwx,g::r-x,m::r-x,o::---', str(path)], check=True)
-        subprocess.run(['setfacl', '--default', '--set', 'u::rwx,g::r-x,m::r-x,o::---', str(path)], check=True)
-        ordinary, executables = [], []
+        info = path.stat()
+        if info.st_gid != gid:
+            os.chown(path, -1, gid)
+        if info.st_gid != gid or stat.S_IMODE(info.st_mode) != 0o2750:
+            os.chmod(path, 0o2750)
+        directories.append(str(path))
+        if len(directories) == 256:
+            apply_acl(directories, 'u::rwx,g::r-x,m::r-x,o::---')
+            apply_acl(directories, 'u::rwx,g::r-x,m::r-x,o::---', default=True)
+            directories.clear()
         for name in files:
             path = Path(directory) / name
             if path.is_symlink():
                 continue
-            executable = bool(path.stat().st_mode & 0o111)
-            os.chown(path, -1, gid)
-            os.chmod(path, 0o750 if executable else 0o640)
-            (executables if executable else ordinary).append(str(path))
-        for paths, acl in ((ordinary, 'u::rw-,g::r--,m::r--,o::---'),
-                           (executables, 'u::rwx,g::r-x,m::r-x,o::---')):
-            for offset in range(0, len(paths), 256):
-                subprocess.run(['setfacl', '--set', acl, *paths[offset:offset + 256]], check=True)
+            info = path.stat()
+            executable = bool(info.st_mode & 0o111)
+            if info.st_gid != gid:
+                os.chown(path, -1, gid)
+            mode = 0o750 if executable else 0o640
+            if stat.S_IMODE(info.st_mode) != mode:
+                os.chmod(path, mode)
+            paths = executables if executable else ordinary
+            paths.append(str(path))
+            if len(paths) == 256:
+                apply_acl(paths, 'u::rwx,g::r-x,m::r-x,o::---' if executable
+                          else 'u::rw-,g::r--,m::r--,o::---')
+                paths.clear()
+    apply_acl(directories, 'u::rwx,g::r-x,m::r-x,o::---')
+    apply_acl(directories, 'u::rwx,g::r-x,m::r-x,o::---', default=True)
+    apply_acl(ordinary, 'u::rw-,g::r--,m::r--,o::---')
+    apply_acl(executables, 'u::rwx,g::r-x,m::r-x,o::---')
 
 
 if __name__ == '__main__':
