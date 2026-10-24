@@ -3,10 +3,10 @@
 Status: migration job `23142906` timed out after 1h00m01s. All 40,341
 pre-publication checks passed and the copied components reached the final
 root, but permissions/access verification did not finish. Collection status
-remains `publishing`; migration status is `verifying_access`. An explicit
-publication-recovery path is being prepared; do not rerun the original
-launcher or describe the collection as complete. The approved scope below
-remains authoritative.
+remains `publishing`; migration status is `verifying_access`. Recovery job
+`23162599` was submitted with the pushed recovery implementation `de3827c`;
+do not rerun the original launcher or describe the collection as complete.
+The approved scope below remains authoritative.
 
 ## Goal and operating conditions
 
@@ -305,3 +305,43 @@ completed production workflows. Resident physical validation remains
 `consolidation_only` with representative reads; omitted derived bundles remain
 repository-only. Commit/push final documentation before synchronizing changed
 runtime READMEs and their deployment inventory, retaining prior deployed copies.
+
+## Publication recovery — October 24, 2026
+
+Inspection confirmed `23142906` timed out at 1h00m01s, with Python-step
+MaxRSS 3,129,088 KiB (2.984 GiB). Its log records all 40,341 pre-publication
+checks passing at 42m06s. Every new component and the audit directory reached
+the final results root, and the relative triangle alias exists. Timeout
+interrupted `normalize_shared_tree` before any access audit completed.
+The staging directory retains its empty `analysis/` remnant.
+
+Recovery implementation `de3827c` was committed/pushed before deployment.
+The 62-file flat deployment passed 65 runtime/metadata checksum checks.
+Previous runtime files and `deployment_manifest.json` were preserved beneath
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/deployment_history/recovery_de3827c_20261024/`.
+The uploaded package remains at that deployment's
+`migration_inputs/recovery_de3827c.tar`. No files were deleted or original
+HOME results changed. Local focused checks: 143 passed, four documented
+geometry-oracle expected failures retained.
+
+Submitted recovery job `23162599` using `resume_canonical_results.sbatch`,
+one CPU, 6 GiB, four hours, `scratch&work`. Logs are
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/canonical_resume_23162599.{out,err}`.
+Its explicit `--resume-published` path verifies cutover identity and preserved
+authority, rechecks all copied-file and original-source hashes, repeats the
+protocol/geometry/resident-compact/deployment checks, then finishes permissions
+and access audits. ACL operations now batch across directories rather than
+launching several processes for each directory.
+
+Recovery preserves prior collection/migration manifests and verification in
+`/work/hdd/bfna/ikhire/regression_5fold_v1/_migration_v1/recovery_<UTC timestamp>_23162599/`,
+alongside new per-check `verification.csv`, `access_verification.csv`, and
+`final_access_verification.csv` (expected/observed/passed columns). Successful
+checks append to the main audit; initial and recovery job/Git identities remain
+distinct. Result components are neither recopied nor renamed.
+
+After recovery finishes, inspect `sacct -j 23162599`, logs, both completion
+manifests, and all audit rows before marking the collection complete and
+finishing runbook cutover. Record successful elapsed/MaxRSS. Physical resident
+validation remains `consolidation_only`. Do not change the deployed inventory
+while this job is running.

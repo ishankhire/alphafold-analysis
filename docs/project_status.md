@@ -68,7 +68,11 @@ pre-publication checks passed, and the copied components reached the final
 root. Permission normalization was interrupted; collection status remains
 `publishing` and migration status `verifying_access`. An explicit recovery
 path revalidates the published files before finishing permissions and access
-checks, preserving the original audits and staging remnants. The shared
+checks, preserving the original audits and staging remnants. Recovery job
+`23162599` was submitted from the shared deployment with implementation
+`de3827c` (one CPU, 6 GiB, four hours); local checks passed 143 tests with four
+documented expected failures. The previous runtime/inventory is retained under
+`deployment_history/recovery_de3827c_20261024/` in that deployment. The shared
 collection is still incomplete. Confirm recovery success and final
 collection/audit manifests before switching readers or marking it complete. See the
 [execution handoff](plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).

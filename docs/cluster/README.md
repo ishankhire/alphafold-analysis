@@ -175,6 +175,11 @@ pre-publication checks. The collection remains incomplete. Use the inspected
 `resume_canonical_results.sbatch` recovery path, preserving previous deployment
 files/inventory, rather than rerunning the original migration launcher. Verify
 recovery logs and final collection/access manifests before switching readers.
+Recovery job `23162599` uses pushed implementation `de3827c`, one CPU,
+6 GiB, and four hours. Its logs are `canonical_resume_23162599.{out,err}` in
+the shared deployment; previous runtime/inventory files remain under
+`deployment_history/recovery_de3827c_20261024/` there. Do not change its
+deployed inventory while it is running.
 See the [execution handoff](../plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
 
 Mutating entrypoints refuse a collection with `collection_manifest.json`

@@ -2196,3 +2196,6 @@ ACL updates and added a 6 GiB / four-hour recovery launcher based on the
 observed 2.984 GiB peak and unfinished filesystem work. Completion remains
 unconfirmed until the recovery job and final audits pass. Focused validation:
 143 passed, four documented expected failures retained.
+Pushed implementation `de3827c`, preserved the previous runtime/inventory under
+the shared deployment's `deployment_history/recovery_de3827c_20261024/`,
+passed 65 deployment checks, and submitted recovery `23162599`. No deletions.
