@@ -190,12 +190,11 @@ def prepare_geometry_refresh(regression_root, optimized_root, ledger, manifest, 
 
 
 def apply_geometry_refresh(updates):
-    import sys
+    """Write only validated changes; repeated application leaves files untouched."""
     sys.path.insert(0, str(ROOT / "scripts/cluster_scripts"))
     from canonical_storage import assert_writable
     for path in updates:
         assert_writable(path)
-    """Write only validated changes; repeated application leaves files untouched."""
     for path, contents in updates.items():
         if path.read_bytes() != contents:
             temporary = path.with_name(path.name + ".tm-refresh.tmp")

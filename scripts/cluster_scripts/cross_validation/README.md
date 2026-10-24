@@ -173,9 +173,8 @@ These initial requests are comparator-derived rather than measured. The
 per-protein launcher allows extra time because it validates and streams
 6,782,976 stability rows and builds a 132,480-row replay index. After the first
 successful production runs, record allocation-level elapsed time and MaxRSS in
-the shared resource guides. Aggregation reads the completed HOME-backed result
-tree and therefore retains the project `scratch` constraint without requesting
-the workers' `/work/hdd` `work` dependency.
+the shared resource guides. Aggregation reads the chosen result tree and declares `scratch&work`,
+including the `work` dependency required for shared HDD results.
 
 Each production aggregator requires all 48 layers and the exact physical shard
 inventory listed above. It rejects missing or unexpected directories,

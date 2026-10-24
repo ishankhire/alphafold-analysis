@@ -2180,4 +2180,8 @@ Centralized active canonical storage defaults, added pre-write publication
 protection and fresh-root overrides, and replaced stale deployment hashes with
 a Git/source inventory. Added an allowlisted copy/verification/cutover job that
 preserves originals and historical identities, plus local analysis root options.
-The Delta migration and access audit are pending execution.
+Deployed 61 runtime files at the shared HDD code root and submitted migration
+job `23142906`; all 13,312 copied files passed integrity checks at last inspection.
+Monitoring stopped at the user's request; final publication/access checks and
+resource accounting remain pending. All 135 focused tests pass, with four
+expected failures; external-root analyses reproduce existing numeric reports.

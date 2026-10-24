@@ -1,8 +1,10 @@
 # Delta canonical-results migration and refactor
 
-Status: approved plan, implementation not started. This document incorporates
-the user's final scope decisions and is intended as a fresh-chat handoff.
-Only this planning document was requested after the failed SSH preflights.
+Status: implementation committed and pushed as `d18b486`; migration job
+`23142906` is running. Monitoring stopped at the user's request. Publication,
+access-audit completion, resource accounting, and final runbook/status cutover
+must be confirmed after the job finishes; do not describe the collection as
+complete yet. The approved scope below remains authoritative.
 
 ## Goal and operating conditions
 
@@ -261,3 +263,43 @@ commit and push the documentation. Explicitly document the new shared code
 deployment root and the intentionally omitted local-only derived bundles.
 Report exact changed cluster paths and verification job IDs in chat. Do not
 delete old copies or staging data.
+
+## Execution handoff — October 23, 2026
+
+- The first implementation action, `ssh delta hostname`, succeeded on
+  `dt-login03.delta.ncsa.illinois.edu`. Frozen metadata and optimized manifest
+  hashes matched the recorded authority; quota/group membership were checked,
+  and no active jobs were present before submission.
+- Implementation `d18b486` was pushed before deploying 61 runtime files flat at
+  `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`. Its
+  `deployment_manifest.json` records Git/source mapping and binary provenance.
+  The retained Linux TMscore SHA-256 is
+  `74c009402184dfb35871b0341d5878f11ce5772cbfe15eb86acba842696d9855`.
+- The twelve refreshed geometry/manifest files and read-only authority report
+  were uploaded under that deployment's `migration_inputs/`. Local geometry
+  preparation passed all 240 checks, verified the 105,984-row ledger, and
+  proposed no byte changes. Shared deployment access was normalized; HOME
+  deployment/results and untracked local MDS exports were left untouched.
+- Job `23142906` uses one CPU, 3 GiB, one hour, and `scratch&work`. Logs are
+  `canonical_migration_23142906.{out,err}` in the shared deployment. Staging is
+  `/work/hdd/bfna/ikhire/.regression_5fold_v1_migration_v1/`.
+- Last observed: all 13,312 copied files passed hash/byte checks and HOME source
+  rechecks. Frozen metadata and shared-OLS retained-model/schema/coverage
+  checks passed; remaining protocol, geometry, resident-export, publication,
+  and access checks were still running. No migration failure was reported.
+  Monitoring stopped at the user's request, not because completion was verified.
+- Local verification: 135 tests passed, four documented geometry-oracle
+  expected failures retained. External input/output overrides reproduced the
+  existing TM-score, coefficient, gain, and split numeric reports byte for byte
+  in separate temporary directories; repository derived bundles were unchanged.
+
+After the job finishes, inspect `sacct -j 23142906`, logs, final
+`collection_manifest.json`, and `_migration_v1/verification.csv`. Record actual
+elapsed/MaxRSS and confirm every check passed before updating project status
+and completing the shared-storage runbook cutover. Preserve partial state if
+it failed; the migration entrypoint deliberately refuses an uninspected retry
+against existing staging or published destinations. Do not delete or restart
+completed production workflows. Resident physical validation remains
+`consolidation_only` with representative reads; omitted derived bundles remain
+repository-only. Commit/push final documentation before synchronizing changed
+runtime READMEs and their deployment inventory, retaining prior deployed copies.

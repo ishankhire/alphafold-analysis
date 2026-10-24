@@ -28,7 +28,8 @@ including `cross_validation/`, `generalized_model_ecod/`, `per_protein_scripts/`
 `gated_linear_probes/`, `diagnostics/`, and `xgboost_search/`.
 
 Deploy cluster Python entrypoints, launchers, shared helpers, and configuration
-files flat into `$HOME/openfold_interpretability_canonical/`. Repository source
+files for active canonical workflows flat into
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`. Repository source
 subdirectories are for organization; do not reproduce them in the deployment.
 Retain `regression_protocol_data/` for the frozen master split manifest.
 
@@ -75,7 +76,7 @@ Submit from the flat deployment directory so `SLURM_SUBMIT_DIR` resolves
 colocated entrypoints and helpers:
 
 ```bash
-cd "$HOME/openfold_interpretability_canonical"
+cd /work/hdd/bfna/ikhire/openfold_interpretability_canonical
 sbatch <launcher>.sbatch
 ```
 
@@ -162,3 +163,22 @@ The canonical source used by `copy_layerwise_ablation_csvs.sh` is
 `/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`.
 The local copies are under `delta_files/layerwise_ablation_csvs/` when present.
 Set `LAYERWISE_ABLATION_SOURCE_DIR` only when intentionally using another source.
+
+## Canonical migration handoff
+
+The new flat runtime is deployed at
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`;
+`deployment_manifest.json` records Git revision, source mapping, hashes, and
+Linux binary provenance. The HOME deployment remains preserved. Migration job
+`23142906` has not yet been confirmed complete; use its logs and final
+collection/audit manifests before switching readers to the migrated families.
+See the [execution handoff](../plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
+
+Mutating entrypoints refuse a collection with `collection_manifest.json`
+before creating locks or tee logs. Reruns require explicit fresh roots.
+The coefficient, gain/split importance, and TM-score-comparison derived bundles
+remain repository-only. Their local analysis entrypoints accept `--input-root`
+and `--output-root`; no local MDS exports or publication figures were migrated.
+After successful cutover, finish the storage-layout/status documentation and
+synchronize updated runtime READMEs with a new deployment inventory, preserving
+prior deployed files. Do not modify the running job's deployed inventory.

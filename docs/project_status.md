@@ -58,6 +58,19 @@ preserved. The [refresh checks and threshold table](../delta_files/regression_5f
 record 240 passing column comparisons and input/output hashes. The active main
 draft and supplement use the refreshed figures and scoring description.
 
+## Canonical migration in progress
+
+Implementation `d18b486` is pushed and the active flat runtime is deployed at
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` with a Git/source
+inventory and retained Linux TMscore binary. Migration job `23142906` is running
+against staging `/work/hdd/bfna/ikhire/.regression_5fold_v1_migration_v1/`.
+All 13,312 copied files passed integrity checks at the last inspection; final
+protocol, geometry, publication, and access checks remain unconfirmed.
+Monitoring stopped at the user's request. Check the terminal job state and
+final collection/audit manifests before treating the shared family tables as
+published or marking this migration complete. See the
+[execution handoff](plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
+
 ## Pending work and evidence limits
 
 | Workstream | Current state | Next step |
