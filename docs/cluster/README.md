@@ -171,15 +171,16 @@ The new flat runtime is deployed at
 `deployment_manifest.json` records Git revision, source mapping, hashes, and
 Linux binary provenance. The HOME deployment remains preserved. Migration job
 `23142906` timed out during permissions after full cutover and all 40,341
-pre-publication checks. The collection remains incomplete. Use the inspected
-`resume_canonical_results.sbatch` recovery path, preserving previous deployment
-files/inventory, rather than rerunning the original migration launcher. Verify
-recovery logs and final collection/access manifests before switching readers.
-Recovery job `23162599` uses pushed implementation `de3827c`, one CPU,
-6 GiB, and four hours. Its logs are `canonical_resume_23162599.{out,err}` in
-the shared deployment; previous runtime/inventory files remain under
-`deployment_history/recovery_de3827c_20261024/` there. Do not change its
-deployed inventory while it is running.
+pre-publication checks. Recovery `23162599` passed all 40,343 revalidation
+checks, then was cancelled at the user's request after 2h54m12s during
+permission normalization. The user accepted the validated data and declined
+remaining permission/access work. Owner reads are available; uniform group
+access remains unconfirmed. Keep the existing incomplete completion statuses
+and consult `_migration_v1/cancellation_23162599.json` in the shared results
+root. Do not resume this work unless the user requests it.
+Recovery logs are `canonical_resume_23162599.{out,err}` in the shared
+deployment; previous runtime/inventory files remain under
+`deployment_history/recovery_de3827c_20261024/` there. Preserve all copies.
 See the [execution handoff](../plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
 
 Mutating entrypoints refuse a collection with `collection_manifest.json`
@@ -187,6 +188,5 @@ before creating locks or tee logs. Reruns require explicit fresh roots.
 The coefficient, gain/split importance, and TM-score-comparison derived bundles
 remain repository-only. Their local analysis entrypoints accept `--input-root`
 and `--output-root`; no local MDS exports or publication figures were migrated.
-After successful cutover, finish the storage-layout/status documentation and
-synchronize updated runtime READMEs with a new deployment inventory, preserving
-prior deployed files. Do not modify the running job's deployed inventory.
+The full access-audit completion criteria remain unexecuted; do not claim
+uniform shared access or automatically finalize the collection manifests.

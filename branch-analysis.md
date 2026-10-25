@@ -2199,3 +2199,11 @@ unconfirmed until the recovery job and final audits pass. Focused validation:
 Pushed implementation `de3827c`, preserved the previous runtime/inventory under
 the shared deployment's `deployment_history/recovery_de3827c_20261024/`,
 passed 65 deployment checks, and submitted recovery `23162599`. No deletions.
+
+## Session: 2026-10-24 — Accept validation and stop access work
+
+Cancelled recovery `23162599` at the user's request after 2h54m12s during
+permissions; all 40,343 recovery validation rows passed. Preserved final-root
+data, logs, audits, backups, staging, and incomplete completion statuses.
+Recorded `_migration_v1/cancellation_23162599.json` on Delta and the user's
+decision to forgo remaining access work. Do not resume unless requested.

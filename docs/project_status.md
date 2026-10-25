@@ -58,23 +58,23 @@ preserved. The [refresh checks and threshold table](../delta_files/regression_5f
 record 240 passing column comparisons and input/output hashes. The active main
 draft and supplement use the refreshed figures and scoring description.
 
-## Canonical migration in progress
+## Canonical migration: data validated; access work stopped
 
 Implementation `d18b486` is pushed and the active flat runtime is deployed at
 `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` with a Git/source
 inventory and retained Linux TMscore binary. Migration job `23142906` timed
-out at 1h00m01s on October 24 (UTC). All 13,312 copied files and all 40,341
-pre-publication checks passed, and the copied components reached the final
-root. Permission normalization was interrupted; collection status remains
-`publishing` and migration status `verifying_access`. An explicit recovery
-path revalidates the published files before finishing permissions and access
-checks, preserving the original audits and staging remnants. Recovery job
-`23162599` was submitted from the shared deployment with implementation
-`de3827c` (one CPU, 6 GiB, four hours); local checks passed 143 tests with four
-documented expected failures. The previous runtime/inventory is retained under
-`deployment_history/recovery_de3827c_20261024/` in that deployment. The shared
-collection is still incomplete. Confirm recovery success and final
-collection/audit manifests before switching readers or marking it complete. See the
+out at 1h00m01s. All 13,312 copied files and all 40,341 pre-publication checks
+passed, and the copied components reached the final root. Recovery `23162599`
+passed all 40,343 revalidation checks, then was cancelled at the user's request
+after 2h54m12s during permission normalization. The user accepted data
+validation and declined further permission/access work. Migrated results can
+be read by their owner; uniform allocation-group access remains unconfirmed.
+Completion statuses remain `publishing` and `verifying_access`, and the stop
+is recorded at `_migration_v1/cancellation_23162599.json` under the shared
+results root. Do not resume unless the user requests it. No files were deleted.
+The previous runtime/inventory is retained under
+`deployment_history/recovery_de3827c_20261024/` in the shared deployment.
+Local checks passed 143 tests with four documented expected failures. See the
 [execution handoff](plans/delta_canonical_results_migration_plan.md#execution-handoff--october-23-2026).
 
 ## Pending work and evidence limits

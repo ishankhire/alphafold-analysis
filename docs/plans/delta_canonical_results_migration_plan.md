@@ -1,12 +1,12 @@
 # Delta canonical-results migration and refactor
 
-Status: migration job `23142906` timed out after 1h00m01s. All 40,341
-pre-publication checks passed and the copied components reached the final
-root, but permissions/access verification did not finish. Collection status
-remains `publishing`; migration status is `verifying_access`. Recovery job
-`23162599` was submitted with the pushed recovery implementation `de3827c`;
-do not rerun the original launcher or describe the collection as complete.
-The approved scope below remains authoritative.
+Status: data validation accepted by the user; remaining permission/access work
+intentionally stopped. Recovery job `23162599` was cancelled at the user's
+request after 2h54m12s. All 40,343 recovery checks passed; all 13,312 copied
+files are in the final root. Collection status remains `publishing`; migration
+status is `verifying_access`, reflecting unfinished permissions/access audits.
+Do not resume migration or permission work unless the user requests it. The
+original full-access completion criteria below were not fully executed.
 
 ## Goal and operating conditions
 
@@ -345,3 +345,24 @@ manifests, and all audit rows before marking the collection complete and
 finishing runbook cutover. Record successful elapsed/MaxRSS. Physical resident
 validation remains `consolidation_only`. Do not change the deployed inventory
 while this job is running.
+
+## User-accepted data validation; remaining access work stopped
+
+At the user's request, recovery `23162599` was cancelled after 2h54m12s
+while normalizing permissions. Slurm confirms cancellation and no remaining
+allocation. All 40,343 recovery verification rows passed, covering copied-file
+and original-source hashes, retained models, protocol interfaces, optimized
+geometry, resident compact outputs, representative physical reads, and the
+deployment. Data is in the final results root and can be read by its owner.
+Permissions are partially normalized; uniform allocation-group access remains
+unconfirmed. No files were deleted and the copied data was not rewritten.
+
+The user explicitly accepted this validation extent and declined further
+permission/access work. Preserve existing completion statuses (`publishing`
+and `verifying_access`) rather than claiming the full access contract passed.
+The cancellation and accepted scope are recorded at
+`/work/hdd/bfna/ikhire/regression_5fold_v1/_migration_v1/cancellation_23162599.json`.
+Keep all logs, audit reports, runtime backups, and staging remnants. Do not
+automatically resume or repeat this work. Resident validation remains
+`consolidation_only`; the original acceptance criteria above remain a record
+of the broader, uncompleted plan.
