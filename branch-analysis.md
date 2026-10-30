@@ -2207,3 +2207,12 @@ permissions; all 40,343 recovery validation rows passed. Preserved final-root
 data, logs, audits, backups, staging, and incomplete completion statuses.
 Recorded `_migration_v1/cancellation_23162599.json` on Delta and the user's
 decision to forgo remaining access work. Do not resume unless requested.
+
+## Session: 2026-10-30 — Georgia Tech writing sample
+
+Created `overleaf/georgia_tech_writing_sample.tex` from draft 6 and the existing
+supplemental methods, with the requested cover, restored authors, main figures
+and references; omitted supplemental figures, cohort lists, and checklist.
+Corrected citation/prose issues and removed dangling references. Checked source
+structure, assets, and citation/label resolution; compilation and page-count
+verification were skipped at the user's request. Original manuscripts unchanged.
