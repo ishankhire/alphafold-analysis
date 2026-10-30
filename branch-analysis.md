@@ -2216,3 +2216,7 @@ and references; omitted supplemental figures, cohort lists, and checklist.
 Corrected citation/prose issues and removed dangling references. Checked source
 structure, assets, and citation/label resolution; compilation and page-count
 verification were skipped at the user's request. Original manuscripts unchanged.
+
+Restored scientific wording in the application copy to pre-sample Overleaf
+commit `8a56c0e` at the user's request, retaining presentation, grammar, and
+citation fixes. Citation and section-reference checks pass; no compilation.
