@@ -11,7 +11,7 @@ import tarfile
 from pathlib import Path
 
 WORKFLOWS = ('cross_validation', 'triangle_violation_subgroups', 'publication_figures',
-             'predicted_distances', 'tm_scores', 'canonical_migration')
+             'predicted_distances', 'tm_scores', 'canonical_migration', 'cross_layer_transfer')
 HELPERS = ('canonical_storage.py', 'canonical_deployment.py', 'cluster_regression_helpers.py',
            'regression_output_helpers.py', 'regression_protocol.py')
 

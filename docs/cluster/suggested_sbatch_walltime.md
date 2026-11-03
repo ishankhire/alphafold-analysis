@@ -108,6 +108,13 @@ below remain existing estimates, pending allocation accounting.
 | One-layer four-family subgroup replay | `02:00:00` | Replays all 552 proteins but omits the triangle enumeration performed by the closest fivefold replay comparator. |
 | Streaming aggregation and pooled reconciliation | `00:30:00` | Streams 1,165,824 rows and validates 2,112 additive comparisons; allocation timing not recorded here. |
 
+### Cross-layer shared-OLS transfer estimates
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| One-target-layer ten-source replay | `02:00:00` | One pass over 552 pair tensors plus 20 small matmuls per protein; comparator one-layer score-only replay took 9–15 minutes and the local 7-protein end-to-end test ran all ten targets in under a minute. Allocation timing not recorded yet. |
+| Primitive aggregation and parity | `00:30:00` | Reads 1,330,320 primitive rows and writes about 1.33 million output rows; allocation timing not recorded yet. |
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much

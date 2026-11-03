@@ -2220,3 +2220,18 @@ verification were skipped at the user's request. Original manuscripts unchanged.
 Restored scientific wording in the application copy to pre-sample Overleaf
 commit `8a56c0e` at the user's request, retaining presentation, grammar, and
 citation fixes. Citation and section-reference checks pass; no compilation.
+
+## Session: 2026-11-03 — Cross-layer shared-OLS probe transfer
+
+Added `scripts/cluster_scripts/cross_layer_transfer/`, a diagnostic replay that
+applies the 50 frozen shared-OLS fits from layers 22–26 and 43–47 to every
+other selected layer's features (full 10×10 block, OOF by outer fold). It runs
+in `raw` and `target_restandardized` modes, the latter using the target layer's
+same-fold train-only scaler. Workers save additive sufficient statistics. The
+aggregator rebuilds the canonical per-protein, pooled, fold, subgroup and
+per-protein subgroup-MAE tables plus `transfer_matrix.csv`, and gates
+completion on diagonal parity with the producer. No geometry is computed. Added
+the workflow to the `canonical_deployment.py` allowlist, along with provisional
+resource rows. Tests: 10 new tests pass, including a local seven-protein
+end-to-end run whose diagonal matched the producer per protein (≤3.6e-15);
+existing suites pass, with four documented expected failures.
