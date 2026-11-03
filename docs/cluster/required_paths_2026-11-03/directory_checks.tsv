@@ -86,4 +86,4 @@ path	cd_status	detail
 /work/hdd/data/alphafold2/database	accessible	""
 /work/hdd/data/alphafold2/database/pdb_mmcif/mmcif_files	accessible	""
 /work/nvme/bekh/thayes/cameo_reps	accessible	""
-/work/nvme/bekh/thayes/cameo_triplets/attn_full/7ebt_B	accessible
+/work/nvme/bekh/thayes/cameo_triplets/attn_full/7ebt_B	accessible	""
