@@ -160,7 +160,8 @@ is not interchangeable with allocation accounting.
 ## Layerwise ablation CSV source
 
 The canonical source used by `copy_layerwise_ablation_csvs.sh` is
-`/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`.
+`/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`.
+This is the accessible relocated source; retain the singular `RESULT` spelling.
 The local copies are under `delta_files/layerwise_ablation_csvs/` when present.
 Set `LAYERWISE_ABLATION_SOURCE_DIR` only when intentionally using another source.
 

@@ -24,6 +24,16 @@ Raw ablation outputs (needed to revisit structures or recompute scores):
 /work/hdd/bfna/openfold_outputs_global_ablations_TRI_END_FIX/
 ```
 
+The two `/work/hdd/bekh/openfold_outputs_*` roots are referenced in the current
+checkout only by `scripts/cluster_scripts/diagnostics/inventory_delta_storage.py`.
+The archived `vizfold-main.zip` contains actual consumers/producers: layerwise
+`slurm_scripts_cameo/compute_tm_scores_LAYER_UPDATE_subset_MIN.sh` and
+`inference_general_per_layer_ablate_flags_LAYER_UPDATE_MIN_SET.sh`, and global
+`slurm_scripts_cameo/compute_tm_scores_GLOBAL_UPDATE.py` and
+`compute_tm_scores_GLOBAL_UPDATE_BASH.sh`. They remain recovery candidates for
+the possible future ablation work; current regression/plotting code does not
+directly reference these two roots.
+
 Per-source ablation score tables (preserve for provenance):
 
 ```text
@@ -60,10 +70,10 @@ Preserve the accessible tree under `toDelete`. The first two original paths
 are still referenced by current regression/replay code. Corresponding directory
 names do not establish complete or byte-identical contents.
 
-The copy helper also names the missing plural
-`/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`.
-The relocated directory uses singular `FINAL_RESULT_CSVS`. Treat this as an
-unresolved path/spelling issue, rather than evidence of another lost dataset.
+The copy helper's spelling/path issue is fixed: its default source is now
+`/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`.
+The original directory-check files retain the earlier failed plural path as
+historical evidence; it is not an additional recovery target.
 
 ## Permission blocked, rather than confirmed missing
 
@@ -78,15 +88,17 @@ The other two may hold original inference code, selected-protein lists and
 pretrained weights. Child paths also failed; avoid counting these as separate
 deletions. The current canonical regression results and runtime are accessible.
 
-## Future-work retention questions
+## Confirmed future-work retention choices
 
-Keep these candidates undecided until the user's future-work scope is clear:
+User choices recorded November 3: possible OpenFold/ablation reruns and
+attention/triplet work should remain supported. Older representation and
+autoencoder experiments are not planned.
 
-| Possible future work | Inputs/outputs to retain |
+| Future work | Retention decision |
 |---|---|
-| Regenerate OpenFold representations or run new ablations | ECOD alignments above, original inference code and weights, sequences/templates, original PDBs, all baseline pair/MSA layers and raw ablation outputs. |
-| Attention/triplet analyses | `/work/nvme/bekh/thayes/cameo_triplets/attn_full/7ebt_B/` and `/work/hdd/bekh/thayes/cameo_triplets/`. Both directory checks passed. |
-| Older representation or autoencoder experiments | `/projects/bekh/thayes/final_cameo_outputs/`, `/projects/bekh/thayes/final_cameo_outputs_ae/`, `/work/nvme/bekh/thayes/cameo_reps/`, `/work/hdd/bekh/thayes/openfold_reps_outputs/`. These directory checks passed. |
+| Regenerate OpenFold representations or run new ablations — might | **Keep/recover:** ECOD alignments above, original inference code and weights, sequences/templates, original PDBs, all baseline pair/MSA layers and raw ablation outputs. |
+| Attention/triplet analyses — might | **Keep:** `/work/nvme/bekh/thayes/cameo_triplets/attn_full/7ebt_B/` and `/work/hdd/bekh/thayes/cameo_triplets/`. Both directory checks passed. |
+| Older representation or autoencoder experiments — no | **Not required for the user's planned work:** `/projects/bekh/thayes/final_cameo_outputs/`, `/projects/bekh/thayes/final_cameo_outputs_ae/`, `/work/nvme/bekh/thayes/cameo_reps/`, `/work/hdd/bekh/thayes/openfold_reps_outputs/`. This does not designate their contents as safe to delete or affect the baseline inputs above. |
 
 No cleanup or deletion is authorized by this list.
 

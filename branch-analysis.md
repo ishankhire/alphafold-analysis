@@ -1,5 +1,18 @@
 # Branch Analysis
 
+## Session: 2026-11-03 — Correct ablation input and confirm retention scope
+
+Fixed the ablation CSV copy helper's source to the accessible relocated
+`/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`
+(singular `RESULT`) and updated current source documentation. Recorded that
+possible OpenFold/ablation reruns and attention/triplet studies remain in the
+preservation scope; older representation/autoencoder studies are not planned.
+Historical directory-check errors remain intact. No data deletion authorized.
+Updated the existing HOME-deployed copy helper at
+`/u/ikhire/openfold_interpretability_canonical/copy_layerwise_ablation_csvs.sh`;
+shell syntax passes and all 15 required source filenames pass presence/read
+metadata checks. No CSVs copied or jobs submitted.
+
 ## Session: 2026-11-03 — Delta directory preservation inventory
 
 Reviewed the path PDF, current code/runbooks and archived inference scripts;
