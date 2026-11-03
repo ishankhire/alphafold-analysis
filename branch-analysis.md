@@ -2235,3 +2235,7 @@ the workflow to the `canonical_deployment.py` allowlist, along with provisional
 resource rows. Tests: 10 new tests pass, including a local seven-protein
 end-to-end run whose diagonal matched the producer per protein (≤3.6e-15);
 existing suites pass, with four documented expected failures.
+Deployed the six new files flat to
+`/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` after confirming
+that all 11 reused helper hashes matched. Submitted array `23482267` and
+aggregation `23482269` (`afterok`). No deletions.
