@@ -1,5 +1,16 @@
 # Branch Analysis
 
+## Session: 2026-11-03 — Delta directory preservation inventory
+
+Reviewed the path PDF, current code/runbooks and archived inference scripts;
+saved a keep list and simple live `cd` checks under
+`docs/cluster/required_paths_2026-11-03/`. Of 88 directories, 60 were accessible,
+23 missing at the tested path, and five permission denied. Important ECOD
+inputs and ablation tables survive under `/work/hdd/bfna/toDelete/thayes/`;
+the old `/work/hdd/bfna/thayes/` paths fail. Stopped the preliminary bulk
+audits (jobs `23484057`, `23484189`) when the user requested directory-only
+checks; retained remote audit artifacts. No research data or permissions changed.
+
 ## Session: 2026-10-15 — Refresh canonical TM-scores and paper
 
 Downloaded compact optimized geometry outputs and promoted only TM-score cells

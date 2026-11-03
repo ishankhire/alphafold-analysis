@@ -1,0 +1,89 @@
+path	cd_status	detail
+/projects/bekh/thayes/alignments	accessible	""
+/projects/bekh/thayes/cameo_dset/fasta_dir	accessible	""
+/projects/bekh/thayes/cameo_dset/rcsb_pdb	accessible	""
+/projects/bekh/thayes/final_cameo_outputs	accessible	""
+/projects/bekh/thayes/final_cameo_outputs_ae	accessible	""
+/u/ikhire/csv_files	accessible	""
+/u/ikhire/csv_files/analysis	accessible	""
+/u/ikhire/csv_files/layerwise_ablation_csvs	accessible	""
+/u/ikhire/csv_files/regression_5fold_v1	accessible	""
+/u/ikhire/csv_files/xgboost_hyperparameter_search	accessible	""
+/u/ikhire/dssp_env	accessible	""
+/u/ikhire/openfold_interpretability_canonical	accessible	""
+/u/ikhire/protein_venv	accessible	""
+/u/thayes/vizfold	unavailable	bash: line 1: cd: /u/thayes/vizfold: Permission denied
+/work/hdd/bekh/openfold_outputs_global_ablations	unavailable	bash: line 1: cd: /work/hdd/bekh/openfold_outputs_global_ablations: No such file or directory
+/work/hdd/bekh/openfold_outputs_layerwise_ablation	unavailable	bash: line 1: cd: /work/hdd/bekh/openfold_outputs_layerwise_ablation: No such file or directory
+/work/hdd/bekh/thayes/cameo_triplets	accessible	""
+/work/hdd/bekh/thayes/ecod_dataset/data	unavailable	bash: line 1: cd: /work/hdd/bekh/thayes/ecod_dataset/data: Permission denied
+/work/hdd/bekh/thayes/ecod_dataset/data/ecod/domain_data	unavailable	bash: line 1: cd: /work/hdd/bekh/thayes/ecod_dataset/data/ecod/domain_data: Permission denied
+/work/hdd/bekh/thayes/ecod_dataset/fasta_files	accessible	""
+/work/hdd/bekh/thayes/openfold_reps	accessible	""
+/work/hdd/bekh/thayes/openfold_reps_outputs	accessible	""
+/work/hdd/bekh/thayes/openfold_reps_outputs_sm	accessible	""
+/work/hdd/bfna/cameo/global_tm_csvs	unavailable	bash: line 1: cd: /work/hdd/bfna/cameo/global_tm_csvs: No such file or directory
+/work/hdd/bfna/cameo/global_tm_csvs_TRI_END_FIX	unavailable	bash: line 1: cd: /work/hdd/bfna/cameo/global_tm_csvs_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/cameo/layerwise_tm_csvs	unavailable	bash: line 1: cd: /work/hdd/bfna/cameo/layerwise_tm_csvs: No such file or directory
+/work/hdd/bfna/cameo/layerwise_tm_csvs_TRI_END_FIX	unavailable	bash: line 1: cd: /work/hdd/bfna/cameo/layerwise_tm_csvs_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/cameo/openfold_outputs_layerwise_ablation	unavailable	bash: line 1: cd: /work/hdd/bfna/cameo/openfold_outputs_layerwise_ablation: No such file or directory
+/work/hdd/bfna/ikhire/.regression_5fold_v1_migration_v1	accessible	""
+/work/hdd/bfna/ikhire/diagnostic_experiments	accessible	""
+/work/hdd/bfna/ikhire/diagnostic_experiments/cross_layer_probe_transfer_v1	accessible	""
+/work/hdd/bfna/ikhire/openfold_interpretability_canonical	accessible	""
+/work/hdd/bfna/ikhire/openfold_interpretability_canonical/deployment_history/recovery_de3827c_20261024	accessible	""
+/work/hdd/bfna/ikhire/openfold_interpretability_canonical/regression_protocol_data	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/_migration_v1	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/analysis	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/metadata	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/per_protein_ols_base256	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/per_protein_ols_base256/model_artifacts	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/sequence_gated_ols_base256	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/sequence_gated_ols_base256/model_artifacts	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/shared_ols_base256	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/shared_ols_base256/model_artifacts	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/shared_xgboost_base256_fixed_s4	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/shared_xgboost_base256_fixed_s4/model_artifacts	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/tm_score_optimized_v1	accessible	""
+/work/hdd/bfna/ikhire/regression_5fold_v1/triangle_violation_subgroups_5fold_v1	accessible	""
+/work/hdd/bfna/openfold_env	accessible	""
+/work/hdd/bfna/openfold_outputs_fixed_ablation	accessible	""
+/work/hdd/bfna/openfold_outputs_global_ablations	accessible	""
+/work/hdd/bfna/openfold_outputs_global_ablations_TRI_END_FIX	unavailable	bash: line 1: cd: /work/hdd/bfna/openfold_outputs_global_ablations_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/openfold_outputs_layerwise_ablation	accessible	""
+/work/hdd/bfna/openfold_outputs_layerwise_ablation_TRI_END_FIX	unavailable	bash: line 1: cd: /work/hdd/bfna/openfold_outputs_layerwise_ablation_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/thayes/ecod/alignments	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/alignments: No such file or directory
+/work/hdd/bfna/thayes/ecod/domain_pdbs	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/domain_pdbs: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments/representation_saves	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments/representation_saves: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments_TRI_END_FIX	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/thayes/ecod/global_tm_csvs_TRI_END_FIX_STANDARDIZED	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/global_tm_csvs_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/thayes/ecod/layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED	unavailable	bash: line 1: cd: /work/hdd/bfna/thayes/ecod/layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/toDelete/thayes	accessible	""
+/work/hdd/bfna/toDelete/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD	unavailable	bash: line 1: cd: /work/hdd/bfna/toDelete/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS	accessible	""
+/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD	accessible	""
+/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/alignments	unavailable	bash: line 1: cd: /work/hdd/bfna/toDelete/thayes/ecod/alignments: No such file or directory
+/work/hdd/bfna/toDelete/thayes/ecod/domain_pdbs	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/experiments	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/experiments/openfold_reps_outputs_sm	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/experiments/representation_saves	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/experiments_TRI_END_FIX	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/global_tm_csvs_TRI_END_FIX_STANDARDIZED	accessible	""
+/work/hdd/bfna/toDelete/thayes/ecod/layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED	accessible	""
+/work/hdd/bfna/tylers_home_dir	accessible	""
+/work/hdd/bfna/tylers_home_dir/thayes	unavailable	bash: line 1: cd: /work/hdd/bfna/tylers_home_dir/thayes: Permission denied
+/work/hdd/bfna/tylers_home_dir/thayes/vizfold	unavailable	bash: line 1: cd: /work/hdd/bfna/tylers_home_dir/thayes/vizfold: Permission denied
+/work/hdd/data/alphafold2/database	accessible	""
+/work/hdd/data/alphafold2/database/pdb_mmcif/mmcif_files	accessible	""
+/work/nvme/bekh/thayes/cameo_reps	accessible	""
+/work/nvme/bekh/thayes/cameo_triplets/attn_full/7ebt_B	accessible

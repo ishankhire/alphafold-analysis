@@ -1,0 +1,29 @@
+path,status,detail
+/u/thayes/vizfold,permission_denied,bash: line 1: cd: /u/thayes/vizfold: Permission denied
+/work/hdd/bekh/openfold_outputs_global_ablations,missing,bash: line 1: cd: /work/hdd/bekh/openfold_outputs_global_ablations: No such file or directory
+/work/hdd/bekh/openfold_outputs_layerwise_ablation,missing,bash: line 1: cd: /work/hdd/bekh/openfold_outputs_layerwise_ablation: No such file or directory
+/work/hdd/bekh/thayes/ecod_dataset/data,permission_denied,bash: line 1: cd: /work/hdd/bekh/thayes/ecod_dataset/data: Permission denied
+/work/hdd/bekh/thayes/ecod_dataset/data/ecod/domain_data,permission_denied,bash: line 1: cd: /work/hdd/bekh/thayes/ecod_dataset/data/ecod/domain_data: Permission denied
+/work/hdd/bfna/cameo/global_tm_csvs,missing,bash: line 1: cd: /work/hdd/bfna/cameo/global_tm_csvs: No such file or directory
+/work/hdd/bfna/cameo/global_tm_csvs_TRI_END_FIX,missing,bash: line 1: cd: /work/hdd/bfna/cameo/global_tm_csvs_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/cameo/layerwise_tm_csvs,missing,bash: line 1: cd: /work/hdd/bfna/cameo/layerwise_tm_csvs: No such file or directory
+/work/hdd/bfna/cameo/layerwise_tm_csvs_TRI_END_FIX,missing,bash: line 1: cd: /work/hdd/bfna/cameo/layerwise_tm_csvs_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/cameo/openfold_outputs_layerwise_ablation,missing,bash: line 1: cd: /work/hdd/bfna/cameo/openfold_outputs_layerwise_ablation: No such file or directory
+/work/hdd/bfna/openfold_outputs_global_ablations_TRI_END_FIX,missing,bash: line 1: cd: /work/hdd/bfna/openfold_outputs_global_ablations_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/openfold_outputs_layerwise_ablation_TRI_END_FIX,missing,bash: line 1: cd: /work/hdd/bfna/openfold_outputs_layerwise_ablation_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD,missing,bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS,missing,bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD,missing,bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED,missing,bash: line 1: cd: /work/hdd/bfna/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/thayes/ecod/alignments,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/alignments: No such file or directory
+/work/hdd/bfna/thayes/ecod/domain_pdbs,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/domain_pdbs: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments/representation_saves,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments/representation_saves: No such file or directory
+/work/hdd/bfna/thayes/ecod/experiments_TRI_END_FIX,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/experiments_TRI_END_FIX: No such file or directory
+/work/hdd/bfna/thayes/ecod/global_tm_csvs_TRI_END_FIX_STANDARDIZED,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/global_tm_csvs_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/thayes/ecod/layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED,missing,bash: line 1: cd: /work/hdd/bfna/thayes/ecod/layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED: No such file or directory
+/work/hdd/bfna/toDelete/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD,missing,bash: line 1: cd: /work/hdd/bfna/toDelete/thayes/FINAL_RESULTS_CSVS_TRI_END_FIX_PATCHED_FROM_OLD: No such file or directory
+/work/hdd/bfna/toDelete/thayes/ecod/alignments,missing,bash: line 1: cd: /work/hdd/bfna/toDelete/thayes/ecod/alignments: No such file or directory
+/work/hdd/bfna/tylers_home_dir/thayes,permission_denied,bash: line 1: cd: /work/hdd/bfna/tylers_home_dir/thayes: Permission denied
+/work/hdd/bfna/tylers_home_dir/thayes/vizfold,permission_denied,bash: line 1: cd: /work/hdd/bfna/tylers_home_dir/thayes/vizfold: Permission denied

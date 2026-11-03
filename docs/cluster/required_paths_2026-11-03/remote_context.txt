@@ -1,0 +1,149 @@
+Tue Nov  3 21:07:48 UTC 2026
+dt-login03.delta.ncsa.illinois.edu
+uid=92846(ikhire) gid=202(grp_202) groups=202(grp_202),2286(delta_active_users),19479(delta_bekh),20197(delta_bfna)
+ls: cannot access '/work/hdd/bfna/thayes': No such file or directory
+ls: cannot access '/work/hdd/bfna/toDelete/thayes/ecod/alignments': No such file or directory
+drwxrwx---+     2 root   root          4096 Jun 18 19:24 /u/thayes
+drwxrws---+    10 thayes delta_bfna   32768 Jun 18 19:34 /work/hdd/bfna/toDelete/thayes
+drwxrws---+     2 thayes delta_bfna 1466368 Nov 25  2025 /work/hdd/bfna/toDelete/thayes/ecod/domain_pdbs
+drwxrws---+ 19202 thayes delta_bfna 2654208 Dec 10  2025 /work/hdd/bfna/toDelete/thayes/ecod/experiments/openfold_reps_outputs_sm
+drwxrws---+   404 thayes delta_bfna   36864 Dec  5  2025 /work/hdd/bfna/toDelete/thayes/ecod/experiments/representation_saves
+ls: cannot access '/work/hdd/bfna/tylers_home_dir/thayes/vizfold': Permission denied
+total 68
+drwxrws---+ 10 thayes delta_bfna 32768 Jun 18 19:34 .
+drwxrws---+  3 root   delta_bfna  4096 Nov  3 08:23 ..
+drwxrws---+  5 thayes delta_bfna  4096 Dec 18  2025 FINAL_RESULT_CSVS
+drwxrws---+  5 thayes delta_bfna  4096 Jun 18 20:09 FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD
+drwxrws---+  3 thayes delta_bfna  4096 Jun 18 19:28 FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED
+drwxrws---+  3 thayes delta_bfna  4096 Mar  7  2026 cameo
+drwxrws---+  3 thayes delta_bfna  4096 Nov 21  2025 cameo_data
+drwxrws---+ 11 thayes delta_bfna  4096 Oct 25 22:13 ecod
+drwxrws---+  2 thayes delta_bfna  4096 Nov 25  2025 ecod_new
+drwxrws---+  3 thayes delta_bfna  4096 Dec  5  2025 ecod_reps
+total 25268
+drwxrws---+    11 thayes delta_bfna     4096 Oct 25 22:13 .
+drwxrws---+    10 thayes delta_bfna    32768 Jun 18 19:34 ..
+drwxrws---+     2 thayes delta_bfna  1466368 Nov 25  2025 domain_pdbs
+-rw-rw----+     1 thayes delta_bfna  3497210 Nov 25  2025 domain_pdbs_mapping.csv
+-rw-rw----+     1 thayes delta_bfna        0 Nov 25  2025 ecod_F99_filelist.txt
+drwxrws---+ 29801 thayes delta_bfna  1556480 Dec 17  2025 experiments
+drwxrws---+   403 thayes delta_bfna    24576 Jun 18 19:11 experiments_TRI_END_FIX
+drwxrws---+     2 thayes delta_bfna    69632 Jun 18 19:18 global_tm_csvs_TRI_END_FIX_STANDARDIZED
+drwxrws---+     2 thayes delta_bfna    36864 Jun 18 19:18 layerwise_tm_csvs_TRI_END_FIX_STANDARDIZED
+drwxrws---+     2 thayes delta_bfna 13316096 Mar  9  2026 logs
+drwxrws---+     2 thayes delta_bfna  5152768 Nov 22  2025 logs_baselines
+drwxrws---+     3 thayes delta_bfna     4096 Nov  5  2025 pdbs
+drwxrws---+     3 thayes delta_bfna     4096 Nov  5  2025 pdbs_latest
+-rw-rwx---+     1 thayes delta_bfna       10 Oct 16  2025 proteins.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_1.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_2.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_3.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_4.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_5.txt
+-rw-rwx---+     1 thayes delta_bfna    50000 Oct 16  2025 proteins_6.txt
+-rw-rwx---+     1 thayes delta_bfna    16960 Oct 16  2025 proteins_7.txt
+-rw-rwx---+     1 thayes delta_bfna   316960 Oct 16  2025 proteins_master.txt
+total 52
+drwxr-s---+ 12 ikhire delta_bfna 4096 Oct 23 19:42 .
+drwxrws---+  6 ikhire delta_bfna 4096 Oct 23 19:00 ..
+drwxr-s---+  4 ikhire delta_bfna 4096 Oct 24 19:40 _migration_v1
+drwxrws---+  3 ikhire delta_bfna 4096 Oct 23 19:42 analysis
+-rw-r-----+  1 ikhire delta_bfna   89 Oct 23 19:42 collection_manifest.json
+drwxrws---+  2 ikhire delta_bfna 4096 Oct 23 19:13 metadata
+drwxr-s---+  6 ikhire delta_bfna 4096 Oct 23 19:14 per_protein_ols_base256
+drwxr-s---+  8 ikhire delta_bfna 4096 Oct 14 21:53 predicted_distances_5fold_v1
+drwxrws---+  6 ikhire delta_bfna 4096 Oct 23 19:14 sequence_gated_ols_base256
+drwxrws---+  6 ikhire delta_bfna 4096 Oct 23 19:14 shared_ols_base256
+drwxr-s---+  6 ikhire delta_bfna 4096 Oct 23 19:14 shared_xgboost_base256_fixed_s4
+drwxr-s---+  9 ikhire delta_bfna 4096 Oct 15 20:08 tm_score_optimized_v1
+drwxr-s---+  4 ikhire delta_bfna 4096 Oct 23 19:14 triangle_violation_subgroups_5fold_v1
+total 16
+drwxrws---+ 4 ikhire delta_bfna 4096 Nov  3 15:06 .
+drwxrws---+ 6 ikhire delta_bfna 4096 Oct 23 19:00 ..
+drwxrws---+ 3 ikhire delta_bfna 4096 Nov  3 14:12 cross_layer_probe_transfer_v1
+drwxrws---+ 3 ikhire delta_bfna 4096 Nov  3 15:06 required_path_audit_2026-11-03
+                   JobID                          JobName      State ExitCode    Elapsed
+------------------------ -------------------------------- ---------- -------- ----------
+                23482269                    XLayerXferAgg CANCELLED+      0:0   00:00:00
+              23482267_0                       XLayerXfer     FAILED      1:0   00:10:48
+        23482267_0.batch                            batch     FAILED      1:0   00:10:48
+       23482267_0.extern                           extern  COMPLETED      0:0   00:10:48
+            23482267_0.0                          python3     FAILED      1:0   00:10:09
+              23482267_1                       XLayerXfer     FAILED      1:0   00:10:49
+        23482267_1.batch                            batch     FAILED      1:0   00:10:49
+       23482267_1.extern                           extern  COMPLETED      0:0   00:10:49
+            23482267_1.0                          python3     FAILED      1:0   00:10:10
+              23482267_2                       XLayerXfer     FAILED      1:0   00:11:28
+        23482267_2.batch                            batch     FAILED      1:0   00:11:28
+       23482267_2.extern                           extern  COMPLETED      0:0   00:11:28
+            23482267_2.0                          python3     FAILED      1:0   00:10:49
+              23482267_3                       XLayerXfer     FAILED      1:0   00:10:48
+        23482267_3.batch                            batch     FAILED      1:0   00:10:48
+       23482267_3.extern                           extern  COMPLETED      0:0   00:10:48
+            23482267_3.0                          python3     FAILED      1:0   00:10:09
+              23482267_4                       XLayerXfer     FAILED      1:0   00:11:01
+        23482267_4.batch                            batch     FAILED      1:0   00:11:01
+       23482267_4.extern                           extern  COMPLETED      0:0   00:11:01
+            23482267_4.0                          python3     FAILED      1:0   00:10:22
+              23482267_5                       XLayerXfer     FAILED      1:0   00:10:55
+        23482267_5.batch                            batch     FAILED      1:0   00:10:55
+       23482267_5.extern                           extern  COMPLETED      0:0   00:10:55
+            23482267_5.0                          python3     FAILED      1:0   00:10:16
+              23482267_6                       XLayerXfer     FAILED      1:0   00:10:48
+        23482267_6.batch                            batch     FAILED      1:0   00:10:48
+       23482267_6.extern                           extern  COMPLETED      0:0   00:10:48
+            23482267_6.0                          python3     FAILED      1:0   00:10:09
+              23482267_7                       XLayerXfer     FAILED      1:0   00:11:04
+        23482267_7.batch                            batch     FAILED      1:0   00:11:04
+       23482267_7.extern                           extern  COMPLETED      0:0   00:11:04
+            23482267_7.0                          python3     FAILED      1:0   00:10:25
+              23482267_8                       XLayerXfer     FAILED      1:0   00:10:48
+        23482267_8.batch                            batch     FAILED      1:0   00:10:48
+       23482267_8.extern                           extern  COMPLETED      0:0   00:10:48
+            23482267_8.0                          python3     FAILED      1:0   00:10:09
+              23482267_9                       XLayerXfer     FAILED      1:0   00:10:48
+        23482267_9.batch                            batch     FAILED      1:0   00:10:48
+       23482267_9.extern                           extern  COMPLETED      0:0   00:10:48
+            23482267_9.0                          python3     FAILED      1:0   00:10:09
+  File "/work/hdd/bfna/ikhire/openfold_interpretability_canonical/cross_layer_transfer_replay.py", line 87, in protein_rows
+    coordinates, chain_ids, pair_i, pair_j, features = load_protein(outer, target_layer)
+                                                       ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/work/hdd/bfna/ikhire/openfold_interpretability_canonical/triangle_violation_subgroup_replay.py", line 218, in load_protein
+    raise FileNotFoundError(f"Missing frozen protein inputs for {outer.protein_id} layer {layer}")
+FileNotFoundError: Missing frozen protein inputs for 002593330 layer 22
+Traceback (most recent call last):
+  File "/work/hdd/bfna/ikhire/openfold_interpretability_canonical/cross_layer_transfer_replay.py", line 209, in <module>
+    main()
+    ~~~~^^
+  File "/work/hdd/bfna/ikhire/openfold_interpretability_canonical/cross_layer_transfer_replay.py", line 194, in main
+    raise RuntimeError(f"Target layer {target_layer} incomplete; failures={failures[:10]}")
+RuntimeError: Target layer 22 incomplete; failures=['000000022: FileNotFoundError: Missing frozen protein inputs for 000000022 layer 22', '000000024: FileNotFoundError: Missing frozen protein inputs for 000000024 layer 22', '000000033: FileNotFoundError: Missing frozen protein inputs for 000000033 layer 22', '000000050: FileNotFoundError: Missing frozen protein inputs for 000000050 layer 22', '000000087: FileNotFoundError: Missing frozen protein inputs for 000000087 layer 22', '000000160: FileNotFoundError: Missing frozen protein inputs for 000000160 layer 22', '000000171: FileNotFoundError: Missing frozen protein inputs for 000000171 layer 22', '000000187: FileNotFoundError: Missing frozen protein inputs for 000000187 layer 22', '000000233: FileNotFoundError: Missing frozen protein inputs for 000000233 layer 22', '000000238: FileNotFoundError: Missing frozen protein inputs for 000000238 layer 22']
+srun: error: cn133: task 0: Exited with exit code 1
+{
+  "collection_version": "regression_5fold_v1_migration_v1",
+  "status": "publishing"
+}
+{
+  "schema": "canonical_migration_user_stop_v1",
+  "recorded_at": "2026-10-25T00:40:55.808528+00:00",
+  "job_id": "23162599",
+  "action": "cancelled_at_user_request",
+  "reason": "User accepts passed data validation and declines remaining permission/access work",
+  "recovery_validation": {
+    "status": "passed",
+    "check_count": 40343,
+    "verification_csv": "_migration_v1/recovery_20261024T213920859329Z_23162599/verification.csv"
+  },
+  "unfinished": [
+    "shared_tree_permission_normalization",
+    "access_audits",
+    "completion_manifest_finalization"
+  ],
+  "collection_status_preserved": "publishing",
+  "migration_status_preserved": "verifying_access",
+  "validation_mode": "consolidation_only",
+  "copied_files_preserved": 13312,
+  "accounting": "23162599|CANCELLED by 92846|02:54:12|04:00:00|0:0",
+  "resume_only_if_user_requests": true,
+  "no_deletions": true
+}
