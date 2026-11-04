@@ -2266,3 +2266,15 @@ Deployed the six new files flat to
 `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/` after confirming
 that all 11 reused helper hashes matched. Submitted array `23482267` and
 aggregation `23482269` (`afterok`). No deletions.
+
+Array `23482267` failed: all 398 ECOD inputs were missing because
+`/work/hdd/bfna/thayes/` had been moved to `/work/hdd/bfna/toDelete/thayes/`.
+The 154 CAMEO proteins per target were checkpointed. Cancelled the stuck
+aggregation `23482269`. As a one-time workaround for this run only, the worker
+accepts `CROSS_LAYER_ECOD_EXPERIMENTS_ROOT` (unset by default). When set, it
+repoints the ECOD pair-block and PDB roots for this process and records the
+override in the provenance JSON. Shared helpers and dataset docs are unchanged.
+Redeployed `cross_layer_transfer_replay.py` and resubmitted array `23533030`
+plus aggregation `23533031` (`afterok`) with
+`CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/work/hdd/bfna/toDelete/thayes/ecod/experiments`.
+The workers resume from the CAMEO checkpoints. No deletions.

@@ -37,6 +37,11 @@ from regression_protocol import (  # noqa: E402
     sequence_separation_bin_codes, spatial_distance_bin_codes,
 )
 from triangle_violation_subgroup_replay import load_protein  # noqa: E402
+import cluster_regression_helpers  # noqa: E402
+
+# One-off, unset by default: points this replay's ECOD inputs at a relocated
+# copy of the ECOD experiments directory. Shared helpers and docs are unchanged.
+ECOD_ROOT_OVERRIDE_ENV = "CROSS_LAYER_ECOD_EXPERIMENTS_ROOT"
 
 
 def utc_now() -> str:
@@ -81,6 +86,20 @@ def read_runtime(path: Path) -> list[dict[str, object]]:
         return []
     with path.open(newline="") as handle:
         return [dict(row) for row in csv.DictReader(handle)]
+
+
+def apply_ecod_root_override() -> dict[str, str] | None:
+    value = os.environ.get(ECOD_ROOT_OVERRIDE_ENV)
+    if not value:
+        return None
+    root = Path(value).expanduser()
+    pair_root, pdb_root = root / "representation_saves", root / "openfold_reps_outputs_sm"
+    for path in (pair_root, pdb_root):
+        if not path.is_dir():
+            raise FileNotFoundError(f"{ECOD_ROOT_OVERRIDE_ENV} directory missing: {path}")
+    cluster_regression_helpers.ECOD_PAIR_BLOCKS_ROOT = pair_root
+    cluster_regression_helpers.ECOD_PDB_ROOT = pdb_root
+    return {"ecod_pair_blocks_root": str(pair_root), "ecod_pdb_root": str(pdb_root)}
 
 
 def protein_rows(outer, target_layer: int, models, baselines) -> list[dict[str, object]]:
@@ -140,6 +159,9 @@ def main() -> None:
     shards.mkdir(parents=True, exist_ok=True)
 
     started_wall, started = utc_now(), time.perf_counter()
+    ecod_override = apply_ecod_root_override()
+    if ecod_override:
+        log(f"target_layer={target_layer} ECOD input override: {ecod_override}")
     fold_bundle = load_cv_folds(metadata_dir=producer_root() / "metadata")
     n_proteins = len(fold_bundle.eligible_protein_ids)
     if n_proteins != EXPECTED_PROTEINS:
@@ -150,7 +172,7 @@ def main() -> None:
     atomic_write_json(shards / f"artifact_provenance_target_layer_{target_layer:02d}.json", {
         "analysis_name": ANALYSIS_NAME, "target_layer": target_layer, "created_at": utc_now(),
         "metadata_digests": dict(fold_bundle.fold_digests), "producer": provenance,
-        "source_probe_status": status_rows,
+        "source_probe_status": status_rows, "ecod_input_override": ecod_override,
     })
 
     rows, complete = read_shard(checkpoint_path, target_layer, expected_proteins=None)
