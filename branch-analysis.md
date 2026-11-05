@@ -2278,3 +2278,19 @@ Redeployed `cross_layer_transfer_replay.py` and resubmitted array `23533030`
 plus aggregation `23533031` (`afterok`) with
 `CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/work/hdd/bfna/toDelete/thayes/ecod/experiments`.
 The workers resume from the CAMEO checkpoints. No deletions.
+
+Diagnostic figure (2026-11-04): `delta_files/diagnostic_plots/spatial_distance_bias/`
+plots the pooled spatial-bin bias (pred − true) by layer for the four fivefold
+probes, in the layout of main figure 15. The 10–20 and 20–40 bins are merged
+weighting by pair count. The data source is
+`<family>/subgroup_metrics/by_spatial_distance.csv`. Values are pair-weighted
+pooled bias with no bootstrap, because signed per-protein bin errors are not
+stored. The publication bundle is unchanged.
+
+Cross-layer transfer run `23533030`/`23533031` completed: `analysis_status=complete`,
+431/431 parity checks pass, about 6 min per target task. Downloaded the compact
+tables (everything except `per_protein_subgroup_mae.csv` and `layer_shards/`) to
+`delta_files/diagnostic_experiments/cross_layer_probe_transfer_v1/`. Added
+pooled-R² heatmaps for both modes under
+`delta_files/diagnostic_plots/cross_layer_transfer/` (`make_transfer_heatmaps.py`).
+Moved the `docs/project_status.md` entry from pending work to the data index.
