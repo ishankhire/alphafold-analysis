@@ -1,0 +1,12 @@
+claim,proteins_evaluated,proteins_holding,median_protein_value,exceptions,evaluated_30–107,holding_30–107,evaluated_107–154,holding_107–154,evaluated_154–218,holding_154–218,evaluated_219–301,holding_219–301,evaluated_301–794,holding_301–794
+Layer 0: pairs beyond 100 Å read short (mean below 0),13,13,-64.8004,,0,0,0,0,0,0,4,4,9,9
+Layer 22: pairs beyond 100 Å read short (mean below 0),13,13,-50.6839,,0,0,0,0,0,0,4,4,9,9
+Layer 47: pairs beyond 100 Å read short (mean below 0),13,13,-39.1539,,0,0,0,0,0,0,4,4,9,9
+Layer 47: pairs at 60–100 Å read short (mean below 0),92,74,-7.3060,6wqc_A 7atr_A 7b3a_A 7b7t_A 7bew_A 7don_B 7dup_A 7et8_A 7f6e_B 7fe3_A 7fh3_A 7mwr_A 7on9_A 7p3b_B 7q03_A 7tav_B 7vdy_A 7wbr_A,4,4,2,2,10,9,26,21,50,38
+Layer 47: pairs at 8–40 Å are near zero (mean within ±1 Å),154,142,0.1842,7dko_A 7esx_A 7ls0_B 7mrk_D 7pab_A 7prd_A 7q1b_A 7r84_A 7rdt_A 7stz_C 7t9w_B 7thw_A,20,17,18,17,27,26,36,35,53,47
+"Layer 47: pairs at 4–5 Å read long (mean above 0, separation 2 or more)",140,137,1.5547,6zpp_A 7dmf_A 7mpz_A,8,8,16,16,27,24,36,36,53,53
+"Layer 47: pairs at 6–7 Å read short (mean below 0, separation 7 or more)",149,129,-1.0425,6tf4_A 6zpp_A 7awk_A 7dfe_A 7dkk_A 7dko_A 7esx_A 7mfi_A 7mfw_B 7mu9_A 7ool_A 7pab_A 7poh_B 7ppp_A 7prd_A 7q47_A 7r84_A 7t9w_B 7thw_A 7wbr_A,15,6,18,14,27,23,36,36,53,50
+Layer 0: separation 200+ at 10–25 Å reads long (mean above 0),81,81,9.6548,,0,0,0,0,1,1,29,29,51,51
+Separation 200+ at 10–25 Å: the mean falls from layer 0 to 22 to 47,81,66,9.0188,7bcz_A 7dq9_A 7jiz_A 7kiu_A 7ksp_A 7lqm_D 7lqn_A 7pab_A 7plb_B 7q03_A 7sir_A 7stz_C 7sy9_A 7tav_B 7vpf_A,0,0,0,0,1,1,29,19,51,46
+Layer 47: spread beyond 60 Å exceeds spread at 8–40 Å,92,86,2.6937,7don_B 7eqx_A 7mfi_A 7ta9_A 7tav_B 7tj1_D,4,3,2,2,10,8,26,24,50,49
+Whole protein: MAE is lower at layer 47 than at layer 0,154,154,-4.2385,,20,20,18,18,27,27,36,36,53,53

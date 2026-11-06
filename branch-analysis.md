@@ -2294,3 +2294,49 @@ tables (everything except `per_protein_subgroup_mae.csv` and `layer_shards/`) to
 pooled-R² heatmaps for both modes under
 `delta_files/diagnostic_plots/cross_layer_transfer/` (`make_transfer_heatmaps.py`).
 Moved the `docs/project_status.md` entry from pending work to the data index.
+
+## Session: 2026-11-06 — Slurm notice address
+
+Slurm notices now come from the user-defined `CLUSTER_NOTICE_EMAIL` variable,
+passed at submission with `sbatch --mail-user`, because Slurm does not expand
+variables in `#SBATCH` lines (`docs/cluster/README.md`). New and modified sbatch
+files must not hard-code `--mail-user`. The 59 existing launchers and their
+header tests are unchanged, and the command-line option overrides their address.
+
+## Session: 2026-11-06 — All-layer shared-OLS probe transfer
+
+Added `scripts/cluster_scripts/cross_layer_transfer_all_layers/`, which replays
+all 240 frozen shared-OLS probes across the 48 × 48 layer block in
+`target_restandardized` mode only; the user ruled `raw` methodologically wrong.
+Workers write one additive NPZ shard per target layer: per-protein statistics and
+signed-error histograms, plus fold-level joint histograms and exact sums by fine
+sequence separation × final structure distance and along the chain. The aggregator
+rebuilds the canonical tables and adds `protein_anomalies.csv`, `error_quantiles.csv`,
+`error_strata.csv`, and `error_position.csv`.
+
+The ECOD `representation_saves/` and `openfold_reps_outputs_sm/` left `toDelete` on
+2026-11-06, so the user chose CAMEO-only runs for now. `ALL_LAYER_COHORT` is an
+explicit setting; `cameo` writes to its own output root and replaces the producer's
+pooled, fold, and subgroup gates, which pool all 552 proteins, with per-protein and
+per-category parity against the ten-layer shards. Re-run as `full` when ECOD returns.
+Launchers leave `--mail-user` to the submit command. Outputs go to the user's home.
+
+CAMEO run complete: pilot `23615941`, array `23616061`, aggregation `23616062`, with
+figures redrawn in ad hoc job `23617049`. The run manifest's `code_revision`, `8329c5b`, is a
+local commit that was squashed; the worker, shared module, and aggregator here are
+byte-identical to it. `analysis_status=complete` with 792/792 checks, including 1,293,600
+per-protein statistics against the ten-layer shards and all 48 native cells against
+the producer. Pooled, fold, and subgroup CAMEO tables have no external reference; they
+rest on the per-protein checks. Pair-weighted pooled metrics remain dominated by
+`7stz_C`, the top squared-error contributor in all 2,304 cells.
+
+## Session: 2026-11-06 — Native error strata
+
+Added `scripts/cluster_scripts/native_error_strata/`, which bins the packed native
+OOF predictions by fine sequence separation and final structure distance at all
+48 layers, and adds a CAMEO per-protein view with a protein-by-protein claims
+table. Job `23613749` confirmed the distances match the probes' training targets.
+New figures say final structure distance, because the target is OpenFold's own
+prediction; canonical columns keep their names. The 552-protein table cannot be
+rebuilt until the ECOD final structures return. `.npz` files and built pages stay
+outside the repository.

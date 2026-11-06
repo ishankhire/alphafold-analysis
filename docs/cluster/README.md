@@ -68,7 +68,8 @@ outputs may still live there; this convention does not migrate them. Older
 launchers may still hard-code or default to that root, so verify their effective
 paths before running. If a workflow uses `CSV_ROOT` for both inputs and outputs,
 preserve the actual input paths and configure outputs separately when needed.
-Pair tensors and original PDBs remain at the locations in `datasets.md`.
+Pair tensors and original PDBs remain at the locations in `datasets.md`, which
+also records that the ECOD inputs are currently unavailable.
 
 ## Submission directory
 
@@ -77,12 +78,31 @@ colocated entrypoints and helpers:
 
 ```bash
 cd /work/hdd/bfna/ikhire/openfold_interpretability_canonical
-sbatch <launcher>.sbatch
+sbatch --mail-user="${CLUSTER_NOTICE_EMAIL:?Set CLUSTER_NOTICE_EMAIL}" <launcher>.sbatch
 ```
+
+Export `CLUSTER_NOTICE_EMAIL` in your shell profile. The command aborts if it is
+unset, and the option overrides any address still hard-coded in an older
+launcher.
 
 Copy each workflow README under a distinct name, such as
 `predicted_distance_export_README.md`, so flat deployment does not overwrite
 another workflow's instructions.
+
+## Python environment
+
+Launchers activate `~/protein_venv`, a plain virtual environment. Recreate it with
+the versions the frozen producer recorded in its `run_manifest.json`:
+
+```bash
+module reset
+module load python    # expect Python 3.13.5
+python3 -m venv ~/protein_venv
+source ~/protein_venv/bin/activate
+pip install numpy==2.4.2 scipy==1.17.1 scikit-learn==1.8.0 biopython matplotlib pandas pytest
+```
+
+XGBoost workflows also need `xgboost==3.2.0`.
 
 ## Launcher requirements
 
@@ -94,8 +114,10 @@ another workflow's instructions.
   partial results survive timeouts.
 - Log timestamps and elapsed times for every major stage and layer.
 - Every new or modified sbatch file must include
-  `#SBATCH --mail-type=BEGIN,END,FAIL` and
-  `#SBATCH --mail-user=ikhire3@gatech.edu`.
+  `#SBATCH --mail-type=BEGIN,END,FAIL` and must not hard-code `--mail-user`.
+  Slurm does not expand variables in `#SBATCH` lines, so pass the recipient at
+  submission from the user-defined `CLUSTER_NOTICE_EMAIL` environment variable,
+  as shown under [Submission directory](#submission-directory).
 - Resolve Python entrypoints with `SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}` and
   `srun python3 -u "$SCRIPT_DIR/<script>.py"`.
 

@@ -35,6 +35,11 @@ for path selection and compatibility with older launchers.
 
 ### ECOD
 
+The ECOD `representation_saves/` and `openfold_reps_outputs_sm/` trees are
+unavailable: they left the relocated copy under
+`/work/hdd/bfna/toDelete/thayes/ecod/experiments/` on 2026-11-06, and whether they
+moved or were deleted is unknown. The paths below record the original layout.
+
 - Pair block: `/work/hdd/bfna/thayes/ecod/experiments/representation_saves/{PROT}_save_layers_0_47/{PROT}_pair_block_{LAYER}.npy`
 - PDB file: `/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_47/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`
 

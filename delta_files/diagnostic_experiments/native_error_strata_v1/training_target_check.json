@@ -1,0 +1,111 @@
+{
+  "passed": true,
+  "tolerance": 1e-08,
+  "pdbs_hashed": 552,
+  "pdb_hash_mismatches": [],
+  "training_rows_compared": 240,
+  "baseline_rows_compared": 50,
+  "folds": [
+    {
+      "outer_fold": 0,
+      "ours": {
+        "n_training_proteins": 441,
+        "n_training_pairs": 13387878,
+        "mean_true_distance": 28.422300262103683,
+        "target_variance": 251.68602800162625,
+        "global_baseline_value": 22.61374575534911
+      },
+      "training_rows": 48,
+      "baseline_rows": 10,
+      "recorded_mean_true_distance": 28.422300262103683,
+      "recorded_target_variance": 251.68602800162623,
+      "recorded_global_baseline": 22.61374575534911,
+      "max_diff_proteins": 0,
+      "max_diff_pairs": 0,
+      "max_diff_mean": 0.0,
+      "max_diff_variance": 2.842170943040401e-14,
+      "max_diff_baseline": 0.0
+    },
+    {
+      "outer_fold": 1,
+      "ours": {
+        "n_training_proteins": 441,
+        "n_training_pairs": 13703662,
+        "mean_true_distance": 28.702742158481744,
+        "target_variance": 256.00507270533967,
+        "global_baseline_value": 22.56863012966477
+      },
+      "training_rows": 48,
+      "baseline_rows": 10,
+      "recorded_mean_true_distance": 28.702742158481744,
+      "recorded_target_variance": 256.00507270533967,
+      "recorded_global_baseline": 22.56863012966477,
+      "max_diff_proteins": 0,
+      "max_diff_pairs": 0,
+      "max_diff_mean": 0.0,
+      "max_diff_variance": 0.0,
+      "max_diff_baseline": 0.0
+    },
+    {
+      "outer_fold": 2,
+      "ours": {
+        "n_training_proteins": 442,
+        "n_training_pairs": 13518297,
+        "mean_true_distance": 28.481962042022115,
+        "target_variance": 253.12381777018095,
+        "global_baseline_value": 22.6150071332636
+      },
+      "training_rows": 48,
+      "baseline_rows": 10,
+      "recorded_mean_true_distance": 28.48196204202212,
+      "recorded_target_variance": 253.12381777018072,
+      "recorded_global_baseline": 22.6150071332636,
+      "max_diff_proteins": 0,
+      "max_diff_pairs": 0,
+      "max_diff_mean": 3.552713678800501e-15,
+      "max_diff_variance": 2.2737367544323206e-13,
+      "max_diff_baseline": 0.0
+    },
+    {
+      "outer_fold": 3,
+      "ours": {
+        "n_training_proteins": 442,
+        "n_training_pairs": 13519256,
+        "mean_true_distance": 27.679637552793526,
+        "target_variance": 189.14560766586567,
+        "global_baseline_value": 22.500199774178437
+      },
+      "training_rows": 48,
+      "baseline_rows": 10,
+      "recorded_mean_true_distance": 27.67963755279353,
+      "recorded_target_variance": 189.14560766586533,
+      "recorded_global_baseline": 22.50019977417844,
+      "max_diff_proteins": 0,
+      "max_diff_pairs": 0,
+      "max_diff_mean": 3.552713678800501e-15,
+      "max_diff_variance": 3.410605131648481e-13,
+      "max_diff_baseline": 3.552713678800501e-15
+    },
+    {
+      "outer_fold": 4,
+      "ours": {
+        "n_training_proteins": 442,
+        "n_training_pairs": 13353375,
+        "mean_true_distance": 28.15789030289001,
+        "target_variance": 243.88591798577477,
+        "global_baseline_value": 22.577171485401852
+      },
+      "training_rows": 48,
+      "baseline_rows": 10,
+      "recorded_mean_true_distance": 28.15789030289001,
+      "recorded_target_variance": 243.8859179857748,
+      "recorded_global_baseline": 22.577171485401852,
+      "max_diff_proteins": 0,
+      "max_diff_pairs": 0,
+      "max_diff_mean": 0.0,
+      "max_diff_variance": 2.842170943040401e-14,
+      "max_diff_baseline": 0.0
+    }
+  ],
+  "total_seconds": 106.00212323499727
+}
