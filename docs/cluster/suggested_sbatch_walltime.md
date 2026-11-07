@@ -131,6 +131,14 @@ below remain existing estimates, pending allocation accounting.
 | All-layer cohort scan, `NativeErrStrata` | `01:00:00` | Job `23612677` took 11:44 with the scan; verifying and redrawing alone took 3:32 in job `23613749`. |
 | CAMEO protein view, `ProteinErrStrata` | `00:30:00` | Job `23615353` took 3:22. |
 
+### Transfer follow-ups
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| `GainPosition`, one target layer | `00:15:00` | Pilot `23618576` and array `23618577` took at most 3:00 at 16 concurrent. |
+| `TriStrata`, one layer | `00:15:00` | Pilot `23623120` and array `23623121` took at most 6:43 at 16 concurrent. |
+| `TransferFollow`, all analyses | `00:15:00` | All six stages took 25 seconds in job `23624510`; keeps the short-job minimum. |
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much

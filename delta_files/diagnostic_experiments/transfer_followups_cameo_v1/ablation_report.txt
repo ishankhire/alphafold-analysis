@@ -1,0 +1,117 @@
+proteins per table: {('pair_transition', 'fwd'): 552, ('pair_transition', 'rev'): 552} structure module 552 missing cells 0
+
+======== 1. CURVES: mean TM by boundary layer, 552 proteins (CAMEO in brackets for structure module)
+                       0     4     8     12    13    16    20    24    28    32    34    35    36    40    43    44    46    47
+pair_transition_fwd  0.92  0.92  0.92  0.90  0.85  0.81  0.18  0.20  0.17  0.19  0.25  0.21  0.16  0.10  0.09  0.09  0.10  0.13
+pair_transition_rev  0.13  0.15  0.16  0.21  0.23  0.33  0.47  0.54  0.59  0.65  0.70  0.72  0.73  0.80  0.87  0.89  0.91  0.92
+msa_transition_fwd   0.92  0.08  0.07  0.08  0.08  0.08  0.08  0.07  0.07  0.08  0.08  0.08  0.07  0.08  0.07  0.08  0.07  0.07
+msa_transition_rev   0.07  0.09  0.08  0.08  0.08  0.09  0.13  0.47  0.77  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92
+msa_row_fwd          0.92  0.90  0.91  0.90  0.90  0.89  0.89  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88  0.88
+msa_row_rev          0.88  0.91  0.92  0.91  0.91  0.91  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92
+msa_col_fwd          0.12  0.10  0.10  0.10  0.10  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09  0.09
+msa_col_rev          0.09  0.89  0.91  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92
+tmu_fwd              0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.91  0.91  0.89  0.88  0.87  0.86  0.83  0.71  0.73  0.76  0.71
+tmu_rev              0.71  0.72  0.74  0.78  0.80  0.82  0.84  0.85  0.87  0.88  0.89  0.90  0.90  0.91  0.92  0.92  0.92  0.92
+tri_attention_fwd    0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.92  0.90  0.89  0.87  0.86  0.84  0.79  0.82  0.81  0.79  0.75
+tri_attention_rev    0.76  0.76  0.79  0.81  0.81  0.84  0.86  0.87  0.89  0.89  0.90  0.90  0.91  0.91  0.92  0.91  0.92  0.92
+tmu_plus_tri_fwd     0.92  0.92  0.92  0.91  0.91  0.91  0.90  0.87  0.80  0.44  0.28  0.28  0.23  0.16  0.15  0.20  0.10  0.08
+tmu_plus_tri_rev     0.08  0.08  0.09  0.11  0.12  0.20  0.36  0.42  0.56  0.65  0.72  0.76  0.80  0.89  0.91  0.91  0.92  0.92
+structure module: {0: np.float64(0.094), 4: np.float64(0.092), 8: np.float64(0.08), 12: np.float64(0.084), 13: np.float64(0.09), 16: np.float64(0.09), 20: np.float64(0.207), 24: np.float64(0.214), 28: np.float64(0.264), 32: np.float64(0.32), 34: np.float64(0.413), 35: np.float64(0.469), 36: np.float64(0.576), 40: np.float64(0.819), 43: np.float64(0.865), 44: np.float64(0.893), 46: np.float64(0.921), 47: np.float64(0.923)}
+structure module CAMEO: {0: np.float64(0.094), 4: np.float64(0.087), 8: np.float64(0.078), 12: np.float64(0.083), 13: np.float64(0.095), 16: np.float64(0.089), 20: np.float64(0.196), 24: np.float64(0.206), 28: np.float64(0.24), 32: np.float64(0.293), 34: np.float64(0.377), 35: np.float64(0.428), 36: np.float64(0.536), 40: np.float64(0.781), 43: np.float64(0.827), 44: np.float64(0.853), 46: np.float64(0.88), 47: np.float64(0.882)}
+half-way layer: {'pair_transition_fwd': 19, 'pair_transition_rev': 23, 'msa_transition_fwd': 1, 'msa_transition_rev': 25, 'msa_row_fwd': 3, 'msa_row_rev': 2, 'msa_col_fwd': 1, 'msa_col_rev': 2, 'tmu_fwd': 41, 'tmu_rev': 16, 'tri_attention_fwd': 37, 'tri_attention_rev': 16, 'tmu_plus_tri_fwd': 32, 'tmu_plus_tri_rev': 26} structure module 36
+intact reference, mean TM of REV at 47 and FWD at 0: {'pair_transition': (0.922, 0.923), 'msa_transition': (0.923, 0.92), 'msa_row': (0.922, 0.922), 'msa_col': (0.923, 0.117), 'tmu': (0.923, 0.923), 'tri_attention': (0.921, 0.923), 'tmu_plus_tri': (0.92, 0.921)}
+
+======== 2. PROBE SERIES BY LAYER
+          dR2_median_cameo  dR2_mean_552  rotation  adjacent_cost  dTM_mds_552  dTriangle_552  dStructureModule
+block 8              0.042         0.040     0.081          0.244        0.024          0.004            -0.005
+block 13             0.068         0.063     0.215          0.427        0.057         -0.009             0.006
+block 35             0.027         0.027     0.049          0.896        0.026         -0.013             0.056
+block 44             0.020         0.018     0.093          0.381        0.025         -0.007             0.028
+rank among 47 blocks, 1 = largest: {'dR2_median_cameo': {8: 3, 13: 1, 35: 4, 44: 10}, 'dR2_mean_552': {8: 2, 13: 1, 35: 6, 44: 10}, 'rotation': {8: 16, 13: 2, 35: 29, 44: 14}, 'adjacent_cost': {8: 24, 13: 9, 35: 2, 44: 12}, 'dTM_mds_552': {8: 6, 13: 1, 35: 4, 44: 5}, 'dTriangle_552': {8: 3, 13: 46, 35: 47, 44: 45}, 'dStructureModule': {8: 45, 13: 29, 35: 3, 44: 13}}
+top blocks: {'dR2_median_cameo': {13: 0.068, 15: 0.045, 8: 0.042, 35: 0.027, 16: 0.026}, 'dR2_mean_552': {13: 0.063, 8: 0.04, 16: 0.035, 15: 0.033, 9: 0.03}, 'rotation': {1: 0.294, 13: 0.215, 2: 0.164, 3: 0.156, 46: 0.142}, 'adjacent_cost': {1: 1.142, 35: 0.896, 2: 0.726, 4: 0.697, 46: 0.603}, 'dTM_mds_552': {13: 0.057, 16: 0.034, 15: 0.032, 35: 0.026, 44: 0.025}, 'dTriangle_552': {6: 0.007, 9: 0.006, 8: 0.004, 26: 0.004, 40: 0.004}, 'dStructureModule': {36: 0.106, 40: 0.082, 35: 0.056, 39: 0.056, 37: 0.054}}
+
+======== 3. DO BLOCK-LEVEL REPRESENTATION CHANGES MATCH ABLATION SENSITIVITY? Spearman, p from spectrum-preserving surrogates
+series                     adjacent_cost  dR2_mean_552  dStructureModule  rotation
+part            direction                                                         
+msa_col         fwd                -0.11          0.21             -0.07     -0.03
+                rev                 0.21         -0.07             -0.42      0.33
+msa_row         fwd                 0.25          0.16             -0.20      0.37
+                rev                 0.01         -0.06             -0.07      0.08
+msa_transition  fwd                 0.16         -0.29             -0.31      0.16
+                rev                -0.44         -0.24             -0.08     -0.50
+pair_transition fwd                -0.03          0.30              0.15      0.08
+                rev                 0.04          0.30              0.40     -0.02
+tmu             fwd                -0.15         -0.07              0.25     -0.29
+                rev                 0.03          0.46             -0.15      0.25
+tmu_plus_tri    fwd                -0.40         -0.29              0.33     -0.53
+                rev                -0.29          0.18              0.39     -0.41
+tri_attention   fwd                -0.27         -0.32              0.28     -0.39
+                rev                -0.01          0.22             -0.22      0.07
+series                     adjacent_cost  dR2_mean_552  dStructureModule  rotation
+part            direction                                                         
+msa_col         fwd                0.408         0.039             0.628     0.878
+                rev                0.412         0.767             0.056     0.331
+msa_row         fwd                0.225         0.318             0.387     0.108
+                rev                0.935         0.627             0.595     0.604
+msa_transition  fwd                0.345         0.069             0.034     0.339
+                rev                0.193         0.441             0.890     0.466
+pair_transition fwd                0.889         0.197             0.366     0.576
+                rev                0.854         0.448             0.124     0.957
+tmu             fwd                0.673         0.749             0.420     0.550
+                rev                0.899         0.121             0.608     0.527
+tmu_plus_tri    fwd                0.107         0.119             0.280     0.063
+                rev                0.454         0.578             0.319     0.526
+tri_attention   fwd                0.306         0.072             0.297     0.243
+                rev                0.968         0.215             0.351     0.861
+56 tests; smallest p 0.0340; Bonferroni threshold 0.0009; p<0.05: 2, expected by chance 2.8
+block 8: marginal TM loss, rank of 47 in brackets: {'pair_transition_fwd': (-0.0, 32), 'pair_transition_rev': (0.009, 39), 'msa_transition_fwd': (0.0, 19), 'msa_transition_rev': (-0.0, 38), 'msa_row_fwd': (0.002, 12), 'msa_row_rev': (-0.001, 43), 'msa_col_fwd': (0.0, 25), 'msa_col_rev': (0.003, 7), 'tmu_fwd': (0.0, 36), 'tmu_rev': (0.012, 3), 'tri_attention_fwd': (-0.0, 38), 'tri_attention_rev': (0.008, 9), 'tmu_plus_tri_fwd': (0.002, 29), 'tmu_plus_tri_rev': (0.003, 36)}
+block 13: marginal TM loss, rank of 47 in brackets: {'pair_transition_fwd': (0.046, 5), 'pair_transition_rev': (0.031, 6), 'msa_transition_fwd': (-0.002, 47), 'msa_transition_rev': (0.0, 33), 'msa_row_fwd': (0.002, 11), 'msa_row_rev': (-0.0, 32), 'msa_col_fwd': (-0.0, 39), 'msa_col_rev': (-0.001, 47), 'tmu_fwd': (-0.0, 39), 'tmu_rev': (0.006, 12), 'tri_attention_fwd': (-0.001, 43), 'tri_attention_rev': (0.009, 5), 'tmu_plus_tri_fwd': (0.001, 30), 'tmu_plus_tri_rev': (0.019, 18)}
+block 35: marginal TM loss, rank of 47 in brackets: {'pair_transition_fwd': (0.042, 6), 'pair_transition_rev': (0.014, 26), 'msa_transition_fwd': (0.0, 27), 'msa_transition_rev': (-0.0, 40), 'msa_row_fwd': (0.0, 31), 'msa_row_rev': (0.0, 24), 'msa_col_fwd': (0.001, 6), 'msa_col_rev': (0.001, 14), 'tmu_fwd': (0.009, 7), 'tmu_rev': (0.004, 23), 'tri_attention_fwd': (0.01, 8), 'tri_attention_rev': (0.003, 24), 'tmu_plus_tri_fwd': (-0.003, 44), 'tmu_plus_tri_rev': (0.045, 3)}
+block 44: marginal TM loss, rank of 47 in brackets: {'pair_transition_fwd': (-0.001, 34), 'pair_transition_rev': (0.012, 33), 'msa_transition_fwd': (-0.001, 40), 'msa_transition_rev': (0.001, 24), 'msa_row_fwd': (0.001, 20), 'msa_row_rev': (0.001, 12), 'msa_col_fwd': (-0.001, 45), 'msa_col_rev': (0.001, 17), 'tmu_fwd': (-0.021, 45), 'tmu_rev': (0.001, 41), 'tri_attention_fwd': (0.005, 11), 'tri_attention_rev': (0.001, 34), 'tmu_plus_tri_fwd': (-0.052, 47), 'tmu_plus_tri_rev': (0.0, 47)}
+TM lost at each block where the curve is informative, largest five blocks:
+  pair_transition_fwd: {19: 0.426, 20: 0.112, 17: 0.088, 36: 0.054, 13: 0.046}
+  pair_transition_rev: {19: 0.05, 14: 0.046, 40: 0.036, 18: 0.034, 20: 0.032}
+  msa_transition_fwd: {1: 0.677, 2: 0.127, 3: 0.038, 5: 0.002, 14: 0.001}
+  msa_transition_rev: {22: 0.171, 21: 0.104, 26: 0.101, 25: 0.087, 28: 0.087}
+  msa_row_fwd: {3: 0.039, 2: 0.02, 17: 0.004, 1: 0.004, 27: 0.003}
+  msa_row_rev: {0: 0.019, 1: 0.006, 3: 0.005, 7: 0.003, 2: 0.003}
+  msa_col_fwd: {1: 0.033, 11: 0.002, 9: 0.001, 28: 0.001, 22: 0.001}
+  msa_col_rev: {1: 0.591, 2: 0.196, 3: 0.012, 4: 0.011, 5: 0.007}
+  tmu_fwd: {41: 0.176, 47: 0.046, 37: 0.021, 39: 0.018, 43: 0.012}
+  tmu_rev: {9: 0.014, 7: 0.013, 8: 0.012, 12: 0.012, 14: 0.01}
+  tri_attention_fwd: {47: 0.035, 37: 0.029, 39: 0.028, 46: 0.026, 34: 0.014}
+  tri_attention_rev: {4: 0.013, 6: 0.013, 15: 0.012, 10: 0.011, 13: 0.009}
+  tmu_plus_tri_fwd: {32: 0.181, 45: 0.095, 34: 0.095, 30: 0.09, 31: 0.082}
+  tmu_plus_tri_rev: {25: 0.09, 18: 0.046, 35: 0.045, 33: 0.041, 17: 0.041}
+
+======== 4. WHAT DOES THE STRUCTURE MODULE'S USABLE SIGNAL TRACK? Levels by layer
+half-way layer of structure module: 36 (CAMEO 36 )
+native median R2                     spearman with SM TM  0.893 (CAMEO  0.903) | half-way layer 15 | values at L16 0.79 L34 0.85 L36 0.88 L40 0.90 L44 0.95
+native mean R2 (552)                 spearman with SM TM  0.900 (CAMEO  0.911) | half-way layer 13 | values at L16 0.79 L34 0.84 L36 0.88 L40 0.89 L44 0.94
+MDS TM (552)                         spearman with SM TM  0.927 (CAMEO  0.938) | half-way layer 16 | values at L16 0.67 L34 0.75 L36 0.79 L40 0.81 L44 0.87
+47 probe on L, median protein R2     spearman with SM TM  0.926 (CAMEO  0.936) | half-way layer 21 | values at L16 0.32 L34 0.55 L36 0.57 L40 0.66 L44 0.75
+47 probe on L, pooled R2 excl        spearman with SM TM  0.937 (CAMEO  0.946) | half-way layer 20 | values at L16 0.32 L34 0.58 L36 0.67 L40 0.73 L44 0.79
+L probe on 47, median protein R2     spearman with SM TM  0.908 (CAMEO  0.910) | half-way layer 5 | values at L16 0.43 L34 0.71 L36 0.60 L40 0.77 L44 0.79
+cosine to layer 47 probe             spearman with SM TM  0.946 (CAMEO  0.950) | half-way layer 38 | values at L16 0.35 L34 0.50 L36 0.54 L40 0.49 L44 0.67
+native triangle violation            spearman with SM TM  0.186 (CAMEO  0.204) | half-way layer 9 | values at L16 0.10 L34 0.11 L36 0.10 L40 0.10 L44 0.09
+largest structure module steps: {'35>36': 0.106, '39>40': 0.082, '34>35': 0.056, '38>39': 0.056, '36>37': 0.054, '33>34': 0.054, '37>38': 0.051, '18>19': 0.043}
+
+======== 5. SAME TEST ACROSS PROTEINS, within each layer (CAMEO, 154 proteins)
+ layer  SM_mean  SM_sd  rho_native_r2  partial_native_r2  rho_47_on_L  partial_47_on_L  rho_L_on_47  partial_L_on_47  rho_length
+    16     0.09   0.01          -0.04               0.04         0.05             0.10        -0.40            -0.11       -0.51
+    20     0.20   0.04          -0.10               0.05         0.05             0.26        -0.37            -0.02       -0.48
+    24     0.21   0.04          -0.05               0.06        -0.11             0.15        -0.29            -0.03       -0.44
+    28     0.24   0.07          -0.00               0.19        -0.04             0.23        -0.51            -0.12       -0.59
+    30     0.25   0.07           0.09               0.23         0.02             0.26        -0.31            -0.05       -0.42
+    32     0.29   0.08           0.20               0.31         0.13             0.28        -0.26            -0.06       -0.31
+    34     0.38   0.12           0.12               0.19         0.02             0.13        -0.25            -0.07       -0.27
+    35     0.43   0.13           0.17               0.22        -0.08             0.01        -0.24            -0.15       -0.21
+    36     0.54   0.14           0.25               0.31        -0.28            -0.19        -0.38            -0.29       -0.26
+    37     0.58   0.12           0.28               0.31        -0.18            -0.13        -0.18            -0.13       -0.14
+    38     0.64   0.10           0.52               0.53         0.11             0.10        -0.01            -0.03        0.02
+    39     0.71   0.09           0.59               0.58        -0.01            -0.07         0.24             0.20        0.16
+    40     0.78   0.10           0.61               0.59         0.05            -0.01         0.24             0.14        0.23
+    42     0.80   0.09           0.55               0.53         0.20             0.20        -0.10            -0.16        0.19
+    44     0.85   0.08           0.57               0.53        -0.07            -0.15         0.15            -0.04        0.31
+    46     0.88   0.08           0.46               0.42         0.36             0.33         0.35             0.27        0.26
+per-protein half-way layer of structure module: quantiles [34. 35. 36. 36. 38.] | spearman with length 0.355

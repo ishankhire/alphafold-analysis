@@ -1,0 +1,142 @@
+
+======== 1. VIOLATION STEP BY COHORT: mean step, then share of proteins falling
+        count   mean    std   min    25%    50%    75%    max
+source                                                       
+cameo   154.0  271.0  152.0  34.0  154.0  245.0  340.0  681.0
+ecod    398.0  191.0  106.0  30.0  112.0  165.0  247.0  794.0
+shared_ols_base256
+layer           8       13      16      17      18      35      39      40      42      43      44      47
+all_mean    0.0043 -0.0087 -0.0019 -0.0047  0.0006 -0.0125 -0.0037  0.0038 -0.0032 -0.0046 -0.0074 -0.0012
+all_fall    0.3300  0.6100  0.4900  0.6600  0.5000  0.7400  0.7400  0.3300  0.4500  0.6800  0.7100  0.6000
+cameo_mean  0.0036 -0.0128 -0.0011 -0.0014 -0.0009 -0.0030 -0.0089  0.0047  0.0015 -0.0029 -0.0024 -0.0043
+cameo_fall  0.2800  0.7500  0.4300  0.5800  0.4800  0.5200  0.9000  0.3000  0.2700  0.6600  0.5800  0.7700
+ecod_mean   0.0045 -0.0071 -0.0022 -0.0060  0.0012 -0.0162 -0.0016  0.0034 -0.0051 -0.0052 -0.0094  0.0001
+ecod_fall   0.3400  0.5600  0.5100  0.6900  0.5000  0.8300  0.6800  0.3400  0.5200  0.6800  0.7600  0.5400
+sequence_gated_ols_base256
+layer           8       13      16      17      18      35      39      40      42      43      44      47
+all_mean    0.0040 -0.0069 -0.0026 -0.0005  0.0006 -0.0076 -0.0032  0.0026 -0.0015 -0.0040 -0.0061  0.0007
+all_fall    0.2500  0.6700  0.6100  0.5600  0.5200  0.7200  0.7200  0.3500  0.5200  0.6500  0.7900  0.4800
+cameo_mean  0.0042 -0.0083  0.0001  0.0010 -0.0012  0.0008 -0.0044  0.0030  0.0011 -0.0035 -0.0037 -0.0019
+cameo_fall  0.2000  0.7900  0.4700  0.4600  0.5600  0.4500  0.7900  0.3800  0.4200  0.6400  0.6900  0.5800
+ecod_mean   0.0040 -0.0063 -0.0037 -0.0011  0.0013 -0.0109 -0.0028  0.0024 -0.0025 -0.0041 -0.0070  0.0017
+ecod_fall   0.2700  0.6300  0.6700  0.6000  0.5000  0.8200  0.6900  0.3400  0.5600  0.6500  0.8200  0.4400
+per_protein_ols_base256
+layer           8       13      16      17      18      35      39      40      42      43      44      47
+all_mean   -0.0000 -0.0102 -0.0058 -0.0037 -0.0031 -0.0066 -0.0021 -0.0002 -0.0023 -0.0045 -0.0038  0.0018
+all_fall    0.4600  0.9500  0.9400  0.9500  0.9700  0.9700  0.9500  0.5400  0.9000  0.9900  0.9800  0.1300
+cameo_mean  0.0018 -0.0072 -0.0064 -0.0031 -0.0032 -0.0064 -0.0027  0.0004 -0.0012 -0.0058 -0.0060  0.0007
+cameo_fall  0.2900  0.9000  0.9600  0.9000  0.9400  0.9600  0.9700  0.3800  0.7400  1.0000  0.9700  0.3400
+ecod_mean  -0.0007 -0.0113 -0.0056 -0.0040 -0.0030 -0.0066 -0.0018 -0.0004 -0.0027 -0.0040 -0.0029  0.0022
+ecod_fall   0.5200  0.9700  0.9300  0.9700  0.9800  0.9800  0.9400  0.6000  0.9600  0.9900  0.9800  0.0600
+shared_xgboost_base256_fixed_s4
+layer           8       13      16      17      18      35      39      40      42      43      44      47
+all_mean    0.0020 -0.0038 -0.0017 -0.0016 -0.0012 -0.0013 -0.0018 -0.0030 -0.0038 -0.0037 -0.0023  0.0016
+all_fall    0.3900  0.6800  0.5300  0.6400  0.5700  0.6000  0.6800  0.7300  0.8400  0.8100  0.7200  0.3200
+cameo_mean  0.0021 -0.0041 -0.0005  0.0014 -0.0019  0.0005 -0.0023 -0.0014 -0.0037 -0.0021 -0.0027  0.0014
+cameo_fall  0.3400  0.7400  0.4800  0.4700  0.6000  0.4700  0.6800  0.5600  0.7900  0.6600  0.6500  0.3900
+ecod_mean   0.0020 -0.0037 -0.0022 -0.0028 -0.0009 -0.0021 -0.0017 -0.0037 -0.0038 -0.0043 -0.0021  0.0016
+ecod_fall   0.4100  0.6600  0.5400  0.7100  0.5600  0.6500  0.6800  0.7900  0.8600  0.8700  0.7500  0.2900
+
+======== 2. SAME BLOCKS BY LENGTH TERTILE, shared OLS and per-protein OLS, 552 proteins
+edges [136. 242.]
+n_residues  short  mid  long
+source                      
+cameo          31   45    78
+ecod          153  140   105
+shared_ols_base256
+layer            13      17      35      39      43      44
+cameo_short -0.0358 -0.0063 -0.0231 -0.0080  0.0051 -0.0110
+cameo_mid   -0.0126  0.0019 -0.0039 -0.0082 -0.0046 -0.0088
+cameo_long  -0.0037 -0.0014  0.0055 -0.0096 -0.0051  0.0047
+ecod_short  -0.0207 -0.0102 -0.0259  0.0070  0.0029 -0.0149
+ecod_mid     0.0000 -0.0042 -0.0135 -0.0054 -0.0084 -0.0095
+ecod_long    0.0030 -0.0022 -0.0056 -0.0092 -0.0127 -0.0011
+per_protein_ols_base256
+layer            13      17      35      39      43      44
+cameo_short -0.0115 -0.0029 -0.0068 -0.0030 -0.0074 -0.0042
+cameo_mid   -0.0088 -0.0030 -0.0061 -0.0032 -0.0060 -0.0069
+cameo_long  -0.0046 -0.0032 -0.0064 -0.0023 -0.0050 -0.0063
+ecod_short  -0.0117 -0.0027 -0.0050 -0.0018 -0.0042 -0.0030
+ecod_mid    -0.0132 -0.0041 -0.0076 -0.0021 -0.0040 -0.0026
+ecod_long   -0.0081 -0.0058 -0.0078 -0.0015 -0.0036 -0.0032
+
+======== 3. EVENT BLOCKS: share of proteins falling, per-protein OLS, both cohorts separately
+          all   cameo    ecod  mean_step
+layer                                   
+43     0.9946  1.0000  0.9925    -0.0045
+44     0.9783  0.9740  0.9799    -0.0038
+35     0.9746  0.9610  0.9799    -0.0066
+18     0.9674  0.9351  0.9799    -0.0031
+13     0.9493  0.8961  0.9698    -0.0102
+17     0.9493  0.9026  0.9673    -0.0037
+39     0.9493  0.9675  0.9422    -0.0021
+16     0.9366  0.9610  0.9271    -0.0058
+15     0.9130  0.7792  0.9648    -0.0043
+20     0.9004  0.9091  0.8970    -0.0021
+42     0.8986  0.7403  0.9598    -0.0023
+36     0.8986  0.7792  0.9447    -0.0020
+12     0.8370  0.7208  0.8819    -0.0022
+22     0.7464  0.8377  0.7111    -0.0013
+41     0.7337  0.6299  0.7739    -0.0012
+11     0.6993  0.4675  0.7889    -0.0012
+share of blocks at or above 0.90: 10 | at or below 0.10: 5 [6, 26, 28, 29, 30]
+events: [13, 15, 16, 17, 18, 20, 35, 39, 43, 44] | same list at 0.85: [13, 15, 16, 17, 18, 20, 35, 36, 39, 42, 43, 44]
+per-protein OLS, share of proteins with R2 rising at events: {13: 1.0, 15: 1.0, 16: 0.99, 17: 0.98, 18: 0.99, 20: 0.95, 35: 0.99, 39: 0.98, 43: 1.0, 44: 1.0} | median block 0.86
+per-protein OLS, violation steps vs R2 steps, spearman -0.554
+per-protein OLS, violation steps vs share falling in the other three families: {'shared_ols_b': np.float64(0.569), 'sequence_gat': np.float64(0.687), 'shared_xgboo': np.float64(0.662)}
+
+======== 4. DO THE EVENTS LINE UP WITH EARLIER SERIES? Mean at event blocks, against all 46 circular shifts
+native R2 step                           events +0.0242 other shifts mean +0.0090 | exact p 0.021
+native amplitude step                    events +0.0323 other shifts mean +0.0066 | exact p 0.021
+adjacent transfer cost                   events +0.3788 other shifts mean +0.2964 | exact p 0.149
+structure module TM step                 events +0.0253 other shifts mean +0.0175 | exact p 0.213
+ablation pair_transitio fwd              events +0.0347 other shifts mean +0.0164 | exact p 0.234
+ablation pair_transitio rev              events +0.0277 other shifts mean +0.0165 | exact p 0.043
+ablation tri_start_abla fwd              events +0.0034 other shifts mean +0.0181 | exact p 0.894
+ablation tri_start_abla rev              events +0.0242 other shifts mean +0.0177 | exact p 0.191
+
+======== 5. WHEN MODELS MISS: absolute steps at the largest CAMEO changes, 153 proteins
+shared_ols_base256
+          observed  protein_strata  residues_plus_permuted
+block 13   -0.0128         -0.0072                 -0.0070
+block 39   -0.0090         -0.0097                 -0.0088
+block 9     0.0062          0.0069                  0.0065
+block 40    0.0048          0.0039                  0.0038
+block 47   -0.0044         -0.0020                 -0.0030
+block 6     0.0044          0.0023                  0.0033
+block 41    0.0043          0.0021                  0.0031
+block 30    0.0042          0.0035                  0.0032
+observed / model, by layer window:
+        iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0-12         0.209             3.000          0.553           0.680               0.683                   0.774
+L13-21        0.318             6.514          0.563           0.650               0.660                   0.736
+L22-34        0.380             7.073          0.608           0.698               0.706                   0.781
+L35-43        0.487             6.395          0.702           0.769               0.776                   0.853
+L44-47        0.628             5.979          0.782           0.837               0.846                   0.928
+shared_xgboost_base256_fixed_s4
+          observed  protein_strata  residues_plus_permuted
+block 13   -0.0042         -0.0034                 -0.0035
+block 42   -0.0036         -0.0040                 -0.0043
+block 14    0.0031          0.0017                  0.0023
+block 33   -0.0029         -0.0036                 -0.0032
+block 44   -0.0028         -0.0061                 -0.0051
+block 5     0.0024          0.0027                  0.0028
+block 39   -0.0023         -0.0045                 -0.0041
+block 38   -0.0023         -0.0028                 -0.0025
+observed / model, by layer window:
+        iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0-12         0.171            11.689          0.367           0.516               0.533                   0.597
+L13-21        0.282            13.849          0.459           0.546               0.573                   0.631
+L22-34        0.353            15.539          0.517           0.605               0.637                   0.691
+L35-43        0.449             8.954          0.625           0.700               0.740                   0.788
+L44-47        0.557             6.424          0.718           0.801               0.850                   0.884
+
+======== 6. TWO-FORCE TEST: does margin mean and SD account for violations?
+shared_ols_base256 cohort means by layer: r(violation, margin mean) 0.681 r(violation, margin SD) -0.578
+   cohort curve ~ margin mean + margin SD: coefficients [0.0055 0.0061 0.0607] R2 0.556
+   within protein across layers: coefficients [0.0131 0.0186] R2 0.499
+   violation share of each force, L0 to L47: mean 0.0398 SD -0.0264 observed 0.0182
+shared_xgboost_base256_fixed_s4 cohort means by layer: r(violation, margin mean) 0.335 r(violation, margin SD) -0.057
+   cohort curve ~ margin mean + margin SD: coefficients [0.0074 0.0089 0.0261] R2 0.852
+   within protein across layers: coefficients [0.0103 0.0123] R2 0.6
+   violation share of each force, L0 to L47: mean 0.0506 SD -0.0492 observed 0.0009

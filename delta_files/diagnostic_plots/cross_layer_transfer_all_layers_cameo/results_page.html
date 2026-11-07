@@ -1,0 +1,160 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>CAMEO Probe Transfer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column of figure plates, opening with findings, then evidence by question.
+   Single light theme by choice: the figures are light PNGs with their own surface. */
+:root {
+  color-scheme: light;
+  --page: #f5f6f8;
+  --plate: #fcfcfb;
+  --ink: #15181d;
+  --ink-soft: #4d535c;
+  --rule: #d9dde3;
+  --mark: #123f75;
+  --mark-wash: #dce9f9;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+body { background: var(--page); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; }
+main { max-width: 1060px; margin: 0 auto; padding-block: 40px 72px;
+       padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+       display: grid; gap: 44px; }
+header { display: grid; gap: 14px; }
+h1 { font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.15; font-weight: 600; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.3rem; line-height: 1.3; font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--ink-soft); font-size: 1.05rem; }
+.limits { background: var(--mark-wash); padding: 14px 18px; display: grid; gap: 6px; }
+.limits strong { color: var(--mark); font-weight: 600; }
+.limits p { font-size: .96rem; }
+section { display: grid; gap: 22px; }
+.group-head { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
+.group-head p { color: var(--ink-soft); }
+.findings { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.findings li { display: grid; gap: 2px; max-width: 72ch; }
+.findings b { font-weight: 600; }
+.findings span { color: var(--ink-soft); font-size: .97rem; }
+figure { margin: 0; background: var(--plate); border: 1px solid var(--rule); display: grid; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; }
+figure.narrow img { max-width: 620px; margin: 0 auto; }
+figcaption { padding: 14px 18px 16px; border-top: 1px solid var(--rule); display: grid; gap: 6px; }
+figcaption p { font-size: .96rem; }
+.file { font-family: var(--mono); font-size: .78rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+.check { font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+@media (max-width: 640px) { main { gap: 32px; padding-block: 24px 48px; } }
+</style>
+
+<main>
+  <header>
+    <h1>CAMEO probe transfer</h1>
+    <p class="lede">All 240 frozen shared-OLS probes replayed across every pair of Evoformer layers, 2,304 cells in <code>target_restandardized</code> mode, with signed error recorded by sequence separation, final structure distance, protein, and chain position.</p>
+    <div class="limits">
+      <p><strong>154 CAMEO proteins only.</strong> The ECOD inputs are unavailable, so this is a partial cohort and must be re-run on all 552 proteins when they return. Do not compare its pooled numbers with 552-protein tables.</p>
+      <p>Error is probe distance minus final structure distance, where the final structure is OpenFold's own prediction. It shows how far a probe reads from that structure.</p>
+    </div>
+    <p class="check">analysis_status=complete, 792 of 792 checks. All 48 native cells match the producer per protein, and 1,293,600 per-protein statistics match the ten-layer run. Pooled, fold, and subgroup tables for this partial cohort have no outside reference; they rest on those per-protein checks.</p>
+  </header>
+
+  <section>
+    <div class="group-head"><h2>What it shows</h2></div>
+    <ul class="findings">
+      <li><b>Probes transfer well among layers 16 to 47, and poorly across the early-layer boundary.</b><span>Median pooled R² excluding 7stz_C is 0.80 within layers 16 to 47. It falls to 0.12 for those probes on layers 0 to 13, and 0.30 for layers 0 to 12 probes on layers 16 to 47. The change is gradual: for probes from layers 22 to 47, it rises from 0.19 at target layer 12 to 0.58 at layer 16 and 0.78 at layer 20.</span></li>
+      <li><b>Which direction is worse depends on the measure.</b><span>At a 40-layer offset, a late probe on an early layer has the higher absolute MAE, 13.2 Å against 11.1 Å. Measured as excess over each target's own probe, an early probe on a late layer looks worse, 8.2 Å against 4.8 Å, because late layers start from a much lower error.</span></li>
+      <li><b>Most squared error sits in pairs far apart in both sequence and space.</b><span>At native layer 47, pairs with sequence separation 50+ and distance 40+ Å hold 88.5% of squared error, or 61.3% excluding 7stz_C.</span></li>
+      <li><b>Long distances read short at every layer.</b><span>At native layer 47, excluding 7stz_C, the median error is near zero up to 60 Å, then about −5 Å at 60 to 80 Å, −19 Å at 80 to 100 Å, and −36 Å beyond 100 Å.</span></li>
+      <li><b>Transfer adds short-range error that native probes do not have.</b><span>For sequence neighbours, the layer 22 probe on layer 47 reads 7.5 Å low on average, and the layer 47 probe on layer 22 reads 5.4 Å high. Native probes are within 0.7 Å. Since these pairs sit about 3.8 Å apart, a 7.5 Å shortfall means the probe reads a negative distance on average.</span></li>
+      <li><b>Error rises at both ends of the chain, more at the N-terminus.</b><span>At layer 47 the first 5% of the chain has an MAE of about 4.1 Å, against about 2.0 Å mid-chain. For the layer 47 probe on layer 22, it is about 13.2 Å against 6.6 Å.</span></li>
+      <li><b>One protein still dominates the pooled numbers.</b><span>7stz_C is the largest squared-error contributor in all 2,304 cells, at 15% to 75% of the total. At native layer 47 it takes pooled R² from 0.945 to 0.870. Median per-protein R² there is 0.942.</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="group-head">
+      <h2>How far a probe transfers</h2>
+      <p>Each cell is one source layer's probe read on one target layer's features.</p>
+    </div>
+    <figure>
+      <img src="01_transfer_pooled_r2_48x48.png" alt="Forty-eight by forty-eight heatmap of pooled R squared by source and target layer. A large high-value block covers layers 16 to 47.">
+      <figcaption>
+        <p>Pooled R² for every cell, with 7stz_C included. The high block covers layers 16 to 47, and the outlined blocks mark what v1 measured.</p>
+        <span class="file">01_transfer_pooled_r2_48x48.png</span>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="02_transfer_offset_decay.png" alt="Line chart of excess mean absolute error against layer offset, rising in both directions and higher when the target layer is later than the source.">
+      <figcaption>
+        <p>Excess MAE over the target layer's own probe. Read this with the absolute numbers above: the steeper right side reflects how low native error is at late layers.</p>
+        <span class="file">02_transfer_offset_decay.png</span>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="03_error_median_and_iqr_48x48.png" alt="Two forty-eight by forty-eight heatmaps of median signed error and interquartile range of signed error.">
+      <figcaption>
+        <p>Every probe's error distribution as shift and spread. Median error stays within about 1 Å through most of the late block, even where spread grows. Late probes read low on early layers.</p>
+        <span class="file">03_error_median_and_iqr_48x48.png</span>
+      </figcaption>
+    </figure>
+    <figure class="narrow">
+      <img src="per_probe/probe_layer_22_error_ridgeline.png" alt="Stacked histograms of signed error for the layer 22 probe at target layers from 0 to 47, narrowest at its own layer.">
+      <figcaption>
+        <p>The full distribution for the layer 22 probe across target layers. All 48 probes have a page like this in <code>per_probe/</code>.</p>
+        <span class="file">per_probe/probe_layer_22_error_ridgeline.png</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="group-head">
+      <h2>Where the error is</h2>
+      <p>Two native cells, and the two directions between them.</p>
+    </div>
+    <figure>
+      <img src="05_native_error_fan_by_layer.png" alt="Fan chart of signed error percentiles by layer, narrowing toward layer 47, with a much longer negative tail.">
+      <figcaption>
+        <p>Native error at every layer. The median stays near zero while the negative tail runs much longer than the positive one. The dashed lines show how much of that tail is 7stz_C.</p>
+        <span class="file">05_native_error_fan_by_layer.png</span>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="06_error_vs_final_structure_distance.png" alt="Four heatmaps of signed error against final structure distance. Median error falls strongly at long distances in all four, and transfers also deviate at short distance.">
+      <figcaption>
+        <p>Signed error against final structure distance, excluding 7stz_C. All four cells read long distances short. The two transfers also bend away from zero under about 25 Å.</p>
+        <span class="file">06_error_vs_final_structure_distance.png</span>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="07_error_budget_strata.png" alt="Grids of sequence separation by final structure distance for four cells, showing share of squared error with and without 7stz_C, and mean signed error.">
+      <figcaption>
+        <p>The error budget by sequence separation and distance. The full fine-binned version, 13 by 17 strata for every cell, is in <code>error_strata.csv</code>.</p>
+        <span class="file">07_error_budget_strata.png</span>
+      </figcaption>
+    </figure>
+    <figure>
+      <img src="08_error_along_chain.png" alt="Line chart of mean absolute error along the chain for four cells, flat through the middle and rising at both ends.">
+      <figcaption>
+        <p>Error along the chain, excluding 7stz_C. Flat through the middle, rising at both termini, and steepest at the N-terminus.</p>
+        <span class="file">08_error_along_chain.png</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="group-head">
+      <h2>Anomalous proteins</h2>
+      <p>Pooled metrics weight pairs, so one long, elongated protein can dominate them.</p>
+    </div>
+    <figure>
+      <img src="09_protein_concentration.png" alt="Left: cumulative share of squared error by ranked protein, starting at about 64 and 71 percent. Right: heatmap of pooled R squared gained by dropping 7stz_C.">
+      <figcaption>
+        <p>7stz_C alone is about 64% of native squared error at layer 22 and 71% at layer 47. That share is larger than in the full cohort, where ECOD proteins dilute it. <code>protein_anomalies.csv</code> lists the top five proteins for every cell; after 7stz_C, the most frequent are 7o49_F and 7t24_A.</p>
+        <span class="file">09_protein_concentration.png</span>
+      </figcaption>
+    </figure>
+  </section>
+</main>
+
+</body></html>

@@ -1,0 +1,424 @@
+<title>__PROBE_LABEL__Protein Error Strata</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: claims table first, then an inspection bench of controls, heatmap and scatter.
+   Single light theme by choice, to match the companion figures. */
+:root {
+  color-scheme: light;
+  --page: #f5f6f8;
+  --plate: #fcfcfb;
+  --ink: #15181d;
+  --ink-soft: #4d535c;
+  --rule: #d9dde3;
+  --accent: #123f75;
+  --accent-wash: #dce9f9;
+  --no-data: #c9c8c1;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+body { background: var(--page); color: var(--ink); font-family: var(--sans); font-size: 16px; line-height: 1.55; }
+main { max-width: 1120px; margin: 0 auto; padding-block: 40px 72px;
+       padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+       display: grid; gap: 40px; }
+header, section { display: grid; gap: 14px; min-width: 0; }
+h1 { font-size: clamp(1.8rem, 4.5vw, 2.5rem); line-height: 1.15; font-weight: 600; margin: 0; text-wrap: balance; }
+h2 { font-size: 1.3rem; line-height: 1.3; font-weight: 600; margin: 0; text-wrap: balance; }
+h3 { font-size: 1.02rem; font-weight: 600; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+.lede { color: var(--ink-soft); font-size: 1.05rem; }
+.note { color: var(--ink-soft); font-size: .92rem; }
+.check { font-family: var(--mono); font-size: .8rem; color: var(--ink-soft); overflow-wrap: anywhere; }
+.scroll { overflow-x: auto; background: var(--plate); border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 280px; }
+th { font-weight: 600; font-size: .82rem; color: var(--ink-soft); }
+tr:last-child td { border-bottom: 0; }
+td small { color: var(--ink-soft); font-size: .76rem; }
+.controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px 18px; background: var(--plate);
+            border: 1px solid var(--rule); padding: 14px 16px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field.grow { flex: 1 1 220px; }
+.field label { font-size: .78rem; font-weight: 500; color: var(--ink-soft); }
+input[type="text"], select { font: inherit; font-size: .92rem; padding: 6px 8px; color: var(--ink); background: #fff;
+                             border: 1px solid var(--rule); max-width: 100%; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+button { font: inherit; font-size: .88rem; color: var(--accent); background: var(--accent-wash); border: 0;
+         padding: 7px 12px; cursor: pointer; }
+:is(button, input, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.summary { font-family: var(--mono); font-size: .86rem; }
+.panel { background: var(--plate); border: 1px solid var(--rule); padding: 14px 16px; display: grid; gap: 10px; min-width: 0; }
+.chart { overflow-x: auto; }
+svg { display: block; width: 100%; height: auto; min-width: 720px; font-family: var(--sans); }
+svg text { fill: var(--ink); }
+.axis text { fill: var(--ink-soft); font-size: 11px; }
+.cell { cursor: pointer; }
+.dot { cursor: pointer; }
+#tooltip { position: fixed; z-index: 20; pointer-events: none; background: var(--ink); color: #fff; font-size: .8rem;
+           line-height: 1.4; padding: 6px 9px; max-width: 280px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; margin: 0; }
+.stats div { display: grid; gap: 1px; min-width: 0; }
+.stats dt { font-size: .76rem; color: var(--ink-soft); }
+.stats dd { margin: 0; font-family: var(--mono); font-size: .98rem; font-variant-numeric: tabular-nums; }
+</style>
+
+<main>
+  <header>
+    <h1>__PROBE_HEADING__</h1>
+    <p class="lede">A check of whether the error statistics hold for individual proteins and across protein lengths, using the 154 CAMEO proteins and all 48 native __PROBE_LABEL__probes.</p>
+    <p>The 398 ECOD proteins are left out because their final structures are currently unavailable, so pooled values here differ from the 551-protein cohort page. They also include 7stz_C unless you choose the view without it.</p>
+    <p>Signed error is the probe's distance minus the distance in OpenFold's final predicted structure. SD is the spread across pairs. Pooled statistics are pair-weighted, so large proteins count for more, while the protein-level columns below count each protein once.</p>
+    <p class="check" id="loadStatus">Loading protein data...</p>
+  </header>
+
+  <section>
+    <h2>Do the stated claims hold protein by protein?</h2>
+    <p class="note" id="claimsNote"></p>
+    <div class="scroll"><table id="claimsTable"></table></div>
+  </section>
+
+  <section>
+    <h2>Inspect any protein</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="scope">View</label>
+        <select id="scope"></select>
+      </div>
+      <div class="field">
+        <label for="protein">Protein</label>
+        <input id="protein" type="text" list="proteinList" autocomplete="off" spellcheck="false">
+        <datalist id="proteinList"></datalist>
+      </div>
+      <button id="previousProtein" type="button">Shorter</button>
+      <button id="nextProtein" type="button">Longer</button>
+      <div class="field grow">
+        <label for="layerRange" id="layerLabel">Layer 47</label>
+        <input id="layerRange" type="range" min="0" max="47" step="1" value="47">
+      </div>
+    </div>
+    <p class="summary" id="scopeSummary"></p>
+    <div class="panel">
+      <h3 id="heatTitle"></h3>
+      <div class="chart"><svg id="heatmap" viewBox="0 0 1060 590" role="img" aria-label="Heatmap of mean signed error and SD by sequence separation and final structure distance"></svg></div>
+      <p class="note" id="heatNote"></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>One bin across every protein</h2>
+    <div class="controls">
+      <div class="field">
+        <label for="seqBin">Sequence separation</label>
+        <select id="seqBin"></select>
+      </div>
+      <div class="field">
+        <label for="distBin">Final structure distance (Å)</label>
+        <select id="distBin"></select>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 id="scatterTitle"></h3>
+      <dl class="stats" id="binStats"></dl>
+      <div class="chart"><svg id="scatter" viewBox="0 0 1060 400" role="img" aria-label="Scatter of each protein's mean signed error in the selected bin against protein length"></svg></div>
+      <p class="note">Each dot is one protein. Hollow dots have fewer than 10 pairs in this bin. The dashed line is the pooled mean. Click a dot to open that protein above.</p>
+    </div>
+    <div class="scroll"><table id="groupTable"></table></div>
+  </section>
+</main>
+<div id="tooltip" hidden></div>
+
+<script>
+const DATA = __PAYLOAD__;
+const NS = "http://www.w3.org/2000/svg";
+const P = DATA.proteins, N_P = P.id.length, N_S = DATA.seq_labels.length, N_D = DATA.dist_labels.length;
+const N_L = DATA.n_layers, UNIT = DATA.unit, OUTLIER = "7stz_C";
+const byLength = [...P.id.keys()].sort((a, b) => P.length[a] - P.length[b]);
+const state = { scope: "protein", protein: byLength[Math.floor(N_P / 2)], layer: 47, seq: 10, dist: 9 };
+let cells, cellN, values, C, lookup;
+
+const $ = (id) => document.getElementById(id);
+const bytes = (text) => Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+const signed = (v) => { const t = Math.abs(v).toFixed(1); return t === "0.0" ? "0.0" : (v < 0 ? "-" : "+") + t; };
+const count = (v) => v.toLocaleString("en-US");
+const mean = (c, l) => values[c * N_L + l] * UNIT;
+const sd = (c, l) => values[(C + c) * N_L + l] * UNIT;
+const median = (list) => { const s = [...list].sort((a, b) => a - b), m = s.length >> 1;
+  return s.length ? (s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2) : NaN; };
+const quantile = (s, q) => { const i = (s.length - 1) * q, f = Math.floor(i);
+  return s[f] + (s[Math.min(f + 1, s.length - 1)] - s[f]) * (i - f); };
+
+async function decode() {
+  cells = bytes(DATA.cells);
+  cellN = new Uint32Array(bytes(DATA.cell_n).buffer);
+  C = cells.length;
+  const stream = new Blob([bytes(DATA.values)]).stream().pipeThrough(new DecompressionStream("gzip"));
+  values = new Int16Array(await new Response(stream).arrayBuffer());
+  for (let row = 0; row < 2 * C; row++) {
+    const start = row * N_L;
+    for (let l = 1; l < N_L; l++) values[start + l] += values[start + l - 1];
+  }
+  lookup = new Int32Array(N_P * N_S * N_D).fill(-1);
+  for (let p = 0; p < N_P; p++) {
+    for (let c = DATA.offsets[p]; c < DATA.offsets[p + 1]; c++) lookup[p * N_S * N_D + cells[c]] = c;
+  }
+}
+
+/* Same colour mapping as the companion figures: linear inside ±2 Å, logarithmic beyond. */
+const { limit, linthresh, linscale } = DATA.color;
+const adjusted = linscale / (1 - 1 / 10);
+const symlog = (v) => { const a = Math.abs(v);
+  return Math.sign(v) * (a <= linthresh ? a * adjusted : linthresh * (adjusted + Math.log10(a / linthresh))); };
+const STOPS = [[143, 29, 28], [227, 73, 72], [240, 239, 236], [42, 120, 214], [18, 63, 117]];
+function colour(v) {
+  const t = Math.min(1, Math.max(0, (symlog(v) + symlog(limit)) / (2 * symlog(limit)))) * (STOPS.length - 1);
+  const i = Math.min(STOPS.length - 2, Math.floor(t)), f = t - i;
+  return STOPS[i].map((x, k) => x + (STOPS[i + 1][k] - x) * f);
+}
+const ink = (rgb) => (0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]) / 255 < 0.5 ? "#ffffff" : "#222222";
+
+function members() {
+  if (state.scope === "protein") return [state.protein];
+  if (state.scope === "all") return [...P.id.keys()];
+  if (state.scope === "without") return [...P.id.keys()].filter((p) => P.id[p] !== OUTLIER);
+  return [...P.id.keys()].filter((p) => P.group[p] === Number(state.scope));
+}
+
+function strata(list, layer) {
+  const size = N_S * N_D, n = new Float64Array(size), e = new Float64Array(size), q = new Float64Array(size), prot = new Float64Array(size);
+  for (const p of list) {
+    for (let c = DATA.offsets[p]; c < DATA.offsets[p + 1]; c++) {
+      const k = cellN[c], m = mean(c, layer), s = sd(c, layer), cell = cells[c];
+      n[cell] += k; e[cell] += k * m; q[cell] += k * (s * s + m * m); prot[cell] += 1;
+    }
+  }
+  const means = e.map((v, i) => (n[i] ? v / n[i] : NaN));
+  const sds = q.map((v, i) => (n[i] ? Math.sqrt(Math.max(v / n[i] - means[i] * means[i], 0)) : NaN));
+  return { n, means, sds, prot };
+}
+
+function element(tag, attributes, parent) {
+  const node = document.createElementNS(NS, tag);
+  for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+  if (parent) parent.appendChild(node);
+  return node;
+}
+
+const HEAT = { left: 86, top: 10, cellW: 56, cellH: 40 };
+const heatCells = [];
+function buildHeatmap() {
+  const svg = $("heatmap");
+  for (let s = 0; s < N_S; s++) {
+    const label = element("text", { x: HEAT.left - 8, y: HEAT.top + (s + .5) * HEAT.cellH + 4, "text-anchor": "end", class: "axis" }, svg);
+    label.textContent = DATA.seq_labels[s]; label.style.fontSize = "12px"; label.style.fill = "var(--ink-soft)";
+    for (let d = 0; d < N_D; d++) {
+      const x = HEAT.left + d * HEAT.cellW, y = HEAT.top + s * HEAT.cellH;
+      const rect = element("rect", { x, y, width: HEAT.cellW, height: HEAT.cellH, class: "cell" }, svg);
+      const top = element("text", { x: x + HEAT.cellW / 2, y: y + 17, "text-anchor": "middle", "font-size": 11.5, "pointer-events": "none" }, svg);
+      const bottom = element("text", { x: x + HEAT.cellW / 2, y: y + 31, "text-anchor": "middle", "font-size": 10.5, "pointer-events": "none" }, svg);
+      const index = s * N_D + d;
+      rect.addEventListener("mousemove", (event) => showTooltip(event, heatText(index)));
+      rect.addEventListener("mouseleave", hideTooltip);
+      rect.addEventListener("click", () => { state.seq = s; state.dist = d; $("seqBin").value = s; $("distBin").value = d; renderBin(); renderHeatmap(); });
+      heatCells.push({ rect, top, bottom });
+    }
+  }
+  for (let d = 0; d < N_D; d++) {
+    const label = element("text", { x: HEAT.left + (d + .5) * HEAT.cellW, y: HEAT.top + N_S * HEAT.cellH + 16, "text-anchor": "middle" }, svg);
+    label.textContent = DATA.dist_labels[d]; label.style.fontSize = "11.5px"; label.style.fill = "var(--ink-soft)";
+  }
+  const x = element("text", { x: HEAT.left + N_D * HEAT.cellW / 2, y: HEAT.top + N_S * HEAT.cellH + 36, "text-anchor": "middle" }, svg);
+  x.textContent = "Final structure Cα distance (Å)"; x.style.fontSize = "12.5px"; x.style.fill = "var(--ink-soft)";
+  const y = element("text", { transform: `translate(14 ${HEAT.top + N_S * HEAT.cellH / 2}) rotate(-90)`, "text-anchor": "middle" }, svg);
+  y.textContent = "Sequence separation (residues)"; y.style.fontSize = "12.5px"; y.style.fill = "var(--ink-soft)";
+}
+
+let current;
+function heatText(index) {
+  const seq = DATA.seq_labels[Math.floor(index / N_D)], dist = DATA.dist_labels[index % N_D];
+  const head = `Separation ${seq}, ${dist} Å`;
+  if (!current.n[index]) return `${head}\nNo pairs`;
+  const proteins = state.scope === "protein" ? "" : ` in ${count(current.prot[index])} proteins`;
+  return `${head}\nMean ${signed(current.means[index])} Å, SD ${current.sds[index].toFixed(1)} Å\n${count(current.n[index])} pairs${proteins}`;
+}
+
+function renderHeatmap() {
+  const list = members();
+  current = strata(list, state.layer);
+  const single = state.scope === "protein";
+  heatCells.forEach(({ rect, top, bottom }, index) => {
+    const n = current.n[index], selected = index === state.seq * N_D + state.dist;
+    const supported = n > 0 && (single ? n >= 10 : n >= 100 && current.prot[index] >= 5);
+    const rgb = supported ? colour(current.means[index]) : null;
+    rect.setAttribute("fill", rgb ? `rgb(${rgb.map(Math.round).join(",")})` : "var(--no-data)");
+    rect.setAttribute("stroke", selected ? "#0b0b0b" : "none");
+    rect.setAttribute("stroke-width", selected ? 2 : 0);
+    const textColour = rgb ? ink(rgb) : "#52514e";
+    top.setAttribute("fill", textColour); bottom.setAttribute("fill", textColour);
+    top.style.fill = textColour; bottom.style.fill = textColour;
+    top.textContent = n ? signed(current.means[index]) : "–";
+    bottom.textContent = n ? "±" + current.sds[index].toFixed(1) : "";
+  });
+  $("layerLabel").textContent = `Layer ${state.layer}`;
+  const scopeName = single ? P.id[state.protein] : state.scope === "all" ? `All ${N_P} CAMEO proteins`
+    : state.scope === "without" ? `CAMEO without ${OUTLIER}` : `Length group ${DATA.group_labels[Number(state.scope)]}`;
+  $("heatTitle").textContent = `${scopeName}, layer ${state.layer}: mean signed error ± SD`;
+  $("heatNote").textContent = single
+    ? "Grey cells have fewer than 10 pairs in this protein, and their values are still printed. A dash means no pairs. Click a cell to compare that bin across proteins."
+    : "Grey cells have under 100 pairs or under 5 proteins, and their values are still printed. A dash means no pairs. Click a cell to compare that bin across proteins.";
+  if (single) {
+    const p = state.protein;
+    $("scopeSummary").textContent = `${P.id[p]} · ${P.source[p]} · ${P.length[p]} residues · ${count(P.pairs[p])} pairs · fold ${P.fold[p]} · length group ${DATA.group_labels[P.group[p]]}`;
+  } else {
+    $("scopeSummary").textContent = `${scopeName} · ${list.length} proteins · ${count(list.reduce((sum, p) => sum + P.pairs[p], 0))} pairs`;
+  }
+}
+
+function binPoints() {
+  const cell = state.seq * N_D + state.dist, points = [];
+  for (let p = 0; p < N_P; p++) {
+    const c = lookup[p * N_S * N_D + cell];
+    if (c >= 0) points.push({ p, n: cellN[c], m: mean(c, state.layer), s: sd(c, state.layer) });
+  }
+  return points;
+}
+
+const SCAT = { left: 62, right: 16, top: 12, bottom: 46, width: 1060, height: 400 };
+const X_TICKS = [30, 50, 100, 200, 400, 800];
+const xScale = (v) => SCAT.left + (Math.log(v / 25) / Math.log(900 / 25)) * (SCAT.width - SCAT.left - SCAT.right);
+
+function renderBin() {
+  const points = binPoints(), weight = points.reduce((a, b) => a + b.n, 0);
+  const pooled = weight ? points.reduce((a, b) => a + b.n * b.m, 0) / weight : NaN;
+  const svg = $("scatter");
+  svg.replaceChildren();
+  $("scatterTitle").textContent = `Separation ${DATA.seq_labels[state.seq]}, ${DATA.dist_labels[state.dist]} Å, layer ${state.layer}`;
+  const stats = $("binStats");
+  stats.replaceChildren();
+  if (!points.length) {
+    const none = element("text", { x: 530, y: 200, "text-anchor": "middle" }, svg);
+    none.textContent = "No protein has pairs in this bin";
+    renderGroups(points, pooled);
+    return;
+  }
+  const sorted = points.map((d) => d.m).sort((a, b) => a - b);
+  const low = Math.min(0, sorted[0], pooled), high = Math.max(0, sorted[sorted.length - 1], pooled);
+  const pad = Math.max((high - low) * .08, .5), y0 = low - pad, y1 = high + pad;
+  const yScale = (v) => SCAT.top + (1 - (v - y0) / (y1 - y0)) * (SCAT.height - SCAT.top - SCAT.bottom);
+  const step = [.5, 1, 2, 5, 10, 20, 50, 100].find((s) => (y1 - y0) / s <= 8) || 200;
+  for (let t = Math.ceil(y0 / step) * step; t <= y1; t += step) {
+    element("line", { x1: SCAT.left, x2: SCAT.width - SCAT.right, y1: yScale(t), y2: yScale(t), stroke: t === 0 ? "#8b8a85" : "#e7e6e1", "stroke-width": t === 0 ? 1.2 : 1 }, svg);
+    const label = element("text", { x: SCAT.left - 8, y: yScale(t) + 4, "text-anchor": "end" }, svg);
+    label.textContent = String(Math.round(t * 10) / 10); label.style.fontSize = "11px"; label.style.fill = "var(--ink-soft)";
+  }
+  for (const t of X_TICKS) {
+    const label = element("text", { x: xScale(t), y: SCAT.height - SCAT.bottom + 18, "text-anchor": "middle" }, svg);
+    label.textContent = String(t); label.style.fontSize = "11px"; label.style.fill = "var(--ink-soft)";
+  }
+  const xTitle = element("text", { x: (SCAT.left + SCAT.width) / 2, y: SCAT.height - 8, "text-anchor": "middle" }, svg);
+  xTitle.textContent = "Protein length (residues, log scale)"; xTitle.style.fontSize = "12.5px"; xTitle.style.fill = "var(--ink-soft)";
+  const yTitle = element("text", { transform: `translate(14 ${(SCAT.top + SCAT.height - SCAT.bottom) / 2}) rotate(-90)`, "text-anchor": "middle" }, svg);
+  yTitle.textContent = "Mean signed error (Å)"; yTitle.style.fontSize = "12.5px"; yTitle.style.fill = "var(--ink-soft)";
+  element("line", { x1: SCAT.left, x2: SCAT.width - SCAT.right, y1: yScale(pooled), y2: yScale(pooled), stroke: "#eb6834", "stroke-width": 2, "stroke-dasharray": "6 4" }, svg);
+  const ordered = [...points].sort((a, b) => (a.p === state.protein) - (b.p === state.protein));
+  for (const d of ordered) {
+    const chosen = d.p === state.protein, hollow = d.n < 10;
+    const dot = element("circle", { cx: xScale(P.length[d.p]), cy: yScale(d.m), r: chosen ? 7 : 4,
+      fill: hollow ? "#fcfcfb" : "#2a78d6", stroke: chosen ? "#0b0b0b" : hollow ? "#2a78d6" : "#fcfcfb", "stroke-width": chosen ? 2.2 : 1, class: "dot" }, svg);
+    dot.addEventListener("mousemove", (event) => showTooltip(event,
+      `${P.id[d.p]} (${P.length[d.p]} residues)\nMean ${signed(d.m)} Å, SD ${d.s.toFixed(1)} Å\n${count(d.n)} pairs in this bin`));
+    dot.addEventListener("mouseleave", hideTooltip);
+    dot.addEventListener("click", () => selectProtein(d.p));
+  }
+  const sign = Math.sign(pooled), agree = points.filter((d) => Math.sign(d.m) === sign).length;
+  const others = points.filter((d) => P.id[d.p] !== OUTLIER), otherWeight = others.reduce((a, b) => a + b.n, 0);
+  const pooledOthers = otherWeight ? others.reduce((a, b) => a + b.n * b.m, 0) / otherWeight : NaN;
+  const tiles = [["Proteins with pairs", `${count(points.length)} of ${N_P}`], ["Pooled mean", `${signed(pooled)} Å`],
+    [`Pooled without ${OUTLIER}`, otherWeight ? `${signed(pooledOthers)} Å` : "–"],
+    ["Median protein", `${signed(median(sorted))} Å`], ["Middle 50% of proteins", `${signed(quantile(sorted, .25))} to ${signed(quantile(sorted, .75))} Å`],
+    ["Same sign as pooled", `${(100 * agree / points.length).toFixed(0)}%`]];
+  for (const [term, value] of tiles) {
+    const row = document.createElement("div");
+    row.innerHTML = "<dt></dt><dd></dd>";
+    row.children[0].textContent = term; row.children[1].textContent = value;
+    stats.appendChild(row);
+  }
+  renderGroups(points, pooled);
+}
+
+function renderGroups(points, pooled) {
+  const rows = DATA.group_labels.map((label, g) => {
+    const list = points.filter((d) => P.group[d.p] === g), weight = list.reduce((a, b) => a + b.n, 0);
+    if (!list.length) return `<tr><td>${label} residues</td><td>0</td><td>–</td><td>–</td><td>–</td><td>–</td></tr>`;
+    const within = list.reduce((a, b) => a + b.n * b.m, 0) / weight, agree = list.filter((d) => Math.sign(d.m) === Math.sign(pooled)).length;
+    return `<tr><td>${label} residues</td><td>${list.length}</td><td>${count(weight)}</td><td>${signed(within)}</td><td>${signed(median(list.map((d) => d.m)))}</td><td>${(100 * agree / list.length).toFixed(0)}%</td></tr>`;
+  });
+  $("groupTable").innerHTML = "<thead><tr><th>Length group</th><th>Proteins</th><th>Pairs</th><th>Pooled mean (Å)</th><th>Median protein (Å)</th><th>Same sign as pooled</th></tr></thead><tbody>" + rows.join("") + "</tbody>";
+}
+
+function renderClaims() {
+  const heads = DATA.group_labels.map((label) => `<th>${label}</th>`).join("");
+  const rows = DATA.claims.map((row) => {
+    const groups = row.groups.map(([n, h]) => (n ? `<td>${(100 * h / n).toFixed(0)}%<br><small>${h}/${n}</small></td>` : "<td>–</td>")).join("");
+    const exceptions = row.exceptions.length ? `<br><small>Exceptions include ${row.exceptions.join(", ")}</small>` : "";
+    const share = row.evaluated ? (100 * row.holds / row.evaluated).toFixed(1) + "%" : "–";
+    const compared = !DATA.comparison_label ? "" : row.comparison
+      ? `<td>${(100 * row.comparison[0] / row.comparison[1]).toFixed(1)}%<br><small>${row.comparison[0]}/${row.comparison[1]}</small></td>` : "<td>–</td>";
+    return `<tr><td>${row.claim}${exceptions}</td><td><strong>${share}</strong><br><small>${row.holds}/${row.evaluated}</small></td>${compared}${groups}</tr>`;
+  });
+  $("claimsTable").innerHTML = `<thead><tr><th>Claim</th><th>All proteins</th>${DATA.comparison_label ? `<th>${DATA.comparison_label}</th>` : ""}${heads}</tr></thead><tbody>${rows.join("")}</tbody>`;
+  $("claimsNote").textContent = `Each row counts the proteins where the claim holds, among proteins with at least ${DATA.min_pairs} pairs in the bins it covers. Columns on the right are the cohort's length groups, in residues. The full exception lists are in claims_check_cameo.csv.`;
+}
+
+function renderAll() { renderHeatmap(); renderBin(); }
+
+function selectProtein(p) {
+  state.protein = p; state.scope = "protein";
+  $("scope").value = "protein"; $("protein").value = P.id[p];
+  renderAll();
+}
+
+function showTooltip(event, text) {
+  const tip = $("tooltip");
+  tip.textContent = "";
+  text.split("\n").forEach((line, i) => { if (i) tip.appendChild(document.createElement("br")); tip.appendChild(document.createTextNode(line)); });
+  tip.hidden = false;
+  tip.style.left = Math.min(event.clientX + 14, window.innerWidth - 290) + "px";
+  tip.style.top = (event.clientY + 14) + "px";
+}
+function hideTooltip() { $("tooltip").hidden = true; }
+
+function wire() {
+  $("scope").innerHTML = '<option value="protein">One protein</option>' + DATA.group_labels.map((label, g) => `<option value="${g}">Length ${label}</option>`).join("") + `<option value="all">All ${N_P} CAMEO</option><option value="without">CAMEO without ${OUTLIER}</option>`;
+  $("proteinList").innerHTML = byLength.map((p) => `<option value="${P.id[p]}">${P.length[p]} residues</option>`).join("");
+  $("seqBin").innerHTML = DATA.seq_labels.map((label, s) => `<option value="${s}">${label}</option>`).join("");
+  $("distBin").innerHTML = DATA.dist_labels.map((label, d) => `<option value="${d}">${label}</option>`).join("");
+  $("seqBin").value = state.seq; $("distBin").value = state.dist; $("protein").value = P.id[state.protein];
+  $("scope").addEventListener("change", (event) => { state.scope = event.target.value; renderHeatmap(); });
+  $("layerRange").addEventListener("input", (event) => { state.layer = Number(event.target.value); renderAll(); });
+  $("seqBin").addEventListener("change", (event) => { state.seq = Number(event.target.value); renderAll(); });
+  $("distBin").addEventListener("change", (event) => { state.dist = Number(event.target.value); renderAll(); });
+  $("protein").addEventListener("change", (event) => {
+    const p = P.id.indexOf(event.target.value.trim());
+    if (p >= 0) selectProtein(p); else event.target.value = P.id[state.protein];
+  });
+  const step = (by) => { const i = byLength.indexOf(state.protein) + by; if (i >= 0 && i < N_P) selectProtein(byLength[i]); };
+  $("previousProtein").addEventListener("click", () => step(-1));
+  $("nextProtein").addEventListener("click", () => step(1));
+}
+
+(async () => {
+  renderClaims();
+  wire();
+  if (typeof DecompressionStream === "undefined") {
+    $("loadStatus").textContent = "This browser cannot unpack the protein data. Use a current version of Chrome, Edge, Firefox or Safari.";
+    return;
+  }
+  await decode();
+  buildHeatmap();
+  renderAll();
+  $("loadStatus").textContent = "__CHECK_LINE__";
+})();
+</script>

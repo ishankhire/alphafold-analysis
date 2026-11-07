@@ -2366,3 +2366,46 @@ New figures say final structure distance, because the target is OpenFold's own
 prediction; canonical columns keep their names. The 552-protein table cannot be
 rebuilt until the ECOD final structures return. `.npz` files and built pages stay
 outside the repository.
+
+## Session: 2026-11-06 — Native XGBoost error strata
+
+`native_error_strata/` now takes `NATIVE_ERROR_STRATA_PROBE` and
+`NATIVE_ERROR_STRATA_COHORT`, with OLS as the default. `native_strata_xgboost.sbatch`
+runs the strata for native `shared_xgboost_base256_fixed_s4` on the 154 CAMEO
+proteins, because the ECOD final structures are unavailable. Job `23618658` reconciled
+7,392 stored rows and 81,312 published per-protein subgroup rows. Layer 47 pooled MAE
+was 1.29 Å against 2.16 Å for OLS on the same 153 proteins without `7stz_C`. The OLS
+6–7 Å short read does not replicate: it holds in 17/149 proteins, against 129/149 for
+OLS. Rebuilt OLS pages stayed byte-identical (native) or differed only in inert
+comparison code (protein). The user decided against an XGBoost transfer run.
+
+## Session: 2026-11-06 — Diagnostic workflows moved
+
+`cross_layer_transfer_all_layers/` and `native_error_strata/` moved under
+`scripts/cluster_scripts/diagnostics/`, with their tests in `diagnostics/tests/`.
+Earlier entries keep the old paths. Flat deployment is unchanged. The replay worker and
+aggregator now differ from the CAMEO run's code by one import path line each;
+`all_layer_transfer_common.py` is still byte-identical, and the run's exact files are
+in `e1b9d30`.
+
+## Session: 2026-11-06 — Transfer follow-ups and report
+
+Added `scripts/cluster_scripts/diagnostics/transfer_followups/`, which holds the
+mechanistic breakdown, ablation comparison, gain versus direction, chain position,
+and triangle violation experiments, and
+`delta_files/analysis/all_layer_transfer_and_triangle_report_v1/REPORT.md`.
+Tables and text reports are in
+`delta_files/diagnostic_experiments/transfer_followups_cameo_v1/`; `.npz` shards stay on
+Delta. These first ran as scratch scripts. Job `23624510` ran the moved code: all five
+reports matched line for line, and layer 47 of both replays matched array for array.
+Per-protein strata explain the shape of the violation curve but overstate its level,
+and rescaling recovers 12% of transfer loss within layers 16–47.
+
+## Session: 2026-11-07 — Result pages tracked
+
+At the user's request, the published result pages are now tracked:
+`delta_files/diagnostic_plots/cross_layer_transfer_all_layers_cameo/results_page.html` and
+the native and XGBoost cohort and protein pages under
+`delta_files/diagnostic_plots/native_error_strata*/`. Each is the published copy; the
+strata page bodies match their builds byte for byte. The transfer page's image paths drop
+`figures/` so they resolve beside its PNGs.
