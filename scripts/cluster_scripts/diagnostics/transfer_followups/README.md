@@ -1,7 +1,7 @@
 # Transfer follow-up diagnostics
 
 Experiments 3 to 8 of the
-[all-layer transfer and triangle violations report](../../../../docs/historical/analysis/all_layer_transfer_and_triangle_report_2026-11-06/REPORT.md).
+[all-layer transfer and triangle violations report](../../../../delta_files/analysis/all_layer_transfer_and_triangle_report_v1/REPORT.md).
 They read the CAMEO all-layer transfer run, the native error strata, and stored
 geometry and predictions. No probe is refitted. Follow the
 [cluster guide](../../../../docs/cluster/README.md) for authorization and deletion

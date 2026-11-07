@@ -2367,7 +2367,7 @@ in `e1b9d30`.
 Added `scripts/cluster_scripts/diagnostics/transfer_followups/`, which holds the
 mechanistic breakdown, ablation comparison, gain versus direction, chain position,
 and triangle violation experiments, and
-`docs/historical/analysis/all_layer_transfer_and_triangle_report_2026-11-06/REPORT.md`.
+`delta_files/analysis/all_layer_transfer_and_triangle_report_v1/REPORT.md`.
 Tables and text reports are in
 `delta_files/diagnostic_experiments/transfer_followups_cameo_v1/`; `.npz` shards stay on
 Delta. These first ran as scratch scripts. Job `23624510` ran the moved code: all five

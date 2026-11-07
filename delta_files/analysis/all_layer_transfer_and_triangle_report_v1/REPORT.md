@@ -19,7 +19,7 @@ Eight experiments ran on Delta, all on 2026-11-06, in the order below. Each one 
 | 7 | Triangle violations against the strata | Do the error strata explain violations? | OLS and XGBoost, 153 CAMEO proteins | `23623120`, `23623121`, `23623122` |
 | 8 | Violation events and two forces | Are the drops real, and why do violations ignore accuracy? | Stored geometry, 552 proteins, 4 probe families; experiment 7 | `23623617` |
 
-Code is in [`cross_layer_transfer_all_layers`](../../../../scripts/cluster_scripts/diagnostics/cross_layer_transfer_all_layers/README.md) (experiment 1), [`native_error_strata`](../../../../scripts/cluster_scripts/diagnostics/native_error_strata/README.md) (experiment 2), and [`transfer_followups`](../../../../scripts/cluster_scripts/diagnostics/transfer_followups/README.md) (experiments 3 to 8). Result tables are in [`delta_files/diagnostic_experiments/`](../../../../delta_files/diagnostic_experiments/).
+Code is in [`cross_layer_transfer_all_layers`](../../../scripts/cluster_scripts/diagnostics/cross_layer_transfer_all_layers/README.md) (experiment 1), [`native_error_strata`](../../../scripts/cluster_scripts/diagnostics/native_error_strata/README.md) (experiment 2), and [`transfer_followups`](../../../scripts/cluster_scripts/diagnostics/transfer_followups/README.md) (experiments 3 to 8). Result tables are in [`delta_files/diagnostic_experiments/`](../../diagnostic_experiments/).
 
 ## Methodology
 
@@ -273,6 +273,6 @@ The representation runs on at least four separate timelines, and accuracy alone 
 
 ## Reproducing this report
 
-Experiments 3 to 8 first ran as scratch scripts, then moved to [`transfer_followups`](../../../../scripts/cluster_scripts/diagnostics/transfer_followups/README.md). Job `23624510` then ran the moved code from a flat deployment. Layer 47 of both replays matched the stored shards array for array, and all five analysis reports matched their first outputs line for line. The gain table and chart data matched byte for byte. The other 47 layers of each replay were not re-run.
+Experiments 3 to 8 first ran as scratch scripts, then moved to [`transfer_followups`](../../../scripts/cluster_scripts/diagnostics/transfer_followups/README.md). Job `23624510` then ran the moved code from a flat deployment. Layer 47 of both replays matched the stored shards array for array, and all five analysis reports matched their first outputs line for line. The gain table and chart data matched byte for byte. The other 47 layers of each replay were not re-run.
 
-Tables and text reports are in [`delta_files/diagnostic_experiments/transfer_followups_cameo_v1/`](../../../../delta_files/diagnostic_experiments/transfer_followups_cameo_v1/). Figures were drawn from `report_chart_data.json` in that folder, plus the values in the text reports. The `.npz` shards stay on Delta in `~/diagnostic_experiments/`, under `gain_and_chain_position_cameo_v1` and `triangle_strata_cameo_v1`.
+Tables and text reports are in [`delta_files/diagnostic_experiments/transfer_followups_cameo_v1/`](../../diagnostic_experiments/transfer_followups_cameo_v1/). Figures were drawn from `report_chart_data.json` in that folder, plus the values in the text reports. The `.npz` shards stay on Delta in `~/diagnostic_experiments/`, under `gain_and_chain_position_cameo_v1` and `triangle_strata_cameo_v1`.
