@@ -118,7 +118,10 @@ Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 
 ## CAMEO
 
-To be added. Quick checks on Nov 7: all 154 CAMEO predicted PDBs
+The full CAMEO catalogue, sizes, purge-risk evidence and the pending copy to
+`/work/hdd/bfna/ikhire/thayes/cameo/` are in the
+[cluster data preservation plan](../plans/cluster_data_preservation_plan.md).
+Quick checks on Nov 7: all 154 CAMEO predicted PDBs
 (`/work/hdd/bekh/thayes/openfold_reps_outputs_sm/`), layer-47 pair blocks
 (`/work/hdd/bekh/thayes/openfold_reps/`) and alignments
 (`/projects/bekh/thayes/alignments/`) are present.
