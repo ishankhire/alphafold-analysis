@@ -4,6 +4,11 @@ Status of the Delta data this project depends on, after the November 2026
 purge of thayes's folder. ECOD is covered here; CAMEO and other cluster data
 are still to be added.
 
+[Important Delta Paths 1.docx.pdf](<../../Important Delta Paths 1.docx.pdf>)
+is a version of the documentation for the files on the cluster. Some of it may
+be outdated, so where it conflicts with this repository's documentation, defer
+to the repository documentation.
+
 ## Summary
 
 - thayes's ECOD data was moved to `/work/hdd/bfna/toDelete/thayes/` and

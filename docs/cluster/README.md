@@ -5,6 +5,9 @@ for current partitions, accounts, modules, limits, and filesystem availability.
 This guide defines this repository's deployment and submission conventions.
 [Current sources and status](../project_status.md) identifies the active results;
 [datasets.md](../../datasets.md) defines the input pool and protein input paths.
+For the current state of the project's Delta data after the November 2026
+purge, see the [Delta data inventory](delta_data_inventory.md); it supersedes
+older Delta path references in this guide.
 
 ## Agent access and permissions
 
