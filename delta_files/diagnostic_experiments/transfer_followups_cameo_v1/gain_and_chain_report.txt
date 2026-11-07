@@ -1,0 +1,115 @@
+proteins 154 pairs 7403166 outlier present True
+
+======== 1. GAIN VERSUS DIRECTION. Each matrix is indexed [target, source]
+control, native cells, excl 7stz_C: recal slope b, median over layers 1.037 range [1.008 1.086] | mean R2 change from recalibration 0.0048
+largest fold SD of recal slope within layers 16-47: 0.015
+gate pooled R2 excl 7stz_C: worst absolute difference from production 1.78e-15
+gate pooled R2 all: worst absolute difference from production 2.00e-15
+gate median protein R2: worst absolute difference from production 8.99e-15
+loss = native R2 - transfer R2; gain = recovered by one global affine map, beyond native; dir = not recoverable by that map. Excl 7stz_C.
+16-47, early on later, offset 1    n=  31 | pooled loss  0.009 gain  0.002 dir  0.007 share_gain  23.8% | protein loss  0.017 gain  0.001 dir  0.014 share  18.7% | recal b  1.02 r 0.920 amp 0.90
+16-47, later on early, offset 1    n=  31 | pooled loss  0.009 gain  0.000 dir  0.008 share_gain  18.3% | protein loss  0.015 gain  0.000 dir  0.016 share   2.3% | recal b  1.03 r 0.921 amp 0.89
+16-47, early on later, offset 2    n=  30 | pooled loss  0.023 gain  0.002 dir  0.016 share_gain  25.1% | protein loss  0.034 gain  0.001 dir  0.029 share  20.9% | recal b  1.02 r 0.917 amp 0.90
+16-47, later on early, offset 2    n=  30 | pooled loss  0.019 gain  0.001 dir  0.016 share_gain  18.2% | protein loss  0.032 gain  0.002 dir  0.028 share  10.5% | recal b  1.02 r 0.916 amp 0.88
+16-47, early on later, offset 3    n=  29 | pooled loss  0.030 gain  0.004 dir  0.025 share_gain  19.6% | protein loss  0.044 gain  0.005 dir  0.039 share  20.5% | recal b  1.01 r 0.914 amp 0.90
+16-47, later on early, offset 3    n=  29 | pooled loss  0.031 gain  0.004 dir  0.026 share_gain  16.9% | protein loss  0.046 gain  0.005 dir  0.040 share  11.6% | recal b  1.03 r 0.908 amp 0.87
+16-47, early on later, offset 5    n=  27 | pooled loss  0.039 gain  0.006 dir  0.036 share_gain  16.2% | protein loss  0.064 gain  0.007 dir  0.051 share  14.8% | recal b  1.02 r 0.910 amp 0.86
+16-47, later on early, offset 5    n=  27 | pooled loss  0.050 gain  0.004 dir  0.046 share_gain  13.5% | protein loss  0.071 gain  0.008 dir  0.069 share  13.3% | recal b  1.01 r 0.901 amp 0.88
+16-47, early on later, offset 8    n=  24 | pooled loss  0.054 gain  0.004 dir  0.051 share_gain  15.4% | protein loss  0.085 gain  0.007 dir  0.073 share  12.2% | recal b  1.02 r 0.907 amp 0.87
+16-47, later on early, offset 8    n=  24 | pooled loss  0.075 gain  0.003 dir  0.069 share_gain  12.8% | protein loss  0.124 gain  0.010 dir  0.110 share  13.9% | recal b  0.98 r 0.884 amp 0.85
+16-47, early on later, offset 12   n=  20 | pooled loss  0.069 gain  0.006 dir  0.065 share_gain   9.9% | protein loss  0.108 gain  0.004 dir  0.102 share   3.5% | recal b  1.03 r 0.904 amp 0.83
+16-47, later on early, offset 12   n=  20 | pooled loss  0.099 gain  0.005 dir  0.092 share_gain   9.8% | protein loss  0.150 gain  0.010 dir  0.131 share  10.0% | recal b  0.99 r 0.865 amp 0.85
+16-47, early on later, offset 16   n=  16 | pooled loss  0.100 gain  0.009 dir  0.082 share_gain  12.5% | protein loss  0.134 gain  0.006 dir  0.130 share   4.9% | recal b  1.02 r 0.910 amp 0.85
+16-47, later on early, offset 16   n=  16 | pooled loss  0.116 gain  0.006 dir  0.103 share_gain   4.7% | protein loss  0.167 gain  0.007 dir  0.163 share   5.7% | recal b  0.97 r 0.858 amp 0.82
+16-47, early on later, offset 20   n=  12 | pooled loss  0.105 gain  0.007 dir  0.096 share_gain   7.7% | protein loss  0.175 gain  0.006 dir  0.168 share   3.0% | recal b  1.01 r 0.903 amp 0.83
+16-47, later on early, offset 20   n=  12 | pooled loss  0.171 gain  0.015 dir  0.138 share_gain  11.5% | protein loss  0.261 gain  0.023 dir  0.232 share   8.5% | recal b  0.91 r 0.832 amp 0.78
+16-47, early on later, offset 25   n=   7 | pooled loss  0.204 gain  0.032 dir  0.166 share_gain  15.4% | protein loss  0.307 gain  0.008 dir  0.275 share   4.0% | recal b  1.07 r 0.872 amp 0.75
+16-47, later on early, offset 25   n=   7 | pooled loss  0.262 gain  0.018 dir  0.244 share_gain   7.6% | protein loss  0.370 gain  0.036 dir  0.336 share   7.5% | recal b  0.89 r 0.776 amp 0.74
+16-47, early on later, offset 31   n=   1 | pooled loss  0.346 gain  0.054 dir  0.292 share_gain  15.7% | protein loss  0.510 gain  0.031 dir  0.479 share   6.0% | recal b  1.11 r 0.820 amp 0.70
+16-47, later on early, offset 31   n=   1 | pooled loss  0.447 gain  0.066 dir  0.381 share_gain  14.7% | protein loss  0.468 gain  0.048 dir  0.420 share  10.3% | recal b  0.89 r 0.660 amp 0.64
+late on early (s>=16, t<=13)       n= 448 | pooled loss  0.395 gain  0.059 dir  0.353 share_gain  17.7% | protein loss  0.412 gain  0.019 dir  0.395 share  13.4% | recal b  0.89 r 0.467 amp 0.48
+early on late (s<=12, t>=16)       n= 416 | pooled loss  0.561 gain  0.119 dir  0.439 share_gain  29.2% | protein loss  0.676 gain  0.309 dir  0.406 share  50.0% | recal b  0.62 r 0.672 amp 1.01
+within 0-13 off-diagonal           n= 182 | pooled loss  0.122 gain  0.010 dir  0.121 share_gain  30.9% | protein loss  0.175 gain  0.015 dir  0.143 share  51.2% | recal b  1.00 r 0.664 amp 0.63
+cell s=22 t=47: R2  0.699 recal  0.712 native  0.945 | r 0.850 amp 0.778 gain-slope 0.662 recal b 1.020 | under60 r 0.820 amp 0.847 | within-protein r 0.838 amp 0.769 u60 r 0.808
+cell s=47 t=22: R2  0.460 recal  0.499 native  0.852 | r 0.736 amp 0.695 gain-slope 0.511 recal b 0.879 | under60 r 0.782 amp 0.826 | within-protein r 0.742 amp 0.725 u60 r 0.790
+cell s=30 t=47: R2  0.735 recal  0.757 native  0.945 | r 0.876 amp 0.766 gain-slope 0.672 recal b 1.058 | under60 r 0.854 amp 0.832 | within-protein r 0.868 amp 0.760 u60 r 0.848
+cell s=47 t=30: R2  0.506 recal  0.509 native  0.832 | r 0.729 amp 0.730 gain-slope 0.533 recal b 0.841 | under60 r 0.793 amp 0.874 | within-protein r 0.728 amp 0.746 u60 r 0.792
+cell s=16 t=47: R2  0.599 recal  0.654 native  0.945 | r 0.820 amp 0.697 gain-slope 0.572 recal b 1.113 | under60 r 0.784 amp 0.757 | within-protein r 0.806 amp 0.689 u60 r 0.771
+cell s=47 t=16: R2  0.319 recal  0.387 native  0.765 | r 0.660 amp 0.637 gain-slope 0.420 recal b 0.886 | under60 r 0.709 amp 0.763 | within-protein r 0.657 amp 0.663 u60 r 0.711
+cell s=44 t=47: R2  0.839 recal  0.840 native  0.945 | r 0.919 amp 0.857 gain-slope 0.788 recal b 1.008 | under60 r 0.905 amp 0.923 | within-protein r 0.913 amp 0.855 u60 r 0.901
+cell s=47 t=44: R2  0.789 recal  0.792 native  0.947 | r 0.895 amp 0.870 gain-slope 0.778 recal b 0.954 | under60 r 0.904 amp 0.979 | within-protein r 0.891 amp 0.891 u60 r 0.902
+cell s=33 t=35: R2  0.816 recal  0.839 native  0.866 | r 0.917 amp 1.064 gain-slope 0.976 recal b 0.860 | under60 r 0.948 amp 1.217 | within-protein r 0.913 amp 1.071 u60 r 0.945
+cell s=35 t=33: R2  0.796 recal  0.822 native  0.841 | r 0.908 amp 0.754 gain-slope 0.684 recal b 1.159 | under60 r 0.930 amp 0.860 | within-protein r 0.902 amp 0.750 u60 r 0.926
+cell s=12 t=13: R2  0.616 recal  0.617 native  0.638 | r 0.791 amp 0.710 gain-slope 0.562 recal b 0.991 | under60 r 0.838 amp 0.843 | within-protein r 0.779 amp 0.710 u60 r 0.827
+cell s=13 t=12: R2  0.532 recal  0.560 native  0.585 | r 0.755 amp 0.627 gain-slope 0.473 recal b 1.082 | under60 r 0.796 amp 0.744 | within-protein r 0.744 amp 0.636 u60 r 0.785
+cell s= 0 t=47: R2 -0.317 recal  0.145 native  0.945 | r 0.486 amp 1.130 gain-slope 0.550 recal b 0.427 | under60 r 0.588 amp 1.362 | within-protein r 0.502 amp 1.189 u60 r 0.604
+cell s=47 t= 0: R2  0.079 recal  0.106 native  0.497 | r 0.378 amp 0.462 gain-slope 0.175 recal b 0.758 | under60 r 0.413 amp 0.559 | within-protein r 0.340 amp 0.470 u60 r 0.373
+
+Is the leftover curvature or scatter? r2 is the linear share of prediction variance tied to distance; eta2 uses all 17 distance bins.
+cell s=22 t=22: r2 0.852 eta2 0.881 curvature share of unexplained 0.192
+cell s=47 t=47: r2 0.946 eta2 0.939 curvature share of unexplained -0.125
+cell s=22 t=47: r2 0.723 eta2 0.740 curvature share of unexplained 0.065
+cell s=47 t=22: r2 0.541 eta2 0.713 curvature share of unexplained 0.375
+cell s=30 t=47: r2 0.768 eta2 0.792 curvature share of unexplained 0.106
+cell s=47 t=30: r2 0.532 eta2 0.758 curvature share of unexplained 0.483
+cell s= 0 t=47: r2 0.237 eta2 0.578 curvature share of unexplained 0.447
+cell s=47 t= 0: r2 0.143 eta2 0.282 curvature share of unexplained 0.162
+mean prediction by distance bin; bins with 200+ pairs
+          pairs  mean_y  native47  22on47  native22  47on22  0on47
+0-4       40983     3.8       3.1    -3.6       4.5     9.2    8.1
+4-5       10467     4.7       6.4     5.1       5.7     0.4    3.6
+5-6       58539     5.5       5.4     4.5       5.8     2.8   -7.0
+6-7       51925     6.5       6.2     6.4       7.3     3.9    1.8
+7-8       37243     7.5       7.7    10.3       8.1     5.1    2.1
+8-10     160275     9.1       9.4    11.0       9.5     5.6   -5.0
+10-12    229429    11.0      11.3    14.9      11.5     7.5   -1.6
+12-15    442635    13.6      14.0    16.2      14.2    11.6    3.4
+15-20    908475    17.6      17.8    22.6      18.4    19.9   10.9
+20-25   1041133    22.5      22.8    23.2      23.5    24.3   24.4
+25-30   1018343    27.5      27.7    25.9      28.8    27.7   33.2
+30-40   1606147    34.6      34.7    31.9      36.3    31.5   35.8
+40-50    901462    44.4      44.3    36.6      44.7    34.5   36.1
+50-60    418286    54.3      54.5    45.5      50.5    35.8   25.3
+60-80    261965    67.4      61.9    51.9      54.3    36.0   25.5
+80-100    40254    86.3      67.6    56.3      56.6    35.6   28.5
+100+       1850   104.8      68.3    57.2      55.5    35.7   32.5
+native amp (SD prediction / SD target) by layer: {0: 0.618, 6: 0.601, 12: 0.653, 18: 0.865, 24: 0.904, 30: 0.86, 36: 0.912, 42: 0.936} L47 0.954
+native r by layer: {0: 0.714, 6: 0.727, 12: 0.781, 18: 0.908, 24: 0.924, 30: 0.914, 36: 0.935, 42: 0.949} L47 0.972
+with 7stz_C included, share of pooled loss from gain, 22 on 47 and 47 on 22: [0.069, 0.107]
+
+======== 2. WHAT CHANGES ACROSS THE BOUNDARIES
+best-source view: for each target, the best non-native source after recalibration, median protein R2
+{0: (1, 0.412, 0.492), 4: (5, 0.467, 0.482), 8: (9, 0.518, 0.55), 12: (11, 0.608, 0.637), 16: (15, 0.767, 0.787), 20: (19, 0.833, 0.842), 24: (25, 0.847, 0.854), 28: (27, 0.833, 0.836), 32: (31, 0.83, 0.843), 36: (35, 0.868, 0.88), 40: (39, 0.883, 0.899), 44: (45, 0.931, 0.947)}
+47 probe on layer t, recal R2 / r: {0: (0.106, 0.378), 8: (0.136, 0.43), 13: (0.251, 0.543), 16: (0.387, 0.66), 20: (0.431, 0.684), 24: (0.519, 0.736), 28: (0.501, 0.726), 32: (0.566, 0.766), 34: (0.603, 0.795), 35: (0.648, 0.818), 36: (0.673, 0.83), 38: (0.685, 0.837), 40: (0.725, 0.856), 42: (0.674, 0.828), 44: (0.792, 0.895), 46: (0.913, 0.956)}
+layer s probe on 47, recal R2 / r: {0: (0.145, 0.486), 8: (0.527, 0.738), 13: (0.492, 0.71), 16: (0.654, 0.82), 20: (0.66, 0.821), 24: (0.653, 0.82), 28: (0.773, 0.884), 32: (0.787, 0.892), 34: (0.829, 0.911), 35: (0.783, 0.887), 36: (0.737, 0.861), 38: (0.822, 0.907), 40: (0.831, 0.913), 42: (0.773, 0.881), 44: (0.84, 0.919), 46: (0.93, 0.965)}
+
+======== 3. CHAIN POSITION AGAINST DISTANCE AND SEQUENCE MIX, excl 7stz_C. Reference mix: bins 5-14
+ cell  midMAE  Nraw  Nstd_d  Nstd_seq  Craw  Cstd_d  Cstd_seq  N2raw  N2std_d  Nbias  Nbias_std  Cbias  Cbias_std  cover_N  cover_C
+  0>0    6.93  1.73    1.22      1.60  1.36    1.17      1.25   1.17     1.10  -5.07       2.01  -1.75       1.45      1.0      1.0
+  8>8    6.56  1.73    1.17      1.58  1.37    1.14      1.24   1.16     1.06  -5.24       1.47  -2.44       0.64      1.0      1.0
+16>16    3.95  2.02    1.31      1.84  1.55    1.24      1.37   1.20     1.11  -3.19       1.14  -1.48       0.31      1.0      1.0
+22>22    3.20  2.04    1.42      1.92  1.57    1.30      1.43   1.22     1.15  -1.55       1.52  -0.61       0.57      1.0      1.0
+33>33    3.21  2.14    1.38      1.97  1.55    1.25      1.38   1.20     1.11  -2.47       1.08  -0.98       0.33      1.0      1.0
+43>43    2.19  2.18    1.38      2.03  1.53    1.25      1.36   1.17     1.09  -1.30       0.81  -0.09       0.49      1.0      1.0
+47>47    1.95  2.09    1.40      1.99  1.44    1.21      1.29   1.13     1.08  -1.05       0.78  -0.20       0.31      1.0      1.0
+22>47    6.16  1.41    1.09      1.36  1.13    1.02      1.08   1.04     1.00  -3.48       1.09  -2.13      -0.30      1.0      1.0
+47>22    6.72  1.97    1.16      1.79  1.37    1.07      1.23   1.15     1.03 -11.44      -5.09  -6.79      -4.21      1.0      1.0
+ 0>47   11.93  1.22    0.88      1.11  1.08    0.93      1.00   1.03     0.95  -7.13      -0.90  -5.23      -2.73      1.0      1.0
+ 47>0    9.92  1.64    1.03      1.49  1.27    1.02      1.15   1.10     1.00 -11.98      -3.23  -7.10      -2.96      1.0      1.0
+share of pairs by distance group: bin0, bin19, mid
+          <8   8-20  20-40  40-60    60+
+N end  0.020  0.144  0.413  0.273  0.150
+C end  0.023  0.182  0.482  0.242  0.071
+mid    0.029  0.258  0.518  0.165  0.030
+MAE by distance group, native 47, N end, C end, mid
+         <8  8-20  20-40  40-60    60+
+N end  2.89  2.22   2.42   3.07  12.43
+C end  2.77  1.76   2.07   2.89  10.10
+mid    2.87  1.44   1.58   2.65   7.87
+native 47 profile, raw: [4.08, 2.21, 2.07, 1.99, 2.05, 2.04, 1.92, 1.95, 1.97, 1.94, 1.93, 1.92, 1.96, 1.92, 1.95, 1.93, 2.03, 2.15, 2.33, 2.8]
+native 47 profile, distance-standardized: [2.72, 2.1, 1.99, 1.96, 1.93, 1.95, 1.96, 2.0, 1.99, 1.94, 1.98, 1.95, 1.97, 1.87, 1.92, 1.93, 1.97, 2.08, 2.17, 2.36]
+native 22 profile, raw: [6.55, 3.89, 3.53, 3.42, 3.45, 3.43, 3.17, 3.14, 3.17, 3.25, 3.09, 3.11, 3.17, 3.24, 3.29, 3.27, 3.44, 3.74, 4.04, 5.04]
+native 22 profile, distance-standardized: [4.55, 3.68, 3.4, 3.39, 3.23, 3.27, 3.24, 3.22, 3.2, 3.26, 3.16, 3.16, 3.18, 3.14, 3.23, 3.27, 3.33, 3.58, 3.75, 4.18]
+by fold, distance-standardized N and C ratios, native 47 and 22 (fold 3 excludes 7stz_C):
+22 [(1.62, 1.42), (1.4, 1.27), (1.39, 1.19), (1.21, 1.15), (1.43, 1.44)]
+47 [(1.54, 1.23), (1.38, 1.27), (1.33, 1.08), (1.51, 1.14), (1.29, 1.31)]

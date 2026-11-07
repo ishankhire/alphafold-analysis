@@ -1,0 +1,184 @@
+proteins 154 exact triangle sets 50 models [np.str_('observed'), np.str_('iid_matched'), np.str_('pooled_mean_only'), np.str_('pooled_strata'), np.str_('protein_strata'), np.str_('residuals_permuted'), np.str_('residues_plus_permuted')]
+Monte Carlo: mean difference between the two replicates, per protein: {np.str_('observed'): np.float64(0.0), np.str_('iid_matched'): np.float64(0.00292), np.str_('pooled_mean_only'): np.float64(0.0), np.str_('pooled_strata'): np.float64(0.00234), np.str_('protein_strata'): np.float64(0.00197), np.str_('residuals_permuted'): np.float64(0.00065), np.str_('residues_plus_permuted'): np.float64(0.00077)}
+
+======== 1. shared_ols_base256: VIOLATION FRACTION BY LAYER, 153 proteins, protein-equal
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0     0.0633       0.3654            0.0390         0.1378          0.0944              0.0935                  0.0825
+L8     0.0763       0.3499            0.0224         0.1300          0.1109              0.1106                  0.0978
+L12    0.0904       0.3250            0.0313         0.1399          0.1301              0.1290                  0.1153
+L13    0.0776       0.3029            0.0163         0.1346          0.1229              0.1212                  0.1083
+L17    0.0802       0.2440            0.0106         0.1418          0.1238              0.1217                  0.1100
+L22    0.0724       0.2170            0.0056         0.1358          0.1132              0.1114                  0.0993
+L34    0.0904       0.2159            0.0163         0.1340          0.1204              0.1188                  0.1088
+L35    0.0873       0.1974            0.0252         0.1413          0.1206              0.1190                  0.1073
+L42    0.0887       0.1656            0.0206         0.1215          0.1108              0.1103                  0.1017
+L43    0.0858       0.1509            0.0093         0.1100          0.1056              0.1049                  0.0961
+L44    0.0833       0.1309            0.0145         0.1078          0.1004              0.0993                  0.0912
+L47    0.0815       0.1358            0.0105         0.1047          0.0990              0.0984                  0.0881
+
+drop and rise columns: model change as a share of the observed change. 1 is full recovery.
+                 model  mean_minus_obs  mean_abs_gap  level_r  step_pearson  step_spearman     p  drop13  drop35  drop44  rise_0_11  rise_22_34
+              observed           0.000         0.000    1.000         1.000          1.000 0.000   1.000   1.000   1.000      1.000       1.000
+           iid_matched           0.167         0.167   -0.617         0.388          0.200 0.362   1.725   6.120   8.003     -1.337      -0.058
+      pooled_mean_only          -0.063         0.063   -0.262         0.425          0.386 0.012   1.175  -2.958  -2.087     -0.591       0.590
+         pooled_strata           0.051         0.051   -0.119         0.489          0.474 0.005   0.418  -2.437   0.896     -0.128      -0.102
+        protein_strata           0.033         0.033    0.628         0.868          0.859 0.000   0.562  -0.076   2.068      1.234       0.402
+    residuals_permuted           0.032         0.032    0.629         0.873          0.845 0.000   0.607  -0.044   2.242      1.235       0.411
+residues_plus_permuted           0.021         0.021    0.718         0.907          0.907 0.000   0.546   0.491   1.971      1.162       0.530
+
+across proteins within a layer, Spearman with observed:
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L13       1.0       -0.226             0.825          0.849           0.922               0.925                   0.938
+L22       1.0       -0.139            -0.101          0.437           0.784               0.801                   0.825
+L34       1.0       -0.098             0.656          0.719           0.862               0.873                   0.905
+L47       1.0        0.095             0.504          0.538           0.704               0.737                   0.866
+
+above 5 A (share of triangles):
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0     0.0119       0.2222            0.0008         0.0551          0.0287              0.0283                  0.0223
+L13    0.0114       0.1654            0.0001         0.0407          0.0345              0.0336                  0.0259
+L22    0.0080       0.0942            0.0001         0.0355          0.0257              0.0250                  0.0186
+L34    0.0123       0.0941            0.0001         0.0330          0.0278              0.0270                  0.0212
+L35    0.0094       0.0816            0.0001         0.0344          0.0263              0.0254                  0.0187
+L44    0.0078       0.0331            0.0000         0.0165          0.0137              0.0136                  0.0104
+L47    0.0080       0.0354            0.0000         0.0163          0.0140              0.0138                  0.0100
+
+======== 1. shared_xgboost_base256_fixed_s4: VIOLATION FRACTION BY LAYER, 153 proteins, protein-equal
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0     0.0453       0.3343            0.0031         0.1462          0.0890              0.0865                  0.0777
+L8     0.0571       0.3069            0.0068         0.1462          0.1091              0.1054                  0.0943
+L12    0.0607       0.2765            0.0112         0.1399          0.1160              0.1117                  0.1002
+L13    0.0565       0.2599            0.0071         0.1345          0.1126              0.1081                  0.0966
+L17    0.0599       0.2021            0.0043         0.1293          0.1082              0.1029                  0.0941
+L22    0.0583       0.1770            0.0026         0.1194          0.1013              0.0962                  0.0878
+L34    0.0618       0.1636            0.0061         0.1142          0.0972              0.0920                  0.0855
+L35    0.0623       0.1564            0.0077         0.1134          0.0966              0.0915                  0.0848
+L42    0.0518       0.1119            0.0083         0.0788          0.0718              0.0675                  0.0637
+L43    0.0497       0.0960            0.0093         0.0720          0.0645              0.0612                  0.0585
+L44    0.0469       0.0843            0.0070         0.0637          0.0585              0.0554                  0.0533
+L47    0.0462       0.0824            0.0068         0.0672          0.0586              0.0542                  0.0524
+
+drop and rise columns: model change as a share of the observed change. 1 is full recovery.
+                 model  mean_minus_obs  mean_abs_gap  level_r  step_pearson  step_spearman     p  drop13  drop35  drop44  rise_0_11  rise_22_34
+              observed           0.000         0.000    1.000         1.000          1.000 0.000   1.000   1.000   1.000      1.000       1.000
+           iid_matched           0.146         0.146   -0.117         0.306          0.244 0.505   3.946 -13.215   4.237     -3.320      -3.872
+      pooled_mean_only          -0.051         0.051    0.048         0.406          0.283 0.068   0.982   2.825   0.838      0.522       1.003
+         pooled_strata           0.062         0.062    0.230         0.619          0.637 0.001   1.284  -1.538   3.018     -0.202      -1.501
+        protein_strata           0.039         0.039    0.660         0.817          0.844 0.000   0.802  -1.066   2.191      1.729      -1.174
+    residuals_permuted           0.035         0.035    0.623         0.826          0.837 0.000   0.874  -0.905   2.096      1.599      -1.205
+residues_plus_permuted           0.027         0.027    0.684         0.892          0.897 0.000   0.841  -1.295   1.863      1.413      -0.669
+
+across proteins within a layer, Spearman with observed:
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L13       1.0       -0.515            -0.161          0.048           0.348               0.368                   0.484
+L22       1.0        0.270            -0.013          0.346           0.630               0.656                   0.710
+L34       1.0        0.348            -0.156          0.218           0.751               0.783                   0.830
+L47       1.0        0.744             0.563          0.789           0.862               0.885                   0.917
+
+above 5 A (share of triangles):
+     observed  iid_matched  pooled_mean_only  pooled_strata  protein_strata  residuals_permuted  residues_plus_permuted
+L0     0.0066       0.1952            0.0001         0.0566          0.0249              0.0235                  0.0188
+L13    0.0062       0.1314            0.0001         0.0416          0.0304              0.0300                  0.0216
+L22    0.0063       0.0667            0.0001         0.0307          0.0237              0.0237                  0.0168
+L34    0.0069       0.0597            0.0001         0.0274          0.0218              0.0221                  0.0157
+L35    0.0066       0.0555            0.0002         0.0271          0.0209              0.0212                  0.0148
+L44    0.0047       0.0143            0.0000         0.0077          0.0074              0.0080                  0.0057
+L47    0.0042       0.0139            0.0000         0.0074          0.0069              0.0075                  0.0054
+
+======== 2. WHICH TRIANGLES: violation rate by relative slack in the final structure, 153 proteins
+share of triangles per slack bin: {'<0.02': np.float64(0.0414), '0.02-0.1': np.float64(0.161), '0.1-0.3': np.float64(0.3505), '>=0.3': np.float64(0.4471)}
+shared_ols_ L0                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.166     0.141    0.075  0.023 | protein_strata          0.225     0.196    0.112  0.038 | residuals_permuted      0.224     0.194    0.110  0.038 | residues_plus_permuted  0.210     0.181    0.097  0.029
+shared_ols_ L22                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.303     0.214    0.072  0.010 | protein_strata          0.372     0.290    0.127  0.023 | residuals_permuted      0.371     0.287    0.124  0.023 | residues_plus_permuted  0.351     0.264    0.107  0.019
+shared_ols_ L34                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.343     0.252    0.093  0.018 | protein_strata          0.380     0.299    0.136  0.029 | residuals_permuted      0.382     0.298    0.132  0.029 | residues_plus_permuted  0.371     0.282    0.117  0.025
+shared_ols_ L47                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.404     0.260    0.060  0.007 | protein_strata          0.435     0.296    0.086  0.011 | residuals_permuted      0.436     0.294    0.084  0.011 | residues_plus_permuted  0.408     0.267    0.072  0.009
+shared_xgbo L0                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.146     0.113    0.053  0.012 | protein_strata          0.221     0.188    0.106  0.034 | residuals_permuted      0.220     0.185    0.102  0.032 | residues_plus_permuted  0.213     0.176    0.091  0.024
+shared_xgbo L22                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.324     0.191    0.041  0.004 | protein_strata          0.398     0.285    0.098  0.015 | residuals_permuted      0.391     0.270    0.090  0.016 | residues_plus_permuted  0.378     0.255    0.079  0.012
+shared_xgbo L34                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.355     0.204    0.041  0.004 | protein_strata          0.412     0.284    0.089  0.011 | residuals_permuted      0.405     0.267    0.081  0.013 | residues_plus_permuted  0.394     0.256    0.072  0.010
+shared_xgbo L47                         <0.02  0.02-0.1  0.1-0.3  >=0.3 | observed                0.415     0.154    0.011  0.000 | protein_strata          0.428     0.199    0.024  0.001 | residuals_permuted      0.424     0.177    0.022  0.001 | residues_plus_permuted  0.420     0.173    0.019  0.001
+
+======== 3. WHY: error correlation across edges, and the margin (longest edge error minus the other two)
+shared_ols_base256
+      z_ab   z_ac   z_bc  margin_mean  margin_sd  perm_mean  perm_sd
+L0   0.070  0.113  0.213       -7.790      8.220     -7.321    9.205
+L8   0.060  0.105  0.215       -6.758      8.126     -6.355    9.090
+L12  0.046  0.100  0.225       -5.292      7.814     -4.893    8.764
+L13  0.034  0.094  0.229       -4.284      7.138     -3.994    8.177
+L17  0.034  0.099  0.260       -2.383      6.143     -2.320    7.244
+L22  0.037  0.110  0.275       -1.798      5.368     -1.790    6.494
+L34  0.053  0.096  0.252       -1.730      5.457     -1.693    6.385
+L35  0.047  0.111  0.273       -1.311      5.063     -1.297    6.087
+L42  0.026  0.068  0.239       -0.734      4.326     -0.782    5.211
+L43  0.029  0.061  0.216       -0.528      4.073     -0.577    4.822
+L44  0.026  0.059  0.210       -0.314      3.688     -0.324    4.293
+L47  0.038  0.079  0.230       -0.608      3.907     -0.539    4.475
+margin SD, step vs observed violation step: spearman [0.344 0.078] | margin mean: [0.162 0.391]
+shared_xgboost_base256_fixed_s4
+      z_ab   z_ac   z_bc  margin_mean  margin_sd  perm_mean  perm_sd
+L0   0.043  0.096  0.213       -6.970      8.164     -6.396    9.187
+L8   0.031  0.095  0.233       -5.482      7.844     -4.915    8.975
+L12  0.016  0.091  0.237       -4.100      7.240     -3.572    8.374
+L13  0.003  0.085  0.236       -3.415      6.771     -2.979    7.925
+L17 -0.003  0.084  0.233       -1.835      5.624     -1.657    6.685
+L22 -0.006  0.089  0.237       -1.245      4.881     -1.154    5.866
+L34  0.005  0.069  0.206       -1.023      4.653     -0.914    5.486
+L35  0.003  0.073  0.210       -0.804      4.422     -0.757    5.288
+L42  0.005  0.051  0.166       -0.336      3.253     -0.321    3.824
+L43  0.004  0.040  0.141       -0.177      2.906     -0.209    3.390
+L44  0.002  0.040  0.136       -0.128      2.660     -0.157    3.050
+L47 -0.000  0.037  0.133       -0.174      2.629     -0.159    2.966
+margin SD, step vs observed violation step: spearman [0.478 0.055] | margin mean: [0.185 0.511]
+
+======== 4. CHAIN POSITION: share of violating triangle corners against share of all corners, 153 proteins
+shared_ols_ L0 enrichment at bins 0,1,2,10,17,18,19: [('observed', [0.52, 0.81, 0.96, 1.13, 0.93, 0.85, 0.61]), ('residuals_permuted', [0.85, 0.97, 1.0, 1.03, 0.99, 0.98, 0.87])]
+shared_ols_ L22 enrichment at bins 0,1,2,10,17,18,19: [('observed', [0.75, 0.88, 0.98, 1.04, 0.98, 0.96, 0.92]), ('residuals_permuted', [0.95, 0.97, 0.99, 1.02, 0.98, 0.99, 0.96])]
+shared_ols_ L47 enrichment at bins 0,1,2,10,17,18,19: [('observed', [0.73, 0.92, 1.01, 1.05, 0.97, 0.95, 0.86]), ('residuals_permuted', [1.0, 0.99, 1.01, 1.01, 0.99, 0.99, 0.98])]
+shared_xgbo L0 enrichment at bins 0,1,2,10,17,18,19: [('observed', [0.7, 0.91, 0.99, 1.08, 1.0, 0.97, 0.78]), ('residuals_permuted', [0.93, 1.01, 1.03, 1.0, 1.01, 1.02, 0.94])]
+shared_xgbo L22 enrichment at bins 0,1,2,10,17,18,19: [('observed', [1.29, 1.03, 0.99, 0.98, 0.98, 0.99, 1.08]), ('residuals_permuted', [1.22, 1.05, 1.01, 0.96, 0.99, 1.04, 1.11])]
+shared_xgbo L47 enrichment at bins 0,1,2,10,17,18,19: [('observed', [1.62, 1.09, 0.98, 0.96, 0.95, 0.99, 1.31]), ('residuals_permuted', [1.48, 1.06, 0.99, 0.96, 0.98, 1.02, 1.24])]
+
+======== 5. ARE THE DROPS REAL ACROSS PROTEINS? 552 proteins, stored geometry, four probe families
+shared_ols_base256                 proteins 552 | share falling, median block 0.47 | b8 0.33 (+0.0043) b13 0.61 (-0.0087) b17 0.66 (-0.0047) b35 0.74 (-0.0125) b43 0.68 (-0.0046) b44 0.71 (-0.0074) | top falling blocks {39: 0.74, 35: 0.74, 44: 0.71, 43: 0.68}
+sequence_gated_ols_base256         proteins 552 | share falling, median block 0.48 | b8 0.25 (+0.0040) b13 0.67 (-0.0069) b17 0.56 (-0.0005) b35 0.72 (-0.0076) b43 0.65 (-0.0040) b44 0.79 (-0.0061) | top falling blocks {44: 0.79, 35: 0.72, 39: 0.72, 1: 0.68}
+per_protein_ols_base256            proteins 552 | share falling, median block 0.46 | b8 0.46 (-0.0000) b13 0.95 (-0.0102) b17 0.95 (-0.0037) b35 0.97 (-0.0066) b43 0.99 (-0.0045) b44 0.98 (-0.0038) | top falling blocks {43: 0.99, 44: 0.98, 35: 0.97, 18: 0.97}
+shared_xgboost_base256_fixed_s4    proteins 552 | share falling, median block 0.49 | b8 0.39 (+0.0020) b13 0.68 (-0.0038) b17 0.64 (-0.0016) b35 0.60 (-0.0013) b43 0.81 (-0.0037) b44 0.72 (-0.0023) | top falling blocks {42: 0.84, 43: 0.81, 41: 0.75, 40: 0.73}
+family step correlation with shared OLS, Spearman and p: {'sequence_gat': (np.float64(0.908), np.float64(0.0)), 'per_protein_': (np.float64(0.678), np.float64(0.0)), 'shared_xgboo': (np.float64(0.583), np.float64(0.003))}
+
+======== 6. AGAINST EVERY EARLIER RESULT, by block. Step in violation fraction is the second series.
+native R2 step (552)               spearman, p with violation step: (np.float64(-0.191), np.float64(0.608))
+MDS TM step (552)                  spearman, p with violation step: (np.float64(-0.144), np.float64(0.65))
+native amplitude step (CAMEO)      spearman, p with violation step: (np.float64(-0.472), np.float64(0.014))
+weight rotation                    spearman, p with violation step: (np.float64(-0.233), np.float64(0.088))
+adjacent transfer cost             spearman, p with violation step: (np.float64(-0.387), np.float64(0.013))
+structure module TM step (CAMEO)   spearman, p with violation step: (np.float64(-0.303), np.float64(0.091))
+levels: violation vs native R2, spearman 0.238 | vs amplitude 0.424 | vs SM TM 0.484
+within layers 16-47: violation vs R2 -0.285 | vs amplitude -0.005
+violation step ~ R2 step + amplitude step: [ 0.001 -0.019 -0.041] r2 0.079
+by block:
+    dViolation_552  dViolation_cameo     dR2    dAmp  rotation    cost     dSM
+8           0.0043            0.0037  0.0401  0.0261    0.0809  0.2440 -0.0075
+13         -0.0087           -0.0128  0.0628  0.0387    0.2154  0.4269  0.0128
+15          0.0004            0.0013  0.0332  0.0450    0.0984  0.4096 -0.0108
+16         -0.0019           -0.0011  0.0349  0.0752    0.1116  0.3122  0.0049
+17         -0.0047           -0.0014  0.0201  0.0353    0.0927  0.2899  0.0118
+19          0.0011            0.0016 -0.0011  0.0001    0.0439  0.2708  0.0413
+34          0.0032            0.0010  0.0043 -0.0055    0.0366  0.1408  0.0511
+35         -0.0125           -0.0030  0.0270  0.0536    0.0487  0.8959  0.0510
+36         -0.0014           -0.0005  0.0067 -0.0007    0.0412  0.1814  0.1082
+39         -0.0037           -0.0090  0.0074 -0.0015    0.0518  0.2487  0.0629
+40          0.0038            0.0048 -0.0009 -0.0090    0.0580  0.3225  0.0755
+42         -0.0032            0.0015  0.0085  0.0182    0.0476  0.2850  0.0111
+43         -0.0046           -0.0030  0.0129  0.0180    0.0927  0.4419  0.0308
+44         -0.0074           -0.0025  0.0184  0.0246    0.0927  0.3810  0.0263
+46          0.0004            0.0006 -0.0003 -0.0139    0.1416  0.6030  0.0163
+47         -0.0012           -0.0044 -0.0042 -0.0085    0.0858  0.5151  0.0017
+
+======== 7. PROTEIN BY PROTEIN: violation drop at block 35 against the structure module
+block 35 violation step vs SM TM gain L34->L36: spearman (np.float64(0.013), np.float64(0.875))
+block 35 violation step vs SM TM gain L34->L40: spearman (np.float64(0.323), np.float64(0.0))
+block 44 violation step vs SM TM gain L43->L44: spearman (np.float64(0.19), np.float64(0.018))
+block 13 violation step vs SM TM gain L12->L13: spearman (np.float64(0.255), np.float64(0.001))
+L35: SM TM vs violation fraction, spearman 0.305 | violation vs length -0.511
+L36: SM TM vs violation fraction, spearman 0.404 | violation vs length -0.526
+L38: SM TM vs violation fraction, spearman 0.328 | violation vs length -0.721
+L40: SM TM vs violation fraction, spearman 0.001 | violation vs length -0.835
+L44: SM TM vs violation fraction, spearman 0.052 | violation vs length -0.475

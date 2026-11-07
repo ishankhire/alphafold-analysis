@@ -2361,3 +2361,16 @@ Earlier entries keep the old paths. Flat deployment is unchanged. The replay wor
 aggregator now differ from the CAMEO run's code by one import path line each;
 `all_layer_transfer_common.py` is still byte-identical, and the run's exact files are
 in `e1b9d30`.
+
+## Session: 2026-11-06 — Transfer follow-ups and report
+
+Added `scripts/cluster_scripts/diagnostics/transfer_followups/`, which holds the
+mechanistic breakdown, ablation comparison, gain versus direction, chain position,
+and triangle violation experiments, and
+`docs/historical/analysis/all_layer_transfer_and_triangle_report_2026-11-06/REPORT.md`.
+Tables and text reports are in
+`delta_files/diagnostic_experiments/transfer_followups_cameo_v1/`; `.npz` shards stay on
+Delta. These first ran as scratch scripts. Job `23624510` ran the moved code: all five
+reports matched line for line, and layer 47 of both replays matched array for array.
+Per-protein strata explain the shape of the violation curve but overstate its level,
+and rescaling recovers 12% of transfer loss within layers 16–47.

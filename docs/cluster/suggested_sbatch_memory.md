@@ -138,6 +138,17 @@ time, plus 48 prediction columns and additive histograms for the target layer.
 | Aggregation and parity | `16g` | `cameo` job `23616062` peaked at 0.97 GiB inside the process. Dense primitives grow from 0.4 GiB to 1.5 GiB for `full`. |
 | Figures | `8g` | `cameo` job `23616063` used 0.67 GiB. |
 
+### Transfer follow-ups
+
+The diagnostic `transfer_followups` workflow reads the all-layer transfer run and stored
+predictions. Replay tasks hold one protein at a time.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| `GainPosition`, one target layer | `12g` | Array `23618577` peaked at 1.7 GiB inside the process; Slurm reported 8.35 GiB, which appears to include cached pair tensors, as for the all-layer replay. |
+| `TriStrata`, one layer | `2g` | Array `23623121` peaked at 0.68 GiB. Above 2x because ECOD's longest chain, 794 residues, exceeds CAMEO's 681 and the pair arrays grow with its square. |
+| `TransferFollow`, all analyses | `2g` | Job `23624510` peaked at 0.74 GiB, in the gain analysis. Above 2x because the gain arrays grow 3.6 times for the full cohort. |
+
 ### Native error strata
 
 | Stage | Initial `--mem` | Basis |
