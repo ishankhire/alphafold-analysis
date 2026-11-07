@@ -1,5 +1,17 @@
 # Branch Analysis
 
+## Session: 2026-11-06/07 — Rescue of purged thayes data and Delta inventory
+
+`/work/hdd/bfna/toDelete/thayes/` was purged during the session. Copied all
+surviving contents to `/work/hdd/bfna/ikhire/thayes/` with parallel rsync
+(scripts and logs under `/work/hdd/bfna/ikhire/`). ECOD pair representations
+and alignments were already gone; 313/400 cohort experiment folders and
+303/398 checksum-verified ECOD predicted PDBs survive. Verified that the
+layerwise (git `sept-2-archive` and Delta) and global (Delta only) ablation
+tables fully cover the paper's ablation figures. Findings and to-dos are in
+`docs/cluster/delta_data_inventory.md`; the ECOD row in
+`docs/project_status.md` now points there. No cluster files deleted.
+
 ## Session: 2026-11-03 — Correct ablation input and confirm retention scope
 
 Fixed the ablation CSV copy helper's source to the accessible relocated
