@@ -19,16 +19,18 @@ import numpy as np
 import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for path in (SCRIPT_DIR, SCRIPT_DIR.parent):
+for path in (SCRIPT_DIR, SCRIPT_DIR.parents[1]):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 import build_strata as bs  # noqa: E402
 from canonical_storage import csv_root  # noqa: E402
 from regression_output_helpers import atomic_savez_compressed  # noqa: E402
-from strata_bins import CANONICAL_DIST, CANONICAL_SEQ, DIST_EDGES, N_D, SEQ_EDGES  # noqa: E402
+from strata_bins import CANONICAL_DIST, CANONICAL_SEQ, DIST_EDGES, N_D, OLS_PROBE, SEQ_EDGES  # noqa: E402
 
 DATA = bs.DATA
 SHARDS = csv_root() / "diagnostic_experiments/cross_layer_probe_transfer_v1/layer_shards"
+PUBLISHED_SUBGROUPS = (csv_root() / "regression_5fold_v1/analysis/publication_subgroup_mae_5fold_v1"
+                       / "per_protein_subgroup_mae.csv")
 V1_LAYERS = (22, 23, 24, 25, 26, 43, 44, 45, 46, 47)
 N_LAYERS, N_PROTEINS, TOLERANCE = bs.N_LAYERS, 154, 1e-5  # stored predictions are float32
 STARTED = time.perf_counter()
@@ -129,6 +131,36 @@ def check_v1_categories(meta, cell_index, cell_n, offsets, sums):
     return summarize(rows, len(meta) * len(V1_LAYERS) * 11)
 
 
+def check_published_subgroups(meta, cell_index, cell_n, offsets, sums):
+    """Summing fine bins to canonical bins must match each protein's published subgroup MAE at every layer."""
+    index = {pid: k for k, pid in enumerate(meta.protein_id)}
+    table = pd.read_csv(PUBLISHED_SUBGROUPS, usecols=[
+        "analysis_name", "layer", "protein_id", "category_scope", "category_label", "n_pairs", "sum_absolute_error"],
+        dtype={"protein_id": str, "category_label": str})
+    table = table[table.analysis_name.eq(bs.PROBE) & table.protein_id.isin(index)]
+    rows = []
+    for r in table.itertuples():
+        k = index[r.protein_id]
+        span = slice(offsets[k], offsets[k + 1])
+        by_sequence = r.category_scope == "sequence_separation"
+        coordinate = cell_index[span] // N_D if by_sequence else cell_index[span] % N_D
+        keep = np.isin(coordinate, (CANONICAL_SEQ if by_sequence else CANONICAL_DIST)[r.category_label])
+        n = cell_n[span][keep].sum()
+        if n != r.n_pairs:
+            rows.append((abs(n - r.n_pairs), np.inf))
+        elif n == 0:
+            rows.append((0, 0))
+        else:
+            rows.append((0, abs(sums[span][keep, int(r.layer), 1].sum() - r.sum_absolute_error) / n))
+    worst = np.array(rows).max(axis=0) if rows else np.full(2, np.inf)
+    return {"rows_compared": len(rows), "expected_rows": len(meta) * N_LAYERS * 11,
+            "max_abs_diff_n": float(worst[0]), "max_abs_diff_mae": float(worst[1])}
+
+
+def largest_metric_difference(check):
+    return max(value for key, value in check.items() if key.startswith("max_abs_diff_") and key != "max_abs_diff_n")
+
+
 def main():
     DATA.mkdir(parents=True, exist_ok=True)
     meta = pd.read_csv(bs.EXPORT / "metadata/proteins.csv", dtype={"protein_id": str})
@@ -137,11 +169,13 @@ def main():
         raise ValueError(f"Expected {N_PROTEINS} CAMEO proteins, found {len(meta)}")
     cell_index, cell_n, offsets, sums = scan(meta)
     log(f"{cell_index.size} protein-bin rows")
-    checks = {"stored_whole_protein": check_export(meta, cell_n, offsets, sums),
-              "v1_canonical_subgroups": check_v1_categories(meta, cell_index, cell_n, offsets, sums)}
+    checks = {"stored_whole_protein": check_export(meta, cell_n, offsets, sums)}
+    if bs.PROBE == OLS_PROBE:
+        checks["v1_canonical_subgroups"] = check_v1_categories(meta, cell_index, cell_n, offsets, sums)
+    else:  # v1's signed shards exist only for shared OLS
+        checks["published_subgroup_mae"] = check_published_subgroups(meta, cell_index, cell_n, offsets, sums)
     passed = all(c["rows_compared"] == c["expected_rows"] and c["max_abs_diff_n"] == 0
-                 and max(c["max_abs_diff_mae"], c["max_abs_diff_rmse"], c["max_abs_diff_bias"]) <= TOLERANCE
-                 for c in checks.values())
+                 and largest_metric_difference(c) <= TOLERANCE for c in checks.values())
     check = {"passed": passed, "tolerance_angstrom": TOLERANCE, "proteins": len(meta), "checks": checks}
     (DATA / "protein_strata_cameo_check.json").write_text(json.dumps(check, indent=2))
     log(f"checks: {json.dumps(check)}")

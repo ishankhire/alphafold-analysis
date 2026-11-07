@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for path in (SCRIPT_DIR, SCRIPT_DIR.parent):
+for path in (SCRIPT_DIR, SCRIPT_DIR.parents[1]):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 import cluster_regression_helpers as helpers  # noqa: E402

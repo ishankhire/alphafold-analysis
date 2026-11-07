@@ -12,11 +12,11 @@ import numpy as np
 import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for path in (SCRIPT_DIR, SCRIPT_DIR.parent):
+for path in (SCRIPT_DIR, SCRIPT_DIR.parents[1]):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 from canonical_storage import csv_root  # noqa: E402
-from strata_bins import DIST_LABELS, N_D, N_S, SEQ_LABELS, output_root  # noqa: E402
+from strata_bins import DIST_LABELS, N_D, N_S, OLS_PROBE, SEQ_LABELS, ols_output_root, output_root, probe_name  # noqa: E402
 
 DATA = output_root() / "data"
 FOLDS = csv_root() / "regression_5fold_v1/metadata/regression_outer_folds_v1.csv"
@@ -110,6 +110,12 @@ def main():
             row[f"evaluated_{label}"], row[f"holding_{label}"] = n, h
         csv_rows.append(row)
     pd.DataFrame(csv_rows).to_csv(DATA / "claims_check_cameo.csv", index=False, float_format="%.4f")
+    comparison = {}
+    if probe_name() != OLS_PROBE:
+        ols = pd.read_csv(ols_output_root() / "data/claims_check_cameo.csv")
+        comparison = {r.claim: [int(r.proteins_holding), int(r.proteins_evaluated)] for r in ols.itertuples()}
+        for row in table:
+            row["comparison"] = comparison.get(row["claim"])
 
     n = s.cell_n[:, None]
     mean = s.sums[:, :, 0] / n
@@ -128,6 +134,8 @@ def main():
         "cells": b64(s.cell_index.astype(np.uint8).tobytes()), "cell_n": b64(s.cell_n.astype("<u4").tobytes()),
         "values": b64(values),
     }
+    if comparison:
+        payload["comparison_label"] = "OLS"
     (DATA / "protein_page_payload_cameo.json").write_text(json.dumps(payload, separators=(",", ":")))
     print(f"{s.cell_index.size} protein-bin rows; raw {len(raw) / 1e6:.1f} MB, gzip {len(values) / 1e6:.1f} MB", flush=True)
     for row in table:

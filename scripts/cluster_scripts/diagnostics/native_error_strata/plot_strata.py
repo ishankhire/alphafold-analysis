@@ -14,7 +14,9 @@ from matplotlib.colors import LinearSegmentedColormap, Normalize, SymLogNorm, to
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from strata_bins import DIST_LABELS, N_D, N_S, SCOPES, SEQ_LABELS, output_root  # noqa: E402
+from strata_bins import (  # noqa: E402
+    DIST_LABELS, N_D, N_S, OLS_PROBE, PROBE_LABELS, SEQ_LABELS, cohort_config, output_root, probe_name,
+)
 
 WORK = output_root()
 FIGS = WORK / "figures"
@@ -22,8 +24,9 @@ N_LAYERS = 48
 SURFACE, INK, INK2, RULE, NO_DATA = "#fcfcfb", "#0b0b0b", "#52514e", "#dedcd6", "#c9c8c1"
 DIV = LinearSegmentedColormap.from_list("red_gray_blue", ["#8f1d1c", "#e34948", "#f0efec", "#2a78d6", "#123f75"])
 SEQ = LinearSegmentedColormap.from_list("blue_seq", ["#f1f6fd", "#cde2fb", "#86b6ef", "#2a78d6", "#184f95", "#0d366b"])
-NOTE = {"excluding_7stz_C": "Real data: native probes, 551 proteins, OOF. Excludes 7stz_C.",
-        "all_552": "Real data: native probes, all 552 proteins, OOF. Includes 7stz_C."}
+TABLE, SCOPES, NOTE = cohort_config()
+LABEL = PROBE_LABELS[probe_name()]
+OLS_LIMITS = (71.0, 9.0)  # other probes reuse the OLS colour scales, so figures compare directly
 MEAN_TICKS = [-50, -20, -10, -5, -2, 0, 2, 5, 10, 20, 50]
 plt.rcParams.update({
     "figure.facecolor": SURFACE, "savefig.facecolor": SURFACE, "font.size": 10, "axes.labelcolor": INK2,
@@ -32,7 +35,7 @@ plt.rcParams.update({
 
 
 def load(scope):
-    table = pd.read_csv(WORK / "data/native_error_strata.csv",
+    table = pd.read_csv(WORK / "data" / TABLE,
                         dtype={"sequence_separation": str, "final_structure_distance": str})
     table = table[table.cohort_scope.eq(scope)]
     if len(table) != N_LAYERS * N_S * N_D:
@@ -63,12 +66,12 @@ def signed(value):
     return "0.0" if text in ("+0.0", "-0.0") else text
 
 
-def mean_colorbar(bar):
-    bar.set_ticks(MEAN_TICKS, labels=[f"{tick:+d}" if tick else "0" for tick in MEAN_TICKS])
+def mean_colorbar(bar, ticks=MEAN_TICKS):
+    bar.set_ticks(ticks, labels=[f"{tick:+d}" if tick else "0" for tick in ticks])
     bar.ax.minorticks_off()
 
 
-def overview(values, ok, cmap, norm, extend, title, note, bar_label, path, log_ticks=False):
+def overview(values, ok, cmap, norm, extend, title, note, bar_label, path, ticks=None):
     fig, axes = plt.subplots(6, 8, figsize=(15.5, 12.8), sharex=True, sharey=True)
     fig.subplots_adjust(left=.058, right=.93, top=.905, bottom=.09, wspace=.07, hspace=.17)
     for layer, ax in enumerate(axes.flat):
@@ -89,8 +92,8 @@ def overview(values, ok, cmap, norm, extend, title, note, bar_label, path, log_t
     fig.supylabel("Sequence separation (residues)", fontsize=11, color=INK2, x=.012)
     bar = fig.colorbar(image, cax=fig.add_axes([.943, .09, .012, .815]), extend=extend)
     bar.set_label(bar_label), bar.outline.set_visible(False)
-    if log_ticks:
-        mean_colorbar(bar)
+    if ticks:
+        mean_colorbar(bar, ticks)
     header(fig, title, note)
     fig.savefig(path, dpi=150)
     fig.savefig(path.with_suffix(".pdf"), dpi=150)
@@ -117,7 +120,7 @@ def layer_page(layer, mean, sd, n, ok, norm, scope, paths):
     bar = fig.colorbar(image, cax=fig.add_axes([.937, .075, .014, .81]), extend="both")
     bar.set_label("Mean signed error, probe − final structure (Å)"), bar.outline.set_visible(False)
     mean_colorbar(bar)
-    header(fig, f"Layer {layer}: mean signed error ± SD by sequence separation and final structure distance",
+    header(fig, f"{LABEL}Layer {layer}: mean signed error ± SD by sequence separation and final structure distance",
            NOTE[scope] + " SD is across pairs. Grey: under 100 pairs or 5 proteins. Colour shared, logarithmic beyond ±2 Å.")
     for path, dpi in paths:
         fig.savefig(path, dpi=dpi)
@@ -130,6 +133,8 @@ def main():
         mean, sd, n, ok = load(scope)
         if limits is None:  # scales come from the primary scope so both scopes stay comparable
             limits = (float(np.ceil(np.nanmax(np.abs(mean[ok])))), float(np.ceil(np.nanquantile(sd[ok], .98))))
+            if probe_name() != OLS_PROBE:
+                limits = OLS_LIMITS
             print("colour limits", limits, flush=True)
         mean_norm = SymLogNorm(linthresh=2.0, linscale=.8, vmin=-limits[0], vmax=limits[0], base=10)
         sd_norm = Normalize(0, limits[1])
@@ -137,10 +142,10 @@ def main():
         (out / "by_layer").mkdir(parents=True, exist_ok=True)
         page = FIGS / "page"
         page.mkdir(exist_ok=True)
-        overview(mean, ok, DIV, mean_norm, "both", "Mean signed error for all 48 native probes",
+        overview(mean, ok, DIV, mean_norm, "both", f"Mean signed error for all 48 native {LABEL}probes",
                  NOTE[scope] + " Colour shared by all panels, logarithmic beyond ±2 Å. Grey: no pairs, or under 100 pairs or 5 proteins.",
-                 "Mean signed error, probe − final structure (Å)", out / "mean_signed_error_all_layers.png", log_ticks=True)
-        overview(sd, ok, SEQ, sd_norm, "max", "Standard deviation of signed error for all 48 native probes",
+                 "Mean signed error, probe − final structure (Å)", out / "mean_signed_error_all_layers.png", ticks=MEAN_TICKS)
+        overview(sd, ok, SEQ, sd_norm, "max", f"Standard deviation of signed error for all 48 native {LABEL}probes",
                  NOTE[scope] + " SD is across pairs in each bin. Grey: no pairs, or fewer than 100 pairs or 5 proteins.",
                  "SD of signed error (Å)", out / "sd_signed_error_all_layers.png")
         for layer in range(N_LAYERS):

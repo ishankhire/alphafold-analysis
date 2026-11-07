@@ -16,7 +16,7 @@ from typing import Iterable, Iterator, Mapping, Sequence
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-CLUSTER_DIR = SCRIPT_DIR.parent
+CLUSTER_DIR = SCRIPT_DIR.parents[1]
 for path in (SCRIPT_DIR, CLUSTER_DIR, CLUSTER_DIR / "cross_layer_transfer",
              CLUSTER_DIR / "cross_validation", CLUSTER_DIR / "triangle_violation_subgroups"):
     if str(path) not in sys.path:

@@ -5,8 +5,9 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from strata_bins import output_root  # noqa: E402
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from strata_bins import output_root, probe_name  # noqa: E402
 
 WORK = output_root()
 PAGE = WORK / "figures" / "page"
@@ -17,7 +18,7 @@ def uri(path):
 
 
 layers = [uri(PAGE / f"layer_{layer:02d}.png") for layer in range(48)]
-template = r'''<title>Native Error Strata</title>
+template = r'''<title>__TITLE__</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,11 +63,8 @@ figcaption { padding: 12px 18px 14px; border-top: 1px solid var(--rule); font-si
 
 <main>
   <header>
-    <h1>Native error strata</h1>
-    <p class="lede">Mean signed error and its standard deviation for all 48 native probes, in 221 finer bins of sequence separation and final structure distance. Figure 07 used 30 bins at two layers.</p>
-    <p>All values are real out-of-fold predictions for 551 proteins, excluding 7stz_C. Each probe is evaluated on its own layer. Signed error is the probe's distance minus the distance in OpenFold's final predicted structure, which is the measurement the probes were fitted to. Red means the probe reads short of that structure, and it says nothing about agreement with experimental structures. SD is the spread across pairs in a bin, not a confidence interval.</p>
-    <p class="check">Job 23612677. Reproduced 26,496 of 26,496 protein-layer rows in the export (1e-14 Å) and, summed to canonical bins, 528 of 528 published subgroup rows (2e-9 Å).</p>
-    <p class="check">Job 23613749. Same measurements as training: target statistics recomputed from these structures match all 240 recorded fit rows and 50 baseline rows (3e-13), and 552 of 552 PDBs match their recorded SHA-256.</p>
+    <h1>__HEADING__</h1>
+    __INTRO__
   </header>
 
   <section>
@@ -85,26 +83,19 @@ figcaption { padding: 12px 18px 14px; border-top: 1px solid var(--rule); font-si
 
   <section>
     <h2>What stands out</h2>
-    <ul>
-      <li><strong>Probes read short of long distances at every layer.</strong> Bins beyond 100 Å go from about −67 Å at layer 0 to −46 Å at layer 22 and −33 Å at layer 47.</li>
-      <li><strong>Mid-range distances become nearly unbiased.</strong> At layer 47, well-supported bins from 8 to 40 Å have means between −0.3 and +0.8 Å, with SDs of 1.7 to 2.7 Å.</li>
-      <li><strong>A short-range stripe survives to the end.</strong> At layer 47, probes read about 2 Å long for 4–5 Å pairs at most separations, and up to 1.3 Å short for 6–7 Å pairs at separations of 7 or more. SD is near 3.5 Å in both.</li>
-      <li><strong>Early-layer probes read long for pairs far apart in sequence but close in space.</strong> At separation 200+ and 10–25 Å, the mean falls from about +10 Å at layer 0 to about +2 Å at layer 22 and under +1 Å at layer 47.</li>
-      <li><strong>Spread is largest beyond 60 Å at most layers,</strong> at about 5 to 10 Å, while early layers also show large spread at short distances.</li>
-    </ul>
-    <p>The bins beyond 100 Å rest on few proteins: 7 to 24 of 551, depending on sequence separation.</p>
+    __FINDINGS__
   </section>
 
   <section>
     <h2>All layers at once</h2>
     <figure>
-      <img src="__MEAN__" alt="Forty-eight small heatmaps of mean signed error, one per layer, showing strong underprediction at long distances at every layer.">
+      <img src="__MEAN__" alt="__MEAN_ALT__">
       <figcaption>Mean signed error. Colour is linear within ±2 Å and logarithmic beyond, so small biases and large ones both show.</figcaption>
     </figure>
     <figure>
       <img src="__SD__" alt="Forty-eight small heatmaps of the standard deviation of signed error, one per layer.">
       <figcaption>Standard deviation of signed error, on a linear scale shared by all panels. The scale is capped at 9 Å.</figcaption>
-    </figure>
+    </figure>__EXTRA_FIGURES__
   </section>
 </main>
 
@@ -125,7 +116,12 @@ document.getElementById("previousLayer").addEventListener("click", () => showLay
 document.getElementById("nextLayer").addEventListener("click", () => showLayer(Number(range.value) + 1));
 </script>
 '''
-page = (template.replace("__FIRST__", layers[47]).replace("__MEAN__", uri(PAGE / "mean_signed_error.png"))
+page = template
+for key, value in json.loads((SCRIPT_DIR / f"page_text_{probe_name()}.json").read_text()).items():
+    page = page.replace(f"__{key}__", value)
+if "__COMPARISON__" in page:
+    page = page.replace("__COMPARISON__", uri(PAGE / "mae_difference_vs_ols.png"))
+page = (page.replace("__FIRST__", layers[47]).replace("__MEAN__", uri(PAGE / "mean_signed_error.png"))
         .replace("__SD__", uri(PAGE / "sd_signed_error.png")).replace("__LAYERS__", json.dumps(layers)))
 target = WORK / "native_error_strata_page.html"
 target.write_text(page)

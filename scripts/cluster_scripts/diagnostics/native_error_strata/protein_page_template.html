@@ -1,4 +1,4 @@
-<title>Protein Error Strata</title>
+<title>__PROBE_LABEL__Protein Error Strata</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,8 +67,8 @@ svg text { fill: var(--ink); }
 
 <main>
   <header>
-    <h1>Protein error strata</h1>
-    <p class="lede">A check of whether the error statistics hold for individual proteins and across protein lengths, using the 154 CAMEO proteins and all 48 native probes.</p>
+    <h1>__PROBE_HEADING__</h1>
+    <p class="lede">A check of whether the error statistics hold for individual proteins and across protein lengths, using the 154 CAMEO proteins and all 48 native __PROBE_LABEL__probes.</p>
     <p>The 398 ECOD proteins are left out because their final structures are currently unavailable, so pooled values here differ from the 551-protein cohort page. They also include 7stz_C unless you choose the view without it.</p>
     <p>Signed error is the probe's distance minus the distance in OpenFold's final predicted structure. SD is the spread across pairs. Pooled statistics are pair-weighted, so large proteins count for more, while the protein-level columns below count each protein once.</p>
     <p class="check" id="loadStatus">Loading protein data...</p>
@@ -364,9 +364,11 @@ function renderClaims() {
     const groups = row.groups.map(([n, h]) => (n ? `<td>${(100 * h / n).toFixed(0)}%<br><small>${h}/${n}</small></td>` : "<td>–</td>")).join("");
     const exceptions = row.exceptions.length ? `<br><small>Exceptions include ${row.exceptions.join(", ")}</small>` : "";
     const share = row.evaluated ? (100 * row.holds / row.evaluated).toFixed(1) + "%" : "–";
-    return `<tr><td>${row.claim}${exceptions}</td><td><strong>${share}</strong><br><small>${row.holds}/${row.evaluated}</small></td>${groups}</tr>`;
+    const compared = !DATA.comparison_label ? "" : row.comparison
+      ? `<td>${(100 * row.comparison[0] / row.comparison[1]).toFixed(1)}%<br><small>${row.comparison[0]}/${row.comparison[1]}</small></td>` : "<td>–</td>";
+    return `<tr><td>${row.claim}${exceptions}</td><td><strong>${share}</strong><br><small>${row.holds}/${row.evaluated}</small></td>${compared}${groups}</tr>`;
   });
-  $("claimsTable").innerHTML = `<thead><tr><th>Claim</th><th>All proteins</th>${heads}</tr></thead><tbody>${rows.join("")}</tbody>`;
+  $("claimsTable").innerHTML = `<thead><tr><th>Claim</th><th>All proteins</th>${DATA.comparison_label ? `<th>${DATA.comparison_label}</th>` : ""}${heads}</tr></thead><tbody>${rows.join("")}</tbody>`;
   $("claimsNote").textContent = `Each row counts the proteins where the claim holds, among proteins with at least ${DATA.min_pairs} pairs in the bins it covers. Columns on the right are the cohort's length groups, in residues. The full exception lists are in claims_check_cameo.csv.`;
 }
 

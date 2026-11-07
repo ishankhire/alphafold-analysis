@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Native shared-OLS signed error by fine sequence separation x final structure distance.
+"""Native probe signed error by fine sequence separation x final structure distance.
 
 Reads the existing packed OOF predictions for all 48 layers and the existing PDBs.
 Nothing is fitted or predicted, and neither probes nor pair tensors are opened.
@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for path in (SCRIPT_DIR, SCRIPT_DIR.parent):
+for path in (SCRIPT_DIR, SCRIPT_DIR.parents[1]):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 import cluster_regression_helpers as helpers  # noqa: E402
@@ -27,7 +27,7 @@ from canonical_storage import csv_root  # noqa: E402
 from regression_output_helpers import atomic_savez_compressed  # noqa: E402
 from regression_protocol import sequence_separation_bin_codes, strict_lower_triangle_indices  # noqa: E402
 from strata_bins import (  # noqa: E402
-    CANONICAL_DIST, CANONICAL_SEQ, DIST_EDGES, DIST_LABELS, N_D, N_S, SEQ_EDGES, SEQ_LABELS, output_root,
+    CANONICAL_DIST, CANONICAL_SEQ, DIST_EDGES, DIST_LABELS, N_D, N_S, SEQ_EDGES, SEQ_LABELS, output_root, probe_name,
 )
 
 ECOD = os.environ.get("CROSS_LAYER_ECOD_EXPERIMENTS_ROOT")
@@ -36,9 +36,10 @@ if ECOD:
     helpers.ECOD_PDB_ROOT = Path(ECOD) / "openfold_reps_outputs_sm"
 PRODUCER = csv_root() / "regression_5fold_v1"
 EXPORT = PRODUCER / "predicted_distances_5fold_v1"
-SUBGROUPS = PRODUCER / "shared_ols_base256/subgroup_metrics"
+PROBE = probe_name()
+SUBGROUPS = PRODUCER / PROBE / "subgroup_metrics"
 DATA = output_root() / "data"
-PROBE, OUTLIER, N_LAYERS, TOLERANCE = "shared_ols_base256", "7stz_C", 48, 1e-3
+OUTLIER, N_LAYERS, TOLERANCE = "7stz_C", 48, 1e-3
 THREADS = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 STARTED = time.perf_counter()
 
@@ -155,11 +156,11 @@ def support_status(n_pairs, n_proteins):
     return "sufficient"
 
 
-def tidy_rows(arrays):
+def tidy_rows(arrays, all_scope="all_552"):
     rows = []
     outlier_cells = arrays["strata_n_outlier"] > 0
     scopes = {
-        "all_552": (arrays["strata_n"], arrays["n_proteins"], arrays["strata_sum"]),
+        all_scope: (arrays["strata_n"], arrays["n_proteins"], arrays["strata_sum"]),
         "excluding_7stz_C": (arrays["strata_n"] - arrays["strata_n_outlier"], arrays["n_proteins"] - outlier_cells,
                              arrays["strata_sum"] - arrays["strata_sum_outlier"]),
     }

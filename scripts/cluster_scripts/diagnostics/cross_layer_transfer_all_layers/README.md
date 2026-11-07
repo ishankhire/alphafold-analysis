@@ -2,8 +2,8 @@
 
 Diagnostic replay of all 240 frozen protocol-2.0 `shared_ols_base256` probes
 across all 48 Evoformer layers. It fits nothing; the canonical families and the
-ten-layer [`cross_layer_transfer`](../cross_layer_transfer/README.md) run are
-unchanged. Follow the [cluster guide](../../../docs/cluster/README.md) for
+ten-layer [`cross_layer_transfer`](../../cross_layer_transfer/README.md) run are
+unchanged. Follow the [cluster guide](../../../../docs/cluster/README.md) for
 authorization and deletion rules.
 
 ## Design
@@ -62,15 +62,15 @@ into `$HOME/openfold_interpretability_canonical/`:
 
 - from this directory: every `.py` and `.sbatch` file, plus this README as
   `cross_layer_transfer_all_layers_README.md`;
-- from `../cross_layer_transfer/`: `cross_layer_transfer_common.py`,
+- from `../../cross_layer_transfer/`: `cross_layer_transfer_common.py`,
   `cross_layer_transfer_replay.py`, and `aggregate_cross_layer_transfer.py`;
-- from `../cross_validation/`: `cross_validation_common.py`,
+- from `../../cross_validation/`: `cross_validation_common.py`,
   `shared_ols_base256_common.py`, `per_protein_ols_base256_common.py`, and
   `sequence_gated_ols_base256_common.py`;
-- from `../triangle_violation_subgroups/`:
+- from `../../triangle_violation_subgroups/`:
   `triangle_violation_subgroup_common.py` and
   `triangle_violation_subgroup_replay.py`;
-- from `..`: `canonical_storage.py`, `cluster_regression_helpers.py`,
+- from `../..`: `canonical_storage.py`, `cluster_regression_helpers.py`,
   `regression_output_helpers.py`, `regression_protocol.py`, and
   `regression_protocol_data/regression_master_split_v1.csv`.
 
@@ -138,7 +138,7 @@ per source layer in `figures/per_probe/`. Canonical column names keep the reposi
 ## Submit
 
 Announce each job first. Launchers use `~/protein_venv` (see the
-[cluster guide](../../../docs/cluster/README.md#python-environment)), need
+[cluster guide](../../../../docs/cluster/README.md#python-environment)), need
 `ALL_LAYER_COHORT` set, and leave `--mail-user` to the submit command, so export
 `CLUSTER_NOTICE_EMAIL` in your shell profile.
 

@@ -10,8 +10,8 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-SCRIPT_DIR = Path(__file__).resolve().parents[1]
-CLUSTER_DIR = SCRIPT_DIR.parent
+SCRIPT_DIR = Path(__file__).resolve().parents[1] / "cross_layer_transfer_all_layers"
+CLUSTER_DIR = SCRIPT_DIR.parents[1]
 for path in (SCRIPT_DIR, CLUSTER_DIR, CLUSTER_DIR / "cross_layer_transfer",
              CLUSTER_DIR / "cross_validation", CLUSTER_DIR / "triangle_violation_subgroups"):
     if str(path) not in sys.path:
