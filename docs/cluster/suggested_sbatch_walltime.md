@@ -115,6 +115,22 @@ below remain existing estimates, pending allocation accounting.
 | One-target-layer ten-source replay | `02:00:00` | One pass over 552 pair tensors plus 20 small matmuls per protein; comparator one-layer score-only replay took 9–15 minutes and the local 7-protein end-to-end test ran all ten targets in under a minute. Allocation timing not recorded yet. |
 | Primitive aggregation and parity | `00:30:00` | Reads 1,330,320 primitive rows and writes about 1.33 million output rows; allocation timing not recorded yet. |
 
+### All-layer shared-OLS transfer estimates
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| One-target-layer replay, `cameo` | `00:30:00` | 47 tasks of array `23616061` took 2:26 to 3:56 at 16 concurrent, and pilot `23615941` took 3:38. |
+| One-target-layer replay, `full` | `01:00:00` | About 2.3 times the `cameo` pairs and tensor bytes; not yet measured. |
+| Aggregation and parity | `01:00:00` | `cameo` job `23616062` took 2:15. `full` adds the pooled gates and 3.6 times the proteins. |
+| Figures | `00:30:00` | Jobs `23616063` and `23616303` took 24 and 22 seconds for 56 PNGs. |
+
+### Native error strata
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| All-layer cohort scan, `NativeErrStrata` | `01:00:00` | Job `23612677` took 11:44 with the scan; verifying and redrawing alone took 3:32 in job `23613749`. |
+| CAMEO protein view, `ProteinErrStrata` | `00:30:00` | Job `23615353` took 3:22. |
+
 ## Measured references
 
 The recommendations below retain practical headroom while avoiding the much

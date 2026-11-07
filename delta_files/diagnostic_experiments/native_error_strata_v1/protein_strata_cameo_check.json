@@ -1,0 +1,23 @@
+{
+  "passed": true,
+  "tolerance_angstrom": 1e-05,
+  "proteins": 154,
+  "checks": {
+    "stored_whole_protein": {
+      "rows_compared": 7392,
+      "expected_rows": 7392,
+      "max_abs_diff_n": 0.0,
+      "max_abs_diff_mae": 1.7763568394002505e-13,
+      "max_abs_diff_rmse": 3.268496584496461e-13,
+      "max_abs_diff_bias": 1.7053025658242404e-13
+    },
+    "v1_canonical_subgroups": {
+      "rows_compared": 16940,
+      "expected_rows": 16940,
+      "max_abs_diff_n": 0.0,
+      "max_abs_diff_mae": 1.8537743851076982e-06,
+      "max_abs_diff_rmse": 1.8537743855517874e-06,
+      "max_abs_diff_bias": 1.8537743851076982e-06
+    }
+  }
+}

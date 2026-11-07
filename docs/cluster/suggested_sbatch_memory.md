@@ -126,6 +126,25 @@ float64 base256 features at a time and no geometry.
 | One-target-layer ten-source replay | `12g` | Same one-protein pair working set as the one-layer four-family replays (6.15 GiB comparator peak) with only 50 small coefficient artifacts; allocation MaxRSS not recorded yet. |
 | Primitive aggregation and parity | `6g` | Dense 10×10×2×552×12×7 float64 primitive array (about 74 MiB), ten 133,032-row shards read one at a time, and 110,400 per-protein rows; allocation MaxRSS not recorded yet. |
 
+### All-layer shared-OLS transfer estimates
+
+The diagnostic `cross_layer_transfer_all_layers` workflow replays 240 frozen
+shared-OLS fits on one target layer. It holds one protein's float64 features at a
+time, plus 48 prediction columns and additive histograms for the target layer.
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| One-target-layer replay | `12g` | `cameo` array `23616061` peaked at 1.13 GiB inside the process; Slurm reported 8.0 GiB for the pilot, which appears to include cached reads. `full` should peak near 2.5 GiB, since v1 reached 2.1 GiB on the largest protein. |
+| Aggregation and parity | `16g` | `cameo` job `23616062` peaked at 0.97 GiB inside the process. Dense primitives grow from 0.4 GiB to 1.5 GiB for `full`. |
+| Figures | `8g` | `cameo` job `23616063` used 0.67 GiB. |
+
+### Native error strata
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| All-layer cohort scan, `NativeErrStrata` | `8g` | Job `23612677` reached 3.5 GiB by Slurm accounting, which may include cached reads. |
+| CAMEO protein view, `ProteinErrStrata` | `8g` | Job `23615353` reached 2.0 GiB by Slurm accounting. |
+
 ## Other workflow references
 
 | Workflow | Best comparable observed MaxRSS | Suggested `--mem` | Basis |
