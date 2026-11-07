@@ -11,6 +11,10 @@ layerwise (git `sept-2-archive` and Delta) and global (Delta only) ablation
 tables fully cover the paper's ablation figures. Findings and to-dos are in
 `docs/cluster/delta_data_inventory.md`; the ECOD row in
 `docs/project_status.md` now points there. No cluster files deleted.
+Committed the full rescued `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`
+(65 files, 47 MB, SHA-256 matched to Delta) as
+`delta_files/layerwise_ablation_csvs/`, and repointed
+`copy_layerwise_ablation_csvs.sh` to the rescued Delta copy.
 
 ## Session: 2026-11-03 — Correct ablation input and confirm retention scope
 

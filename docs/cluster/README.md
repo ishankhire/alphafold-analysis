@@ -182,9 +182,12 @@ is not interchangeable with allocation accounting.
 ## Layerwise ablation CSV source
 
 The canonical source used by `copy_layerwise_ablation_csvs.sh` is
-`/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`.
-This is the accessible relocated source; retain the singular `RESULT` spelling.
-The local copies are under `delta_files/layerwise_ablation_csvs/` when present.
+`/work/hdd/bfna/ikhire/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`,
+the rescued copy of thayes's purged folder (see the
+[Delta data inventory](delta_data_inventory.md)); retain the singular `RESULT`
+spelling. The full folder, including `global/` and
+`pair_layer_similarity_outputs/`, is committed under
+`delta_files/layerwise_ablation_csvs/` with checksums verified against Delta.
 Set `LAYERWISE_ABLATION_SOURCE_DIR` only when intentionally using another source.
 
 ## Canonical migration handoff

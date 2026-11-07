@@ -33,7 +33,7 @@ system, but that isn't confirmed.
 | Path | What it is | Status |
 |---|---|---|
 | `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` | All ablation TM-score tables (post-tri-end-fix): 14 layerwise FWD/REV files, structure-module scores, `MASTER_all_experiments_wide.csv` | ✅ Complete (65 files, 47 MB) |
-| `FINAL_RESULT_CSVS_…/global/` | Global ablation tables: 13 conditions + baseline, 3-run mean per protein | ✅ Complete, **only copy outside gprash's unreadable `/projects/bfna/gprash/FINAL_RESULT_CSVS`** |
+| `FINAL_RESULT_CSVS_…/global/` | Global ablation tables: 13 conditions + baseline, 3-run mean per protein | ✅ Complete; also committed in git (see below) |
 | `ecod/experiments/<ID>/` | Per-protein raw runs: layerwise and global ablations, `zero_m`/`zero_z`, baseline, representation-save run (PDBs + `timings.json`), `<ID>_tm_scores.csv` | ⚠️ Partial, see below |
 | `ecod/experiments/<ID>/my_outputs_align_<ID>_representations_layers_save_0_47/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Unablated final predicted structure, the probes' distance target | ⚠️ 303 / 398 cohort proteins. SHA-256 identical to the originals the probes used |
 | `ecod/pdbs/ecod.latest.pdb.tar.gz` | ECOD experimental (reference) structures | ✅ Complete (537 MB) |
@@ -78,7 +78,7 @@ Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 | `/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1/` | Out-of-fold probe predictions for every residue pair: 552 proteins × 48 layers × 4 probes (all 105,984 arrays complete). Distances can be analysed without pair reps. |
 | `/work/hdd/bfna/ikhire/regression_5fold_v1/` and `$HOME/csv_files/` | All regression results, per-protein metrics, geometry and triangle tables |
 | `/work/hdd/bekh/thayes/ecod_dataset/fasta_files/` | ECOD FASTA sequences (all 400 cohort IDs present) |
-| `sept-2-archive` git branch, `delta_files/layerwise_ablation_csvs/` | The 15 layerwise ablation CSVs, identical cell for cell to the patched Delta tables. Not on `main`. |
+| `delta_files/layerwise_ablation_csvs/` (git, `main`) | Full copy of `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`: layerwise and global ablation tables, master tables, pre-patch backups, `pair_layer_similarity_outputs/` (Fig. 6/S13). The older `sept-2-archive` branch has the 15 layerwise CSVs only. |
 | `/sw/external/alphafold2/data_hyun_official/` | Shared AlphaFold2 databases on Delta (UniRef90, MGnify, BFD, UniRef30, PDB70), if MSAs must be regenerated |
 
 ## Paper reproducibility
@@ -86,15 +86,16 @@ Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 - **Layerwise ablation figures (3, 4, 5, S7–S11, S21):** ✅ All 7 components ×
   FWD/REV × 48 layers × 554 proteins, with no gaps, in git and on Delta.
 - **Global ablation figures (2, S2–S6):** ✅ All conditions × 554 proteins ×
-  3 runs, on Delta only. Per-run scores aren't stored, only the 3-run mean.
+  3 runs, in git and on Delta. Per-run scores aren't stored, only the 3-run mean.
   Five triangle files have an empty `length` column; join on protein ID.
 - **Probe and triangle figures:** ✅ The saved predictions and result tables
   are intact.
 
 ## To do
 
-1. Commit `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` (47 MB, including
-   `global/`) into `delta_files/`. Global ablations are not in git.
+1. ✅ Done Nov 7: `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` (all 65
+   files, checksums verified) is committed as
+   `delta_files/layerwise_ablation_csvs/`.
 2. Update the ECOD paths in `datasets.md`. The pair-block path is gone; the
    PDB path should point to the rescued `representations_layers_save_0_47`
    files.
