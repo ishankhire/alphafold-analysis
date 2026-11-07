@@ -80,8 +80,9 @@ Copy these flat into `$HOME/openfold_interpretability_canonical/`:
 | `figures/mae_difference_vs_ols_all_layers.*` | PNG, PDF | overview | MAE minus OLS MAE at all layers |
 
 The launchers finish by building single-file HTML pages under the output root
-with `make_page.py` and `make_protein_page.py`. HTML is not tracked in this
-repository, apart from the page template.
+with `make_page.py` and `make_protein_page.py`. Copies of the CAMEO-run pages, as
+published, are in `delta_files/diagnostic_plots/native_error_strata/` and
+`delta_files/diagnostic_plots/native_error_strata_xgboost/`.
 `../tests/test_protein_page.js` exercises a built page:
 `node ../tests/test_protein_page.js <page.html>`.
 

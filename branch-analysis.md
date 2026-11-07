@@ -2374,3 +2374,12 @@ Delta. These first ran as scratch scripts. Job `23624510` ran the moved code: al
 reports matched line for line, and layer 47 of both replays matched array for array.
 Per-protein strata explain the shape of the violation curve but overstate its level,
 and rescaling recovers 12% of transfer loss within layers 16–47.
+
+## Session: 2026-11-07 — Result pages tracked
+
+At the user's request, the published result pages are now tracked:
+`delta_files/diagnostic_plots/cross_layer_transfer_all_layers_cameo/results_page.html` and
+the native and XGBoost cohort and protein pages under
+`delta_files/diagnostic_plots/native_error_strata*/`. Each is the published copy; the
+strata page bodies match their builds byte for byte. The transfer page's image paths drop
+`figures/` so they resolve beside its PNGs.
