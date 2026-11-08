@@ -1,5 +1,20 @@
 # Branch Analysis
 
+## Session: 2026-11-08 — Null-triangle results (CAMEO)
+
+All 48 layers of array `23656699` and aggregation `23656700` completed. Gates:
+9,600 bit-identical comparisons, 29,568 paper-parity rows (worst violation-fraction gap
+1.7e-5), 739,200 Null B histogram checks, 0 failures. Copied `tables/` to
+`delta_files/diagnostic_experiments/null_triangles_cameo_v1/` (sha256 verified) and ran
+`analyze_null_triangles.py`; figures are in `delta_files/diagnostic_plots/null_triangles_cameo_v1/`.
+Observed is below Nulls A, B and C at every layer for all four probes, on both metrics and
+on B10×S6. The gap narrows with depth. The second-peak contrast (L30–34 minus L20–22) is
+positive in observed − Null B for every probe. Null B alone has a smaller second peak for
+the shared and per-protein OLS probes and none for sequence-gated OLS or XGBoost.
+`RESULTS.md` now also reports the second-peak contrast in Null B alone. At XGBoost layer 47,
+Null A is above Null B; the residuals are heavy-tailed. Recorded measured walltime
+(max 11:22) and memory (max 2.58 GiB) in `docs/cluster/`. No cluster files changed.
+
 ## Session: 2026-11-07 — Null models for triangle violations (CAMEO)
 
 Added `scripts/cluster_scripts/diagnostics/null_triangles/` and the local

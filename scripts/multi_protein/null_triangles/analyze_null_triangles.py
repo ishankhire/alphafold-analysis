@@ -329,7 +329,9 @@ def results_markdown(data, counts) -> str:
                              f"{contiguous_ranges(within)}.")
             obs = window_contrast(observed(data, probe, metric), counts)
             gap_b = window_contrast(gap(data, probe, "null_b", "B10", metric), counts)
+            null_b = window_contrast(null(data, probe, "null_b", "B10", metric), counts)
             lines.append(f"- Second peak in observed: {obs['mean']:.4g} [{obs['ci_low']:.4g}, {obs['ci_high']:.4g}]; "
+                         f"in Null B alone: {null_b['mean']:.4g} [{null_b['ci_low']:.4g}, {null_b['ci_high']:.4g}]; "
                          f"in observed − Null B: {gap_b['mean']:.4g} [{gap_b['ci_low']:.4g}, {gap_b['ci_high']:.4g}] "
                          f"({'survives' if gap_b['ci_low'] > 0 else 'does not survive'}).")
             lines.append("")
