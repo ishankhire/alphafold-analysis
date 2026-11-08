@@ -1,5 +1,19 @@
 # Branch Analysis
 
+## Session: 2026-11-07 — Null models for triangle violations (CAMEO)
+
+Added `scripts/cluster_scripts/diagnostics/null_triangles/` and the local
+`scripts/multi_protein/null_triangles/analyze_null_triangles.py`. Nulls A
+(Gaussian per B10 bin), B (residuals permuted within bin) and C (bin mean and
+per-residue offsets kept, remainder permuted) run on the 154 CAMEO proteins, 4
+probes, 48 layers, K=10, on a 1M-triple sample per protein. Observed is scored on
+every triple. Also run: B and C on B10×seq-sep, and B5/B20 sensitivity for
+shared OLS. The slim triangle reducer is gated bit-identical to
+`compute_metric_rows` and within float32 tolerance of the paper's per-protein
+values. Deployed flat to the canonical runtime; created
+`/work/hdd/bfna/ikhire/diagnostic_experiments/null_triangles_cameo_v1/logs/`;
+submitted array `23656699` and aggregation `23656700` (afterok).
+
 ## Session: 2026-11-07 — Catalogue Delta data and plan CAMEO copy
 
 Surveyed the bekh and bfna allocations, found the root-owned six-month and
