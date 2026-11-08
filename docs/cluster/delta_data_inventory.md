@@ -118,9 +118,32 @@ Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 
 ## CAMEO
 
-The full CAMEO catalogue, sizes, purge-risk evidence and the pending copy to
-`/work/hdd/bfna/ikhire/thayes/cameo/` are in the
+The full CAMEO catalogue, sizes and purge-risk evidence are in the
 [cluster data preservation plan](../plans/cluster_data_preservation_plan.md).
+
+**Copied Nov 7–8 (job `23649985`), verified.** CAMEO MSAs, reference
+structures, predicted and ablation PDBs, 48-layer pair/MSA blocks, and triangle
+attention maps are now also under **`/work/hdd/bfna/ikhire/thayes/cameo/`**:
+777.3 GiB, 293,280 files. Each of the 383 copy tasks has matching source and
+destination file counts and bytes, and a dry-run rsync found nothing pending.
+The originals are untouched.
+
+| Copy path (under `thayes/cameo/`) | Source |
+|---|---|
+| `projects_bekh/alignments/` | `/projects/bekh/thayes/alignments` (MSAs) |
+| `projects_bekh/cameo_dset/` | `/projects/bekh/thayes/cameo_dset` (reference PDBs, FASTA) |
+| `work_hdd_bekh/openfold_reps/` | `/work/hdd/bekh/thayes/openfold_reps` (pair + MSA blocks, 48 layers) |
+| `work_hdd_bekh/openfold_reps_outputs_sm/` | Per-layer predicted PDBs |
+| `work_hdd_bekh/openfold_reps_outputs/`, `work_nvme_bekh/cameo_reps_outputs/` | Representation-save run outputs |
+| `work_hdd_bfna/openfold_outputs_{layerwise,global,fixed}_ablation/` | Ablation PDBs |
+| `work_nvme_bekh/openfold_outputs_layerwise_ablation/` | 10-protein layerwise ablation PDBs |
+| `work_hdd_bfna/gprash/cameo_pdbs/` | gprash per-layer PDBs |
+| `work_hdd_bekh/{cameo_triplets,test_attn,temp_store}/`, `work_nvme_bekh/cameo_triplets/`, `work_hdd_bfna/attention_map_dir_test_triplets/` | Triangle attention maps |
+
+Not copied: `attention_map_dir_test_triplets/plots/` (unreadable to ikhire),
+the nvme duplicate of the pair blocks, and the older CAMEO experiments. Logs and
+`verify.tsv` are in `/work/hdd/bfna/ikhire/cameo_copy/logs/23649985/`.
+
 Quick checks on Nov 7: all 154 CAMEO predicted PDBs
 (`/work/hdd/bekh/thayes/openfold_reps_outputs_sm/`), layer-47 pair blocks
 (`/work/hdd/bekh/thayes/openfold_reps/`) and alignments

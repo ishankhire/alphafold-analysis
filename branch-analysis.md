@@ -20,9 +20,11 @@ Surveyed the bekh and bfna allocations, found the root-owned six-month and
 one-year purge lists, and sized candidate folders with read-only job
 `23646162`. Wrote `docs/plans/cluster_data_preservation_plan.md` and the copy
 script `scripts/cluster_scripts/data_rescue/copy_cameo.sbatch`. The script is
-deployed to `/work/hdd/bfna/ikhire/cameo_copy/` and has not been submitted.
-Created `/work/hdd/bfna/ikhire/{storage_audit,cameo_copy/logs}/`. No data
-copied, moved or deleted.
+deployed to `/work/hdd/bfna/ikhire/cameo_copy/`. Created
+`/work/hdd/bfna/ikhire/{storage_audit,cameo_copy/logs}/`. With the user's
+go-ahead, job `23649985` copied tiers 1–3 (777.3 GiB, 293,280 files) to
+`/work/hdd/bfna/ikhire/thayes/cameo/` and verified them with 0 mismatches.
+Sources untouched; nothing deleted.
 
 ## Session: 2026-11-06/07 — Rescue of purged thayes data and Delta inventory
 

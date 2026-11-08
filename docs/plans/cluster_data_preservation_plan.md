@@ -9,11 +9,14 @@ directory checks are in
 
 ## Summary
 
-- **Status:** copy script written and deployed, **not submitted**.
-- **Scope:** CAMEO inputs/outputs and triangle attention maps, about
-  **0.76 TB**, into `/work/hdd/bfna/ikhire/thayes/cameo/`.
-- **Space:** `/work/hdd/bfna` uses 2.87 TB of a 4.88 TB soft / 5.37 TB hard
-  quota, so about 2.0 TB is free.
+- **Status:** tiers 1–3 **copied and verified** on Nov 7–8 by job
+  `23649985`: 777.3 GiB and 293,280 files, with 0 mismatches. See the
+  [Delta data inventory](../cluster/delta_data_inventory.md#cameo).
+- **Scope:** CAMEO inputs/outputs and triangle attention maps, now under
+  `/work/hdd/bfna/ikhire/thayes/cameo/`.
+- **Space:** `/work/hdd/bfna` was at 2.87 TB before the copy and is now at
+  3.63 TB, against a 4.88 TB soft / 5.37 TB hard quota. About 1.25 TB is free
+  under the soft quota.
 - **Not all critical data is in a `thayes/` folder.** thayes also owns
   top-level bfna folders, and gprash owns the CAMEO ablation PDB folders.
 
@@ -138,7 +141,9 @@ sbatch --mail-user="${CLUSTER_NOTICE_EMAIL:?Set CLUSTER_NOTICE_EMAIL}" copy_came
 
 ## Open items
 
-1. Submit the copy, then record the result in the Delta data inventory.
+1. ✅ Copy submitted (job `23649985`), verified, and recorded in the Delta
+   data inventory. It took 5 h to copy (the layerwise ablation PDB folder,
+   with hundreds of thousands of small files, dominated) and 6.8 h to verify.
 2. Finish sizing the layerwise ablation folders (top-level and gprash copies);
    job `23646162` was still running at the time of writing.
 3. Compare checksums on a sample of hdd vs nvme pair blocks before treating
