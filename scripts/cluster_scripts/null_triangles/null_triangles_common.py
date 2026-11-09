@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Shared pieces of the null-triangle experiment: bins, triangle sets, scoring, and nulls.
+"""Shared pieces of the null-triangle experiment: bins, streaming scoring, and nulls.
 
 Each null adds errors to the final-structure distances (d_true). The errors match the
-probe's residuals bin by bin but are rearranged among pairs. The nulls are scored with
-the paper's all-triangles metrics (violation fraction, normalized mean violation), and
-the observed probe output is scored the same way.
+probe's residuals bin by bin but are rearranged among pairs. The nulls and the observed
+probe output are scored on every triangle with the paper's all-triangles metrics
+(violation fraction, normalized mean violation).
 
 The triangle metric follows ``triangle_violation_subgroup_common.compute_metric_rows``
 operation by operation. It reuses that module's triangle order and tolerance, and keeps
 only the all-triangles reduction. ``tests/test_null_triangles.py`` and the replay's
-in-job gate assert bit-identical results against ``compute_metric_rows``.
+in-job gate assert bit-identical results against ``compute_metric_rows``. Every vector of
+a protein is scored in one pass over the triangles, batched as ``iter_triangle_indices``
+batches them, so each vector's summation order matches ``compute_metric_rows``.
 """
 from __future__ import annotations
 
@@ -20,7 +22,7 @@ from pathlib import Path
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for _path in (SCRIPT_DIR, SCRIPT_DIR.parents[1], SCRIPT_DIR.parents[1] / "triangle_violation_subgroups"):
+for _path in (SCRIPT_DIR, SCRIPT_DIR.parent, SCRIPT_DIR.parent / "triangle_violation_subgroups"):
     if _path.is_dir() and str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
@@ -31,8 +33,8 @@ from triangle_violation_subgroup_common import (  # noqa: E402
     triangle_count,
 )
 
-EXPERIMENT_NAME = "null_triangles_cameo_v1"
-SEED = 20261107
+EXPERIMENT_NAME = "null_triangles_5fold_v1"
+SEED = 20261109
 PROBES = (
     "shared_ols_base256",
     "per_protein_ols_base256",
@@ -40,11 +42,11 @@ PROBES = (
     "shared_xgboost_base256_fixed_s4",
 )
 SENSITIVITY_PROBE = "shared_ols_base256"
-N_DRAWS = 10
-N_SAMPLE_TRIANGLES = 1_000_000
+N_DRAWS = 3
 NULL_A_MIN_PAIRS = 30
+BITWISE_MAX_TRIANGLES = 1_000_000   # proteins this small are also checked against compute_metric_rows
 LAYERS = tuple(range(48))
-EXPECTED_CAMEO = 154
+EXPECTED_COHORT = {"cameo": 154, "ecod": 398}
 
 # Distance bins on d_true, half-open [lo, hi) in angstroms.
 B10_EDGES = np.array([0, 4, 6, 8, 10, 14, 20, 30, 40, 55, np.inf], dtype=np.float64)
@@ -56,9 +58,8 @@ B20_EDGES = np.array(
 SEQ_LABELS = ("1", "2-4", "5-9", "10-19", "20-49", "50+")
 BINNINGS = ("B10", "B10xS6", "B5", "B20")
 BINNING_CODES = {name: code for code, name in enumerate(BINNINGS)}
-MODELS = ("observed", "null_a", "null_b", "null_c")
+MODELS = ("observed", "null_a", "null_b")
 MODEL_CODES = {name: code for code, name in enumerate(MODELS)}
-TRIANGLE_SETS = ("exact", "sample_1m")
 
 
 def edge_labels(edges: np.ndarray) -> tuple[str, ...]:
@@ -76,11 +77,8 @@ BIN_LABELS = {
 }
 
 # Which (model, binning) runs are made, per probe. Observed is scored separately.
-NULL_RUNS = (
-    ("null_a", "B10"), ("null_b", "B10"), ("null_c", "B10"),
-    ("null_b", "B10xS6"), ("null_c", "B10xS6"),
-)
-SENSITIVITY_RUNS = (("null_b", "B5"), ("null_b", "B20"))
+NULL_RUNS = (("null_a", "B10"), ("null_b", "B10"))
+SENSITIVITY_RUNS = (("null_b", "B5"), ("null_b", "B20"), ("null_b", "B10xS6"))
 
 
 def null_runs(probe: str) -> tuple[tuple[str, str], ...]:
@@ -150,51 +148,6 @@ def reference_rms(d_true: np.ndarray, positions: np.ndarray) -> np.ndarray:
     return np.sqrt((a * a + b * b + c * c) / 3.0)
 
 
-def unrank_triangles(linear: np.ndarray, n_residues: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Map linear indices in iter_triangle_indices order (k < j < i) to (i, j, k)."""
-    linear = np.asarray(linear, dtype=np.int64)
-    tops = np.arange(n_residues + 1, dtype=np.int64)
-    block_start = tops * (tops - 1) * (tops - 2) // 6          # C(i, 3): triples with max < i
-    tri_i = np.searchsorted(block_start, linear, side="right") - 1
-    rest = linear - block_start[tri_i]
-    pair_start = tops * (tops - 1) // 2                         # pairs (j, k) with j < row
-    tri_j = np.searchsorted(pair_start, rest, side="right") - 1
-    tri_k = rest - pair_start[tri_j]
-    return tri_i, tri_j, tri_k
-
-
-class TriangleSet:
-    """Triangle side positions, reference RMS, and batch boundaries for one protein."""
-
-    def __init__(self, positions: np.ndarray, rms: np.ndarray, bounds: list[tuple[int, int]], exact: bool):
-        self.positions, self.rms, self.bounds, self.exact = positions, rms, bounds, exact
-        self.n = int(positions.shape[0])
-
-
-def full_triangle_set(d_true: np.ndarray, n_residues: int) -> TriangleSet:
-    """Every triple, batched exactly as iter_triangle_indices batches them."""
-    parts, bounds, cursor = [], [], 0
-    for tri_i, tri_j, tri_k in iter_triangle_indices(n_residues, DEFAULT_TRIANGLE_BATCH_SIZE):
-        parts.append(side_positions(tri_i, tri_j, tri_k))
-        bounds.append((cursor, cursor + tri_i.size))
-        cursor += tri_i.size
-    positions = np.concatenate(parts)
-    return TriangleSet(positions, reference_rms(d_true, positions), bounds, True)
-
-
-def sampled_triangle_set(d_true: np.ndarray, n_residues: int, protein_index: int) -> TriangleSet:
-    """All triples if C(R,3) <= 1M, else 1M distinct triples (fixed per protein)."""
-    total = triangle_count(n_residues)
-    if total <= N_SAMPLE_TRIANGLES:
-        return full_triangle_set(d_true, n_residues)
-    rng = np.random.default_rng([SEED, 0, protein_index])
-    linear = np.sort(rng.choice(total, size=N_SAMPLE_TRIANGLES, replace=False))
-    positions = side_positions(*unrank_triangles(linear, n_residues))
-    step = DEFAULT_TRIANGLE_BATCH_SIZE
-    bounds = [(s, min(s + step, N_SAMPLE_TRIANGLES)) for s in range(0, N_SAMPLE_TRIANGLES, step)]
-    return TriangleSet(positions, reference_rms(d_true, positions), bounds, False)
-
-
 def score_batch(clipped: np.ndarray, positions: np.ndarray, rms: np.ndarray,
                 negative: np.ndarray | None = None) -> tuple[int, int, float, float, int]:
     """One batch of the all-triangles reduction in compute_metric_rows, step for step."""
@@ -237,29 +190,23 @@ class Totals:
         }
 
 
-def score_set(values: np.ndarray, triangles: TriangleSet, track_clipped: bool = False) -> dict[str, float]:
-    """Clip at zero, then reduce every triangle in the set."""
-    values = np.asarray(values, dtype=np.float64)
-    clipped = np.maximum(values, 0.0)
-    negative = values < 0.0 if track_clipped else None
-    totals = Totals()
-    for start, stop in triangles.bounds:
-        totals.add(score_batch(clipped, triangles.positions[start:stop], triangles.rms[start:stop], negative))
-    return totals.metrics()
+def score_streaming(vectors: dict, d_true: np.ndarray, n_residues: int,
+                    track_clipped: frozenset | set = frozenset()) -> dict:
+    """Every triple for many packed distance vectors at once, without holding the triangle list.
 
-
-def score_exact_streaming(values_by_probe: dict[str, np.ndarray], d_true: np.ndarray,
-                          n_residues: int) -> dict[str, dict[str, float]]:
-    """Every triple for several probes at once, without holding the triangle list."""
-    clipped = {p: np.maximum(np.asarray(v, dtype=np.float64), 0.0) for p, v in values_by_probe.items()}
-    negative = {p: np.asarray(v) < 0.0 for p, v in values_by_probe.items()}
-    totals = {p: Totals() for p in values_by_probe}
+    Each vector is clipped at zero once; triangle indices and reference RMS are made once
+    per batch and shared. ``n_violations_with_clipped_side`` is counted for keys in
+    ``track_clipped`` and left at 0 for the rest.
+    """
+    clipped = {k: np.maximum(np.asarray(v, dtype=np.float64), 0.0) for k, v in vectors.items()}
+    negative = {k: np.asarray(vectors[k]) < 0.0 for k in vectors if k in track_clipped}
+    totals = {k: Totals() for k in vectors}
     for tri_i, tri_j, tri_k in iter_triangle_indices(n_residues, DEFAULT_TRIANGLE_BATCH_SIZE):
         positions = side_positions(tri_i, tri_j, tri_k)
         rms = reference_rms(d_true, positions)
-        for probe in values_by_probe:
-            totals[probe].add(score_batch(clipped[probe], positions, rms, negative[probe]))
-    return {p: t.metrics() for p, t in totals.items()}
+        for key in vectors:
+            totals[key].add(score_batch(clipped[key], positions, rms, negative.get(key)))
+    return {k: t.metrics() for k, t in totals.items()}
 
 
 # ---------------------------------------------------------------- nulls
@@ -279,33 +226,19 @@ def same_bin_histograms(original: np.ndarray, permuted: np.ndarray, codes: np.nd
     return bool(np.array_equal(a, b))
 
 
-def residue_offsets(centred: np.ndarray, pair_i: np.ndarray, pair_j: np.ndarray, n_residues: int) -> np.ndarray:
-    """Per-residue additive offset u (the Exp 7 estimator): pair sums over residue / (n - 2)."""
-    totals = (np.bincount(pair_i, weights=centred, minlength=n_residues)
-              + np.bincount(pair_j, weights=centred, minlength=n_residues))
-    return totals / max(n_residues - 2, 1)
-
-
 def null_draw_rng(layer: int, probe: str, protein_index: int, model: str, binning: str, draw: int) -> np.random.Generator:
     return np.random.default_rng([SEED, 1, layer, PROBES.index(probe), protein_index,
                                   MODEL_CODES[model], BINNING_CODES[binning], draw])
 
 
 def make_null(model: str, rng: np.random.Generator, d_true: np.ndarray, residual: np.ndarray,
-              codes: np.ndarray, pair_i: np.ndarray, pair_j: np.ndarray, n_residues: int,
-              mu: np.ndarray, sd: np.ndarray) -> tuple[np.ndarray, bool | None]:
+              codes: np.ndarray, mu: np.ndarray, sd: np.ndarray) -> tuple[np.ndarray, bool | None]:
     """One null distance vector (unclipped) and, for Null B, the histogram check."""
     if model == "null_a":
         return d_true + mu[codes] + sd[codes] * rng.standard_normal(d_true.size), None
-    permutation = within_bin_permutation(rng, codes)
     if model == "null_b":
-        permuted = residual[permutation]
+        permuted = residual[within_bin_permutation(rng, codes)]
         return d_true + permuted, same_bin_histograms(residual, permuted, codes)
-    if model == "null_c":
-        centred = residual - mu[codes]
-        offsets = residue_offsets(centred, pair_i, pair_j, n_residues)
-        remainder = centred - offsets[pair_i] - offsets[pair_j]
-        return d_true + mu[codes] + offsets[pair_i] + offsets[pair_j] + remainder[permutation], None
     raise ValueError(f"Unknown null model {model!r}")
 
 

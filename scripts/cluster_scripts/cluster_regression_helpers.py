@@ -71,8 +71,9 @@ CAMEO_PDB_ROOT = Path("/work/hdd/bekh/thayes/openfold_reps_outputs_sm")
 ECOD_PAIR_BLOCKS_ROOT = Path(
     "/work/hdd/bfna/thayes/ecod/experiments/representation_saves"
 )
+# thayes's ECOD tree was purged in Nov 2026; the PDBs were restored here from PACE.
 ECOD_PDB_ROOT = Path(
-    "/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm"
+    "/work/hdd/bfna/ikhire/thayes/ecod/experiments/openfold_reps_outputs_sm"
 )
 
 TM_SCORE_METHOD = "tmscore_fixed_correspondence_best_mds_reflection_v1"

@@ -1,5 +1,19 @@
 # Branch Analysis
 
+## Session: 2026-11-09 — Null-triangle experiment on the 552-protein cohort
+
+The null-triangle experiment is now a main experiment, `null_triangles_5fold_v1`, in
+`scripts/cluster_scripts/null_triangles/` (moved from `diagnostics/`). It covers 552
+proteins (CAMEO + ECOD), Nulls A and B only, K=3, and scores every triangle, with all 37
+vectors of a protein in one streaming pass. Null B also runs on B5, B20 and B10×S6 for
+shared OLS. Outputs go to `regression_5fold_v1/analysis/null_triangles_5fold_v1/`. The
+parity table now covers all 552 proteins (`paper_triangle_parity_5fold_v1.csv.gz`). In
+`cluster_regression_helpers.py`, `ECOD_PDB_ROOT` now points to the restored
+`/work/hdd/bfna/ikhire/thayes/ecod/...` copy. `analyze_null_triangles.py` was rewritten to
+make a main figure, two supplements and the diagnostics. The CAMEO outputs moved to
+`delta_files/historical_outputs/null_triangles_cameo_v1/`. Estimated cost: about 85 CPU-h.
+Not yet deployed or submitted.
+
 ## Session: 2026-11-08 — Null-triangle results (CAMEO)
 
 All 48 layers of array `23656699` and aggregation `23656700` completed. Gates:

@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Null models for triangle violations: one layer, four probes, 154 CAMEO proteins.
+"""Null models for triangle violations: one layer, four probes, the 552-protein cohort.
 
-Task i scores layer i. For each probe and protein it scores:
+Task i scores layer i on every triangle of every protein (154 CAMEO + 398 ECOD). For
+each probe and protein it scores:
 
-- the observed OOF prediction on every triple (exact) and on the protein's fixed
-  triangle sample (all triples if C(R,3) <= 1M, else 1M distinct triples);
-- Null A (Gaussian per bin), Null B (residuals permuted within bin), and Null C
-  (bin mean and per-residue offsets kept, remainder permuted within bin) on B10;
-- Nulls B and C on B10 x the six sequence-separation bins;
-- for shared OLS only, Null B on B5 and B20;
+- the observed OOF prediction;
+- Null A (Gaussian per bin) and Null B (residuals permuted within bin) on B10;
+- for shared OLS only, Null B on B5, B20, and B10 x the six sequence-separation bins;
 
-each with ``N_DRAWS`` draws, on the triangle sample. Pass 1 collects pair-level
-error diagnostics and the cohort statistics Null A falls back to; pass 2 scores
-triangles. No model is fitted or replayed: inputs are the cached OOF predictions
-and the final OpenFold structures.
+each null with ``N_DRAWS`` draws. All vectors of a protein are scored in one streaming
+pass over its triangles. Pass 1 collects pair-level error diagnostics and the cohort
+statistics Null A falls back to; pass 2 builds the nulls and scores triangles. No model
+is fitted or replayed: inputs are the cached OOF predictions and the final OpenFold
+structures.
 
 Gates before anything is written:
-- the slim reducer equals ``compute_metric_rows`` bit for bit on every protein
-  whose triangle sample is every triple (same float32-loaded inputs);
-- exact observed metrics match the paper's stored per-protein values within the
+- the streaming reducer equals ``compute_metric_rows`` bit for bit on every protein
+  with at most ``BITWISE_MAX_TRIANGLES`` triangles (same float32-loaded inputs);
+- observed metrics match the paper's stored per-protein values within the
   float32-cache tolerance (the paper replayed float64 predictions);
 - Null B keeps every bin's residual histogram on every draw.
 """
@@ -41,7 +40,7 @@ from pathlib import Path
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for _path in (SCRIPT_DIR, SCRIPT_DIR.parents[1], SCRIPT_DIR.parents[1] / "triangle_violation_subgroups"):
+for _path in (SCRIPT_DIR, SCRIPT_DIR.parent, SCRIPT_DIR.parent / "triangle_violation_subgroups"):
     if _path.is_dir() and str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
@@ -50,14 +49,17 @@ import null_triangles_common as common  # noqa: E402
 from canonical_storage import csv_root  # noqa: E402
 from regression_output_helpers import sha256_file  # noqa: E402
 from regression_protocol import sequence_separation_bin_codes, strict_lower_triangle_indices  # noqa: E402
-from triangle_violation_subgroup_common import build_reference_cache, compute_metric_rows  # noqa: E402
+from triangle_violation_subgroup_common import build_reference_cache, compute_metric_rows, triangle_count  # noqa: E402
 
 PRODUCER = csv_root() / "regression_5fold_v1"
 EXPORT = Path(os.environ.get("NULL_TRIANGLES_EXPORT_ROOT", PRODUCER / "predicted_distances_5fold_v1"))
 OUTPUT_ROOT = Path(os.environ.get(
-    "NULL_TRIANGLES_OUTPUT_ROOT", csv_root() / "diagnostic_experiments" / common.EXPERIMENT_NAME))
+    "NULL_TRIANGLES_OUTPUT_ROOT", PRODUCER / "analysis" / common.EXPERIMENT_NAME))
 COHORT_CSV = PRODUCER / "metadata" / "regression_outer_folds_v1.csv"
-PARITY_CSV = SCRIPT_DIR / "paper_triangle_parity_cameo.csv"
+# all_triangles rows of regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/
+# per_protein_triangle_metrics.csv (extraction command in null_triangles_README.md).
+PARITY_CSV = SCRIPT_DIR / "paper_triangle_parity_5fold_v1.csv.gz"
+PARITY_SOURCE_SHA256 = "badc45f0f8f8765d1cdde59ba5504cb4cffda38d79c256179ab8da1a0b924c7f"
 PARITY_KEYS = ("n_triangles", "n_violations", "violation_sum_angstrom", "relative_violation_sum")
 PAPER_FRACTION_TOL = 5e-5          # Exp 7's gate for exact proteins
 PAPER_RELATIVE_SUM_RTOL = 1e-4
@@ -65,17 +67,17 @@ PAPER_NEGATIVE_TOL = 2
 STARTED = time.perf_counter()
 
 METRIC_COLUMNS = (
-    "probe", "layer", "protein_id", "n_residues", "model", "binning", "triangle_set", "draw",
+    "probe", "layer", "protein_id", "source", "n_residues", "model", "binning", "draw",
     "n_triangles", "n_violations", "violation_sum_angstrom", "relative_violation_sum",
     "violation_fraction", "mean_relative_violation_all", "n_violations_with_clipped_side",
     "n_negative_values",
 )
 DIAGNOSTIC_COLUMNS = (
-    "probe", "layer", "protein_id", "binning", "cell", "cell_label", "n_pairs", "mean_r", "sd_r",
+    "probe", "layer", "protein_id", "source", "binning", "cell", "cell_label", "n_pairs", "mean_r", "sd_r",
     "rmse", "skew", "excess_kurtosis", "null_a_fallback",
 )
 CALIBRATION_COLUMNS = (
-    "probe", "layer", "protein_id", "n_residues", "n_pairs", "alpha", "beta", "mean_r", "rmse",
+    "probe", "layer", "protein_id", "source", "n_residues", "n_pairs", "alpha", "beta", "mean_r", "rmse",
     "n_negative_predictions",
 )
 
@@ -123,16 +125,29 @@ def atomic_json(path: Path, payload: object) -> None:
 
 def load_cohort() -> list[dict]:
     with open(COHORT_CSV, newline="") as handle:
-        rows = [r for r in csv.DictReader(handle) if r["source"] == "cameo"]
+        rows = list(csv.DictReader(handle))
+    check_cohort(rows)
     rows.sort(key=lambda r: r["protein_id"])
+    cohort = [{"protein_index": k, "protein_id": r["protein_id"], "source": r["source"],
+               "n_residues": int(r["n_residues"]), "n_pairs": int(r["n_pairs"])} for k, r in enumerate(rows)]
     selected = os.environ.get("NULL_TRIANGLES_PROTEINS")       # local smoke tests only
     if selected:
         keep = set(selected.split(","))
-        rows = [r for r in rows if r["protein_id"] in keep]
-    elif len(rows) != common.EXPECTED_CAMEO:
-        raise ValueError(f"Expected {common.EXPECTED_CAMEO} CAMEO proteins, found {len(rows)}")
-    return [{"protein_index": k, "protein_id": r["protein_id"], "n_residues": int(r["n_residues"]),
-             "n_pairs": int(r["n_pairs"])} for k, r in enumerate(rows)]
+        cohort = [p for p in cohort if p["protein_id"] in keep]
+    return cohort
+
+
+def check_cohort(rows: list[dict]) -> None:
+    """The frozen cohort: 154 CAMEO + 398 ECOD, unique IDs, R(R-1)/2 pairs each."""
+    counts = {source: sum(r["source"] == source for r in rows) for source in common.EXPECTED_COHORT}
+    if counts != common.EXPECTED_COHORT or len(rows) != sum(counts.values()):
+        raise ValueError(f"Expected cohort {common.EXPECTED_COHORT}, found {counts} of {len(rows)} rows")
+    if len({r["protein_id"] for r in rows}) != len(rows):
+        raise ValueError("Duplicate protein IDs in the cohort")
+    for r in rows:
+        n = int(r["n_residues"])
+        if int(r["n_pairs"]) != n * (n - 1) // 2:
+            raise ValueError(f"{r['protein_id']}: n_pairs does not match n_residues")
 
 
 def load_prediction_index(layer: int) -> dict[tuple[str, str], dict]:
@@ -142,7 +157,7 @@ def load_prediction_index(layer: int) -> dict[tuple[str, str], dict]:
 
 
 def load_paper_parity(layer: int) -> dict[tuple[str, str], dict]:
-    with open(PARITY_CSV, newline="") as handle:
+    with gzip.open(PARITY_CSV, "rt", newline="") as handle:
         return {(r["protein_id"], r["analysis_name"]): r for r in csv.DictReader(handle)
                 if int(r["layer"]) == layer}
 
@@ -160,7 +175,9 @@ def load_prediction(layer: int, protein: dict, probe: str, index_row: dict | Non
 
 
 def load_structure(protein: dict) -> dict:
-    pdb = helpers.resolve_combined_pdb_path(protein["protein_id"], "cameo")
+    pdb = helpers.resolve_combined_pdb_path(protein["protein_id"], protein["source"])
+    if not pdb.is_file():
+        raise FileNotFoundError(f"{protein['protein_id']}: final PDB not found at {pdb}")
     ca = helpers.extract_ca_coordinates(pdb)
     coordinates = np.asarray(ca["coordinates"], dtype=np.float64)
     if coordinates.shape[0] != protein["n_residues"]:
@@ -179,7 +196,7 @@ def pair_geometry(structure: dict) -> dict:
 
 # ---------------------------------------------------------------- paper metric (parity only)
 
-def paper_all_triangles(prediction: np.ndarray, coordinates: np.ndarray, directory: Path) -> dict:
+def paper_all_triangles(prediction: np.ndarray, coordinates: np.ndarray, directory: Path, source: str) -> dict:
     """compute_metric_rows on one packed prediction; returns the all-triangles row."""
     n = coordinates.shape[0]
     pair_i, pair_j = np.tril_indices(n, k=-1)
@@ -190,7 +207,7 @@ def paper_all_triangles(prediction: np.ndarray, coordinates: np.ndarray, directo
     try:
         identity = {
             "analysis_name": "parity", "model_family": "parity", "layer": 0, "protein_id": "parity",
-            "source": "cameo", "generalization_scope": "parity", "n_residues": n,
+            "source": source, "generalization_scope": "parity", "n_residues": n,
             "protein_length_bin": "parity",
         }
         rows = compute_metric_rows(matrix, cache, identity)
@@ -218,7 +235,7 @@ def pass_one(task: tuple) -> dict:
                 residual, geometry["codes"][binning], len(common.BIN_LABELS[binning]))
         alpha, beta = common.calibration_fit(d_true, prediction)
         out["calibration"].append({
-            "probe": probe, "layer": layer, "protein_id": protein["protein_id"],
+            "probe": probe, "layer": layer, "protein_id": protein["protein_id"], "source": protein["source"],
             "n_residues": protein["n_residues"], "n_pairs": d_true.size, "alpha": alpha, "beta": beta,
             "mean_r": float(residual.mean()), "rmse": float(np.sqrt(np.mean(residual ** 2))),
             "n_negative_predictions": int(np.count_nonzero(prediction < 0.0)),
@@ -251,65 +268,68 @@ def null_a_parameters(n_pairs, mu, sd, cohort_mu, cohort_sd):
 
 # ---------------------------------------------------------------- pass 2
 
-def metric_row(probe, layer, protein, model, binning, triangle_set, draw, metrics, values) -> dict:
-    return {"probe": probe, "layer": layer, "protein_id": protein["protein_id"],
-            "n_residues": protein["n_residues"], "model": model, "binning": binning,
-            "triangle_set": triangle_set, "draw": draw, **metrics,
+def metric_row(key: tuple, layer: int, protein: dict, metrics: dict, values: np.ndarray) -> dict:
+    probe, model, binning, draw = key
+    return {"probe": probe, "layer": layer, "protein_id": protein["protein_id"], "source": protein["source"],
+            "n_residues": protein["n_residues"], "model": model, "binning": binning, "draw": draw, **metrics,
             "n_negative_values": int(np.count_nonzero(np.asarray(values) < 0.0))}
+
+
+def build_vectors(layer: int, protein: dict, geometry: dict, predictions: dict, fallback: dict) -> tuple:
+    """Observed predictions and every null draw, keyed (probe, model, binning, draw)."""
+    d_true, codes = geometry["d_true"], geometry["codes"]
+    vectors, fallback_used = {}, {}
+    checks = {"histogram_checks": 0, "histogram_failures": 0}
+    for probe in common.PROBES:
+        vectors[(probe, "observed", "none", -1)] = predictions[probe]
+    for probe in common.PROBES:
+        residual = predictions[probe].astype(np.float64) - d_true
+        runs = common.null_runs(probe)
+        moments = {b: common.bin_moments(residual, codes[b], len(common.BIN_LABELS[b]))
+                   for b in sorted({"B10", *(binning for _, binning in runs)})}
+        a_mu, a_sd, used = null_a_parameters(moments["B10"]["n"], moments["B10"]["mean"], moments["B10"]["sd"],
+                                             *fallback[probe])
+        fallback_used[probe] = used.tolist()
+        for model, binning in runs:
+            mu, sd = (a_mu, a_sd) if model == "null_a" else (moments[binning]["mean"], moments[binning]["sd"])
+            for draw in range(common.N_DRAWS):
+                rng = common.null_draw_rng(layer, probe, protein["protein_index"], model, binning, draw)
+                values, same = common.make_null(model, rng, d_true, residual, codes[binning], mu, sd)
+                if not np.all(np.isfinite(values)):
+                    raise ValueError(f"{protein['protein_id']} {probe} {model} {binning}: nonfinite null values")
+                if same is not None:
+                    checks["histogram_checks"] += 1
+                    checks["histogram_failures"] += int(not same)
+                vectors[(probe, model, binning, draw)] = values
+    return vectors, fallback_used, checks
 
 
 def pass_two(task: tuple) -> dict:
     layer, protein, structure, fallback, scratch = task
     began = time.perf_counter()
     geometry = pair_geometry(structure)
-    d_true, pair_i, pair_j, codes = geometry["d_true"], geometry["pair_i"], geometry["pair_j"], geometry["codes"]
     n_res = protein["n_residues"]
-    triangles = common.sampled_triangle_set(d_true, n_res, protein["protein_index"])
     predictions = {p: load_prediction(layer, protein, p, None) for p in common.PROBES}
-    rows, checks = [], {"bitwise_compared": 0, "bitwise_failures": [], "histogram_checks": 0,
-                        "histogram_failures": 0}
+    vectors, fallback_used, checks = build_vectors(layer, protein, geometry, predictions, fallback)
+    t_build = time.perf_counter() - began
 
-    # Observed, exact and on the sample. A full sample is the exact set, batched identically.
-    if triangles.exact:
-        exact = {p: common.score_set(v, triangles, track_clipped=True) for p, v in predictions.items()}
-        for probe, values in predictions.items():
-            paper = paper_all_triangles(values, structure["coordinates"], scratch)
+    observed_keys = {(p, "observed", "none", -1) for p in common.PROBES}
+    scored = common.score_streaming(vectors, geometry["d_true"], n_res, track_clipped=observed_keys)
+    t_score = time.perf_counter() - began - t_build
+
+    checks.update({"bitwise_compared": 0, "bitwise_failures": []})
+    if triangle_count(n_res) <= common.BITWISE_MAX_TRIANGLES:
+        for probe in common.PROBES:
+            ours = scored[(probe, "observed", "none", -1)]
+            paper = paper_all_triangles(predictions[probe], structure["coordinates"], scratch, protein["source"])
             checks["bitwise_compared"] += 1
             for key in PARITY_KEYS:
-                if exact[probe][key] != paper[key]:
-                    checks["bitwise_failures"].append([probe, key, exact[probe][key], paper[key]])
-    else:
-        exact = common.score_exact_streaming(predictions, d_true, n_res)
-    for probe, values in predictions.items():
-        rows.append(metric_row(probe, layer, protein, "observed", "none", "exact", -1, exact[probe], values))
-        sample = exact[probe] if triangles.exact else common.score_set(values, triangles, track_clipped=True)
-        rows.append(metric_row(probe, layer, protein, "observed", "none", "sample_1m", -1, sample, values))
-    t_observed = time.perf_counter() - began
-
-    # Nulls, on the sample.
-    fallback_used = {}
-    for probe in common.PROBES:
-        residual = predictions[probe].astype(np.float64) - d_true
-        moments = {b: common.bin_moments(residual, codes[b], len(common.BIN_LABELS[b])) for b in common.BINNINGS}
-        a_mu, a_sd, used = null_a_parameters(moments["B10"]["n"], moments["B10"]["mean"], moments["B10"]["sd"],
-                                             *fallback[probe])
-        fallback_used[probe] = used.tolist()
-        for model, binning in common.null_runs(probe):
-            mu, sd = (a_mu, a_sd) if model == "null_a" else (moments[binning]["mean"], moments[binning]["sd"])
-            for draw in range(common.N_DRAWS):
-                rng = common.null_draw_rng(layer, probe, protein["protein_index"], model, binning, draw)
-                values, same = common.make_null(model, rng, d_true, residual, codes[binning], pair_i, pair_j,
-                                                n_res, mu, sd)
-                if not np.all(np.isfinite(values)):
-                    raise ValueError(f"{protein['protein_id']} {probe} {model} {binning}: nonfinite null values")
-                if same is not None:
-                    checks["histogram_checks"] += 1
-                    checks["histogram_failures"] += int(not same)
-                rows.append(metric_row(probe, layer, protein, model, binning, "sample_1m", draw,
-                                       common.score_set(values, triangles), values))
+                if ours[key] != paper[key]:
+                    checks["bitwise_failures"].append([protein["protein_id"], probe, key, ours[key], paper[key]])
+    rows = [metric_row(key, layer, protein, scored[key], vectors[key]) for key in vectors]
     return {"protein_id": protein["protein_id"], "rows": rows, "checks": checks,
-            "fallback_used": fallback_used, "sample_exact": triangles.exact, "n_sample": triangles.n,
-            "seconds_observed": t_observed, "seconds": time.perf_counter() - began}
+            "fallback_used": fallback_used, "n_vectors": len(vectors), "n_triangles": triangle_count(n_res),
+            "seconds_build": t_build, "seconds_score": t_score, "seconds": time.perf_counter() - began}
 
 
 # ---------------------------------------------------------------- main
@@ -317,8 +337,7 @@ def pass_two(task: tuple) -> dict:
 def paper_parity(rows: list[dict], paper: dict, cohort: list[dict]) -> dict:
     worst = {"fraction": 0.0, "relative_sum_rtol": 0.0, "negative": 0, "n_compared": 0}
     failures = []
-    observed = {(r["protein_id"], r["probe"]): r for r in rows
-                if r["model"] == "observed" and r["triangle_set"] == "exact"}
+    observed = {(r["protein_id"], r["probe"]): r for r in rows if r["model"] == "observed"}
     for protein in cohort:
         for probe in common.PROBES:
             key = (protein["protein_id"], probe)
@@ -375,8 +394,9 @@ def main() -> None:
             second = {}
             for done, result in enumerate(pool.imap_unordered(pass_two, tasks, chunksize=1), 1):
                 second[result["protein_id"]] = result
-                if done % 10 == 0 or done == len(tasks):
+                if done % 25 == 0 or done == len(tasks):
                     log(f"pass 2: {done}/{len(tasks)} proteins (last {result['protein_id']}, "
+                        f"{result['n_triangles']} triangles x {result['n_vectors']} vectors, "
                         f"{result['seconds']:.0f}s)")
 
     metric_rows = [row for p in cohort for row in second[p["protein_id"]]["rows"]]
@@ -403,8 +423,8 @@ def main() -> None:
                 m = result["moments"][(probe, binning)]
                 for cell in np.flatnonzero(m["n"] > 0):
                     diagnostic_rows.append({
-                        "probe": probe, "layer": layer, "protein_id": pid, "binning": binning,
-                        "cell": int(cell), "cell_label": common.BIN_LABELS[binning][cell],
+                        "probe": probe, "layer": layer, "protein_id": pid,
+                        "source": result["protein"]["source"], "binning": binning, "cell": int(cell), "cell_label": common.BIN_LABELS[binning][cell],
                         "n_pairs": int(m["n"][cell]), "mean_r": m["mean"][cell], "sd_r": m["sd"][cell],
                         "rmse": m["rmse"][cell], "skew": m["skew"][cell],
                         "excess_kurtosis": m["excess_kurtosis"][cell],
@@ -418,7 +438,10 @@ def main() -> None:
                                for b in range(len(common.B10_LABELS))] for probe in common.PROBES}
     atomic_json(marker, {
         "layer": layer, "status": "complete", "n_proteins": len(cohort),
-        "proteins_with_every_triple": sum(r["sample_exact"] for r in second.values()),
+        "n_proteins_by_source": {s: sum(p["source"] == s for p in cohort) for s in common.EXPECTED_COHORT},
+        "triangle_set": "every triple", "n_triangles": sum(r["n_triangles"] for r in second.values()),
+        "vectors_scored": sum(r["n_vectors"] for r in second.values()),
+        "bitwise_max_triangles": common.BITWISE_MAX_TRIANGLES,
         "bitwise_compared": sum(r["checks"]["bitwise_compared"] for r in second.values()),
         "bitwise_failures": 0, "paper_parity": parity,
         "paper_tolerances": {"violation_fraction": PAPER_FRACTION_TOL,
@@ -429,15 +452,19 @@ def main() -> None:
         "null_a_fallback_proteins_by_bin": fallback_counts,
         "null_a_cohort_support_by_bin": fallback_support,
         "b10_labels": list(common.B10_LABELS),
-        "n_draws": common.N_DRAWS, "n_sample_triangles": common.N_SAMPLE_TRIANGLES, "seed": common.SEED,
+        "n_draws": common.N_DRAWS, "seed": common.SEED,
         "rows": {"null_metrics": len(metric_rows), "pair_diagnostics": len(diagnostic_rows),
                  "calibration": len(calibration_rows)},
         "seconds": {"total": time.perf_counter() - STARTED,
                     "pass_one_protein_max": max(r["seconds"] for r in results),
                     "pass_two_protein_max": max(r["seconds"] for r in second.values()),
-                    "pass_two_protein_sum": sum(r["seconds"] for r in second.values())},
+                    "pass_two_protein_sum": sum(r["seconds"] for r in second.values()),
+                    "pass_two_build_sum": sum(r["seconds_build"] for r in second.values()),
+                    "pass_two_score_sum": sum(r["seconds_score"] for r in second.values())},
         "inputs": {"export_root": str(EXPORT), "cohort_csv": str(COHORT_CSV),
-                   "parity_csv_sha256": sha256_file(PARITY_CSV)},
+                   "parity_csv_sha256": sha256_file(PARITY_CSV),
+                   "parity_source_sha256": PARITY_SOURCE_SHA256,
+                   "ecod_pdb_root": str(helpers.ECOD_PDB_ROOT), "cameo_pdb_root": str(helpers.CAMEO_PDB_ROOT)},
     })
     log(f"layer {layer} complete: {len(metric_rows)} metric rows")
 

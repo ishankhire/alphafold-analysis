@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect the 48 null-triangle layer shards into compact, analysis-ready tables.
+"""Collect the 48 null-triangle layer shards (552 proteins) into compact, analysis-ready tables.
 
 Every summary is a protein-equal mean of per-protein statistics. Draws are averaged
 within each protein first; the draw SD is kept so Monte Carlo noise can be reported.
@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-for _path in (SCRIPT_DIR, SCRIPT_DIR.parents[1], SCRIPT_DIR.parents[1] / "triangle_violation_subgroups"):
+for _path in (SCRIPT_DIR, SCRIPT_DIR.parent, SCRIPT_DIR.parent / "triangle_violation_subgroups"):
     if _path.is_dir() and str(_path) not in sys.path:
         sys.path.insert(0, str(_path))
 
@@ -33,7 +33,7 @@ CROSSTAB_MIN_COHORT_PAIRS = 100    # cohort-wide, below which a cross-tab cell i
 LAYERS = tuple(int(x) for x in os.environ.get("NULL_TRIANGLES_AGGREGATE_LAYERS", "").split(",") if x) or common.LAYERS
 
 PER_PROTEIN_COLUMNS = (
-    "probe", "layer", "protein_id", "n_residues", "model", "binning", "triangle_set", "n_draws",
+    "probe", "layer", "protein_id", "source", "n_residues", "model", "binning", "n_draws",
     "n_triangles", "violation_fraction", "violation_fraction_draw_sd", "mean_relative_violation_all",
     "mean_relative_violation_all_draw_sd", "n_violations", "clipped_side_fraction",
 )
@@ -60,9 +60,9 @@ def draw_sd(values: list[float]) -> float:
 def per_protein_rows(layer: int, rows: list[dict]) -> list[dict]:
     groups = defaultdict(list)
     for r in rows:
-        groups[(r["probe"], r["protein_id"], r["model"], r["binning"], r["triangle_set"])].append(r)
+        groups[(r["probe"], r["protein_id"], r["model"], r["binning"])].append(r)
     out = []
-    for (probe, pid, model, binning, triangle_set), members in sorted(groups.items()):
+    for (probe, pid, model, binning), members in sorted(groups.items()):
         vf = [num(m["violation_fraction"]) for m in members]
         rel = [num(m["mean_relative_violation_all"]) for m in members]
         expected = 1 if model == "observed" else common.N_DRAWS
@@ -72,8 +72,9 @@ def per_protein_rows(layer: int, rows: list[dict]) -> list[dict]:
         clipped = (int(members[0]["n_violations_with_clipped_side"]) / int(members[0]["n_violations"])
                    if model == "observed" and int(members[0]["n_violations"]) else float("nan"))
         out.append({
-            "probe": probe, "layer": layer, "protein_id": pid, "n_residues": int(members[0]["n_residues"]),
-            "model": model, "binning": binning, "triangle_set": triangle_set, "n_draws": len(members),
+            "probe": probe, "layer": layer, "protein_id": pid, "source": members[0]["source"],
+            "n_residues": int(members[0]["n_residues"]),
+            "model": model, "binning": binning, "n_draws": len(members),
             "n_triangles": int(members[0]["n_triangles"]),
             "violation_fraction": float(np.mean(vf)), "violation_fraction_draw_sd": draw_sd(vf),
             "mean_relative_violation_all": float(np.mean(rel)),
@@ -154,20 +155,23 @@ def main() -> None:
                                  "n_proteins_cohort_support": report["null_a_cohort_support_by_bin"][probe][b]})
         log(f"aggregated layer {layer}")
 
-    atomic_write(tables / "null_per_protein.csv", PER_PROTEIN_COLUMNS, per_protein, False)
+    atomic_write(tables / "null_per_protein.csv.gz", PER_PROTEIN_COLUMNS, per_protein, True)
     atomic_write(tables / "error_diagnostics_by_bin.csv", BIN_COLUMNS, by_bin, False)
     atomic_write(tables / "crosstab_b10_seqsep.csv", BIN_COLUMNS, crosstab, False)
     atomic_write(tables / "calibration_per_protein.csv", calibration_columns, calibration, False)
     atomic_write(tables / "null_a_fallback_counts.csv", FALLBACK_COLUMNS, fallback, False)
     worst = {
-        "paper_fraction": max(r["paper_parity"]["worst"]["fraction"] for r in layer_reports.values()),
-        "paper_relative_sum_rtol": max(r["paper_parity"]["worst"]["relative_sum_rtol"] for r in layer_reports.values()),
-        "paper_negative": max(r["paper_parity"]["worst"]["negative"] for r in layer_reports.values()),
+        "paper_fraction": max(r["paper_parity"]["worst"].get("fraction", float("nan")) for r in layer_reports.values()),
+        "paper_relative_sum_rtol": max(r["paper_parity"]["worst"].get("relative_sum_rtol", float("nan")) for r in layer_reports.values()),
+        "paper_negative": max(r["paper_parity"]["worst"].get("negative", -1) for r in layer_reports.values()),
     }
     atomic_json(tables / "run_manifest.json", {
         "experiment": common.EXPERIMENT_NAME, "layers": list(LAYERS), "probes": list(common.PROBES),
-        "n_proteins": layer_reports[LAYERS[0]]["n_proteins"], "seed": common.SEED, "n_draws": common.N_DRAWS,
-        "n_sample_triangles": common.N_SAMPLE_TRIANGLES, "null_a_min_pairs": common.NULL_A_MIN_PAIRS,
+        "n_proteins": layer_reports[LAYERS[0]]["n_proteins"],
+        "n_proteins_by_source": layer_reports[LAYERS[0]]["n_proteins_by_source"],
+        "seed": common.SEED, "n_draws": common.N_DRAWS, "triangle_set": "every triple",
+        "n_triangles_per_layer": layer_reports[LAYERS[0]]["n_triangles"],
+        "null_a_min_pairs": common.NULL_A_MIN_PAIRS, "bitwise_max_triangles": common.BITWISE_MAX_TRIANGLES,
         "diagnostic_min_pairs": DIAGNOSTIC_MIN_PAIRS, "crosstab_min_cohort_pairs": CROSSTAB_MIN_COHORT_PAIRS,
         "null_runs": [list(r) for r in common.NULL_RUNS], "sensitivity_runs": [list(r) for r in common.SENSITIVITY_RUNS],
         "sensitivity_probe": common.SENSITIVITY_PROBE,
@@ -175,7 +179,7 @@ def main() -> None:
         "checks": {
             "bitwise_compared": sum(r["bitwise_compared"] for r in layer_reports.values()),
             "bitwise_failures": 0,
-            "paper_parity_compared": sum(r["paper_parity"]["worst"]["n_compared"] for r in layer_reports.values()),
+            "paper_parity_compared": sum(r["paper_parity"]["worst"].get("n_compared", 0) for r in layer_reports.values()),
             "paper_parity_worst": worst,
             "histogram_checks": sum(r["histogram_checks"] for r in layer_reports.values()),
             "histogram_failures": 0,
@@ -184,6 +188,7 @@ def main() -> None:
         "rows": {"null_per_protein": len(per_protein), "error_diagnostics_by_bin": len(by_bin),
                  "crosstab_b10_seqsep": len(crosstab), "calibration_per_protein": len(calibration),
                  "null_a_fallback_counts": len(fallback)},
+        "inputs": layer_reports[LAYERS[0]]["inputs"],
         "aggregation_seconds": time.perf_counter() - started,
     })
     log(f"tables written to {tables}")
