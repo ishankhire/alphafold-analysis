@@ -1,8 +1,9 @@
 # Delta data inventory
 
 Status of the Delta data this project depends on, after the November 2026
-purge of thayes's folder. ECOD is covered here; CAMEO and other cluster data
-are still to be added.
+purge of thayes's folder. It covers ECOD and the CAMEO copy; the full CAMEO
+catalogue and the other cluster data are in the
+[cluster data preservation plan](../plans/cluster_data_preservation_plan.md).
 
 [Important Delta Paths 1.docx.pdf](<../../Important Delta Paths 1.docx.pdf>)
 is a version of the documentation for the files on the cluster. Some of it may
@@ -14,9 +15,15 @@ to the repository documentation.
 - thayes's ECOD data was moved to `/work/hdd/bfna/toDelete/thayes/` and
   purged between November 3 and 7, 2026. The folder no longer exists.
 - What survived was copied to **`/work/hdd/bfna/ikhire/thayes/`**.
-- **Lost:** ECOD pair representations, ECOD alignments, and some per-protein
-  ablation runs. **Safe:** all ablation result tables, all probe predictions,
-  and 303 of 398 ECOD predicted structures.
+- The PI's copy of the ECOD tree is on PACE Phoenix at
+  `/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod/`. On Nov 8 its predicted
+  PDBs (all 400 proteins × 48 layers) were copied back to Delta.
+- **Safe on Delta:** all ablation result tables, all probe predictions, and
+  predicted structures for every ECOD protein.
+- **Not on Delta, but on PACE:** ECOD pair representations, alignments,
+  `domain_pdbs/`, and the raw ablation runs that were lost. These have not been
+  copied, and the contents of the PACE subfolders have not been checked.
+- CAMEO has a verified second copy under `/work/hdd/bfna/ikhire/thayes/cameo/`.
 - Every ablation figure in the paper can still be regenerated from saved
   tables.
 
@@ -28,19 +35,25 @@ to the repository documentation.
 | Nov 3–6 | Most ECOD folders disappeared, including `representation_saves/` and `openfold_reps_outputs_sm/`. Cause unknown. |
 | Nov 6, 15:52 | Only 5 top-level folders remained. `ecod/experiments/` was losing ~100–190 entries a minute. The rescue copy started. |
 | Nov 7 | The source folder is gone entirely. Copying finished. |
+| Nov 7–8 | Job `23649985` copied CAMEO data and triangle attention maps to `ikhire/thayes/cameo/` (777 GiB, verified). See [CAMEO](#cameo). |
+| Nov 8 | The PI's ECOD copy was found on PACE Phoenix. `experiments/openfold_reps_outputs_sm/` was copied back to Delta by Globus. |
 
 No process from gprash or thayes was deleting files. gprash was only copying
 `cameo` and `cameo_data`. The purge was probably done by an admin or the
 system, but that isn't confirmed.
 
-## Rescued: `/work/hdd/bfna/ikhire/thayes/`
+## Rescued or restored: `/work/hdd/bfna/ikhire/thayes/`
+
+Everything here came from the Nov 6–7 rescue copy, except the first row, which
+came from PACE on Nov 8.
 
 | Path | What it is | Status |
 |---|---|---|
+| `ecod/experiments/openfold_reps_outputs_sm/my_outputs_align_<ID>_representations_load_from_saved_layer_<LAYER>/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Per-layer predicted structures, restored from PACE. Layer 47 is the probes' distance target. This is the path `datasets.md` uses. | ✅ All 400 TM > 0.7 proteins × layers 0–47 (19,200 folders, one non-empty PDB each). Layer 47 matches byte for byte the 305 complete rescued PDBs below and 100 older local copies. |
 | `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` | All ablation TM-score tables (post-tri-end-fix): 14 layerwise FWD/REV files, structure-module scores, `MASTER_all_experiments_wide.csv` | ✅ Complete (65 files, 47 MB) |
 | `FINAL_RESULT_CSVS_…/global/` | Global ablation tables: 13 conditions + baseline, 3-run mean per protein | ✅ Complete; also committed in git (see below) |
 | `ecod/experiments/<ID>/` | Per-protein raw runs: layerwise and global ablations, `zero_m`/`zero_z`, baseline, representation-save run (PDBs + `timings.json`), `<ID>_tm_scores.csv` | ⚠️ Partial, see below |
-| `ecod/experiments/<ID>/my_outputs_align_<ID>_representations_layers_save_0_47/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Unablated final predicted structure, the probes' distance target | ⚠️ 303 / 398 cohort proteins. SHA-256 identical to the originals the probes used |
+| `ecod/experiments/<ID>/my_outputs_align_<ID>_representations_layers_save_0_47/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Unablated final predicted structure, the probes' distance target | ⚠️ 303 / 398 cohort proteins. SHA-256 identical to the originals the probes used. Superseded by the complete PACE copy above. |
 | `ecod/pdbs/ecod.latest.pdb.tar.gz` | ECOD experimental (reference) structures | ✅ Complete (537 MB) |
 | `ecod/domain_pdbs_mapping.csv` | ECOD domain-to-PDB mapping | ✅ |
 | `ecod_reps/logs/` | Baseline representation-save Slurm logs | ✅ (814 files) |
@@ -63,18 +76,30 @@ system, but that isn't confirmed.
 Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 `thayes_copy_logs/`).
 
+## Missing from Delta, on PACE
+
+The PI's copy at `/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod/` has the
+same top level as the Nov 3 Delta listing
+([`remote_context.txt`](../../miscellaneous/required_paths_2026-11-03/remote_context.txt)),
+plus `alignments/` and `logs_TRI_END_FIX/`. Apart from
+`experiments/openfold_reps_outputs_sm/`, nothing below the top level has been
+checked or copied.
+
+| Path (under `ecod/`; originally `/work/hdd/bfna/thayes/ecod/`) | What it is | Impact while missing |
+|---|---|---|
+| `experiments/representation_saves/` | ECOD pair (and MSA) representations, all 48 layers; about 450 GB for the cohort (estimated) | Cannot refit probes or run new representation analyses on ECOD. CAMEO pair blocks are safe. Copy with [`pair_blocks.batch`](../../miscellaneous/ecod_pace_transfer/README.md). |
+| `alignments/` | ECOD MSAs and template hits | Needed only to rerun ECOD inference. It was already missing from Delta on Nov 3. |
+| `domain_pdbs/` | ECOD domain reference PDBs. On Delta these were symlinks into bekh. | The rescued tarball in `ecod/pdbs/` covers this. Check that the PACE copy holds real files, not broken links. |
+| `experiments_TRI_END_FIX/` | Corrected ECOD ablation run outputs | Score tables survive. The raw structures exist only on PACE. |
+| `experiments/<ID>/` for the 87 cohort proteins lost in the purge | Raw ablation runs | Score tables survive. |
+| `{layerwise,global}_tm_csvs_TRI_END_FIX_STANDARDIZED/` | Per-source ECOD score tables | Superseded by the combined tables in `FINAL_RESULT_CSVS_…`. |
+| `logs_TRI_END_FIX/` | ECOD tri-end-fix ablation logs | Low impact. |
+
 ## Lost (not found anywhere)
 
-| Original path (all under `/work/hdd/bfna/thayes/`, later `toDelete/thayes/`) | What it was | Impact |
+| Original path (under `/work/hdd/bfna/thayes/`, later `toDelete/thayes/`) | What it was | Impact |
 |---|---|---|
-| `ecod/experiments/representation_saves/` | ECOD pair (and MSA) representations, all 48 layers | Cannot refit probes or run new representation analyses on ECOD. CAMEO pair blocks are safe. |
-| `ecod/experiments/openfold_reps_outputs_sm/` | ECOD layer-47 predicted structures | Mostly replaced by the identical rescued PDBs above (303 / 398). |
-| `ecod/alignments/` | ECOD MSAs and template hits | Rerunning ECOD inference needs new MSAs (about 6–12 CPU-hours per protein). Was already missing on Nov 3. |
-| `ecod/experiments_TRI_END_FIX/` | Corrected ECOD ablation run outputs | Score tables survive; raw structures don't. |
-| `ecod/domain_pdbs/` | Symlinks to ECOD domain reference PDBs | The rescued tarball covers this. |
-| `ecod/{layerwise,global}_tm_csvs_TRI_END_FIX_STANDARDIZED/` | Per-source ECOD score tables | Superseded by the combined tables in `FINAL_RESULT_CSVS_…`. |
-| `FINAL_RESULT_CSVS/`, `FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED/` | Older and standardized versions of the result tables | Low impact. The patched version used by the paper survives. |
-| `ecod/experiments/<ID>/` for 87 cohort proteins | Raw ablation runs and predicted PDBs | 95 cohort proteins have no predicted PDB at all. |
+| `FINAL_RESULT_CSVS/`, `FINAL_RESULT_CSVS_TRI_END_FIX_STANDARDIZED/` | Older and standardized versions of the result tables. They sat outside `ecod/`, so they are not in the PACE copy. | Low impact. The patched version used by the paper survives. |
 
 ## Safe, outside the purge
 
@@ -101,20 +126,30 @@ Copy scripts and logs are in `/work/hdd/bfna/ikhire/` (`copy_*.sh`,
 1. ✅ Done Nov 7: `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` (all 65
    files, checksums verified) is committed as
    `delta_files/layerwise_ablation_csvs/`.
-2. Update the ECOD paths in `datasets.md`. The pair-block path is gone; the
-   PDB path should point to the rescued `representations_layers_save_0_47`
-   files.
-3. Repoint code that uses the old ECOD PDB root:
-   `scripts/cluster_scripts/diagnostics/distance_error_geometry_null/` (and
-   any helpers using `ECOD_PDB_ROOT`). The `pdb_path` column in
-   `predicted_distances_5fold_v1/metadata/proteins.csv` is stale; the
+2. ✅ Done Nov 8: the ECOD PDB path in `datasets.md` points to the copy
+   restored from PACE.
+3. Repoint code that uses the old ECOD roots. The restored PDBs keep the
+   original layout, so only the root changes, from
+   `/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm` to
+   `/work/hdd/bfna/ikhire/thayes/ecod/experiments/openfold_reps_outputs_sm`.
+   The old root is hard-coded in `cluster_regression_helpers.py`
+   (`ECOD_PDB_ROOT`, `ECOD_PAIR_BLOCKS_ROOT`),
+   `generalized_model_ecod/general_train_test_common.py`, and the secondary
+   structure, DSSP and `distance_error_geometry_null` diagnostics and their
+   sbatch files. The `pdb_path` column in
+   `predicted_distances_5fold_v1/metadata/proteins.csv` is also stale; the
    checksums still match.
-4. Ask thayes/gprash about ECOD `representation_saves/` and `alignments/`. The
-   remaining leads are `/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod`
-   (another cluster) and `/granite/nsf/access/bekh` (NCSA Granite tape,
-   reachable through Globus). Neither has been checked yet.
-5. Treat the 95 ECOD proteins without PDBs as lost unless recovered. Analyses
-   that need reference structures run on 457 proteins (154 CAMEO + 303 ECOD).
+4. Copy ECOD pair blocks from PACE with
+   [`pair_blocks.batch`](../../miscellaneous/ecod_pace_transfer/README.md)
+   into `/work/hdd/bfna/ikhire/thayes/ecod/experiments/representation_saves/`
+   when they are needed. First check that the PACE folder holds all 400
+   proteins × 48 layers, and keep the space under the bfna quota in mind (see
+   the [preservation plan](../plans/cluster_data_preservation_plan.md)). The
+   Granite tape lead (`/granite/nsf/access/bekh`) is needed only if PACE turns
+   out to be incomplete.
+5. Analyses that need final structures can use all 552 cohort proteins again.
+   ECOD analyses that need pair blocks still cannot run.
+6. Check `domain_pdbs/` on PACE for broken symlinks before copying it.
 
 ## CAMEO
 

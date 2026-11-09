@@ -33,15 +33,31 @@ for path selection and compatibility with older launchers.
 - Pair block: `/work/hdd/bekh/thayes/openfold_reps/{PROT}/{PROT}_pair_block_{LAYER}.npy`
 - PDB file: `/work/hdd/bekh/thayes/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_47/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`
 
+The code reads the original paths above. A verified backup (job `23649985`,
+2026-11-08) has the same layout under `/work/hdd/bfna/ikhire/thayes/cameo/`:
+
+- Pair block: `/work/hdd/bfna/ikhire/thayes/cameo/work_hdd_bekh/openfold_reps/{PROT}/{PROT}_pair_block_{LAYER}.npy`
+- PDB file: `/work/hdd/bfna/ikhire/thayes/cameo/work_hdd_bekh/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_47/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`
+
+Use the backup if the bekh originals become unavailable. The other copied
+CAMEO data is listed in the
+[Delta data inventory](docs/cluster/delta_data_inventory.md#cameo).
+
 ### ECOD
 
-The ECOD `representation_saves/` and `openfold_reps_outputs_sm/` trees are
-unavailable: they left the relocated copy under
-`/work/hdd/bfna/toDelete/thayes/ecod/experiments/` on 2026-11-06, and whether they
-moved or were deleted is unknown. The paths below record the original layout.
+thayes's original ECOD tree under `/work/hdd/bfna/thayes/ecod/` was purged in
+November 2026. The PI's copy is on PACE Phoenix at
+`/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod/`, laid out the same way.
 
-- Pair block: `/work/hdd/bfna/thayes/ecod/experiments/representation_saves/{PROT}_save_layers_0_47/{PROT}_pair_block_{LAYER}.npy`
-- PDB file: `/work/hdd/bfna/thayes/ecod/experiments/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_47/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`
+- PDB file (restored to Delta from PACE on 2026-11-08; all 400 proteins × 48 layers):
+  `/work/hdd/bfna/ikhire/thayes/ecod/experiments/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_{LAYER}/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`.
+  Use layer 47 for the final prediction. The layer-47 files are byte-identical to the 305 complete originals rescued from Delta and to 100 older local copies.
+  Code still hard-codes the old root `/work/hdd/bfna/thayes/ecod/experiments/`; see the [Delta data inventory](docs/cluster/delta_data_inventory.md#to-do).
+- Pair block: **not yet on Delta.** On PACE it is at
+  `experiments/representation_saves/{PROT}_save_layers_0_47/{PROT}_pair_block_{LAYER}.npy` (about 450 GB for the cohort, estimated).
+  To copy it back, use `miscellaneous/ecod_pace_transfer/pair_blocks.batch`.
+  The old Delta path was `/work/hdd/bfna/thayes/ecod/experiments/representation_saves/...`.
+- `domain_pdbs/` (experimental reference structures) is not yet on Delta either; only `domain_pdbs_mapping.csv` is.
 
 ## TM-Score Filtered CAMEO Proteins
 

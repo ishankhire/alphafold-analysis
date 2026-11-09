@@ -2440,3 +2440,37 @@ the native and XGBoost cohort and protein pages under
 `delta_files/diagnostic_plots/native_error_strata*/`. Each is the published copy; the
 strata page bodies match their builds byte for byte. The transfer page's image paths drop
 `figures/` so they resolve beside its PNGs.
+
+## Session: 2026-11-08 — ECOD copy found on PACE; Globus batch files
+
+The PI's copy of thayes's ECOD tree is on PACE Phoenix at
+`/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod/`. Its top level matches the Delta listing
+from Nov 3 (`miscellaneous/required_paths_2026-11-03/remote_context.txt`): the same 9
+directories and 11 files, with the same file sizes. It also has `alignments/` and
+`logs_TRI_END_FIX/`, which Delta had already lost. The contents of the subdirectories have
+not been checked. `miscellaneous/ecod_pace_transfer/` holds the 400 cohort IDs and Globus CLI
+batch files for copying only the cohort's pair blocks (`representation_saves`) and layer-47
+PDBs back to `/work/hdd/bfna/ikhire/thayes/ecod/`.
+
+### Update: ECOD predicted PDBs restored to Delta
+
+The PI's copy of ECOD `openfold_reps_outputs_sm/` came from PACE by Globus. It arrived
+flattened into `thayes/ecod/` and was moved into
+`/work/hdd/bfna/ikhire/thayes/ecod/experiments/openfold_reps_outputs_sm/`, the original
+layout. It has 19,200 folders: the 400 cohort IDs from `datasets.md` × layers 0–47. Each
+holds one non-empty `predictions/{ID}_model_1_ptm_unrelaxed.pdb`. The 100 layer-47 PDBs that
+also exist locally (`vizfold-foundation/extract_pair_reps/sample_ecod_proteins/`) match by
+MD5. Not yet copied: pair blocks (`representation_saves`) and `domain_pdbs/`. `datasets.md`
+is updated.
+
+### Update: Delta data docs brought up to date (2026-11-09)
+
+Checked Delta directly. Since Nov 8 the only new ECOD data in `ikhire/thayes/` is the
+PACE copy of `openfold_reps_outputs_sm/`. Its layer-47 PDBs are byte-identical (`cmp`) to
+all 305 complete rescued `representations_layers_save_0_47` PDBs.
+`docs/cluster/delta_data_inventory.md` now splits data that is missing from Delta but on
+PACE (pair blocks, alignments, `domain_pdbs/`, raw ablation runs) from data that is truly
+lost, and its to-do list is refreshed. Code still hard-codes the old
+`bfna/thayes/ecod` roots; not yet changed. `datasets.md` lists the verified CAMEO backup
+paths. `docs/project_status.md` and `docs/cluster/README.md` no longer say that ECOD is
+unavailable. `miscellaneous/ecod_pace_transfer/README.md` describes the batch files.
