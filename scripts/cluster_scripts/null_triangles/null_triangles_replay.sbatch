@@ -9,8 +9,8 @@
 #SBATCH --time=01:00:00
 #SBATCH --constraint="scratch&work"
 #SBATCH --array=0-47%16
-#SBATCH -o /work/hdd/bfna/ikhire/regression_5fold_v1/analysis/null_triangles_5fold_v1/logs/null_triangles_replay_%A_%a.out
-#SBATCH -e /work/hdd/bfna/ikhire/regression_5fold_v1/analysis/null_triangles_5fold_v1/logs/null_triangles_replay_%A_%a.err
+#SBATCH -o /work/hdd/bfna/ikhire/main_experiments/null_triangles_5fold_v1/logs/null_triangles_replay_%A_%a.out
+#SBATCH -e /work/hdd/bfna/ikhire/main_experiments/null_triangles_5fold_v1/logs/null_triangles_replay_%A_%a.err
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # Task i scores observed predictions and Nulls A/B on every triangle of layer i (4 probes,
@@ -22,7 +22,7 @@ module load python
 source ~/protein_venv/bin/activate
 
 export CSV_ROOT=${CSV_ROOT:-/work/hdd/bfna/ikhire}
-export NULL_TRIANGLES_OUTPUT_ROOT=${NULL_TRIANGLES_OUTPUT_ROOT:-$CSV_ROOT/regression_5fold_v1/analysis/null_triangles_5fold_v1}
+export NULL_TRIANGLES_OUTPUT_ROOT=${NULL_TRIANGLES_OUTPUT_ROOT:-$CSV_ROOT/main_experiments/null_triangles_5fold_v1}
 SCRIPT_DIR=${SLURM_SUBMIT_DIR:-$(pwd)}
 python3 "$SCRIPT_DIR/canonical_storage.py" --check-write "$NULL_TRIANGLES_OUTPUT_ROOT" || exit $?
 export SRUN_CPUS_PER_TASK=$SLURM_CPUS_PER_TASK

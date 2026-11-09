@@ -6,7 +6,10 @@ The null-triangle experiment is now a main experiment, `null_triangles_5fold_v1`
 `scripts/cluster_scripts/null_triangles/` (moved from `diagnostics/`). It covers 552
 proteins (CAMEO + ECOD), Nulls A and B only, K=3, and scores every triangle, with all 37
 vectors of a protein in one streaming pass. Null B also runs on B5, B20 and B10×S6 for
-shared OLS. Outputs go to `regression_5fold_v1/analysis/null_triangles_5fold_v1/`. The
+shared OLS. Delta outputs go to `/work/hdd/bfna/ikhire/main_experiments/null_triangles_5fold_v1/`,
+because the published `regression_5fold_v1/` collection is write-protected. That is a new
+root for final results, documented in `docs/cluster/README.md` and `AGENTS.md`. The local copy
+is `delta_files/regression_5fold_v1/analysis/null_triangles_5fold_v1/`. The
 parity table now covers all 552 proteins (`paper_triangle_parity_5fold_v1.csv.gz`). In
 `cluster_regression_helpers.py`, `ECOD_PDB_ROOT` now points to the restored
 `/work/hdd/bfna/ikhire/thayes/ecod/...` copy. `analyze_null_triangles.py` was rewritten to

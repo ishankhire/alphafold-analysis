@@ -47,6 +47,8 @@ $HOME/
   regression_5fold_v1/               # final, analysis-ready results and artifacts
     predicted_distances_5fold_v1/    # packed OOF distance exports
     tm_score_optimized_v1/          # optimized scoring outputs
+  main_experiments/
+    <experiment_name>/              # final results made after regression_5fold_v1 was frozen
   diagnostic_experiments/
     <experiment_name>/              # exploratory and diagnostic outputs
 ```
@@ -58,6 +60,12 @@ The default Delta CSV output root is `/work/hdd/bfna/ikhire/`:
 - `regression_5fold_v1/` holds final, analysis-ready regression results and their
   associated model artifacts, exports, and provenance. Derived analysis tables
   belong under `regression_5fold_v1/analysis/<analysis_name>/`.
+- `main_experiments/<experiment_name>/` holds final, analysis-ready results
+  produced after `regression_5fold_v1/` was published. That collection carries
+  `collection_manifest.json`, and `canonical_storage.assert_writable` refuses any
+  write under it, including `analysis/`. New main experiments therefore write here,
+  one directory per experiment, for example `main_experiments/null_triangles_5fold_v1/`.
+  Their local copies may still sit under `delta_files/regression_5fold_v1/analysis/`.
 - `diagnostic_experiments/<experiment_name>/` holds exploratory runs and
   diagnostic experiments, with a separate directory per experiment.
 

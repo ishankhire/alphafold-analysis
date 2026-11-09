@@ -78,7 +78,7 @@ Copy flat into `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`:
   - `metadata/regression_outer_folds_v1.csv`;
   - `predicted_distances_5fold_v1/layers/layer_LL/` (`prediction_index.csv` checksums and `<id>/<probe>.npy`);
   - final PDBs via `resolve_combined_pdb_path`. CAMEO PDBs come from bekh; ECOD PDBs come from the restored copy.
-- **Output root:** `NULL_TRIANGLES_OUTPUT_ROOT`, default `/work/hdd/bfna/ikhire/regression_5fold_v1/analysis/null_triangles_5fold_v1/`.
+- **Output root:** `NULL_TRIANGLES_OUTPUT_ROOT`, default `/work/hdd/bfna/ikhire/main_experiments/null_triangles_5fold_v1/`. The published `regression_5fold_v1/` collection is write-protected, so new final results go under `main_experiments/`.
 - **Slurm logs:** `<root>/logs/`, which must exist before submission.
 
 | Output | Row | Principal columns |
@@ -96,7 +96,7 @@ Copy flat into `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`:
 
 ```bash
 cd /work/hdd/bfna/ikhire/openfold_interpretability_canonical
-mkdir -p /work/hdd/bfna/ikhire/regression_5fold_v1/analysis/null_triangles_5fold_v1/logs
+mkdir -p /work/hdd/bfna/ikhire/main_experiments/null_triangles_5fold_v1/logs
 # Pilot one layer, check its validation JSON, time and memory, then run the rest.
 sbatch --mail-user="${CLUSTER_NOTICE_EMAIL:?}" --array=47 null_triangles_replay.sbatch
 array=$(sbatch --parsable --mail-user="$CLUSTER_NOTICE_EMAIL" --array=0-46%16 null_triangles_replay.sbatch)
@@ -106,4 +106,4 @@ sbatch --mail-user="$CLUSTER_NOTICE_EMAIL" --dependency=afterok:${array%%;*} agg
 A layer whose `validation/layer_LL.json` exists is skipped, so rerunning the array only
 redoes missing layers.
 
-Copy `tables/` to `delta_files/regression_5fold_v1/analysis/null_triangles_5fold_v1/tables/`. Bootstraps, text and figures are then made locally by `scripts/multi_protein/null_triangles/analyze_null_triangles.py`, under `figures/{main,supplement,diagnostics}/`.
+Copy `tables/` from the Delta root to the local `delta_files/regression_5fold_v1/analysis/null_triangles_5fold_v1/tables/`. Bootstraps, text and figures are then made locally by `scripts/multi_protein/null_triangles/analyze_null_triangles.py`, under `figures/{main,supplement,diagnostics}/`.

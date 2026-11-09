@@ -53,8 +53,10 @@ from triangle_violation_subgroup_common import build_reference_cache, compute_me
 
 PRODUCER = csv_root() / "regression_5fold_v1"
 EXPORT = Path(os.environ.get("NULL_TRIANGLES_EXPORT_ROOT", PRODUCER / "predicted_distances_5fold_v1"))
+# regression_5fold_v1/ is a protected published collection; final results produced after it
+# was frozen live under main_experiments/ (see docs/cluster/README.md).
 OUTPUT_ROOT = Path(os.environ.get(
-    "NULL_TRIANGLES_OUTPUT_ROOT", PRODUCER / "analysis" / common.EXPERIMENT_NAME))
+    "NULL_TRIANGLES_OUTPUT_ROOT", csv_root() / "main_experiments" / common.EXPERIMENT_NAME))
 COHORT_CSV = PRODUCER / "metadata" / "regression_outer_folds_v1.csv"
 # all_triangles rows of regression_5fold_v1/analysis/triangle_violation_subgroups_5fold_v1/
 # per_protein_triangle_metrics.csv (extraction command in null_triangles_README.md).

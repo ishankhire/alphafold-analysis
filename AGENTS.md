@@ -52,8 +52,10 @@ with the current methodology or output contract.
 - Current outputs belong under `delta_files/`; do not recreate the retired
   `proteins/multi_protein_results/` tree.
 - On Delta, the default CSV output root is `/work/hdd/bfna/ikhire/`.
-  Save final, analysis-ready results under `regression_5fold_v1/` and exploratory
-  runs under `diagnostic_experiments/<experiment_name>/`. `$HOME/csv_files/` is
+  The published `regression_5fold_v1/` collection is write-protected
+  (`collection_manifest.json`), so save new final, analysis-ready results under
+  `main_experiments/<experiment_name>/` and exploratory runs under
+  `diagnostic_experiments/<experiment_name>/`. `$HOME/csv_files/` is
   a legacy location; preserve existing input paths unless explicitly migrated.
 - Clearly superseded outputs may be archived under `delta_files/historical_outputs/`.
   Keep outputs referenced by existing analysis scripts at their established paths.
