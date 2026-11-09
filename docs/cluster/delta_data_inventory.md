@@ -53,7 +53,7 @@ came from PACE on Nov 8.
 | `FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/` | All ablation TM-score tables (post-tri-end-fix): 14 layerwise FWD/REV files, structure-module scores, `MASTER_all_experiments_wide.csv` | ✅ Complete (65 files, 47 MB) |
 | `FINAL_RESULT_CSVS_…/global/` | Global ablation tables: 13 conditions + baseline, 3-run mean per protein | ✅ Complete; also committed in git (see below) |
 | `ecod/experiments/<ID>/` | Per-protein raw runs: layerwise and global ablations, `zero_m`/`zero_z`, baseline, representation-save run (PDBs + `timings.json`), `<ID>_tm_scores.csv` | ⚠️ Partial, see below |
-| `ecod/experiments/<ID>/my_outputs_align_<ID>_representations_layers_save_0_47/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Unablated final predicted structure, the probes' distance target | ⚠️ 303 / 398 cohort proteins. SHA-256 identical to the originals the probes used. Superseded by the complete PACE copy above. |
+| `ecod/experiments/<ID>/my_outputs_align_<ID>_representations_layers_save_0_47/predictions/<ID>_model_1_ptm_unrelaxed.pdb` | Unablated final predicted structure, the probes' distance target | ⚠️ **Partial; do not use for analyses.** It has 305 of the 400 TM > 0.7 proteins (303 of the 398 in the 552-protein cohort). SHA-256 identical to the originals the probes used and byte-identical to the complete PACE copy above, which replaces it. |
 | `ecod/pdbs/ecod.latest.pdb.tar.gz` | ECOD experimental (reference) structures | ✅ Complete (537 MB) |
 | `ecod/domain_pdbs_mapping.csv` | ECOD domain-to-PDB mapping | ✅ |
 | `ecod_reps/logs/` | Baseline representation-save Slurm logs | ✅ (814 files) |
@@ -139,16 +139,19 @@ checked or copied.
    sbatch files. The `pdb_path` column in
    `predicted_distances_5fold_v1/metadata/proteins.csv` is also stale; the
    checksums still match.
-4. Copy ECOD pair blocks from PACE with
+4. **Planned (the user will do this):** copy all ECOD representations and
+   alignments from PACE to `/work/hdd/bfna/ikhire/thayes/ecod/`. Copy the pair blocks with
    [`pair_blocks.batch`](../../miscellaneous/ecod_pace_transfer/README.md)
-   into `/work/hdd/bfna/ikhire/thayes/ecod/experiments/representation_saves/`
-   when they are needed. First check that the PACE folder holds all 400
+   into `/work/hdd/bfna/ikhire/thayes/ecod/experiments/representation_saves/`,
+   and the alignments into `/work/hdd/bfna/ikhire/thayes/ecod/alignments/`. First check that the PACE folder holds all 400
    proteins × 48 layers, and keep the space under the bfna quota in mind (see
    the [preservation plan](../plans/cluster_data_preservation_plan.md)). The
    Granite tape lead (`/granite/nsf/access/bekh`) is needed only if PACE turns
    out to be incomplete.
-5. Analyses that need final structures can use all 552 cohort proteins again.
-   ECOD analyses that need pair blocks still cannot run.
+5. Analyses that need final structures can use all 552 cohort proteins again,
+   reading from `ecod/experiments/openfold_reps_outputs_sm/`, not from the
+   partial rescued `<ID>/..._representations_layers_save_0_47/` copy. ECOD
+   analyses that need pair blocks or MSAs still cannot run.
 6. Check `domain_pdbs/` on PACE for broken symlinks before copying it.
 
 ## CAMEO

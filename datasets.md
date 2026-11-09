@@ -49,15 +49,28 @@ thayes's original ECOD tree under `/work/hdd/bfna/thayes/ecod/` was purged in
 November 2026. The PI's copy is on PACE Phoenix at
 `/storage/cedar/cedar0/cedarp-gkrishnan46-0/ecod/`, laid out the same way.
 
-- PDB file (restored to Delta from PACE on 2026-11-08; all 400 proteins × 48 layers):
+- **PDB file: use this path. It is the only complete ECOD PDB copy on Delta.**
+  It was restored from PACE on 2026-11-08 and has all 400 proteins × 48 layers:
   `/work/hdd/bfna/ikhire/thayes/ecod/experiments/openfold_reps_outputs_sm/my_outputs_align_{PROT}_representations_load_from_saved_layer_{LAYER}/predictions/{PROT}_model_1_ptm_unrelaxed.pdb`.
-  Use layer 47 for the final prediction. The layer-47 files are byte-identical to the 305 complete originals rescued from Delta and to 100 older local copies.
-  Code still hard-codes the old root `/work/hdd/bfna/thayes/ecod/experiments/`; see the [Delta data inventory](docs/cluster/delta_data_inventory.md#to-do).
+  Use layer 47 for the final prediction.
+  - **Do not use the partial copy** at
+    `/work/hdd/bfna/ikhire/thayes/ecod/experiments/{PROT}/my_outputs_align_{PROT}_representations_layers_save_0_47/predictions/`.
+    That is the Nov 6–7 purge rescue, and it has only 305 of the 400 proteins.
+  - The two copies agree where they overlap: the restored layer-47 PDBs match
+    all 305 rescued PDBs byte for byte. They also match 100 older local copies.
+    So the restored copy is the same set of structures the probes were trained
+    on.
+  - Code still hard-codes the old root `/work/hdd/bfna/thayes/ecod/experiments/`;
+    see the [Delta data inventory](docs/cluster/delta_data_inventory.md#to-do).
 - Pair block: **not yet on Delta.** On PACE it is at
   `experiments/representation_saves/{PROT}_save_layers_0_47/{PROT}_pair_block_{LAYER}.npy` (about 450 GB for the cohort, estimated).
-  To copy it back, use `miscellaneous/ecod_pace_transfer/pair_blocks.batch`.
+  It will be copied to `/work/hdd/bfna/ikhire/thayes/ecod/experiments/representation_saves/` with `miscellaneous/ecod_pace_transfer/pair_blocks.batch`.
   The old Delta path was `/work/hdd/bfna/thayes/ecod/experiments/representation_saves/...`.
+- Alignments (MSAs and template hits): **not on Delta.** They are in `alignments/` on PACE.
 - `domain_pdbs/` (experimental reference structures) is not yet on Delta either; only `domain_pdbs_mapping.csv` is.
+- **Planned:** the user will copy all ECOD representations and alignments from
+  PACE to `/work/hdd/bfna/ikhire/thayes/ecod/`. Until then, ECOD analyses that
+  need pair blocks or MSAs cannot run.
 
 ## TM-Score Filtered CAMEO Proteins
 

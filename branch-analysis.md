@@ -2474,3 +2474,13 @@ lost, and its to-do list is refreshed. Code still hard-codes the old
 `bfna/thayes/ecod` roots; not yet changed. `datasets.md` lists the verified CAMEO backup
 paths. `docs/project_status.md` and `docs/cluster/README.md` no longer say that ECOD is
 unavailable. `miscellaneous/ecod_pace_transfer/README.md` describes the batch files.
+
+### Update: which ECOD PDB copy to use; temporary AGENTS.md reminder (2026-11-09)
+
+`datasets.md` and the inventory now say outright that the complete PACE-restored
+`openfold_reps_outputs_sm/` is the only ECOD PDB copy to use. The rescued per-protein
+`..._representations_layers_save_0_47/` copy is partial (305/400) and kept only as a
+cross-check. Also recorded: the user plans to copy all ECOD representations and alignments
+from PACE to `ikhire/thayes/ecod/`. `AGENTS.md` has a temporary section reminding agents
+that scripts still use the old `bfna/thayes/ecod` roots; delete it once they are
+repointed. CAMEO code keeps reading the original bekh paths.

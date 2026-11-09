@@ -88,6 +88,22 @@ applicable; documentation updates do not substitute for this chat report.
 - Default to fixed repo-relative configuration. Add CLI arguments only for
   genuine environment, reproducibility, or input/output variability.
 
+## Temporary reminder: repoint ECOD paths (delete this section when done)
+
+The ECOD data under `/work/hdd/bfna/thayes/ecod/` was purged in November 2026.
+Scripts still hard-code that root: `cluster_regression_helpers.py`
+(`ECOD_PDB_ROOT`, `ECOD_PAIR_BLOCKS_ROOT`),
+`generalized_model_ecod/general_train_test_common.py`, and several diagnostics
+and sbatch files (`grep -rn "bfna/thayes/ecod" scripts`). They should point to
+`/work/hdd/bfna/ikhire/thayes/ecod/`, which has the same layout. Remind the user
+about this when ECOD paths come up, but don't change the scripts unless asked.
+For PDBs, use `experiments/openfold_reps_outputs_sm/` (complete), never the
+partial rescued `experiments/<ID>/..._representations_layers_save_0_47/` copy.
+The pair blocks and alignments are not on Delta yet; the user will copy them
+from PACE. See `datasets.md` and inventory to-do 3–4 in
+`docs/cluster/delta_data_inventory.md`. Once the scripts are repointed,
+delete this whole section.
+
 ## Planning and documentation
 
 - Every implementation plan must name exact output directories and filenames,
