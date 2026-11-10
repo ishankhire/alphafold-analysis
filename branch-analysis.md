@@ -2514,3 +2514,12 @@ cross-check. Also recorded: the user plans to copy all ECOD representations and 
 from PACE to `ikhire/thayes/ecod/`. `AGENTS.md` has a temporary section reminding agents
 that scripts still use the old `bfna/thayes/ecod` roots; delete it once they are
 repointed. CAMEO code keeps reading the original bekh paths.
+
+## Session: 2026-11-10 — Triangle-null figure typography
+
+Regenerated all 10 current null-triangle figures (PDF and PNG) under
+`delta_files/regression_5fold_v1/analysis/null_triangles_5fold_v1/figures/`
+with the main publication font scale, larger labels/legends, spaced layouts,
+and fewer numeric y-axis ticks. All figures were visually checked; analysis
+tables and results are unchanged. `AGENTS.md` now requires large, readable
+publication typography and uncluttered numeric axes.

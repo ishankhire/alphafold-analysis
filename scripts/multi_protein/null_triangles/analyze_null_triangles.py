@@ -30,9 +30,11 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.ticker import MaxNLocator  # noqa: E402
 
 from generate_sept_2_publication_plots import (  # noqa: E402
     BOOTSTRAP_REPLICATES, BOOTSTRAP_SEED, bootstrap_counts, bootstrap_matrix_summary,
+    configure_style, MAIN_FIGURE_FONT_SCALE,
 )
 
 ROOT = Path(os.environ.get("NULL_TRIANGLES_ANALYSIS_ROOT",       # override for local smoke tests only
@@ -69,9 +71,11 @@ SENSITIVITY_SERIES = {
     "B10xS6": ("#9b4dca", "-.", "Null B, 10 × 6 seq-sep bins"),
 }
 
+configure_style(font_scale=MAIN_FIGURE_FONT_SCALE)
 plt.rcParams.update({"axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
                      "grid.color": "#e6e6e6", "grid.linewidth": 0.6, "axes.axisbelow": True,
-                     "legend.frameon": False, "font.size": 10})
+                     "legend.frameon": False, "figure.titlesize": 21,
+                     "axes.linewidth": 1.2, "xtick.major.size": 6, "ytick.major.size": 6})
 
 
 # ---------------------------------------------------------------- data
@@ -139,10 +143,14 @@ def markdown_table(frame: pd.DataFrame) -> str:
 
 
 def save(fig, folder: str, name: str) -> None:
+    # Heatmaps use categorical bin labels; keep those and their colorbar intact.
+    for ax in fig.axes:
+        if not ax.images and ax.get_label() != "<colorbar>":
+            ax.yaxis.set_major_locator(MaxNLocator(nbins=4, min_n_ticks=3))
     directory = FIGURES / folder
     directory.mkdir(parents=True, exist_ok=True)
     for suffix in ("pdf", "png"):
-        fig.savefig(directory / f"{name}.{suffix}", dpi=200, bbox_inches="tight")
+        fig.savefig(directory / f"{name}.{suffix}", dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -159,7 +167,7 @@ def from_zero(ax) -> None:
 
 def figure_observed_vs_nulls(data, counts, metric: str, folder: str, name: str) -> None:
     """One row of four probes, observed vs Null A vs Null B on B10, shared y-axis from 0."""
-    fig, axes = plt.subplots(1, len(PROBES), figsize=(16, 3.9), sharex=True, sharey=True)
+    fig, axes = plt.subplots(1, len(PROBES), figsize=(20, 5.5), sharex=True, sharey=True, layout="constrained")
     for ax, probe in zip(axes, PROBES):
         band(ax, summary(observed(data, probe, metric), counts), SERIES_COLORS["observed"], SERIES_LABELS["observed"])
         for model in NULLS:
@@ -170,8 +178,7 @@ def figure_observed_vs_nulls(data, counts, metric: str, folder: str, name: str) 
     from_zero(axes[0])
     axes[0].set_ylabel(METRICS[metric])
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3, bbox_to_anchor=(0.5, -0.06))
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     save(fig, folder, name)
 
 
@@ -181,7 +188,7 @@ def figure_sensitivity(data, counts) -> None:
     Bands for observed and the B10 reference only; the other binnings are lines so the
     panel stays readable.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.2), sharex=True)
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6), sharex=True, layout="constrained")
     for ax, (metric, label) in zip(axes, METRICS.items()):
         band(ax, summary(observed(data, SENSITIVITY_PROBE, metric), counts), SERIES_COLORS["observed"], "Observed")
         for binning, (color, style, series_label) in SENSITIVITY_SERIES.items():
@@ -195,8 +202,7 @@ def figure_sensitivity(data, counts) -> None:
         ax.set_xlim(0, 47)
         from_zero(ax)
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.06))
-    fig.tight_layout(rect=(0, 0.04, 1, 1))
+    fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     save(fig, "supplement", "sensitivity_binning_shared_ols")
 
 
@@ -204,7 +210,7 @@ def figure_sensitivity(data, counts) -> None:
 
 def figure_gap(data, counts, model: str, binning: str, probes: tuple[str, ...], name: str) -> None:
     """Observed − null with 95% bands; dots where the band excludes 0. Centred on 0, not from 0."""
-    fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6), layout="constrained")
     for ax, (metric, label) in zip(axes, METRICS.items()):
         for probe in probes:
             s = summary(gap(data, probe, model, binning, metric), counts)
@@ -213,16 +219,17 @@ def figure_gap(data, counts, model: str, binning: str, probes: tuple[str, ...], 
             ax.plot(LAYERS[excludes], s["mean"][excludes], "o", ms=3, color=PROBE_COLORS[probe])
         ax.axhline(0, color="#888888", lw=0.8)
         ax.set_xlabel("Layer")
-        ax.set_ylabel(f"Observed − {SERIES_LABELS[model].split(' (')[0]}: {label.lower()}")
-    axes[0].legend(fontsize=8)
-    fig.suptitle(f"Observed − {SERIES_LABELS[model]} on {binning}; dots: 95% band excludes 0")
+        ax.set_ylabel(f"Observed − {SERIES_LABELS[model].split(' (')[0]}:\n{label.lower()}")
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=len(probes), bbox_to_anchor=(0.5, -0.02))
+    fig.suptitle(f"Observed − {SERIES_LABELS[model]} on {binning}\nDots: 95% band excludes 0")
     save(fig, "diagnostics", name)
 
 
 def figure_bias_sd(data) -> None:
     bins = data["bins"]
     labels = ("[0,4)", "[4,6)", "[6,8)", "[8,10)")
-    fig, axes = plt.subplots(1, 4, figsize=(18, 4.2), sharex=True)
+    fig, axes = plt.subplots(1, 4, figsize=(22, 6), sharex=True, layout="constrained")
     for ax, label in zip(axes, labels):
         for probe in PROBES:
             rows = bins[(bins.probe == probe) & (bins.cell_label == label)].set_index("layer").reindex(LAYERS)
@@ -232,11 +239,11 @@ def figure_bias_sd(data) -> None:
         ax.set_title(f"d_true in {label} Å")
         ax.set_xlabel("Layer")
         from_zero(ax)
-    axes[0].set_ylabel("Å²: lower line sd², upper line sd² + bias² (= MSE)")
+    axes[0].set_ylabel("Squared error (Å²)")
     handles = [Line2D([], [], color="#2a6fb0", label="sd²"), Line2D([], [], color="#c0392b", label="sd² + bias²")]
     handles += [Line2D([], [], color="#444444", ls=PROBE_STYLES[p], label=PROBE_LABELS[p]) for p in PROBES]
-    axes[0].legend(handles=handles, fontsize=8)
-    fig.suptitle("Error decomposition by distance bin, protein-equal means (proteins with ≥10 pairs in the bin)")
+    fig.legend(handles=handles, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.02))
+    fig.suptitle("Error decomposition by distance bin\nProtein-equal means (proteins with ≥10 pairs in the bin)")
     save(fig, "diagnostics", "bias_sd_stacked")
 
 
@@ -254,7 +261,7 @@ def calibration_table(data, counts) -> pd.DataFrame:
 
 
 def figure_line_table(table: pd.DataFrame, ylabel: str, name: str, reference: float | None = None) -> None:
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=(10, 6), layout="constrained")
     for probe in PROBES:
         rows = table[table.probe == probe].sort_values("layer")
         ax.plot(rows.layer, rows.protein_mean, PROBE_STYLES[probe], color=PROBE_COLORS[probe], label=PROBE_LABELS[probe])
@@ -264,7 +271,8 @@ def figure_line_table(table: pd.DataFrame, ylabel: str, name: str, reference: fl
     ax.set_xlabel("Layer")
     ax.set_ylabel(ylabel)
     from_zero(ax)
-    ax.legend(fontsize=8)
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.02))
     save(fig, "diagnostics", name)
 
 
@@ -283,7 +291,7 @@ def figure_crosstab(data) -> None:
     table = data["crosstab"]
     distance_labels = list(dict.fromkeys(table.distance_bin))
     sequence_labels = list(dict.fromkeys(table.sequence_bin))
-    fig, axes = plt.subplots(len(PROBES), len(CROSSTAB_LAYERS), figsize=(16, 16), sharex=True, sharey=True)
+    fig, axes = plt.subplots(len(PROBES), len(CROSSTAB_LAYERS), figsize=(20, 20), sharex=True, sharey=True, layout="constrained")
     finite = table[table.layer.isin(CROSSTAB_LAYERS)].protein_mean_sd
     vmax = float(np.nanpercentile(finite, 99))
     for r, probe in enumerate(PROBES):
@@ -296,17 +304,19 @@ def figure_crosstab(data) -> None:
             image = ax.imshow(grid.to_numpy(float), cmap="viridis", vmin=0, vmax=vmax, aspect="auto")
             for (y, x), value in np.ndenumerate(grid.to_numpy(float)):
                 if np.isfinite(value):
-                    ax.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=6, color="white")
-            ax.set_xticks(range(len(sequence_labels)), sequence_labels, fontsize=7)
-            ax.set_yticks(range(len(distance_labels)), distance_labels, fontsize=7)
+                    ax.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=12, color="white")
+            ax.set_xticks(range(len(sequence_labels)), sequence_labels, fontsize=14, rotation=45, ha="right")
+            ax.set_yticks(range(len(distance_labels)), distance_labels, fontsize=14)
             if r == 0:
                 ax.set_title(f"Layer {layer}")
             if c == 0:
                 ax.set_ylabel(f"{PROBE_LABELS[probe]}\nd_true bin (Å)")
             if r == len(PROBES) - 1:
                 ax.set_xlabel("Sequence separation")
-    fig.colorbar(image, ax=axes, shrink=0.5, label="Protein-equal mean residual SD (Å)")
-    fig.suptitle("Residual SD by distance × sequence separation (empty: < 100 pairs cohort-wide)")
+    colorbar = fig.colorbar(image, ax=axes, shrink=0.5, label="Protein-equal mean residual SD (Å)")
+    colorbar.locator = MaxNLocator(nbins=4)
+    colorbar.update_ticks()
+    fig.suptitle("Residual SD by distance × sequence separation\nEmpty: < 100 pairs cohort-wide")
     save(fig, "diagnostics", "crosstab_sd_heatmap")
 
 
@@ -451,10 +461,10 @@ def main() -> None:
     calibration = calibration_table(data, counts)
     calibration.to_csv(ROOT / "calibration_by_layer.csv", index=False)
     figure_line_table(calibration[calibration.parameter == "beta"],
-                      "β in d_pred = α + β·d_true (protein-equal mean)", "calibration_beta", reference=1.0)
+                      "β in d_pred = α + β·d_true\n(protein-equal mean)", "calibration_beta", reference=1.0)
     clipped = clipped_table(data, counts)
     clipped.to_csv(ROOT / "clipped_side_fraction.csv", index=False)
-    figure_line_table(clipped, "Share of violating triples with a side clipped to 0", "clipped_side_fraction")
+    figure_line_table(clipped, "Share of violating triples\nwith a side clipped to 0", "clipped_side_fraction")
     figure_crosstab(data)
     summary_table(data, counts).to_csv(ROOT / "summary_table.csv", index=False)
     (ROOT / "sanity_checks.md").write_text(sanity_markdown(data, counts))

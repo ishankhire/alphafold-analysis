@@ -106,6 +106,17 @@ from PACE. See `datasets.md` and inventory to-do 3–4 in
 `docs/cluster/delta_data_inventory.md`. Once the scripts are repointed,
 delete this whole section.
 
+## Publication figures
+
+- All publication graphs must use large, readable axis labels, tick labels,
+  titles, legends, annotations, and colorbar labels at the final manuscript size.
+- Match the typography in `scripts/multi_protein/generate_sept_2_publication_plots.py`
+  (main-figure font scale 1.75); expand the layout to prevent overlap or clipping.
+- Keep numeric axes uncluttered: aim for 4–5 major y-axis ticks unless the data
+  require otherwise. Preserve meaningful categorical ticks on heatmaps.
+- Regenerate both PDF and PNG outputs after changing figure styling and visually
+  inspect the results.
+
 ## Planning and documentation
 
 - Every implementation plan must name exact output directories and filenames,
