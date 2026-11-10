@@ -2529,3 +2529,13 @@ canvases are 2–2.5× wider than the 8.6 in single-panel figures, so 1.75 read 
 shrunk to the page). Every line-plot y-axis has exactly 5 round ticks with limits snapped to
 the data (`five_y_ticks` in `analyze_null_triangles.py`); x-axes run 0–47 with ticks every 10.
 Gap plots title each panel by metric; the heatmap uses one shared x-label.
+
+## Session: 2026-11-10 — Manuscript audit and camera-ready prep (`overleaf/draft_7.tex`)
+
+Audited every number in `draft_7.tex` and the supplement body against `delta_files/`
+(September 2 source tables, null-triangle tables, layerwise ablation CSVs, fold and XGBoost
+manifests). All matched except the Pair Transition forward-ablation drop: the text says
+"around 0.5", the 552-protein mean falls 0.91 → 0.18 between boundaries 10 and 20. Left for
+the author to decide, along with other wording questions reported in chat. Overleaf commit
+`035f38c`: `[main, final]` option, author block, red wrappers and the to-do removed (text
+kept), and small mechanical fixes. No LaTeX compiler locally, so the build was not checked.
