@@ -45,11 +45,12 @@ CROSSTAB_LAYERS = (10, 21, 32, 47)
 TROUGH, SECOND_PEAK = range(20, 23), range(30, 35)
 OUTLIER = "7stz_C"
 EXPECTED_PROTEINS = 552
-PROBES = ("shared_ols_base256", "per_protein_ols_base256", "sequence_gated_ols_base256",
-          "shared_xgboost_base256_fixed_s4")
+# Paper order and names: shared linear, per-protein linear, XGBoost, sequence-gated.
+PROBES = ("shared_ols_base256", "per_protein_ols_base256", "shared_xgboost_base256_fixed_s4",
+          "sequence_gated_ols_base256")
 SENSITIVITY_PROBE = "shared_ols_base256"
-PROBE_LABELS = {"shared_ols_base256": "Shared OLS", "per_protein_ols_base256": "Per-protein OLS",
-                "sequence_gated_ols_base256": "Seq-gated OLS", "shared_xgboost_base256_fixed_s4": "XGBoost"}
+PROBE_LABELS = {"shared_ols_base256": "Shared linear", "per_protein_ols_base256": "Per-protein linear",
+                "sequence_gated_ols_base256": "Sequence-gated", "shared_xgboost_base256_fixed_s4": "XGBoost"}
 # Validated categorical order (CVD ΔE ≥ 8 on adjacent pairs); line styles are the secondary encoding.
 PROBE_COLORS = {"shared_ols_base256": "#2a6fb0", "per_protein_ols_base256": "#d9822b",
                 "sequence_gated_ols_base256": "#2a9d8f", "shared_xgboost_base256_fixed_s4": "#9b4dca"}
