@@ -169,7 +169,7 @@ predictions. Replay tasks hold one protein at a time.
 | Gated final aggregation | 2.86 GiB | `8g` | Maximum across the completed and retried aggregation jobs. |
 | Per-protein OLS, `per_protein_base256_common.py` | 7.98 GiB | `12g` | The completed base256 layer jobs reached the current 8 GiB request, leaving effectively no headroom. |
 | Triangle-violation subgroup replay, `triangle_violation_subgroup_replay.py` | 6.15 GiB | `8g` | Maximum across 21 successful array tasks (layers 0–20) from Delta job `21445976`; the tasks had consistent memory use, so 8 GiB provides sufficient workflow-specific headroom. |
-| Null triangle replay, `null_triangles_replay.py` (8 workers) | 2.58 GiB | `4g` | Maximum across the 48 tasks of Delta job `23656699`; the script currently requests `8g`. Aggregation `23656700` peaked at 0.66 GiB under an `8g` request; `2g` is enough. |
+| Null triangle replay, `null_triangles_replay.py` (16 workers; 552 proteins) | 3.13 GiB | `6g` | Maximum across pilot `23689526_47` and array `23689609`; the script requests `16g`, which Delta does not charge extra for at 16 CPUs. The earlier CAMEO-only diagnostic (8 workers, `23656699`) peaked at 2.58 GiB. |
 
 The canonical paper XGBoost model is the shared 256-feature model. If the
 exploratory per-protein XGBoost workflow is retained and also changed from 128

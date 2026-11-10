@@ -1,5 +1,18 @@
 # Branch Analysis
 
+## Session: 2026-11-09 — Null-triangle results (552 proteins)
+
+Pilot `23689526_47`, array `23689609` and aggregation `23694765` completed; layer 6 hit a
+transient zero-byte read (all 2,208 of its prediction files then verified) and was rerun as
+`23694764`. Gates: 53,184 bit-identical comparisons, 105,984 paper-parity rows (worst
+violation-fraction gap 2.4e-5), 556,416 Null B histogram checks, 0 failures. Max 5m12s and
+3.13 GiB per layer, about 57 CPU-h in total; recorded in `docs/cluster/`. Tables copied
+(sha256 verified) to `delta_files/regression_5fold_v1/analysis/null_triangles_5fold_v1/`,
+and the analysis was run. Observed is below Nulls A and B at all layers for all probes, on
+both metrics and under B5/B10/B20/B10×S6. The second-peak contrast survives in observed −
+Null B for every probe. The K=3 Monte Carlo SE is about 2e-5, against bootstrap half-widths
+of about 1e-3.
+
 ## Session: 2026-11-09 — Null-triangle experiment on the 552-protein cohort
 
 The null-triangle experiment is now a main experiment, `null_triangles_5fold_v1`, in

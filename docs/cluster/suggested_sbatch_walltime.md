@@ -167,7 +167,7 @@ initial reference and should be confirmed on its next representative run.
 | Sequence-gated secondary-structure layer stage, `SeqGateSecLayers` | 6 | `00:01:12` | `00:15:00` | Maximum across six successful layer tasks; use only for the layer stage. |
 | Per-protein XGBoost search, `XGBPerProtSearch` | 6 | `00:12:02` | `00:30:00` | Maximum across six successful search tasks. |
 | Shared XGBoost search, `XGBSharedSearch` | 6 | `00:25:03` | `01:00:00` | Maximum across six successful search tasks. |
-| Null triangle replay, `null_triangles_replay.sbatch` (8 CPUs) | 48 | `00:11:22` | `00:20:00` | Maximum across the 48-layer array `23656699`; most layers took 4–6 minutes. The current script requests `01:00:00`. Aggregation `23656700` took `00:00:58`; keep `00:30:00` or lower to `00:10:00`. |
+| Null triangle replay, `null_triangles_replay.sbatch` (16 CPUs; 552 proteins, every triangle, 37 vectors) | 48 | `00:05:12` | `00:15:00` | Maximum across pilot `23689526_47` and array `23689609` (median 4m24s; about 57 allocated CPU-h in total). The script requests `01:00:00`. The earlier CAMEO-only diagnostic (8 CPUs, array `23656699`) peaked at `00:11:22`. |
 
 ## Collecting new references
 
