@@ -2523,3 +2523,9 @@ with the main publication font scale, larger labels/legends, spaced layouts,
 and fewer numeric y-axis ticks. All figures were visually checked; analysis
 tables and results are unchanged. `AGENTS.md` now requires large, readable
 publication typography and uncluttered numeric axes.
+
+Follow-up (same day): null-triangle figures now use font scale 3.0 and 3 pt lines (the
+canvases are 2–2.5× wider than the 8.6 in single-panel figures, so 1.75 read too small once
+shrunk to the page). Every line-plot y-axis has exactly 5 round ticks with limits snapped to
+the data (`five_y_ticks` in `analyze_null_triangles.py`); x-axes run 0–47 with ticks every 10.
+Gap plots title each panel by metric; the heatmap uses one shared x-label.

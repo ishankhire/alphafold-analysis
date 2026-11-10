@@ -33,8 +33,7 @@ from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.ticker import MaxNLocator  # noqa: E402
 
 from generate_sept_2_publication_plots import (  # noqa: E402
-    BOOTSTRAP_REPLICATES, BOOTSTRAP_SEED, bootstrap_counts, bootstrap_matrix_summary,
-    configure_style, MAIN_FIGURE_FONT_SCALE,
+    BOOTSTRAP_REPLICATES, BOOTSTRAP_SEED, bootstrap_counts, bootstrap_matrix_summary, configure_style,
 )
 
 ROOT = Path(os.environ.get("NULL_TRIANGLES_ANALYSIS_ROOT",       # override for local smoke tests only
@@ -59,6 +58,7 @@ PROBE_COLORS = {"shared_ols_base256": "#2a6fb0", "per_protein_ols_base256": "#d9
 PROBE_STYLES = {"shared_ols_base256": "-", "per_protein_ols_base256": "--",
                 "sequence_gated_ols_base256": "-.", "shared_xgboost_base256_fixed_s4": ":"}
 METRICS = {"mean_relative_violation_all": "Normalized mean violation", "violation_fraction": "Violation fraction"}
+AXIS_LABELS = {"mean_relative_violation_all": "Normalized mean\nviolation", "violation_fraction": "Violation fraction"}
 NULLS = ("null_a", "null_b")
 SERIES_COLORS = {"observed": "#222222", "null_a": "#d9822b", "null_b": "#2a6fb0"}
 SERIES_LABELS = {"observed": "Observed", "null_a": "Null A (Gaussian)", "null_b": "Null B (permuted)"}
@@ -71,11 +71,19 @@ SENSITIVITY_SERIES = {
     "B10xS6": ("#9b4dca", "-.", "Null B, 10 × 6 seq-sep bins"),
 }
 
-configure_style(font_scale=MAIN_FIGURE_FONT_SCALE)
+# These canvases are 2-2.5x wider than the single-panel publication figures (8.6 in at font
+# scale 1.75), so they need a larger scale for text to read at the same size once each figure
+# is shrunk to the page.
+FONT_SCALE = 3.0
+LINE_WIDTH = 3.0
+Y_TICKS = 5
+configure_style(font_scale=FONT_SCALE)
 plt.rcParams.update({"axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
-                     "grid.color": "#e6e6e6", "grid.linewidth": 0.6, "axes.axisbelow": True,
-                     "legend.frameon": False, "figure.titlesize": 21,
-                     "axes.linewidth": 1.2, "xtick.major.size": 6, "ytick.major.size": 6})
+                     "grid.color": "#e6e6e6", "grid.linewidth": 1.0, "axes.axisbelow": True,
+                     "legend.frameon": False, "figure.titlesize": 12 * FONT_SCALE,
+                     "lines.linewidth": LINE_WIDTH, "legend.handlelength": 2.6,
+                     "axes.linewidth": 1.6, "xtick.major.size": 8, "ytick.major.size": 8,
+                     "xtick.major.width": 1.6, "ytick.major.width": 1.6})
 
 
 # ---------------------------------------------------------------- data
@@ -142,11 +150,32 @@ def markdown_table(frame: pd.DataFrame) -> str:
     return "\n".join(lines)
 
 
+def five_y_ticks(ax) -> None:
+    """Exactly Y_TICKS round-valued y ticks spanning the axis, with the limits snapped to them."""
+    # Fit the data extent (not matplotlib's padded limits); keep a 0 floor set by from_zero.
+    low = 0.0 if ax.get_ylim()[0] == 0 else ax.dataLim.y0
+    high = ax.dataLim.y1
+    if abs(high) < 1e-9 * (high - low):  # float noise around a 0 reference line
+        high = 0.0
+    headroom = 0.01 * (high - low)
+    magnitude = 10.0 ** np.floor(np.log10((high - low) / (Y_TICKS - 1)))
+    for step in magnitude * np.array([1, 1.5, 2, 2.5, 3, 4, 5, 10]):
+        start = np.floor((low - headroom) / step + 1e-9) * step if low != 0 else 0.0
+        # A 0 reference line may sit on the top tick; 1e-9·step absorbs float error.
+        if start + (Y_TICKS - 1) * step >= high + (headroom if high != 0 else 0) - 1e-9 * step:
+            break
+    ticks = start + step * np.arange(Y_TICKS)
+    ax.set_yticks(ticks)
+    ax.set_ylim(ticks[0], ticks[-1])
+
+
 def save(fig, folder: str, name: str) -> None:
     # Heatmaps use categorical bin labels; keep those and their colorbar intact.
     for ax in fig.axes:
         if not ax.images and ax.get_label() != "<colorbar>":
-            ax.yaxis.set_major_locator(MaxNLocator(nbins=4, min_n_ticks=3))
+            five_y_ticks(ax)
+            ax.set_xlim(0, 47)
+            ax.set_xticks(range(0, 48, 10))
     directory = FIGURES / folder
     directory.mkdir(parents=True, exist_ok=True)
     for suffix in ("pdf", "png"):
@@ -155,7 +184,7 @@ def save(fig, folder: str, name: str) -> None:
 
 
 def band(ax, s, color, label, style="-"):
-    ax.plot(LAYERS, s["mean"], style, color=color, lw=1.6, label=label)
+    ax.plot(LAYERS, s["mean"], style, color=color, lw=LINE_WIDTH, label=label)
     ax.fill_between(LAYERS, s["bootstrap_ci_low"], s["bootstrap_ci_high"], color=color, alpha=0.18, lw=0)
 
 
@@ -176,7 +205,7 @@ def figure_observed_vs_nulls(data, counts, metric: str, folder: str, name: str) 
         ax.set_xlabel("Layer")
         ax.set_xlim(0, 47)
     from_zero(axes[0])
-    axes[0].set_ylabel(METRICS[metric])
+    axes[0].set_ylabel(AXIS_LABELS[metric])
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.02))
     save(fig, folder, name)
@@ -188,7 +217,7 @@ def figure_sensitivity(data, counts) -> None:
     Bands for observed and the B10 reference only; the other binnings are lines so the
     panel stays readable.
     """
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7), sharex=True, layout="constrained")
     for ax, (metric, label) in zip(axes, METRICS.items()):
         band(ax, summary(observed(data, SENSITIVITY_PROBE, metric), counts), SERIES_COLORS["observed"], "Observed")
         for binning, (color, style, series_label) in SENSITIVITY_SERIES.items():
@@ -196,9 +225,9 @@ def figure_sensitivity(data, counts) -> None:
             if binning == "B10":
                 band(ax, s, color, series_label, style)
             else:
-                ax.plot(LAYERS, s["mean"], style, color=color, lw=1.6, label=series_label)
+                ax.plot(LAYERS, s["mean"], style, color=color, lw=LINE_WIDTH, label=series_label)
         ax.set_xlabel("Layer")
-        ax.set_ylabel(label)
+        ax.set_ylabel(AXIS_LABELS[metric])
         ax.set_xlim(0, 47)
         from_zero(ax)
     handles, labels = axes[0].get_legend_handles_labels()
@@ -210,16 +239,17 @@ def figure_sensitivity(data, counts) -> None:
 
 def figure_gap(data, counts, model: str, binning: str, probes: tuple[str, ...], name: str) -> None:
     """Observed − null with 95% bands; dots where the band excludes 0. Centred on 0, not from 0."""
-    fig, axes = plt.subplots(1, 2, figsize=(16, 6), layout="constrained")
+    fig, axes = plt.subplots(1, 2, figsize=(18, 7), layout="constrained")
     for ax, (metric, label) in zip(axes, METRICS.items()):
         for probe in probes:
             s = summary(gap(data, probe, model, binning, metric), counts)
             band(ax, s, PROBE_COLORS[probe], PROBE_LABELS[probe], PROBE_STYLES[probe])
             excludes = (s["bootstrap_ci_low"] > 0) | (s["bootstrap_ci_high"] < 0)
-            ax.plot(LAYERS[excludes], s["mean"][excludes], "o", ms=3, color=PROBE_COLORS[probe])
-        ax.axhline(0, color="#888888", lw=0.8)
+            ax.plot(LAYERS[excludes], s["mean"][excludes], "o", ms=7, color=PROBE_COLORS[probe])
+        ax.axhline(0, color="#888888", lw=1.6)
         ax.set_xlabel("Layer")
-        ax.set_ylabel(f"Observed − {SERIES_LABELS[model].split(' (')[0]}:\n{label.lower()}")
+        ax.set_title(label)
+        ax.set_ylabel(f"Observed − {SERIES_LABELS[model].split(' (')[0]}")
     handles, labels = axes[0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="upper center", ncol=len(probes), bbox_to_anchor=(0.5, -0.02))
     fig.suptitle(f"Observed − {SERIES_LABELS[model]} on {binning}\nDots: 95% band excludes 0")
@@ -234,8 +264,8 @@ def figure_bias_sd(data) -> None:
         for probe in PROBES:
             rows = bins[(bins.probe == probe) & (bins.cell_label == label)].set_index("layer").reindex(LAYERS)
             style = PROBE_STYLES[probe]
-            ax.plot(LAYERS, rows["protein_mean_sd_sq"], style, color="#2a6fb0", lw=1.4)
-            ax.plot(LAYERS, rows["protein_mean_mse"], style, color="#c0392b", lw=1.4)
+            ax.plot(LAYERS, rows["protein_mean_sd_sq"], style, color="#2a6fb0", lw=LINE_WIDTH)
+            ax.plot(LAYERS, rows["protein_mean_mse"], style, color="#c0392b", lw=LINE_WIDTH)
         ax.set_title(f"d_true in {label} Å")
         ax.set_xlabel("Layer")
         from_zero(ax)
@@ -261,13 +291,13 @@ def calibration_table(data, counts) -> pd.DataFrame:
 
 
 def figure_line_table(table: pd.DataFrame, ylabel: str, name: str, reference: float | None = None) -> None:
-    fig, ax = plt.subplots(figsize=(10, 6), layout="constrained")
+    fig, ax = plt.subplots(figsize=(11, 7.5), layout="constrained")
     for probe in PROBES:
         rows = table[table.probe == probe].sort_values("layer")
         ax.plot(rows.layer, rows.protein_mean, PROBE_STYLES[probe], color=PROBE_COLORS[probe], label=PROBE_LABELS[probe])
         ax.fill_between(rows.layer, rows.ci_low, rows.ci_high, color=PROBE_COLORS[probe], alpha=0.18, lw=0)
     if reference is not None:
-        ax.axhline(reference, color="#888888", lw=0.8)
+        ax.axhline(reference, color="#888888", lw=1.6)
     ax.set_xlabel("Layer")
     ax.set_ylabel(ylabel)
     from_zero(ax)
@@ -304,15 +334,14 @@ def figure_crosstab(data) -> None:
             image = ax.imshow(grid.to_numpy(float), cmap="viridis", vmin=0, vmax=vmax, aspect="auto")
             for (y, x), value in np.ndenumerate(grid.to_numpy(float)):
                 if np.isfinite(value):
-                    ax.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=12, color="white")
-            ax.set_xticks(range(len(sequence_labels)), sequence_labels, fontsize=14, rotation=45, ha="right")
-            ax.set_yticks(range(len(distance_labels)), distance_labels, fontsize=14)
+                    ax.text(x, y, f"{value:.1f}", ha="center", va="center", fontsize=20, color="white")
+            ax.set_xticks(range(len(sequence_labels)), sequence_labels, fontsize=24, rotation=45, ha="right")
+            ax.set_yticks(range(len(distance_labels)), distance_labels, fontsize=24)
             if r == 0:
                 ax.set_title(f"Layer {layer}")
             if c == 0:
                 ax.set_ylabel(f"{PROBE_LABELS[probe]}\nd_true bin (Å)")
-            if r == len(PROBES) - 1:
-                ax.set_xlabel("Sequence separation")
+    fig.supxlabel("Sequence separation")
     colorbar = fig.colorbar(image, ax=axes, shrink=0.5, label="Protein-equal mean residual SD (Å)")
     colorbar.locator = MaxNLocator(nbins=4)
     colorbar.update_ticks()
@@ -461,10 +490,10 @@ def main() -> None:
     calibration = calibration_table(data, counts)
     calibration.to_csv(ROOT / "calibration_by_layer.csv", index=False)
     figure_line_table(calibration[calibration.parameter == "beta"],
-                      "β in d_pred = α + β·d_true\n(protein-equal mean)", "calibration_beta", reference=1.0)
+                      "Calibration slope β\n(protein-equal mean)", "calibration_beta", reference=1.0)
     clipped = clipped_table(data, counts)
     clipped.to_csv(ROOT / "clipped_side_fraction.csv", index=False)
-    figure_line_table(clipped, "Share of violating triples\nwith a side clipped to 0", "clipped_side_fraction")
+    figure_line_table(clipped, "Violating triples\nwith a clipped side", "clipped_side_fraction")
     figure_crosstab(data)
     summary_table(data, counts).to_csv(ROOT / "summary_table.csv", index=False)
     (ROOT / "sanity_checks.md").write_text(sanity_markdown(data, counts))
