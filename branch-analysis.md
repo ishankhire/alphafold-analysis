@@ -2579,3 +2579,9 @@ Bookkeeping files were left out (`runtime.csv`, `model_stability.csv`, `protein_
 venv from `requirements.txt`. 194 tests pass when `TMSCORE_BINARY` is set; 17 need the
 binary. The builder was a one-off scratch script. The stale ablation-inventory test (expected
 18 PDFs, the code makes 19) was fixed here and in the release.
+
+Follow-up (same day): published at https://github.com/ishankhire/match-and-correct-evoformer
+(public, tag `v1.0` → `df4dbfd`). The paper's Fig. S8 now uses the corrected legend, and the
+code-availability link in the supplement and checklist points to the release (Overleaf commit
+`efe1aaf`). Main's copy of the Fig. S8 PNG/PDF and its manifest row were synced to match.
+`../arxiv_submission.zip` was rebuilt (35 files).
