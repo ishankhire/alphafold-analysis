@@ -119,6 +119,7 @@ delete this whole section.
 
 ## Planning and documentation
 
+- Whenever you make a plan, please interrogate me and ask me lots of questions! I'd rather there be too many than too few questions.
 - Every implementation plan must name exact output directories and filenames,
   row granularity, split/evaluation scope, and principal columns or fields.
 - Record important codebase changes very briefly in `branch-analysis.md`; omit
