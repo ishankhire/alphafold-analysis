@@ -1393,116 +1393,23 @@ def refresh_tm_score_figures() -> None:
     print(f"Refreshed {len(ids)} TM-score figure pairs in {relative(OUTPUT_ROOT)}")
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tm-score-only", action="store_true",
-                        help="Refresh only the two reconstruction TM-score figures and their source data")
-    args = parser.parse_args()
-    if args.tm_score_only:
-        refresh_tm_score_figures()
-        return
-    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
-    ensure_directories()
-    generated_at = datetime.now(timezone.utc).isoformat()
-    cohort = load_cohort()
-    counts = bootstrap_counts()
-
-    print("Loading fivefold R2 and geometry values...")
-    r2, r2_inputs = load_core_metric(cohort, "per_protein.csv", "r2", "prediction_status")
-    tm, tm_inputs = load_core_metric(cohort, "geometry_metrics.csv", "tm_score", "geometry_status")
-    top3, top3_inputs = load_core_metric(
-        cohort, "geometry_metrics.csv", "frac_top3_eigenvalues", "geometry_status"
-    )
-    stress, stress_inputs = load_core_metric(
-        cohort, "geometry_metrics.csv", "stress", "geometry_status"
-    )
-    print("Loading per-protein subgroup MAE values...")
-    subgroup, subgroup_inputs = load_subgroup_values(cohort)
-    spatial = combine_spatial_distance_bins(
-        subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
-    )
-    sequence = subgroup[subgroup["category_scope"].eq("sequence_separation")].copy()
-    print("Loading focused fivefold triangle values...")
-    triangle, triangle_inputs = load_triangle_values(cohort)
-
-    print("Computing paired-protein bootstrap summaries...")
-    r2_summary = bootstrap_summary(r2, cohort, counts)
-    tm_summary = bootstrap_summary(tm, cohort, counts)
-    top3_summary = bootstrap_summary(top3, cohort, counts)
-    stress_summary = bootstrap_summary(stress, cohort, counts)
-    spatial_summary = bootstrap_summary(
-        spatial, cohort, counts, ("category_scope", "category_label")
-    )
-    sequence_summary = bootstrap_summary(
-        sequence, cohort, counts, ("category_scope", "category_label")
-    )
-    triangle_summaries = []
-    for metric in TRIANGLE_METRICS:
-        values = triangle.copy()
-        values["value"] = values[metric]
-        summary = bootstrap_summary(
-            values, cohort, counts, ("category_system", "category_label")
-        )
-        summary["metric"] = metric
-        triangle_summaries.append(summary)
-    triangle_summary = pd.concat(triangle_summaries, ignore_index=True)
-
-    print("Running peak/trough tests and BH correction...")
-    all_tests, candidates, trajectory_summary = analyze_peak_troughs(triangle)
-    phase_points = build_phase_points(r2, triangle, cohort, counts)
-
-    print("Writing source-data tables...")
-    source_paths: dict[str, Path] = {}
-    source_paths["r2_raw"] = write_source_csv(r2, "r2_per_protein_values")
-    source_paths["r2_summary"] = write_source_csv(r2_summary, "r2_plot_summary")
-    source_paths["tm_raw"] = write_source_csv(tm, "tm_score_per_protein_values")
-    source_paths["tm_summary"] = write_source_csv(tm_summary, "tm_score_plot_summary")
-    source_paths["top3_raw"] = write_source_csv(
-        top3, "top3_eigenvalue_fraction_per_protein_values"
-    )
-    source_paths["top3_summary"] = write_source_csv(
-        top3_summary, "top3_eigenvalue_fraction_plot_summary"
-    )
-    source_paths["stress_raw"] = write_source_csv(
-        stress, "mds_stress_per_protein_values"
-    )
-    source_paths["stress_summary"] = write_source_csv(
-        stress_summary, "mds_stress_plot_summary"
-    )
-    source_paths["spatial_raw"] = write_source_csv(
-        spatial, "spatial_distance_mae_per_protein_values", compressed=True
-    )
-    source_paths["spatial_summary"] = write_source_csv(
-        spatial_summary, "spatial_distance_mae_plot_summary"
-    )
-    source_paths["sequence_raw"] = write_source_csv(
-        sequence, "sequence_separation_mae_per_protein_values", compressed=True
-    )
-    source_paths["sequence_summary"] = write_source_csv(
-        sequence_summary, "sequence_separation_mae_plot_summary"
-    )
-    source_paths["triangle_raw"] = write_source_csv(
-        triangle, "triangle_per_protein_values", compressed=True
-    )
-    source_paths["triangle_summary"] = write_source_csv(
-        triangle_summary, "triangle_plot_summary"
-    )
-    source_paths["all_tests"] = write_source_csv(all_tests, "triangle_all_layer_tests")
-    source_paths["candidates"] = write_source_csv(candidates, "triangle_candidate_extrema")
-    source_paths["trajectory"] = write_source_csv(
-        trajectory_summary, "triangle_trajectory_summary"
-    )
-    source_paths["phase"] = write_source_csv(
-        phase_points, "decodability_consistency_points"
-    )
-    reconciliation = pd.read_csv(
-        require_input_path(SUBGROUP_DIR / "pooled_reconciliation.csv"),
-        dtype={"category_label": "string"},
-    )
-    source_paths["reconciliation"] = write_source_csv(
-        reconciliation, "pooled_reconciliation_diagnostic"
-    )
-
+def render_publication_figures(
+    *,
+    r2: pd.DataFrame,
+    r2_summary: pd.DataFrame,
+    tm: pd.DataFrame,
+    tm_summary: pd.DataFrame,
+    top3_summary: pd.DataFrame,
+    stress_summary: pd.DataFrame,
+    spatial_summary: pd.DataFrame,
+    sequence_summary: pd.DataFrame,
+    triangle: pd.DataFrame,
+    triangle_summary: pd.DataFrame,
+    candidates: pd.DataFrame,
+    phase_points: pd.DataFrame,
+    source_paths: Mapping[str, Path],
+) -> list[dict[str, object]]:
+    """Draw every publication figure from the computed tables and return manifest rows."""
     manifest: list[dict[str, object]] = []
     standard_uncertainty = "paired protein bootstrap percentile 95% CI"
     phase_uncertainty = "joint paired-protein bootstrap 95% x/y intervals at milestone layers"
@@ -1639,6 +1546,203 @@ def main() -> None:
             raw, summary, str(metric_spec["ylabel"]), str(metric_spec["domain"]), stem
         )
         manifest.append(manifest_row(stem=stem, section="supplemental", title=f"Model-separated individual-protein trajectories: {metric_spec['title']}", png=png, pdf=pdf, source_csvs=[source_paths["triangle_raw"], source_paths["triangle_summary"]], uncertainty=standard_uncertainty))
+    return manifest
+
+
+SOURCE_DATA_TABLES = {
+    "r2_raw": "r2_per_protein_values.csv",
+    "r2_summary": "r2_plot_summary.csv",
+    "tm_raw": "tm_score_per_protein_values.csv",
+    "tm_summary": "tm_score_plot_summary.csv",
+    "top3_summary": "top3_eigenvalue_fraction_plot_summary.csv",
+    "stress_summary": "mds_stress_plot_summary.csv",
+    "spatial_summary": "spatial_distance_mae_plot_summary.csv",
+    "sequence_summary": "sequence_separation_mae_plot_summary.csv",
+    "triangle_raw": "triangle_per_protein_values.csv.gz",
+    "triangle_summary": "triangle_plot_summary.csv",
+    "candidates": "triangle_candidate_extrema.csv",
+    "phase": "decodability_consistency_points.csv",
+}
+SOURCE_DATA_DTYPES = {"protein_id": "string", "category_label": "string"}
+
+
+def render_from_source_data() -> None:
+    """Redraw all figures from the committed source-data tables, without Delta-only inputs.
+
+    Bootstrap summaries, peak/trough tests and phase points are read back exactly as the
+    full run wrote them, so no statistics are recomputed here.
+    """
+    source_paths = {
+        key: SOURCE_DIR / name for key, name in SOURCE_DATA_TABLES.items()
+    }
+    tables = {
+        key: pd.read_csv(path, dtype=SOURCE_DATA_DTYPES)
+        for key, path in source_paths.items()
+    }
+    # Provenance-only entries: the manifest lists them, but no figure reads them.
+    source_paths["reconciliation"] = SOURCE_DIR / "pooled_reconciliation_diagnostic.csv"
+    source_paths["all_tests"] = SOURCE_DIR / "triangle_all_layer_tests.csv"
+    source_paths["trajectory"] = SOURCE_DIR / "triangle_trajectory_summary.csv"
+    for key, name in (
+        ("top3_raw", "top3_eigenvalue_fraction_per_protein_values.csv"),
+        ("stress_raw", "mds_stress_per_protein_values.csv"),
+        ("spatial_raw", "spatial_distance_mae_per_protein_values.csv.gz"),
+        ("sequence_raw", "sequence_separation_mae_per_protein_values.csv.gz"),
+    ):
+        source_paths[key] = SOURCE_DIR / name
+    ensure_directories()
+    manifest = render_publication_figures(
+        r2=tables["r2_raw"],
+        r2_summary=tables["r2_summary"],
+        tm=tables["tm_raw"],
+        tm_summary=tables["tm_summary"],
+        top3_summary=tables["top3_summary"],
+        stress_summary=tables["stress_summary"],
+        spatial_summary=tables["spatial_summary"],
+        sequence_summary=tables["sequence_summary"],
+        triangle=tables["triangle_raw"],
+        triangle_summary=tables["triangle_summary"],
+        candidates=tables["candidates"],
+        phase_points=tables["phase"],
+        source_paths=source_paths,
+    )
+    produced = {str(row["figure_id"]) for row in manifest}
+    if produced != set(expected_figure_ids()):
+        raise ValueError("Figure inventory mismatch in source-data mode")
+    print(f"Redrew {len(manifest)} figure pairs from {relative(SOURCE_DIR)}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--tm-score-only", action="store_true",
+                        help="Refresh only the two reconstruction TM-score figures and their source data")
+    parser.add_argument("--from-source-data", action="store_true",
+                        help="Redraw every figure from the committed source_data/ tables "
+                             "(no cluster-only inputs needed)")
+    args = parser.parse_args()
+    if args.from_source_data:
+        render_from_source_data()
+        return
+    if args.tm_score_only:
+        refresh_tm_score_figures()
+        return
+    configure_style(font_scale=SUPPLEMENTAL_FIGURE_FONT_SCALE)
+    ensure_directories()
+    generated_at = datetime.now(timezone.utc).isoformat()
+    cohort = load_cohort()
+    counts = bootstrap_counts()
+
+    print("Loading fivefold R2 and geometry values...")
+    r2, r2_inputs = load_core_metric(cohort, "per_protein.csv", "r2", "prediction_status")
+    tm, tm_inputs = load_core_metric(cohort, "geometry_metrics.csv", "tm_score", "geometry_status")
+    top3, top3_inputs = load_core_metric(
+        cohort, "geometry_metrics.csv", "frac_top3_eigenvalues", "geometry_status"
+    )
+    stress, stress_inputs = load_core_metric(
+        cohort, "geometry_metrics.csv", "stress", "geometry_status"
+    )
+    print("Loading per-protein subgroup MAE values...")
+    subgroup, subgroup_inputs = load_subgroup_values(cohort)
+    spatial = combine_spatial_distance_bins(
+        subgroup[subgroup["category_scope"].eq("spatial_distance")].copy()
+    )
+    sequence = subgroup[subgroup["category_scope"].eq("sequence_separation")].copy()
+    print("Loading focused fivefold triangle values...")
+    triangle, triangle_inputs = load_triangle_values(cohort)
+
+    print("Computing paired-protein bootstrap summaries...")
+    r2_summary = bootstrap_summary(r2, cohort, counts)
+    tm_summary = bootstrap_summary(tm, cohort, counts)
+    top3_summary = bootstrap_summary(top3, cohort, counts)
+    stress_summary = bootstrap_summary(stress, cohort, counts)
+    spatial_summary = bootstrap_summary(
+        spatial, cohort, counts, ("category_scope", "category_label")
+    )
+    sequence_summary = bootstrap_summary(
+        sequence, cohort, counts, ("category_scope", "category_label")
+    )
+    triangle_summaries = []
+    for metric in TRIANGLE_METRICS:
+        values = triangle.copy()
+        values["value"] = values[metric]
+        summary = bootstrap_summary(
+            values, cohort, counts, ("category_system", "category_label")
+        )
+        summary["metric"] = metric
+        triangle_summaries.append(summary)
+    triangle_summary = pd.concat(triangle_summaries, ignore_index=True)
+
+    print("Running peak/trough tests and BH correction...")
+    all_tests, candidates, trajectory_summary = analyze_peak_troughs(triangle)
+    phase_points = build_phase_points(r2, triangle, cohort, counts)
+
+    print("Writing source-data tables...")
+    source_paths: dict[str, Path] = {}
+    source_paths["r2_raw"] = write_source_csv(r2, "r2_per_protein_values")
+    source_paths["r2_summary"] = write_source_csv(r2_summary, "r2_plot_summary")
+    source_paths["tm_raw"] = write_source_csv(tm, "tm_score_per_protein_values")
+    source_paths["tm_summary"] = write_source_csv(tm_summary, "tm_score_plot_summary")
+    source_paths["top3_raw"] = write_source_csv(
+        top3, "top3_eigenvalue_fraction_per_protein_values"
+    )
+    source_paths["top3_summary"] = write_source_csv(
+        top3_summary, "top3_eigenvalue_fraction_plot_summary"
+    )
+    source_paths["stress_raw"] = write_source_csv(
+        stress, "mds_stress_per_protein_values"
+    )
+    source_paths["stress_summary"] = write_source_csv(
+        stress_summary, "mds_stress_plot_summary"
+    )
+    source_paths["spatial_raw"] = write_source_csv(
+        spatial, "spatial_distance_mae_per_protein_values", compressed=True
+    )
+    source_paths["spatial_summary"] = write_source_csv(
+        spatial_summary, "spatial_distance_mae_plot_summary"
+    )
+    source_paths["sequence_raw"] = write_source_csv(
+        sequence, "sequence_separation_mae_per_protein_values", compressed=True
+    )
+    source_paths["sequence_summary"] = write_source_csv(
+        sequence_summary, "sequence_separation_mae_plot_summary"
+    )
+    source_paths["triangle_raw"] = write_source_csv(
+        triangle, "triangle_per_protein_values", compressed=True
+    )
+    source_paths["triangle_summary"] = write_source_csv(
+        triangle_summary, "triangle_plot_summary"
+    )
+    source_paths["all_tests"] = write_source_csv(all_tests, "triangle_all_layer_tests")
+    source_paths["candidates"] = write_source_csv(candidates, "triangle_candidate_extrema")
+    source_paths["trajectory"] = write_source_csv(
+        trajectory_summary, "triangle_trajectory_summary"
+    )
+    source_paths["phase"] = write_source_csv(
+        phase_points, "decodability_consistency_points"
+    )
+    reconciliation = pd.read_csv(
+        require_input_path(SUBGROUP_DIR / "pooled_reconciliation.csv"),
+        dtype={"category_label": "string"},
+    )
+    source_paths["reconciliation"] = write_source_csv(
+        reconciliation, "pooled_reconciliation_diagnostic"
+    )
+
+    manifest = render_publication_figures(
+        r2=r2,
+        r2_summary=r2_summary,
+        tm=tm,
+        tm_summary=tm_summary,
+        top3_summary=top3_summary,
+        stress_summary=stress_summary,
+        spatial_summary=spatial_summary,
+        sequence_summary=sequence_summary,
+        triangle=triangle,
+        triangle_summary=triangle_summary,
+        candidates=candidates,
+        phase_points=phase_points,
+        source_paths=source_paths,
+    )
 
     manifest_frame = pd.DataFrame(manifest)
     expected_ids = set(expected_figure_ids())
