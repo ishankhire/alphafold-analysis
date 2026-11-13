@@ -2539,3 +2539,16 @@ manifests). All matched except the Pair Transition forward-ablation drop: the te
 the author to decide, along with other wording questions reported in chat. Overleaf commit
 `035f38c`: `[main, final]` option, author block, red wrappers and the to-do removed (text
 kept), and small mechanical fixes. No LaTeX compiler locally, so the build was not checked.
+
+## Session: 2026-11-13 — arXiv source package
+
+Overleaf commit `e6699e1`: Tyler Hayes gets a `**` footnote, "Work done while at the Georgia
+Institute of Technology." (`\setcounter{footnote}{6}` before his `\thanks` gives fnsymbol 7 =
+`**`; the counter is reset to 0 before Giri's `\thanks` so that one stays `*`.) Built
+`../arxiv_submission/` and `../arxiv_submission.zip` (35 files, 8.4 MB): `main.tex` is
+`draft_7.tex` with comments stripped and the NeurIPS checklist removed, plus the supplement body,
+`eocd-protein-list.tex`, `neurips_2026.sty`, and only the 26 referenced figures. The builder is a
+one-off script, not committed. pdfLaTeX-compatible (inputenc/T1, inline `thebibliography`, PDF/PNG
+figures). The local Docker TeX Live build failed because Docker Desktop kept shutting down, so
+arXiv's own compile is the first real build. The supplement's code link still points to
+anonymous.4open.science.
