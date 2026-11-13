@@ -2552,3 +2552,30 @@ one-off script, not committed. pdfLaTeX-compatible (inputenc/T1, inline `thebibl
 figures). The local Docker TeX Live build failed because Docker Desktop kept shutting down, so
 arXiv's own compile is the first real build. The supplement's code link still points to
 anonymous.4open.science.
+
+## Session: 2026-11-13 — Public code release `match-and-correct-evoformer` (local, not yet pushed)
+
+`generate_sept_2_publication_plots.py` gained `--from-source-data` (commit `988af50`): the figure
+stage moved into `render_publication_figures()`, and `render_from_source_data()` redraws all
+29 figures from `source_data/` without Delta-only inputs. Every committed PNG reproduces byte
+for byte when drawn with the matplotlib version that made it. 13 were drawn with 3.11.1 and the
+rest (16 bundle figures plus all ablation, null-triangle and PyMOL-grid figures) with 3.10.8,
+recorded in each PNG's `Software` tag. Exception: the committed
+`supp_figure_all_triangles_violation_fraction_peak_troughs_overlay` (paper Fig. S8) predates the
+legend fix. Its legend shows a filled circle for BH-supported extrema; the code (and the plot)
+use a filled triangle. The data is unchanged.
+
+The release repo is at `../match-and-correct-evoformer/` (fresh history, MIT). It keeps main's
+paths (`scripts/cluster_scripts`, `scripts/multi_protein`, `delta_files/...`), so files are
+identical to main apart from scrubbing:
+- emails, allocation and `/work`/`/u` paths → `YOUR_EMAIL`, `YOUR_ALLOCATION`, `/path/to/...`
+- `delta_bfna` → `DATA_GROUP` env var
+- overleaf/ outputs redirected (ablation PDFs → `layerwise_ablation_trajectories/paper_pdfs/`; grid copies dropped)
+- the Fig. S8 PNG/PDF and its manifest row replaced with the regenerated version
+
+Bookkeeping files were left out (`runtime.csv`, `model_stability.csv`, `protein_length_effects.csv`,
+`triangle_metric_summary.csv`, `edge_model_count_*`, logs). Total size is 265 MB, largest file
+54 MB. `scripts/verify_figures.py` passes under 3.10.8 (34/34) and 3.11.1 (13/13) in a fresh
+venv from `requirements.txt`. 194 tests pass when `TMSCORE_BINARY` is set; 17 need the
+binary. The builder was a one-off scratch script. The stale ablation-inventory test (expected
+18 PDFs, the code makes 19) was fixed here and in the release.

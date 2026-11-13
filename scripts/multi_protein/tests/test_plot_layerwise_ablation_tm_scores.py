@@ -94,7 +94,7 @@ def test_probe_summary_rejects_incomplete_model_coverage() -> None:
 
 def test_overleaf_inventory_has_six_base_and_twelve_overlay_pdfs() -> None:
     names = expected_overleaf_filenames()
-    assert len(names) == 18
+    assert len(names) == 19  # plus the combined four-panel figure
     assert sum(name.endswith("_tm_score_trajectory.pdf") for name in names) == 6
     assert sum(name.endswith("_with_r2.pdf") for name in names) == 6
     assert sum(
