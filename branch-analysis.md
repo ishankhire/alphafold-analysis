@@ -2637,3 +2637,7 @@ Follow-up (same day): the analysis also draws Plots 1, 3 and 4 with the mean of 
 first, then average), which `7stz_C` barely moves, plus `figures/main/error_share_stacked` (per-protein
 shares of total², which add to 100%) and `figures/diagnostics/smacof_rmsd_observed_vs_controls`.
 `RESULTS.md` gained per-protein tables and a SMACOF vs classical-MDS TM-score table.
+
+Follow-up (2026-11-14): the SMACOF vs classical-MDS TM-score figure is now one panel per probe
+(`figures/diagnostics/smacof_vs_classical_tm_score`), replacing the single-panel
+`smacof_vs_classical_reconstruction_quality`; its RMSD panel was dropped.

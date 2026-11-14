@@ -430,28 +430,24 @@ def figure_smacof_vs_classical_split(data, counts) -> None:
     save(fig, "diagnostics", "smacof_vs_classical_split")
 
 
-def figure_reconstruction_quality(data, counts) -> None:
-    """TM-score and coordinate RMSD of the SMACOF (solid) and classical-MDS (dotted) reconstructions."""
-    fig, axes = plt.subplots(1, 2, figsize=(19, 7.5), sharex=True, layout="constrained")
+def figure_tm_score(data, counts) -> None:
+    """TM-score of the SMACOF and classical-MDS reconstructions against the final structure, one panel per probe."""
+    series = {"SMACOF": ("#2a6fb0", "-"), "Classical MDS": ("#555555", "--")}
     classical = data["classical_geometry"]
-    for probe in PROBES:
-        color = PROBE_COLORS[probe]
-        rows = classical[classical.probe == probe]
-        band(axes[0], bootstrap_matrix_summary(matrix(data, probe, "observed", "smacof_tm_score"), counts), color,
-             PROBE_LABELS[probe])
-        band(axes[0], bootstrap_matrix_summary(pivot(rows, data["cohort"], "tm_score"), counts), color, style=":")
-        band(axes[1], bootstrap_matrix_summary(matrix(data, probe, "observed", "smacof_rmsd"), counts), color)
-        band(axes[1], bootstrap_matrix_summary(matrix(data, probe, "observed", "classical_rmsd"), counts), color, style=":")
-    axes[0].set_ylabel("TM-score")
-    axes[1].set_ylabel("Coordinate RMSD (Å)")
-    for ax in axes:
-        ax.set_xlabel("Layer")
+    fig, axes = probe_grid()
+    for ax, probe in zip(axes, PROBES):
+        values = {"SMACOF": matrix(data, probe, "observed", "smacof_tm_score"),
+                  "Classical MDS": pivot(classical[classical.probe == probe], data["cohort"], "tm_score")}
+        for label, (color, style) in series.items():
+            band(ax, bootstrap_matrix_summary(values[label], counts), color, label, style=style)
+        ax.set_title(PROBE_LABELS[probe])
         ax.set_ylim(bottom=0)
-    handles, labels = axes[0].get_legend_handles_labels()
-    handles += [Line2D([], [], color="#666666", lw=LINE_WIDTH, ls="-", label="SMACOF"),
-                Line2D([], [], color="#666666", lw=LINE_WIDTH, ls=":", label="Classical MDS")]
-    fig.legend(handles=handles, loc="upper center", ncol=3, bbox_to_anchor=(0.5, -0.01))
-    save(fig, "diagnostics", "smacof_vs_classical_reconstruction_quality")
+    for ax in axes[2:]:
+        ax.set_xlabel("Layer")
+    for ax in axes[::2]:
+        ax.set_ylabel("TM-score")
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.01))
+    save(fig, "diagnostics", "smacof_vs_classical_tm_score")
 
 
 def figure_convergence(data) -> None:
@@ -780,7 +776,7 @@ def main() -> None:
         figure_phase(trimmed, trimmed_counts, "sensitivity", f"consistent_vs_inconsistent_phase_without_{OUTLIER}")
     figure_cross_share_controls(data, counts)
     figure_smacof_vs_classical_split(data, counts)
-    figure_reconstruction_quality(data, counts)
+    figure_tm_score(data, counts)
     figure_convergence(data)
     figure_bins(data, "sequence_separation", "error_by_sequence_separation", "Sequence separation")
     figure_bins(data, "true_distance_b10", "error_by_true_distance", "Final-structure distance (Å)")
