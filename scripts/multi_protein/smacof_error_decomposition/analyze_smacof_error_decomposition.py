@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Local analysis of the SMACOF error decomposition (552 proteins, 4 probes, 48 layers).
 
+Two cohort aggregations are drawn. ``root_mean_square`` averages squared terms over proteins
+and takes the root (the four terms add up exactly, but one protein with huge errors can
+dominate). ``mean_per_protein_rms`` takes each protein's root first and then averages.
+
 Reads the aggregated tables under
 ``delta_files/diagnostic_experiments/smacof_error_decomposition_5fold_v1/tables`` and writes
 ``summary_table.csv``, ``cross_share_by_layer.csv``, ``RESULTS.md``, ``sanity_checks.md``
@@ -97,6 +101,21 @@ def rms_summary(squares: np.ndarray, counts: np.ndarray) -> dict[str, np.ndarray
             "bootstrap_ci_high": root(s["bootstrap_ci_high"])}
 
 
+def mean_rms_summary(squares: np.ndarray, counts: np.ndarray) -> dict[str, np.ndarray]:
+    """Protein-equal mean of each protein's own RMS (square root first, then average), with its band.
+
+    Far less sensitive to one protein with very large errors than the root of the mean square,
+    but the four terms no longer add up exactly at the cohort level.
+    """
+    return bootstrap_matrix_summary(np.sqrt(np.maximum(np.asarray(squares, float), 0.0)), counts)
+
+
+AGGREGATIONS = {
+    "root_mean_square": (rms_summary, "", "RMS error (Å)"),
+    "mean_per_protein_rms": (mean_rms_summary, "_mean_per_protein_rms", "Mean per-protein\nRMS error (Å)"),
+}
+
+
 def ratio_summary(numerator: np.ndarray, denominator: np.ndarray, counts: np.ndarray) -> dict[str, np.ndarray]:
     """Ratio of protein-equal means with a paired-protein bootstrap of the ratio."""
     numerator, denominator = np.asarray(numerator, float), np.asarray(denominator, float)
@@ -112,6 +131,8 @@ def ratio_summary(numerator: np.ndarray, denominator: np.ndarray, counts: np.nda
 
 def load() -> dict:
     per = pd.read_csv(TABLES / "decomposition_per_protein.csv.gz", dtype={"protein_id": str})
+    for part in ("inconsistent_sq", "consistent_sq", "cross"):
+        per[f"smacof_{part.replace('_sq', '')}_share"] = per[f"smacof_{part}"] / per["total_sq"]
     cohort = sorted(per["protein_id"].unique())
     if len(cohort) != EXPECTED_PROTEINS and not SMOKE:
         raise ValueError(f"Expected {EXPECTED_PROTEINS} proteins, found {len(cohort)}")
@@ -198,17 +219,19 @@ def without_outlier(data: dict) -> dict:
     return {**data, "cohort": [pid for pid in data["cohort"] if pid != OUTLIER]}
 
 
-def figure_parts_by_layer(data, counts, folder="main", name="inconsistent_consistent_by_layer") -> None:
+def figure_parts_by_layer(data, counts, folder="main", name="inconsistent_consistent_by_layer",
+                          aggregation="root_mean_square") -> None:
     """Plot 1. Inconsistent (solid) and consistent (dashed) error by layer; controls overlaid.
 
     The two controls nearly coincide, so the Gaussian one is drawn last as a thinner line.
     """
     widths = {"control_shuffled": LINE_WIDTH + 1.5, "observed": LINE_WIDTH, "control_gaussian": LINE_WIDTH - 1.4}
+    summarise, suffix, ylabel = AGGREGATIONS[aggregation]
     fig, axes = probe_grid()
     for ax, probe in zip(axes, PROBES):
         for matrix_type, width in widths.items():
             for part, style in PART_STYLES.items():
-                s = rms_summary(matrix(data, probe, matrix_type, f"smacof_{part}_sq"), counts)
+                s = summarise(matrix(data, probe, matrix_type, f"smacof_{part}_sq"), counts)
                 band(ax, s, SERIES_COLORS[matrix_type], style=style, lw=width,
                      alpha=0.0 if matrix_type == "control_gaussian" else 0.12)
         ax.set_title(PROBE_LABELS[probe])
@@ -216,12 +239,12 @@ def figure_parts_by_layer(data, counts, folder="main", name="inconsistent_consis
     for ax in axes[2:]:
         ax.set_xlabel("Layer")
     for ax in axes[::2]:
-        ax.set_ylabel("RMS error (Å)")
+        ax.set_ylabel(ylabel)
     handles = [Line2D([], [], color=SERIES_COLORS[m], lw=widths[m], label=SERIES_LABELS[m]) for m in MATRIX_TYPES]
     handles += [Line2D([], [], color="#666666", lw=LINE_WIDTH, ls=style, label=f"{part.capitalize()} part")
                 for part, style in PART_STYLES.items()]
     fig.legend(handles=handles, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.01))
-    save(fig, folder, name)
+    save(fig, folder, name + suffix)
 
 
 def cross_share(data, probe, matrix_type, counts):
@@ -242,11 +265,12 @@ def figure_cross_share(data, counts) -> None:
     save(fig, "main", "cross_share_by_layer")
 
 
-def figure_inconsistent_vs_triangles(data, counts) -> None:
+def figure_inconsistent_vs_triangles(data, counts, aggregation="root_mean_square") -> None:
     """Plot 3. Inconsistent error (left axis) on the normalized triangle-violation curve (right axis)."""
+    summarise, suffix, _ = AGGREGATIONS[aggregation]
     fig, axes = probe_grid(sharey=False)
     for index, (ax, probe) in enumerate(zip(axes, PROBES)):
-        band(ax, rms_summary(matrix(data, probe, "observed", "smacof_inconsistent_sq"), counts),
+        band(ax, summarise(matrix(data, probe, "observed", "smacof_inconsistent_sq"), counts),
              PART_COLORS["inconsistent"])
         ax.set_title(PROBE_LABELS[probe])
         ax.set_ylim(bottom=0)
@@ -269,19 +293,23 @@ def figure_inconsistent_vs_triangles(data, counts) -> None:
                Line2D([], [], color=VIOLATION_COLOR, lw=LINE_WIDTH, ls="--",
                       label="Normalized mean triangle violation (right axis)")]
     fig.legend(handles=handles, loc="upper center", ncol=1, bbox_to_anchor=(0.5, -0.01))
-    save(fig, "main", "inconsistent_vs_triangle_violation")
+    save(fig, "main", "inconsistent_vs_triangle_violation" + suffix)
 
 
-def figure_phase(data, counts, folder="main", name="consistent_vs_inconsistent_phase") -> None:
+def figure_phase(data, counts, folder="main", name="consistent_vs_inconsistent_phase",
+                 aggregation="root_mean_square") -> None:
     """Plot 4. Consistent (x) against inconsistent (y) error, layers labelled, as in Figure 2b."""
+    summarise, suffix, _ = AGGREGATIONS[aggregation]
+    labels = (("Mean per-protein consistent error (Å)", "Mean per-protein inconsistent error (Å)")
+              if aggregation == "mean_per_protein_rms" else ("Consistent error (Å)", "Inconsistent error (Å)"))
     with plt.rc_context():
         configure_style(font_scale=SINGLE_PANEL_FONT_SCALE)
         fig, ax = plt.subplots(figsize=(8.7, 6.4))
         label_shifts = (-8, 8, -7, 7)
         milestones = list(MILESTONE_LAYERS)
         for index, probe in enumerate(PROBES):
-            x = rms_summary(matrix(data, probe, "observed", "smacof_consistent_sq"), counts)
-            y = rms_summary(matrix(data, probe, "observed", "smacof_inconsistent_sq"), counts)
+            x = summarise(matrix(data, probe, "observed", "smacof_consistent_sq"), counts)
+            y = summarise(matrix(data, probe, "observed", "smacof_inconsistent_sq"), counts)
             color = PROBE_COLORS[probe]
             ax.plot(x["mean"], y["mean"], color=color, ls=PROBE_STYLES[probe], lw=2.0, label=PROBE_LABELS[probe], zorder=2)
             ax.scatter(x["mean"], y["mean"], color=color, s=10, zorder=3)
@@ -295,13 +323,73 @@ def figure_phase(data, counts, folder="main", name="consistent_vs_inconsistent_p
                 ax.annotate(str(layer), (px, py), xytext=(4, label_shifts[index]), textcoords="offset points",
                             fontsize=6.2 * SINGLE_PANEL_FONT_SCALE, color=color,
                             bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.65, "pad": 0.1})
-        ax.set(xlabel="Consistent error (Å)", ylabel="Inconsistent error (Å)")
+        ax.set(xlabel=labels[0], ylabel=labels[1])
         ax.set_xlim(left=0)
         ax.set_ylim(bottom=0)
+        limit = max(ax.get_xlim()[1], ax.get_ylim()[1])
+        ax.plot([0, limit], [0, limit], color="#999999", lw=1.0, ls=":", zorder=0)     # equal parts
         ax.locator_params(axis="both", nbins=5)
         ax.legend(frameon=False, loc="best")
         fig.tight_layout()
-        save(fig, folder, name, layer_axis=False)
+        save(fig, folder, name + suffix, layer_axis=False)
+
+
+def figure_share_stack(data, counts) -> None:
+    """Each protein's total squared error split into its three terms, averaged equally over proteins.
+
+    Per protein the shares add to exactly 1, so the protein-equal means do too. The cross term
+    is negative, so the two positive bands together exceed 100% by its size. The dashed line is
+    where the inconsistent band would end for the shuffled-errors control.
+    """
+    fig, axes = probe_grid()
+    for ax, probe in zip(axes, PROBES):
+        shares = {part: matrix(data, probe, "observed", f"smacof_{part}_share").mean(axis=0)
+                  for part in ("inconsistent", "consistent", "cross")}
+        if not np.allclose(shares["inconsistent"] + shares["consistent"] + shares["cross"], 1.0, atol=1e-9):
+            raise ValueError("Per-protein shares do not add to 1")
+        ax.stackplot(LAYERS, shares["inconsistent"], shares["consistent"],
+                     colors=[PART_COLORS["inconsistent"], PART_COLORS["consistent"]], alpha=0.85, lw=0)
+        ax.fill_between(LAYERS, shares["cross"], 0, color="#888888", alpha=0.85, lw=0)
+        ax.plot(LAYERS, matrix(data, probe, "control_shuffled", "smacof_inconsistent_share").mean(axis=0),
+                color="#111111", ls="--", lw=LINE_WIDTH)
+        ax.axhline(0, color="#333333", lw=1.2)
+        ax.axhline(1, color="#333333", lw=1.2, ls=":")
+        ax.set_title(PROBE_LABELS[probe])
+        ax.set_xlim(0, 47)
+        ax.set_xticks(range(0, 48, 10))
+        ax.set_ylim(-0.25, 1.25)
+        ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
+        ax.grid(False)
+    for ax in axes[2:]:
+        ax.set_xlabel("Layer")
+    for ax in axes[::2]:
+        ax.set_ylabel("Share of total²\n(mean over proteins)")
+    from matplotlib.patches import Patch
+    handles = [Patch(color=PART_COLORS["inconsistent"], alpha=0.85, label="Inconsistent²"),
+               Patch(color=PART_COLORS["consistent"], alpha=0.85, label="Consistent²"),
+               Patch(color="#888888", alpha=0.85, label="Cross term (negative)"),
+               Line2D([], [], color="#111111", ls="--", lw=LINE_WIDTH, label="Inconsistent² share, shuffled-errors control")]
+    fig.legend(handles=handles, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.01))
+    save(fig, "main", "error_share_stacked", layer_axis=False)
+
+
+def figure_control_reconstruction(data, counts) -> None:
+    """Coordinate RMSD of the SMACOF reconstruction against the final structure: observed and controls."""
+    fig, axes = probe_grid()
+    for ax, probe in zip(axes, PROBES):
+        for matrix_type in ("control_shuffled", "observed", "control_gaussian"):
+            band(ax, bootstrap_matrix_summary(matrix(data, probe, matrix_type, "smacof_rmsd"), counts),
+                 SERIES_COLORS[matrix_type], SERIES_LABELS[matrix_type],
+                 lw=LINE_WIDTH - 1.4 if matrix_type == "control_gaussian" else LINE_WIDTH,
+                 alpha=0.0 if matrix_type == "control_gaussian" else 0.14)
+        ax.set_title(PROBE_LABELS[probe])
+        ax.set_ylim(bottom=0)
+    for ax in axes[2:]:
+        ax.set_xlabel("Layer")
+    for ax in axes[::2]:
+        ax.set_ylabel("SMACOF coordinate\nRMSD (Å)")
+    fig.legend(*axes[0].get_legend_handles_labels(), loc="upper center", ncol=1, bbox_to_anchor=(0.5, -0.01))
+    save(fig, "diagnostics", "smacof_rmsd_observed_vs_controls")
 
 
 # ---------------------------------------------------------------- diagnostic figures
@@ -507,6 +595,48 @@ def results_markdown(data, counts) -> str:
                              "(95% interval of the paired difference excludes 0).")
         lines.append("")
 
+    lines += ["## Mean per-protein RMS and shares", "",
+              "Here the square root is taken per protein first and the results are averaged equally over proteins, so "
+              "one protein with very large errors has little weight. Shares are each protein's inconsistent², "
+              "consistent² and cross term divided by its own total², then averaged; they add to exactly 100%.", ""]
+    rows = []
+    for probe in PROBES:
+        parts = {(m, part): mean_rms_summary(matrix(data, probe, m, f"smacof_{part}_sq"), counts)
+                 for m in ("observed", "control_shuffled") for part in PART_STYLES}
+        shares = {part: matrix(data, probe, "observed", f"smacof_{part}_share").mean(axis=0)
+                  for part in ("inconsistent", "consistent", "cross")}
+        for layer in TABLE_LAYERS:
+            rows.append({"Probe": PROBE_LABELS[probe], "Layer": layer,
+                         "Inconsistent (Å)": interval(parts[("observed", "inconsistent")], layer),
+                         "Consistent (Å)": interval(parts[("observed", "consistent")], layer),
+                         "Inconsistent, shuffled control (Å)": interval(parts[("control_shuffled", "inconsistent")], layer),
+                         "Consistent, shuffled control (Å)": interval(parts[("control_shuffled", "consistent")], layer),
+                         "Inconsistent² share": f"{shares['inconsistent'][layer]:.0%}",
+                         "Consistent² share": f"{shares['consistent'][layer]:.0%}",
+                         "Cross share": f"{shares['cross'][layer]:.0%}"})
+    lines += [markdown_table(pd.DataFrame(rows)), ""]
+
+    lines += ["## Reconstruction quality: SMACOF against classical MDS, and the controls", "",
+              "Protein-equal means. TM-score was computed for observed matrices only; coordinate RMSD is available "
+              "for every matrix. The classical-MDS TM-score is the canonical optimized value.", ""]
+    rows = []
+    classical = data["classical_geometry"]
+    for probe in PROBES:
+        smacof_tm = matrix(data, probe, "observed", "smacof_tm_score")
+        classical_tm = pivot(classical[classical.probe == probe], data["cohort"], "tm_score")
+        tm = {"smacof": bootstrap_matrix_summary(smacof_tm, counts), "classical": bootstrap_matrix_summary(classical_tm, counts),
+              "gain": bootstrap_matrix_summary(smacof_tm - classical_tm, counts)}
+        rmsd = {m: bootstrap_matrix_summary(matrix(data, probe, m, "smacof_rmsd"), counts)
+                for m in ("observed", "control_shuffled")}
+        for layer in TABLE_LAYERS:
+            rows.append({"Probe": PROBE_LABELS[probe], "Layer": layer,
+                         "TM-score, classical MDS": f"{tm['classical']['mean'][layer]:.3f}",
+                         "TM-score, SMACOF": f"{tm['smacof']['mean'][layer]:.3f}",
+                         "Gain": interval(tm["gain"], layer, 3),
+                         "SMACOF RMSD, observed (Å)": interval(rmsd["observed"], layer),
+                         "SMACOF RMSD, shuffled control (Å)": interval(rmsd["control_shuffled"], layer)})
+    lines += [markdown_table(pd.DataFrame(rows)), ""]
+
     if OUTLIER in data["cohort"]:
         trimmed = without_outlier(data)
         trimmed_counts = bootstrap_counts(n_proteins=len(trimmed["cohort"]))
@@ -636,10 +766,13 @@ def main() -> None:
     summary, shares = summary_tables(data, counts)
     summary.to_csv(ROOT / "summary_table.csv", index=False)
     shares.to_csv(ROOT / "cross_share_by_layer.csv", index=False)
-    figure_parts_by_layer(data, counts)
+    for aggregation in AGGREGATIONS:
+        figure_parts_by_layer(data, counts, aggregation=aggregation)
+        figure_inconsistent_vs_triangles(data, counts, aggregation=aggregation)
+        figure_phase(data, counts, aggregation=aggregation)
     figure_cross_share(data, counts)
-    figure_inconsistent_vs_triangles(data, counts)
-    figure_phase(data, counts)
+    figure_share_stack(data, counts)
+    figure_control_reconstruction(data, counts)
     if OUTLIER in data["cohort"]:
         trimmed = without_outlier(data)
         trimmed_counts = bootstrap_counts(n_proteins=len(trimmed["cohort"]))

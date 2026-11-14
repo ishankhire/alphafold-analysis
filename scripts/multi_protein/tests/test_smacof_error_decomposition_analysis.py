@@ -28,6 +28,13 @@ def test_rms_is_root_of_protein_mean_square():
     assert np.allclose(s["bootstrap_ci_low"] ** 2, s["sq_ci_low"])
 
 
+def test_mean_per_protein_rms_takes_the_root_first():
+    squares = np.array([[1.0], [4.0], [10000.0]])                       # one protein with a huge error
+    counts = analysis.bootstrap_counts(n_proteins=3, replicates=500)
+    assert np.isclose(analysis.mean_rms_summary(squares, counts)["mean"][0], (1 + 2 + 100) / 3)
+    assert np.isclose(analysis.rms_summary(squares, counts)["mean"][0], np.sqrt(10005 / 3))
+
+
 def test_cross_share_is_ratio_of_cohort_means():
     cross = np.array([[1.0], [-2.0], [4.0]])
     total = np.array([[10.0], [1.0], [100.0]])
@@ -125,10 +132,12 @@ def test_full_analysis_on_synthetic_tables(tmp_path, monkeypatch):
     shares = pd.read_csv(tmp_path / "cross_share_by_layer.csv")
     assert len(shares) == 4 * 3 * 2 * 48
     for name in ("inconsistent_consistent_by_layer", "cross_share_by_layer", "inconsistent_vs_triangle_violation",
-                 "consistent_vs_inconsistent_phase"):
+                 "consistent_vs_inconsistent_phase", "inconsistent_consistent_by_layer_mean_per_protein_rms",
+                 "inconsistent_vs_triangle_violation_mean_per_protein_rms",
+                 "consistent_vs_inconsistent_phase_mean_per_protein_rms", "error_share_stacked"):
         for suffix in ("pdf", "png"):
             assert (tmp_path / "figures/main" / f"{name}.{suffix}").stat().st_size > 0
-    assert len(list((tmp_path / "figures/diagnostics").glob("*.png"))) == 6
+    assert len(list((tmp_path / "figures/diagnostics").glob("*.png"))) == 7
     results = (tmp_path / "RESULTS.md").read_text()
     assert "Unconverged SMACOF runs" in results and "hit the iteration cap" in results
     assert "| 1e-6 | inconsistent |" in (tmp_path / "sanity_checks.md").read_text()

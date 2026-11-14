@@ -2632,3 +2632,8 @@ alignments and `experiments/<ID>/` runs, and `domain_pdbs/` (its Globus listing 
 `pdbs/` is permission-denied, and `pdbs_latest/` holds the 562 MB `ecod.latest.pdb.tar.gz`).
 `datasets.md` and the inventory still say "not on Delta"; update them once the tasks succeed and
 the destination is checked.
+
+Follow-up (same day): the analysis also draws Plots 1, 3 and 4 with the mean of per-protein RMS (root
+first, then average), which `7stz_C` barely moves, plus `figures/main/error_share_stacked` (per-protein
+shares of total², which add to 100%) and `figures/diagnostics/smacof_rmsd_observed_vs_controls`.
+`RESULTS.md` gained per-protein tables and a SMACOF vs classical-MDS TM-score table.
