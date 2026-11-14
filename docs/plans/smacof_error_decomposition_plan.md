@@ -94,3 +94,7 @@ slowly long after a loose tolerance is met, and the consistent part moves with i
 0.37 Å for one row between 1e-8 and 1e-13). The inconsistent part and all cohort curves are
 far less sensitive. Layer 47 has no row moving by more than 1e-4 Å after 1e-12. 1e-13 is
 near the float64 noise floor of the stress, so nothing tighter can be checked.
+
+**Decision (2026-11-13):** the full run uses 1e-10 with a 200,000-iteration cap. The cohort
+curves and plots are the deliverable and are unaffected at that tolerance; per-protein
+consistent values at early layers carry the row-level sensitivity in the table above.

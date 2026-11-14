@@ -27,7 +27,7 @@ the four families' `geometry_metrics.csv` is not changed.
   that matrix's own classical-MDS coordinates. `smacof_error_decomposition_common.smacof_metric`
   is a plain Guttman-transform loop. A run has converged when one iteration lowers raw stress by
   at most `SMACOF_REL_TOL` times its value (default 1e-10), with at most `SMACOF_MAX_ITER`
-  iterations (default 20,000). The iteration count and a converged flag are saved, and so are
+  iterations (default 200,000). The iteration count and a converged flag are saved, and so are
   the terms at the moment each of the tolerances 1e-6, 1e-8, 1e-10 and 1e-12 was first met.
 - **Decomposition**, means over unordered pairs, with `d̂` the clipped decoded distances, `p`
   the SMACOF distances and `d` the final-structure distances:
@@ -60,6 +60,12 @@ the four families' `geometry_metrics.csv` is not changed.
 protein_id, stress, rmsd, n_negative_predictions` from the four local
 `delta_files/regression_5fold_v1/<family>/geometry_metrics.csv` files (105,984 rows), sorted by
 layer, protein and family.
+
+**Tolerance.** The pilot ran layers 0 and 47 at 1e-10, 1e-12 and 1e-13. The full run uses
+1e-10: against 1e-13 no cohort curve moves by more than 2.3e-4 Å. Individual rows can move
+more, because SMACOF has plateaus on some noisy early-layer matrices: at layer 0, 1,166 of
+15,456 rows change their consistent RMS by more than 1e-4 Å, 7 by more than 0.01 Å and 2 by
+more than 0.1 Å (largest 0.22 Å). Use a tighter `SMACOF_REL_TOL` for per-protein work.
 
 ## Deploy
 
@@ -121,8 +127,8 @@ SMACOF_DECOMPOSITION_OUTPUT_ROOT=$root/gate_check SMACOF_MAX_ITER=0 SMACOF_DECOM
 SMACOF_DECOMPOSITION_OUTPUT_ROOT=$root/pilot \
   sbatch --mail-user="$CLUSTER_NOTICE_EMAIL" --array=0,47 smacof_error_decomposition.sbatch
 
-# 3. Full run at the chosen tolerance, then aggregation.
-array=$(SMACOF_REL_TOL=<chosen> sbatch --parsable --mail-user="$CLUSTER_NOTICE_EMAIL" smacof_error_decomposition.sbatch)
+# 3. Full run at the default tolerance (1e-10), then aggregation.
+array=$(sbatch --parsable --mail-user="$CLUSTER_NOTICE_EMAIL" smacof_error_decomposition.sbatch)
 sbatch --mail-user="$CLUSTER_NOTICE_EMAIL" --dependency=afterok:${array%%;*} aggregate_smacof_error_decomposition.sbatch
 ```
 
