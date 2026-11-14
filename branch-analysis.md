@@ -2585,3 +2585,19 @@ Follow-up (same day): published at https://github.com/ishankhire/match-and-corre
 code-availability link in the supplement and checklist points to the release (Overleaf commit
 `efe1aaf`). Main's copy of the Fig. S8 PNG/PDF and its manifest row were synced to match.
 `../arxiv_submission.zip` was rebuilt (35 files).
+
+## Session: 2026-11-13 — SMACOF error decomposition (`smacof_error_decomposition_5fold_v1`)
+
+New diagnostic under `scripts/cluster_scripts/diagnostics/smacof_error_decomposition/` (worker,
+aggregation, two launchers, parity table, README) with tests in `diagnostics/tests/`. Each decoded
+distance matrix is fitted with metric SMACOF (own NumPy, raw stress in Å, classical-MDS start) and the
+error against the final structure is split into inconsistent², consistent² and a cross term. The
+controls are the triangle experiment's Null A/B on B10, rebuilt through
+`null_triangles_replay.build_vectors` and checked against that run's saved per-vector counts. Local
+analysis: `scripts/multi_protein/smacof_error_decomposition/analyze_smacof_error_decomposition.py`.
+Plan: `docs/plans/smacof_error_decomposition_plan.md`.
+
+Pilot on Delta (layers 0 and 47, full cohort): gate rehearsal `23922131`, then `23922169` (1e-10),
+`23922775` (1e-12), `23923418` (1e-13). All gates passed and every run converged; a layer takes 2–7
+minutes on 32 CPUs. The stopping tolerance matters for the consistent part of a minority of early-layer
+matrices (SMACOF plateaus), not for cohort curves. Full run not yet submitted.

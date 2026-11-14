@@ -168,6 +168,7 @@ initial reference and should be confirmed on its next representative run.
 | Per-protein XGBoost search, `XGBPerProtSearch` | 6 | `00:12:02` | `00:30:00` | Maximum across six successful search tasks. |
 | Shared XGBoost search, `XGBSharedSearch` | 6 | `00:25:03` | `01:00:00` | Maximum across six successful search tasks. |
 | Null triangle replay, `null_triangles_replay.sbatch` (16 CPUs; 552 proteins, every triangle, 37 vectors) | 48 | `00:05:12` | `00:15:00` | Maximum across pilot `23689526_47` and array `23689609` (median 4m24s; about 57 allocated CPU-h in total). The script requests `01:00:00`. The earlier CAMEO-only diagnostic (8 CPUs, array `23656699`) peaked at `00:11:22`. |
+| SMACOF error decomposition, `smacof_error_decomposition.sbatch` (32 CPUs; 552 proteins, 28 matrices each) | 6 | `00:06:29` | `00:20:00` | Maximum across the two-layer pilots `23922169` (tolerance 1e-10), `23922775` (1e-12) and `23923418` (1e-13); layer 0 is the slow one (3m16s, 5m52s, 6m29s) and layer 47 takes 2–4 minutes. About 2.8 CPU-h for layer 0 at 1e-13. The script requests `01:00:00`. |
 
 ## Collecting new references
 

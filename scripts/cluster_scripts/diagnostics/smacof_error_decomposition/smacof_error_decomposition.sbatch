@@ -5,8 +5,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=32
-#SBATCH --mem=32g
-#SBATCH --time=06:00:00
+#SBATCH --mem=16g
+#SBATCH --time=01:00:00
 #SBATCH --constraint="scratch&work"
 #SBATCH --array=0-47%16
 #SBATCH -o /work/hdd/bfna/ikhire/diagnostic_experiments/smacof_error_decomposition_5fold_v1/logs/smacof_error_decomposition_%A_%a.out
