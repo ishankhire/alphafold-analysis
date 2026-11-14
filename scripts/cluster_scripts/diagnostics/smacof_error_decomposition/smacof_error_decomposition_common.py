@@ -22,8 +22,8 @@ import numpy as np
 EXPERIMENT_NAME = "smacof_error_decomposition_5fold_v1"
 DEFAULT_REL_TOL = 1e-10
 DEFAULT_MAX_ITER = 20_000
-SNAPSHOT_TOLS = (1e-6, 1e-8, 1e-10)      # tolerances whose terms are recorded on the way
-SNAPSHOT_LABELS = {1e-6: "1e-6", 1e-8: "1e-8", 1e-10: "1e-10"}
+SNAPSHOT_TOLS = (1e-6, 1e-8, 1e-10, 1e-12)   # tolerances whose terms are recorded on the way
+SNAPSHOT_LABELS = {1e-6: "1e-6", 1e-8: "1e-8", 1e-10: "1e-10", 1e-12: "1e-12"}
 EXACT_FIT_FRACTION = 1e-24               # raw stress below this share of sum(d_hat^2) is an exact fit
 IDENTITY_RTOL = 1e-9
 STRESS_SLACK_RTOL = 1e-9                 # rounding slack when comparing SMACOF and classical raw stress
