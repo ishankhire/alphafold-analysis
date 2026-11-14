@@ -44,6 +44,7 @@ TRIANGLE_TABLE = REGRESSION / "analysis/null_triangles_5fold_v1/tables/null_per_
 LAYERS = np.arange(48)
 TABLE_LAYERS = (0, 10, 21, 32, 40, 47)
 EXPECTED_PROTEINS = 552
+OUTLIER = "7stz_C"        # one protein whose squared errors dominate cohort means of squares
 # Paper order and names: shared linear, per-protein linear, XGBoost, sequence-gated.
 PROBES = ("shared_ols_base256", "per_protein_ols_base256", "shared_xgboost_base256_fixed_s4",
           "sequence_gated_ols_base256")
@@ -180,8 +181,8 @@ def save(fig, folder: str, name: str, layer_axis: bool = True) -> None:
     plt.close(fig)
 
 
-def band(ax, s, color, label=None, style="-", alpha=0.18):
-    ax.plot(LAYERS, s["mean"], style, color=color, lw=LINE_WIDTH, label=label)
+def band(ax, s, color, label=None, style="-", alpha=0.18, lw=LINE_WIDTH):
+    ax.plot(LAYERS, s["mean"], style, color=color, lw=lw, label=label)
     ax.fill_between(LAYERS, s["bootstrap_ci_low"], s["bootstrap_ci_high"], color=color, alpha=alpha, lw=0)
 
 
@@ -192,25 +193,35 @@ def probe_grid(figsize=(19, 12.5), sharey=True):
 
 # ---------------------------------------------------------------- main figures
 
-def figure_parts_by_layer(data, counts) -> None:
-    """Plot 1. Inconsistent (solid) and consistent (dashed) error by layer; controls overlaid."""
+def without_outlier(data: dict) -> dict:
+    """The same tables with the outlier protein left out of the cohort."""
+    return {**data, "cohort": [pid for pid in data["cohort"] if pid != OUTLIER]}
+
+
+def figure_parts_by_layer(data, counts, folder="main", name="inconsistent_consistent_by_layer") -> None:
+    """Plot 1. Inconsistent (solid) and consistent (dashed) error by layer; controls overlaid.
+
+    The two controls nearly coincide, so the Gaussian one is drawn last as a thinner line.
+    """
+    widths = {"control_shuffled": LINE_WIDTH + 1.5, "observed": LINE_WIDTH, "control_gaussian": LINE_WIDTH - 1.4}
     fig, axes = probe_grid()
     for ax, probe in zip(axes, PROBES):
-        for matrix_type in MATRIX_TYPES:
+        for matrix_type, width in widths.items():
             for part, style in PART_STYLES.items():
                 s = rms_summary(matrix(data, probe, matrix_type, f"smacof_{part}_sq"), counts)
-                band(ax, s, SERIES_COLORS[matrix_type], style=style, alpha=0.14)
+                band(ax, s, SERIES_COLORS[matrix_type], style=style, lw=width,
+                     alpha=0.0 if matrix_type == "control_gaussian" else 0.12)
         ax.set_title(PROBE_LABELS[probe])
         ax.set_ylim(bottom=0)
     for ax in axes[2:]:
         ax.set_xlabel("Layer")
     for ax in axes[::2]:
         ax.set_ylabel("RMS error (Å)")
-    handles = [Line2D([], [], color=SERIES_COLORS[m], lw=LINE_WIDTH, label=SERIES_LABELS[m]) for m in MATRIX_TYPES]
+    handles = [Line2D([], [], color=SERIES_COLORS[m], lw=widths[m], label=SERIES_LABELS[m]) for m in MATRIX_TYPES]
     handles += [Line2D([], [], color="#666666", lw=LINE_WIDTH, ls=style, label=f"{part.capitalize()} part")
                 for part, style in PART_STYLES.items()]
     fig.legend(handles=handles, loc="upper center", ncol=2, bbox_to_anchor=(0.5, -0.01))
-    save(fig, "main", "inconsistent_consistent_by_layer")
+    save(fig, folder, name)
 
 
 def cross_share(data, probe, matrix_type, counts):
@@ -261,7 +272,7 @@ def figure_inconsistent_vs_triangles(data, counts) -> None:
     save(fig, "main", "inconsistent_vs_triangle_violation")
 
 
-def figure_phase(data, counts) -> None:
+def figure_phase(data, counts, folder="main", name="consistent_vs_inconsistent_phase") -> None:
     """Plot 4. Consistent (x) against inconsistent (y) error, layers labelled, as in Figure 2b."""
     with plt.rc_context():
         configure_style(font_scale=SINGLE_PANEL_FONT_SCALE)
@@ -290,7 +301,7 @@ def figure_phase(data, counts) -> None:
         ax.locator_params(axis="both", nbins=5)
         ax.legend(frameon=False, loc="best")
         fig.tight_layout()
-        save(fig, "main", "consistent_vs_inconsistent_phase", layer_axis=False)
+        save(fig, folder, name, layer_axis=False)
 
 
 # ---------------------------------------------------------------- diagnostic figures
@@ -490,17 +501,48 @@ def results_markdown(data, counts) -> str:
                                                - matrix(data, probe, control, f"smacof_{part}_sq"), counts)
                 below = LAYERS[gap["bootstrap_ci_high"] < 0]
                 above = LAYERS[gap["bootstrap_ci_low"] > 0]
-                lines.append(f"- {part.capitalize()}² observed − {SERIES_LABELS[control].lower()}: below at "
-                             f"{contiguous_ranges(below)}; above at {contiguous_ranges(above)} "
+                name = SERIES_LABELS[control].split(": ")[1]
+                lines.append(f"- {part.capitalize()}², observed minus the {name} control: below 0 at "
+                             f"{contiguous_ranges(below)}; above 0 at {contiguous_ranges(above)} "
                              "(95% interval of the paired difference excludes 0).")
         lines.append("")
+
+    if OUTLIER in data["cohort"]:
+        trimmed = without_outlier(data)
+        trimmed_counts = bootstrap_counts(n_proteins=len(trimmed["cohort"]))
+        lines += [f"## Sensitivity to {OUTLIER}", "",
+                  f"Cohort curves average squared terms, so one protein with very large errors has a lot of weight. "
+                  f"`{OUTLIER}` is that protein (it is also the outlier in the triangle analysis). The table gives each "
+                  f"observed curve with all {len(data['cohort'])} proteins and without it, and its share of the cohort "
+                  "sum of consistent².", ""]
+        rows = []
+        for probe in PROBES:
+            consistent = matrix(data, probe, "observed", "smacof_consistent_sq")
+            share = consistent[data["cohort"].index(OUTLIER)] / consistent.sum(axis=0)
+            parts = {(label, part): rms_summary(matrix(source, probe, "observed", f"smacof_{part}_sq"), source_counts)
+                     for label, source, source_counts in (("all", data, counts), ("without", trimmed, trimmed_counts))
+                     for part in PART_STYLES}
+            for layer in TABLE_LAYERS:
+                rows.append({"Probe": PROBE_LABELS[probe], "Layer": layer,
+                             "Inconsistent, all": interval(parts[("all", "inconsistent")], layer),
+                             "Inconsistent, without": interval(parts[("without", "inconsistent")], layer),
+                             "Consistent, all": interval(parts[("all", "consistent")], layer),
+                             "Consistent, without": interval(parts[("without", "consistent")], layer),
+                             "Share of consistent²": f"{share[layer]:.0%}"})
+        lines += [markdown_table(pd.DataFrame(rows)), "",
+                  f"Figures without it are in `figures/sensitivity/`. Across probes and layers its share of the cohort "
+                  f"consistent² ranges up to "
+                  f"{max(float((matrix(data, p, 'observed', 'smacof_consistent_sq')[data['cohort'].index(OUTLIER)] / matrix(data, p, 'observed', 'smacof_consistent_sq').sum(axis=0)).max()) for p in PROBES):.0%}.", ""]
 
     lines += ["## Unconverged SMACOF runs", ""]
     per = data["per"]
     unconverged = per[per.n_unconverged > 0]
     total_runs = int(per.n_draws.sum())
-    lines.append(f"{int(per.n_unconverged.sum())} of {total_runs} runs hit the iteration cap "
-                 f"({unconverged.shape[0]} protein × layer × probe × matrix-type cells). They stay in every curve above.")
+    if unconverged.empty:
+        lines.append(f"None: all {total_runs} runs met the tolerance before the iteration cap.")
+    else:
+        lines.append(f"{int(per.n_unconverged.sum())} of {total_runs} runs hit the iteration cap "
+                     f"({unconverged.shape[0]} protein × layer × probe × matrix-type cells). They stay in every curve above.")
     if not unconverged.empty:
         by_type = unconverged.groupby("matrix_type").n_unconverged.sum().to_dict()
         lines.append(f"By matrix type: {by_type}. Layers affected: "
@@ -598,6 +640,11 @@ def main() -> None:
     figure_cross_share(data, counts)
     figure_inconsistent_vs_triangles(data, counts)
     figure_phase(data, counts)
+    if OUTLIER in data["cohort"]:
+        trimmed = without_outlier(data)
+        trimmed_counts = bootstrap_counts(n_proteins=len(trimmed["cohort"]))
+        figure_parts_by_layer(trimmed, trimmed_counts, "sensitivity", f"inconsistent_consistent_by_layer_without_{OUTLIER}")
+        figure_phase(trimmed, trimmed_counts, "sensitivity", f"consistent_vs_inconsistent_phase_without_{OUTLIER}")
     figure_cross_share_controls(data, counts)
     figure_smacof_vs_classical_split(data, counts)
     figure_reconstruction_quality(data, counts)

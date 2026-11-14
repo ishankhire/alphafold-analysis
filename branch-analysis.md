@@ -2600,4 +2600,35 @@ Plan: `docs/plans/smacof_error_decomposition_plan.md`.
 Pilot on Delta (layers 0 and 47, full cohort): gate rehearsal `23922131`, then `23922169` (1e-10),
 `23922775` (1e-12), `23923418` (1e-13). All gates passed and every run converged; a layer takes 2–7
 minutes on 32 CPUs. The stopping tolerance matters for the consistent part of a minority of early-layer
-matrices (SMACOF plateaus), not for cohort curves. Full run not yet submitted.
+matrices (SMACOF plateaus), not for cohort curves.
+
+Full run (same day): array `23924664` at 1e-10 (cap 200,000) and aggregation `23924666`; all 741,888
+runs converged, every gate clean, slowest layer 5m54s on 32 CPUs. Outputs in
+`delta_files/diagnostic_experiments/smacof_error_decomposition_5fold_v1/` (`RESULTS.md`,
+`sanity_checks.md`, `summary_table.csv`, figures). Observed errors are less inconsistent and more
+consistent than both controls at every layer for every probe. Cohort curves are means of squares, so
+`7stz_C` dominates the consistent part (up to 64% of the cohort sum); `figures/sensitivity/` and a
+RESULTS table give the curves without it. The four large tables are not committed.
+
+## Session: 2026-11-13 — ECOD cohort pair blocks and alignments: PACE → Delta transfers submitted
+
+The Globus CLI (3.44.0) was installed in `~/.globus-cli-venv` and used to submit two transfers from
+PACE Phoenix (`6df312ab-ad7c-4bbc-9369-450c82f0cb92`) to NCSA Delta
+(`2d66a243-4a3f-4578-9d7f-1935fb5fba8f`), both with `--sync-level checksum`, into
+`/work/hdd/bfna/ikhire/thayes/ecod/`:
+
+- Pair blocks, task `a673c23a-dfc8-11f1-96c2-0affc602d875`:
+  `miscellaneous/ecod_pace_transfer/pair_blocks.batch`, the 400 cohort folders of
+  `experiments/representation_saves/`. All 400 exist on PACE. The whole PACE folder (402 folders;
+  the two extras are `000000000` and `000000249`) measures 478.0 GB; each folder holds 48 pair
+  blocks and 48 MSA blocks.
+- Alignments, task `a72ad97d-dfc8-11f1-849c-0affc602d875`: new
+  `miscellaneous/ecod_pace_transfer/alignments.batch`, the 400 cohort folders of `alignments/`
+  (PACE has 31,605; each holds `bfd_uniclust_hits.a3m`, `hhsearch_output.hhr`, `mgnify_hits.sto`,
+  `uniref90_hits.sto`).
+
+Not copied: `experiments_TRI_END_FIX/` (cohort only, 400 protein folders), the non-cohort
+alignments and `experiments/<ID>/` runs, and `domain_pdbs/` (its Globus listing fails with a 502;
+`pdbs/` is permission-denied, and `pdbs_latest/` holds the 562 MB `ecod.latest.pdb.tar.gz`).
+`datasets.md` and the inventory still say "not on Delta"; update them once the tasks succeed and
+the destination is checked.
