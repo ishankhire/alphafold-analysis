@@ -28,7 +28,7 @@ the four families' `geometry_metrics.csv` is not changed.
   is a plain Guttman-transform loop. A run has converged when one iteration lowers raw stress by
   at most `SMACOF_REL_TOL` times its value (default 1e-10), with at most `SMACOF_MAX_ITER`
   iterations (default 20,000). The iteration count and a converged flag are saved, and so are
-  the terms at the looser tolerances 1e-6 and 1e-8.
+  the terms at the moment each of the tolerances 1e-6, 1e-8 and 1e-10 was first met.
 - **Decomposition**, means over unordered pairs, with `d̂` the clipped decoded distances, `p`
   the SMACOF distances and `d` the final-structure distances:
 
@@ -91,7 +91,7 @@ Copy flat into `/work/hdd/bfna/ikhire/openfold_interpretability_canonical/`:
 
 | Output | Row | Principal columns |
 |---|---|---|
-| `layer_shards/decomposition_layer_LL.csv.gz` | probe × protein × `matrix_type` × draw (draw −1 = observed); 15,456 rows per layer | the four terms above, `smacof_identity_residual`, `smacof_raw_stress`, `classical_raw_stress`, `smacof_normalized_stress`, `classical_normalized_stress`, `smacof_scale_ratio`, `smacof_iterations`, `smacof_converged`, `smacof_final_relative_decrease`, `smacof_{iterations,inconsistent_sq,consistent_sq}_at_{1e-6,1e-8}`, `classical_{inconsistent_sq,consistent_sq,cross}`, `smacof_rmsd`, `classical_rmsd`, `smacof_tm_score` (observed only), `n_negative_values` |
+| `layer_shards/decomposition_layer_LL.csv.gz` | probe × protein × `matrix_type` × draw (draw −1 = observed); 15,456 rows per layer | the four terms above, `smacof_identity_residual`, `smacof_raw_stress`, `classical_raw_stress`, `smacof_normalized_stress`, `classical_normalized_stress`, `smacof_scale_ratio`, `smacof_iterations`, `smacof_converged`, `smacof_final_relative_decrease`, `smacof_{iterations,inconsistent_sq,consistent_sq}_at_{1e-6,1e-8,1e-10}`, `classical_{inconsistent_sq,consistent_sq,cross}`, `smacof_rmsd`, `classical_rmsd`, `smacof_tm_score` (observed only), `n_negative_values` |
 | `layer_shards/bin_sums_layer_LL.csv.gz` | probe × protein × `matrix_type` × `bin_system` × occupied bin; control draws averaged | `n_pairs`, `n_draws`, `sum_total_sq`, `sum_smacof_inconsistent_sq`, `sum_smacof_consistent_sq`, `sum_classical_inconsistent_sq`, `sum_classical_consistent_sq` (cross sum = total − inconsistent − consistent) |
 | `layer_shards/smacof_coordinates_layer_LL.npz` | observed matrices; key `<protein_id>/<probe>` | float32 `(R, 3)` SMACOF coordinates, Kabsch-aligned to the final structure |
 | `validation/layer_LL.json` | layer | gate results, convergence counts, snapshot comparison, timings, inputs; marks the layer complete |
