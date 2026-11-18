@@ -129,31 +129,46 @@ transfer command are in the
 - **Probe and triangle figures:** ✅ The saved predictions and result tables
   are intact.
 
+## Scripts on the old ECOD root
+
+Older scripts still hard-code the purged `/work/hdd/bfna/thayes/ecod/` root.
+**This is deliberate:** on Nov 18 the user decided not to repoint them in bulk.
+A script on this list fails on ECOD inputs until it is repointed, so repoint it
+when it is next needed. The restored folders keep the original layout, so only
+the root changes, to `/work/hdd/bfna/ikhire/thayes/ecod/`. New scripts must use
+the current paths in [`datasets.md`](../../datasets.md#ecod).
+
+Known on Nov 18 (`grep -rn "bfna/thayes/ecod" scripts`):
+
+- `cluster_regression_helpers.py`: `ECOD_PAIR_BLOCKS_ROOT`. This is the shared
+  helper, so anything that resolves ECOD pair blocks through it is affected.
+  Its `ECOD_PDB_ROOT` is already repointed.
+- `generalized_model_ecod/general_train_test_common.py` (both roots)
+- `diagnostics/diagnostic_secondary_structure_emergence.py` and the two
+  secondary structure sbatch files
+- `diagnostics/dssp_smoke_test.py` and its sbatch file
+- `diagnostics/distance_error_geometry_null/` (script and sbatch file)
+- `diagnostics/inventory_delta_storage.py`
+
+Related stale paths:
+
+- Workflows that read `CROSS_LAYER_ECOD_EXPERIMENTS_ROOT` need it set to
+  `/work/hdd/bfna/ikhire/thayes/ecod/experiments`; it has no default.
+- `diagnostics/transfer_followups/transfer_followups_report.sbatch` defaults
+  `LAYERWISE_ABLATION_CSV_DIR` to a purged `toDelete` path. Set it to
+  `/work/hdd/bfna/ikhire/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`.
+- The `pdb_path` column in
+  `predicted_distances_5fold_v1/metadata/proteins.csv` names the old root; the
+  checksums still match.
+
 ## To do
 
-1. Repoint code that still uses the old ECOD root. The restored folders keep
-   the original layout, so only the root changes, from
-   `/work/hdd/bfna/thayes/ecod/` to `/work/hdd/bfna/ikhire/thayes/ecod/`.
-   `ECOD_PDB_ROOT` in `cluster_regression_helpers.py` is already repointed.
-   Still on the old root (`grep -rn "bfna/thayes/ecod" scripts`):
-   - `cluster_regression_helpers.py` (`ECOD_PAIR_BLOCKS_ROOT`)
-   - `generalized_model_ecod/general_train_test_common.py` (both roots)
-   - `diagnostics/diagnostic_secondary_structure_emergence.py` and the two
-     secondary structure sbatch files
-   - `diagnostics/dssp_smoke_test.py` and its sbatch file
-   - `diagnostics/distance_error_geometry_null/` (script and sbatch file)
-   - `diagnostics/inventory_delta_storage.py`
-
-   Workflows that read `CROSS_LAYER_ECOD_EXPERIMENTS_ROOT` need it set to
-   `/work/hdd/bfna/ikhire/thayes/ecod/experiments`. The `pdb_path` column in
-   `predicted_distances_5fold_v1/metadata/proteins.csv` is also stale; the
-   checksums still match.
-2. Analyses can use all 552 cohort proteins again. The CAMEO-only diagnostics
+1. Analyses can use all 552 cohort proteins again. The CAMEO-only diagnostics
    listed in [project status](../project_status.md) have not been rerun on the
    full cohort.
-3. If `domain_pdbs/` is ever needed, check the PACE copy for broken symlinks
+2. If `domain_pdbs/` is ever needed, check the PACE copy for broken symlinks
    before copying it.
-4. Space: `/work/hdd/bfna` is at 4.26 TB against a 4.88 TB soft and 5.37 TB
+3. Space: `/work/hdd/bfna` is at 4.26 TB against a 4.88 TB soft and 5.37 TB
    hard quota (Nov 18), so about 0.6 TB is free under the soft quota.
 
 ## CAMEO

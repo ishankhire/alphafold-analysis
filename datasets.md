@@ -64,9 +64,12 @@ Notes:
   byte-identical.
 - thayes's original tree at `/work/hdd/bfna/thayes/ecod/` was purged in
   November 2026, and these files were copied back from the PI's copy on PACE
-  Phoenix. Some scripts still hard-code the old root. The history, what is
-  still only on PACE, and the scripts to repoint are in the
+  Phoenix. The history and what is still only on PACE are in the
   [Delta data inventory](docs/cluster/delta_data_inventory.md).
+- Older scripts still hard-code the purged root and are deliberately not being
+  repointed in bulk. One will fail on ECOD inputs until it is repointed, so
+  check a script's ECOD root before running it. The list is in the
+  [inventory](docs/cluster/delta_data_inventory.md#scripts-on-the-old-ecod-root).
 - ECOD experimental reference structures: `domain_pdbs/` is not on Delta. The
   tarball `/work/hdd/bfna/ikhire/thayes/ecod/pdbs/ecod.latest.pdb.tar.gz` and
   `domain_pdbs_mapping.csv` are.

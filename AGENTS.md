@@ -90,21 +90,26 @@ applicable; documentation updates do not substitute for this chat report.
 - Default to fixed repo-relative configuration. Add CLI arguments only for
   genuine environment, reproducibility, or input/output variability.
 
-## Temporary reminder: repoint ECOD paths (delete this section when done)
+## ECOD paths in older scripts
 
 The ECOD data under `/work/hdd/bfna/thayes/ecod/` was purged in November 2026.
 The cohort's PDBs, pair blocks and alignments are back on Delta under
 `/work/hdd/bfna/ikhire/thayes/ecod/`, in the same layout (paths in
-`datasets.md`). Some scripts still hard-code the old root
-(`grep -rn "bfna/thayes/ecod" scripts`): `ECOD_PAIR_BLOCKS_ROOT` in
-`cluster_regression_helpers.py` (its `ECOD_PDB_ROOT` is already repointed),
-both roots in `generalized_model_ecod/general_train_test_common.py`, and
-several diagnostics and sbatch files. Remind the user about this when ECOD
-paths come up, but don't change the scripts unless asked. For PDBs, use
-`experiments/openfold_reps_outputs_sm/` (complete), never the partial rescued
-`experiments/<ID>/..._representations_layers_save_0_47/` copy. The full list
-is to-do 1 in `docs/cluster/delta_data_inventory.md`. Once the scripts are
-repointed, delete this whole section.
+`datasets.md`). Older scripts still hard-code the purged root
+(`grep -rn "bfna/thayes/ecod" scripts`), and the user decided on 2026-11-18
+not to repoint them in bulk. So:
+
+- A script on the old root will fail on ECOD inputs. Repoint it only when a
+  task needs to run it; only the root changes.
+- This includes the shared `ECOD_PAIR_BLOCKS_ROOT` in
+  `cluster_regression_helpers.py` (its `ECOD_PDB_ROOT` is already repointed).
+- New scripts must use the current paths.
+- For PDBs, use `experiments/openfold_reps_outputs_sm/` (complete), never the
+  partial rescued `experiments/<ID>/..._representations_layers_save_0_47/`
+  copy.
+
+The known list is in the "Scripts on the old ECOD root" section of
+`docs/cluster/delta_data_inventory.md`.
 
 ## Publication figures
 

@@ -2660,5 +2660,7 @@ preservation plan, and the stale "ECOD unavailable" notes in the `native_error_s
 `miscellaneous/required_paths_2026-11-03/` pages carry a "historical snapshot" notice, since
 their `toDelete` paths are gone.
 
-Still open: scripts hard-code the old `bfna/thayes/ecod` root, except `ECOD_PDB_ROOT` in
-`cluster_regression_helpers.py` (list in inventory to-do 1).
+Decision (user, same day): older scripts that hard-code the purged `bfna/thayes/ecod` root will
+not be repointed in bulk; repoint one when it is next run. Only `ECOD_PDB_ROOT` in
+`cluster_regression_helpers.py` is on the new root. `AGENTS.md`, `datasets.md`, the status page and
+the inventory's "Scripts on the old ECOD root" section say so.
