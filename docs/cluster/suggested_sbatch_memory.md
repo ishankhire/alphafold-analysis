@@ -171,6 +171,7 @@ predictions. Replay tasks hold one protein at a time.
 | Triangle-violation subgroup replay, `triangle_violation_subgroup_replay.py` | 6.15 GiB | `8g` | Maximum across 21 successful array tasks (layers 0–20) from Delta job `21445976`; the tasks had consistent memory use, so 8 GiB provides sufficient workflow-specific headroom. |
 | Null triangle replay, `null_triangles_replay.py` (16 workers; 552 proteins) | 3.13 GiB | `6g` | Maximum across pilot `23689526_47` and array `23689609`; the script requests `16g`, which Delta does not charge extra for at 16 CPUs. The earlier CAMEO-only diagnostic (8 workers, `23656699`) peaked at 2.58 GiB. |
 | SMACOF error decomposition, `smacof_error_decomposition.py` (32 workers; 552 proteins) | 3.76 GiB | `8g` | Maximum across the two-layer pilots `23922169`, `23922775` and `23923418`; the script requests `16g`, which Delta does not charge extra for at 32 CPUs. |
+| Per-channel MDS, `per_channel_mds.py` (16 workers; 154 CAMEO proteins, 128 channels in chunks of 8) | 10.12 GiB | `16g` | Maximum Slurm MaxRSS across the 48-task array `24124699`. The in-process peak of one worker is 0.65 GiB, so the Slurm figure is 16 workers plus cached pair-block reads. The script requests `16g` (1.58x), which Delta does not charge extra for at 16 CPUs. Aggregation `24124700` peaked at 0.51 GiB against its `8g` request; `2g` is enough. |
 
 The canonical paper XGBoost model is the shared 256-feature model. If the
 exploratory per-protein XGBoost workflow is retained and also changed from 128

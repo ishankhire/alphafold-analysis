@@ -169,6 +169,7 @@ initial reference and should be confirmed on its next representative run.
 | Shared XGBoost search, `XGBSharedSearch` | 6 | `00:25:03` | `01:00:00` | Maximum across six successful search tasks. |
 | Null triangle replay, `null_triangles_replay.sbatch` (16 CPUs; 552 proteins, every triangle, 37 vectors) | 48 | `00:05:12` | `00:15:00` | Maximum across pilot `23689526_47` and array `23689609` (median 4m24s; about 57 allocated CPU-h in total). The script requests `01:00:00`. The earlier CAMEO-only diagnostic (8 CPUs, array `23656699`) peaked at `00:11:22`. |
 | SMACOF error decomposition, `smacof_error_decomposition.sbatch` (32 CPUs; 552 proteins, 28 matrices each) | 6 | `00:06:29` | `00:20:00` | Maximum across the two-layer pilots `23922169` (tolerance 1e-10), `23922775` (1e-12) and `23923418` (1e-13); layer 0 is the slow one (3m16s, 5m52s, 6m29s) and layer 47 takes 2–4 minutes. About 2.8 CPU-h for layer 0 at 1e-13. The script requests `01:00:00`. |
+| Per-channel MDS, `per_channel_mds.sbatch` (16 CPUs; 154 CAMEO proteins, 128 channels, 4 eigendecompositions each) | 48 | `00:10:00` | `00:20:00` | Maximum across array `24124699`. 46 layers took 97–135 s inside Python; layers 16 and 47 took 586 s and 360 s for the same work, with summed per-protein time 3–5x the median, which points to a busy node. The script requests `00:30:00`. Aggregation `24124700` took 1m04s against `00:15:00`. |
 
 ## Collecting new references
 

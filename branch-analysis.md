@@ -2664,3 +2664,32 @@ Decision (user, same day): older scripts that hard-code the purged `bfna/thayes/
 not be repointed in bulk; repoint one when it is next run. Only `ECOD_PDB_ROOT` in
 `cluster_regression_helpers.py` is on the new root. `AGENTS.md`, `datasets.md`, the status page and
 the inventory's "Scripts on the old ECOD root" section say so.
+
+## Session: 2026-11-18 — Per-channel MDS of the pair representation (`per_channel_mds_cameo_v1`)
+
+New probe-free diagnostic under `scripts/cluster_scripts/diagnostics/per_channel_mds/` (maths module,
+per-layer worker, aggregation, two launchers, README) with tests in
+`scripts/multi_protein/tests/test_per_channel_mds.py`. Each of the 128 channels is symmetrised,
+oriented by the sign with lower stress, shifted so its smallest off-diagonal value is zero and embedded
+in 3D with `helpers.classical_mds`; one permutation of each channel's values is the null. Reference
+rows put the final-structure distances and `|i − j|` through the same MDS, raw and min-shifted. Local
+analysis: `scripts/multi_protein/per_channel_mds/analyze_per_channel_mds.py`; the shared linear
+probe's numbers are joined from `regression_5fold_v1/shared_ols_base256/geometry_metrics.csv`, not
+recomputed.
+
+Run on Delta (154 CAMEO proteins, 48 layers, code `3102531`): array `24124699` (16 CPUs, `16g`) and
+aggregation `24124700`; all 49 jobs completed and every gate passed (parity with
+`helpers.classical_mds` 1.8e-14, no constant channels). Most layers took about 2 minutes; layers 16
+and 47 took 10 and 6 minutes on busy nodes. Submitted without `--mail-user` because
+`CLUSTER_NOTICE_EMAIL` is not set on Delta. Outputs in
+`delta_files/diagnostic_experiments/per_channel_mds_cameo_v1/`; `tables/channel_metrics.csv.gz`
+(129 MB) is not committed.
+
+Results: single channels are far from Euclidean. At layer 47 the channel mean stress is 0.480, against
+0.637 for permuted channels, 0.100 for the shared linear probe and 0.078 for min-shifted true
+distances (the floor the shift rule allows). The best channel of each protein reaches 0.246. The
+channel mean follows the probe's shape (drop over layers 10–20, lowest 0.473 at layer 22) but then
+rises to 0.543 at layer 34 before falling again. At layer 0 low stress tracks sequence separation
+(across channels r = −0.83 with `|ρ| separation`); from layer 20 it tracks distance (r ≈ −0.7), and
+at layer 47 neither (r = −0.31 and −0.08): the lowest-stress layer-47 channels are mostly not
+distance-like. About a third of each channel's off-diagonal variance is antisymmetric and discarded.
