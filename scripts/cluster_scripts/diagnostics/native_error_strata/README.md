@@ -32,11 +32,10 @@ rules.
   scales. `verify_training_target.py` is OLS-only: XGBoost fits on sampled pairs, and
   its configuration records the same final structure target.
 
-The ECOD final structure PDBs are unavailable as of 2026-11-06. Until they return,
-`build_strata.py` and `verify_training_target.py` cannot run, so
-`native_error_strata.csv`, `native_strata.npz`, `checks.json`, and
-`training_target_check.json` cannot be rebuilt. `plot_strata.py` and the protein
-view still run.
+The ECOD final structure PDBs were purged on 2026-11-06 and restored on
+2026-11-08 (see `datasets.md`), so `build_strata.py` and
+`verify_training_target.py` can run again. Neither has been rerun since, and
+the XGBoost view above is still CAMEO only.
 
 ## Deploy
 
@@ -100,9 +99,9 @@ sbatch "$MAIL" protein_strata.sbatch                         # CAMEO protein vie
 sbatch "$MAIL" native_strata_xgboost.sbatch                  # XGBoost CAMEO views; output root native_error_strata_xgboost_v1
 ```
 
-When the ECOD PDBs return:
+Full cohort, now that the ECOD PDBs are back (not yet rerun):
 
 ```bash
-export CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/path/holding/both/folders
+export CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/work/hdd/bfna/ikhire/thayes/ecod/experiments
 sbatch "$MAIL" native_error_strata.sbatch                    # cohort view, target check, plots
 ```

@@ -1,5 +1,12 @@
 # Missing Delta paths to preserve or locate
 
+> **Historical snapshot (November 3, 2026). Do not use these paths.** The
+> `/work/hdd/bfna/toDelete/thayes/` tree this page points to was purged between
+> November 3 and 7. The current locations are in
+> [`datasets.md`](../../datasets.md) and the
+> [Delta data inventory](../../docs/cluster/delta_data_inventory.md). Only the
+> retention choices at the end of this page still apply.
+
 Based on the November 3, 2026 directory checks. “Missing” means `cd` returned
 “No such file or directory” at that path; it does not prove deletion. Individual
 file contents were not audited. The inventory has moved out of `docs/`.

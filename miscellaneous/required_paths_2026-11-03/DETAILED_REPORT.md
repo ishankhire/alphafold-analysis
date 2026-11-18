@@ -1,5 +1,10 @@
 # Important Delta paths and directory access
 
+> **Historical snapshot (November 3, 2026). Do not use these paths.** The
+> `/work/hdd/bfna/toDelete/thayes/` tree was purged between November 3 and 7.
+> The current locations are in [`datasets.md`](../../datasets.md) and the
+> [Delta data inventory](../../docs/cluster/delta_data_inventory.md).
+
 Update: the copy helper now uses the accessible singular-spelling source
 `/work/hdd/bfna/toDelete/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD/`.
 Spelling-issue descriptions below record the pre-fix audit. The user wants to

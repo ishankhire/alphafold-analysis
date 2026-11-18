@@ -12,10 +12,11 @@ authorization and deletion rules.
   `target_restandardized` mode only. `raw` is not run.
 - Cohort: `ALL_LAYER_COHORT` must be stated. `cameo` is the 154 CAMEO proteins of
   the frozen cohort, and `full` is all 552. The ECOD pair tensors and final
-  structure PDBs left `toDelete` on 2026-11-06, so current results are
+  structure PDBs were purged from Delta on 2026-11-06, so current results are
   `cameo`. They use the same frozen probes and stay out-of-fold, but they are a
-  different cohort: re-run as `full` once ECOD returns, and do not compare pooled
-  numbers across cohorts.
+  different cohort: do not compare pooled numbers across cohorts. The ECOD
+  inputs are back on Delta (PDBs 2026-11-08, pair tensors 2026-11-13), but the
+  `full` run has not been made.
 - Each held-out protein in outer fold `f` is evaluated with the fold-`f` probe
   from the source layer, applied to its target-layer `[Z_ij | Z_ji]` features.
 - `target_restandardized`: the source standardized coefficients and intercept
@@ -85,9 +86,10 @@ recorded in the run manifest.
 - Ten-layer run for the overlap gate: `$CROSS_LAYER_V1_ROOT`, default
   `/work/hdd/bfna/ikhire/diagnostic_experiments/cross_layer_probe_transfer_v1`.
 - Pair tensors and PDBs: the CAMEO paths in `datasets.md`. `full` also needs
-  `$CROSS_LAYER_ECOD_EXPERIMENTS_ROOT`, set to wherever the ECOD
-  `representation_saves/` and `openfold_reps_outputs_sm/` now live. It has no
-  default, and the path in `datasets.md` is stale.
+  `$CROSS_LAYER_ECOD_EXPERIMENTS_ROOT`, the folder holding the ECOD
+  `representation_saves/` and `openfold_reps_outputs_sm/`:
+  `/work/hdd/bfna/ikhire/thayes/ecod/experiments` (see `datasets.md`). It has
+  no default.
 - Output root: `$ALL_LAYER_TRANSFER_OUTPUT_ROOT`, default
   `~/diagnostic_experiments/cross_layer_probe_transfer_all_layers_<cohort>_v1/`
   for `cameo`, and `~/diagnostic_experiments/cross_layer_probe_transfer_all_layers_v1/`
@@ -158,13 +160,12 @@ provided the deployed code revision is unchanged.
 
 ### Re-running on the full cohort
 
-Once the ECOD inputs are back, nothing below needs a code change. Confirm the
-`representation_saves/` and `openfold_reps_outputs_sm/` folder names, then repeat
-the commands above with:
+The ECOD inputs are back on Delta, and nothing below needs a code change.
+Repeat the commands above with:
 
 ```bash
 export ALL_LAYER_COHORT=full
-export CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/path/holding/both/folders
+export CROSS_LAYER_ECOD_EXPERIMENTS_ROOT=/work/hdd/bfna/ikhire/thayes/ecod/experiments
 ```
 
 The launcher's 4 CPUs and 1-hour limit should still suit `full`: each target

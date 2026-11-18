@@ -2641,3 +2641,24 @@ shares of total², which add to 100%) and `figures/diagnostics/smacof_rmsd_obser
 Follow-up (2026-11-14): the SMACOF vs classical-MDS TM-score figure is now one panel per probe
 (`figures/diagnostics/smacof_vs_classical_tm_score`), replacing the single-panel
 `smacof_vs_classical_reconstruction_quality`; its RMSD panel was dropped.
+
+## Session: 2026-11-18 — ECOD inputs back on Delta; docs brought up to date
+
+Both Nov 13 Globus transfers succeeded with no faults (pair and MSA blocks: 400 folders, 38,400
+files, 476.4 GB; alignments: 400 folders, 1,600 files, 6.3 GB). Checked on Delta: the 400 cohort
+IDs are under `/work/hdd/bfna/ikhire/thayes/ecod/experiments/representation_saves/` and
+`/work/hdd/bfna/ikhire/thayes/ecod/alignments/`. Alignments are nested as
+`alignments/{ID}/{ID}/`, as on PACE. `/work/hdd/bfna` is at 4.26 TB of a 4.88 TB soft quota.
+
+Docs only; no script was changed. `datasets.md` now gives the ECOD pair block, MSA block, PDB
+and alignment paths as plain current paths. `docs/cluster/delta_data_inventory.md` lists the
+restored folders, renames "Missing from Delta, on PACE" to "Only on PACE", and drops its finished
+to-do items. Also updated: `AGENTS.md` (temporary repoint reminder), `docs/project_status.md`,
+`docs/cluster/README.md`, `miscellaneous/ecod_pace_transfer/README.md`, the space line in the
+preservation plan, and the stale "ECOD unavailable" notes in the `native_error_strata`,
+`cross_layer_transfer_all_layers` and `transfer_followups` runbooks. The Nov 3
+`miscellaneous/required_paths_2026-11-03/` pages carry a "historical snapshot" notice, since
+their `toDelete` paths are gone.
+
+Still open: scripts hard-code the old `bfna/thayes/ecod` root, except `ECOD_PDB_ROOT` in
+`cluster_regression_helpers.py` (list in inventory to-do 1).

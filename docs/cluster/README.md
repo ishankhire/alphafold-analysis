@@ -79,10 +79,9 @@ outputs may still live there; this convention does not migrate them. Older
 launchers may still hard-code or default to that root, so verify their effective
 paths before running. If a workflow uses `CSV_ROOT` for both inputs and outputs,
 preserve the actual input paths and configure outputs separately when needed.
-Pair tensors and original PDBs remain at the locations in `datasets.md`. That
-file also records that the ECOD PDBs were restored to
-`/work/hdd/bfna/ikhire/thayes/ecod/`, and that the ECOD pair blocks are not yet
-back on Delta.
+Pair tensors and predicted PDBs are at the locations in `datasets.md`. The ECOD
+ones are under `/work/hdd/bfna/ikhire/thayes/ecod/`, restored from PACE after
+the purge.
 
 ## Submission directory
 

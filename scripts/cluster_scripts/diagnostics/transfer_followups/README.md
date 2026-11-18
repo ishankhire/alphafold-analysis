@@ -23,8 +23,9 @@ rules.
 - Target: the Cα distance in OpenFold's final predicted structure. Signed error is
   probe minus final structure.
 - Proteins: the 154 CAMEO proteins, with `7stz_C` excluded where a table says so.
-  ECOD pair tensors and final structures are unavailable, and the two replays select
-  CAMEO directly, so a full-cohort run needs that selection changed.
+  ECOD pair tensors and final structures were unavailable when this ran (they are
+  back on Delta; see `datasets.md`). The two replays select CAMEO directly, so a
+  full-cohort run needs that selection changed.
 - Gates: `gain_position_replay.py` reproduces the all-layer transfer shard, and
   `triangle_strata_replay.py` reproduces the stored strata and violation fractions,
   before either writes. Proteins above 1,000,000 triples use a fixed sample.
@@ -63,14 +64,14 @@ coefficient artifacts, and `predicted_distances_5fold_v1/`.
 | `ALL_LAYER_TRANSFER_OUTPUT_ROOT` | `~/diagnostic_experiments/cross_layer_probe_transfer_all_layers_cameo_v1` | All-layer transfer tables and shards |
 | `NATIVE_OLS_STRATA_ROOT` | `~/diagnostic_experiments/native_error_strata_v1` | `data/protein_strata_cameo.npz` |
 | `NATIVE_XGBOOST_STRATA_ROOT` | `~/diagnostic_experiments/native_error_strata_xgboost_v1` | `data/protein_strata_cameo.npz` |
-| `LAYERWISE_ABLATION_CSV_DIR` | The launcher's source in `toDelete`; see below | Ablation CSVs and `structure_module_tm_scores.csv` |
+| `LAYERWISE_ABLATION_CSV_DIR` | A purged `toDelete` path; set it explicitly, see below | Ablation CSVs and `structure_module_tm_scores.csv` |
 | `GAIN_POSITION_OUTPUT_ROOT` | `~/diagnostic_experiments/gain_and_chain_position_cameo_v1` | Written: gain replay shards and the gain table |
 | `TRIANGLE_STRATA_OUTPUT_ROOT` | `~/diagnostic_experiments/triangle_strata_cameo_v1` | Written: triangle shards, tables, and chart rows |
 | `TRANSFER_FOLLOWUPS_REPORT_DIR` | `~/diagnostic_experiments/transfer_followups_cameo_v1` | Written: text reports |
 
-The ablation source sits in a to-delete tree. Copy it with
-[`copy_layerwise_ablation_csvs.sh`](../../copy_layerwise_ablation_csvs.sh) and point
-`LAYERWISE_ABLATION_CSV_DIR` at the copy.
+The launcher's default ablation source was purged in November 2026. Set
+`LAYERWISE_ABLATION_CSV_DIR=/work/hdd/bfna/ikhire/thayes/FINAL_RESULT_CSVS_TRI_END_FIX_PATCHED_FROM_OLD`,
+the rescued copy (also committed under `delta_files/layerwise_ablation_csvs/`).
 
 | Output | Rows | Row | Principal columns |
 |---|---:|---|---|

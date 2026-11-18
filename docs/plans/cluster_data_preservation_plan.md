@@ -14,9 +14,10 @@ directory checks are in
   [Delta data inventory](../cluster/delta_data_inventory.md#cameo).
 - **Scope:** CAMEO inputs/outputs and triangle attention maps, now under
   `/work/hdd/bfna/ikhire/thayes/cameo/`.
-- **Space:** `/work/hdd/bfna` was at 2.87 TB before the copy and is now at
-  3.63 TB, against a 4.88 TB soft / 5.37 TB hard quota. About 1.25 TB is free
-  under the soft quota.
+- **Space:** `/work/hdd/bfna` was at 2.87 TB before the copy and 3.63 TB after
+  it. With the ECOD data restored from PACE it is at 4.26 TB (Nov 18), against
+  a 4.88 TB soft / 5.37 TB hard quota. About 0.6 TB is free under the soft
+  quota.
 - **Not all critical data is in a `thayes/` folder.** thayes also owns
   top-level bfna folders, and gprash owns the CAMEO ablation PDB folders.
 
