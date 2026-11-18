@@ -2664,3 +2664,15 @@ Decision (user, same day): older scripts that hard-code the purged `bfna/thayes/
 not be repointed in bulk; repoint one when it is next run. Only `ECOD_PDB_ROOT` in
 `cluster_regression_helpers.py` is on the new root. `AGENTS.md`, `datasets.md`, the status page and
 the inventory's "Scripts on the old ECOD root" section say so.
+
+## Session: 2026-11-18 — Probe layer similarity; all-layer transfer on 552 proteins
+
+Added `scripts/cluster_scripts/diagnostics/probe_layer_similarity/` (compute, figures, launchers,
+runbook, tests). It compares the frozen probes across layers: weight cosine for the shared and
+sequence-gated linear probes, and per-protein Pearson and Spearman correlation of stored OOF
+predictions and of errors for all four probes. Everything is protein-equal; nothing is pooled over
+pairs. Job `24125964` (32 min, 7.8 GiB) passed 192/192 MAE parity checks.
+
+Reran the all-layer shared-OLS transfer with `ALL_LAYER_COHORT=full`, no code change (array
+`24125962`, aggregation `24125963`; 2,456/2,456 checks). Report:
+`delta_files/analysis/probe_layer_similarity_report_v1/REPORT.md`.

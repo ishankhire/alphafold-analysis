@@ -120,8 +120,15 @@ below remain existing estimates, pending allocation accounting.
 | Stage | Initial `--time` | Basis |
 |---|---:|---|
 | One-target-layer replay, `cameo` | `00:30:00` | 47 tasks of array `23616061` took 2:26 to 3:56 at 16 concurrent, and pilot `23615941` took 3:38. |
-| One-target-layer replay, `full` | `01:00:00` | About 2.3 times the `cameo` pairs and tensor bytes; not yet measured. |
-| Aggregation and parity | `01:00:00` | `cameo` job `23616062` took 2:15. `full` adds the pooled gates and 3.6 times the proteins. |
+| One-target-layer replay, `full` | `01:00:00` | Array `24125962` took 4:33 to 29:28 per task at 16 concurrent; the slow tasks were waiting on tensor reads. |
+| Aggregation and parity | `01:00:00` | `cameo` job `23616062` took 2:15. `full` adds the pooled gates and 3.6 times the proteins. `full` job `24125963` took 5:27. |
+
+### Probe layer similarity
+
+| Stage | Initial `--time` | Basis |
+|---|---:|---|
+| `ProbeLayerSim`, all probes and layers | `01:00:00` | Job `24125964` took 32:07 on 4 CPUs; most of it is ranking for Spearman. |
+| `ProbeLayerSimFig` | `00:30:00` | Jobs `24125965` and `24128141` took 18 and 31 seconds; keeps the short-job minimum. |
 | Figures | `00:30:00` | Jobs `23616063` and `23616303` took 24 and 22 seconds for 56 PNGs. |
 
 ### Native error strata

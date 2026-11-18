@@ -138,6 +138,15 @@ time, plus 48 prediction columns and additive histograms for the target layer.
 | Aggregation and parity | `16g` | `cameo` job `23616062` peaked at 0.97 GiB inside the process. Dense primitives grow from 0.4 GiB to 1.5 GiB for `full`. |
 | Figures | `8g` | `cameo` job `23616063` used 0.67 GiB. |
 
+`full` aggregation `24125963` peaked at 2.2 GiB inside the process (4.2 GiB by Slurm accounting).
+
+### Probe layer similarity
+
+| Stage | Initial `--mem` | Basis |
+|---|---:|---|
+| `ProbeLayerSim` | `16g` | Job `24125964` reached 7.8 GiB by Slurm accounting with four worker processes. |
+| `ProbeLayerSimFig` | `8g` | Job `24125965` used 0.33 GiB. |
+
 ### Transfer follow-ups
 
 The diagnostic `transfer_followups` workflow reads the all-layer transfer run and stored

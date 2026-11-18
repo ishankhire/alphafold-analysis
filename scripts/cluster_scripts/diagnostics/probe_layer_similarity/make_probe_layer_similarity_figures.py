@@ -93,8 +93,11 @@ def offset_profile(matrix: np.ndarray) -> np.ndarray:
 
 
 def color_scale(matrices) -> tuple:
+    """Diverging if any value is negative; otherwise sequential from a rounded-down minimum."""
     low = min(float(np.nanmin(matrix)) for matrix in matrices)
-    return (DIVERGING, -1.0, 1.0) if low < 0 else (SEQUENTIAL, 0.0, 1.0)
+    if low < 0:
+        return DIVERGING, -1.0, 1.0
+    return SEQUENTIAL, (np.floor(low * 10) / 10 if low >= 0.5 else 0.0), 1.0
 
 
 def heatmap(ax, matrix, cmap, vmin, vmax, title, xlabel="Layer", ylabel="Layer"):

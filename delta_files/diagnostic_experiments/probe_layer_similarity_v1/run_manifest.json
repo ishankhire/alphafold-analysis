@@ -1,0 +1,45 @@
+{
+  "analysis_name": "probe_layer_similarity_v1",
+  "analysis_status": "complete",
+  "code_revision": "33329374873882d6d94814ccdd6553c7a6fecf48",
+  "n_proteins": 552,
+  "n_layers": 48,
+  "probes": [
+    "shared_ols_base256",
+    "per_protein_ols_base256",
+    "sequence_gated_ols_base256",
+    "shared_xgboost_base256_fixed_s4"
+  ],
+  "sequence_gates": [
+    "1",
+    "2_to_4",
+    "5_to_9",
+    "10_to_19",
+    "20_to_49",
+    "50_plus"
+  ],
+  "pair_measures": [
+    "prediction_pearson",
+    "prediction_spearman",
+    "error_pearson",
+    "error_spearman"
+  ],
+  "aggregation": "per-protein correlation, then equal-weight statistics across proteins; weight cosine within outer fold, then statistics across folds",
+  "error_definition": "probe distance minus final structure distance",
+  "parity": {
+    "checks": 192,
+    "failed": 0,
+    "atol_angstrom": 0.001,
+    "max_abs_mae_difference": 1.1887257156395492e-07
+  },
+  "nonfinite_similarity_values": 0,
+  "inputs": {
+    "producer_root": "/work/hdd/bfna/ikhire/regression_5fold_v1",
+    "predicted_distances": "/work/hdd/bfna/ikhire/regression_5fold_v1/predicted_distances_5fold_v1"
+  },
+  "versions": {
+    "numpy": "2.4.2",
+    "scipy": "1.17.1"
+  },
+  "elapsed_seconds": 1911.0
+}
