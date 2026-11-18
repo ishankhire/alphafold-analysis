@@ -54,13 +54,12 @@ METRICS = {
     "frac_top3_eigenvalues": ("Top-3 eigenvalue fraction", "p90", "max"),
 }
 BLUE, ORANGE, AQUA, GREY = "#2a78d6", "#eb6834", "#1baf7a", "#52514e"   # grey is the neutral null
-# series -> (label, colour, line style, drawn with a band)
+# Drawn series -> (label, colour, line style, drawn with a band). The better decile and the
+# permuted best channel are in summary_by_layer.csv and RESULTS.md but not in the figure.
 SERIES = {
     "channel_mean": ("Channel mean", BLUE, "-", True),
-    "channel_better_decile": ("Channel better decile", BLUE, "--", False),
     "channel_best": ("Best channel", BLUE, ":", False),
     "permuted_mean": ("Permuted channel mean", GREY, "-", True),
-    "permuted_best": ("Permuted best channel", GREY, ":", False),
     "shared_ols_probe": ("Shared linear probe", ORANGE, "-", True),
     "true_distance_minshift": ("True distances, min-shifted", AQUA, "-.", False),
 }
@@ -167,7 +166,7 @@ def figure_metric_by_layer(summary: pd.DataFrame, layers: list[int]) -> None:
         layer_axis(ax, layers)
     handles = [Line2D([0], [0], color=colour, linestyle=style, linewidth=2.4, label=label)
                for label, colour, style, _ in SERIES.values()]
-    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False, bbox_to_anchor=(0.5, -0.17))
+    fig.legend(handles=handles, loc="lower center", ncol=len(handles), frameon=False, bbox_to_anchor=(0.5, -0.1))
     fig.tight_layout(w_pad=2.5)
     save(fig, "metric_by_layer")
 
@@ -360,8 +359,8 @@ def write_results(data: dict, summary: pd.DataFrame, channels: pd.DataFrame) -> 
                   f"{relation.loc[layers[0]]:.2f} at layer {layers[0]} and {relation.loc[last]:.2f} at layer {last}. "
                   f"The stress floor from the shift rule is {floor:.3f}.", "",
               "## Figures", "",
-              "- `figures/metric_by_layer`: the three metrics by layer, channel mean, better decile and best",
-              "  channel, with the permuted null, the shared linear probe and the min-shifted true distances.",
+              "- `figures/metric_by_layer`: the three metrics by layer, channel mean and best channel, with",
+              "  the permuted channel mean, the shared linear probe and the min-shifted true distances.",
               "- `figures/stress_heatmap_layer_by_channel`: cohort-mean stress per channel and layer.",
               "- `figures/stress_vs_distance_correlation`: one point per channel at selected layers.",
               "- `figures/stress_distribution_real_vs_permuted`: stress over protein-channel pairs.", ""]

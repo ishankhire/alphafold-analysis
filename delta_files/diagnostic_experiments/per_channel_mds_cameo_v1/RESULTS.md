@@ -120,8 +120,8 @@ Across protein-channel pairs, the correlation between stress and `|ρ| distance`
 
 ## Figures
 
-- `figures/metric_by_layer`: the three metrics by layer, channel mean, better decile and best
-  channel, with the permuted null, the shared linear probe and the min-shifted true distances.
+- `figures/metric_by_layer`: the three metrics by layer, channel mean and best channel, with
+  the permuted channel mean, the shared linear probe and the min-shifted true distances.
 - `figures/stress_heatmap_layer_by_channel`: cohort-mean stress per channel and layer.
 - `figures/stress_vs_distance_correlation`: one point per channel at selected layers.
 - `figures/stress_distribution_real_vs_permuted`: stress over protein-channel pairs.
