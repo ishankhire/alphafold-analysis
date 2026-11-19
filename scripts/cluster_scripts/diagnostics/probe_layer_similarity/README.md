@@ -61,6 +61,20 @@ Measures in `layer_pair_similarity.csv`: `weight_cosine_standardized`,
 
 The figure stage writes nine PNG and PDF files to `figures/`.
 
+### Transfer by stratum
+
+`transfer_by_stratum.py` reads the all-layer transfer run's `layer_shards/` and
+replays nothing. For each source layer, target layer and canonical stratum (six
+sequence-separation bins, five final-structure-distance bins, and all pairs) it
+takes each protein's mean absolute error and averages over proteins. It writes
+`transfer_by_stratum.csv` (25,344 rows; one per stratum axis, stratum, source
+layer and target layer; `n_proteins`, `mean_protein_mae`, `median_protein_mae`,
+`mean_protein_excess_mae`, `median_protein_excess_mae`,
+`native_target_mean_protein_mae`) and four heatmap figures, `10_` to `13_`. Its
+gate is that the all-pairs mean reproduces `transfer_matrix.csv`. Submit
+`transfer_by_stratum.sbatch` after the transfer aggregation; job `24134288`
+took 23 seconds and 1.2 GiB.
+
 ## Deploy and submit
 
 Copy into `$HOME/openfold_interpretability_canonical/`: every `.py` and

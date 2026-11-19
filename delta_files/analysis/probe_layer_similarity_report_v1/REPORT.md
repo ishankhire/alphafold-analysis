@@ -148,7 +148,77 @@ rerun on the full cohort; the earlier run covered the 154 CAMEO proteins only.
 
 ![Transfer](../../diagnostic_plots/probe_layer_similarity_v1/06_transfer_mean_protein_r2.png)
 
-## 5. How the measures relate
+## 5. Transfer by sequence separation and by distance
+
+The same transfer run, split by pair stratum: six sequence-separation bins and
+five final-structure-distance bins, one axis at a time. Each protein's absolute
+error is computed inside the stratum and then averaged over proteins. "Excess"
+is the transferred probe's error minus the target layer's own probe's error on
+the same protein and stratum. The 40+ Å bin has 479 proteins; the rest have 552.
+
+Excess error as a fraction of the layer's own probe's error, within layers
+16–47 (forward is an earlier probe on a later layer):
+
+| Stratum | 5 apart, forward | 5, backward | 10, forward | 10, backward | 20, forward | 20, backward |
+|---|---:|---:|---:|---:|---:|---:|
+| All pairs | 0.33 | 0.37 | 0.50 | 0.60 | 0.94 | 0.93 |
+| Separation 1 | 0.52 | 0.68 | 1.07 | 1.59 | 2.07 | 3.15 |
+| Separation 2–4 | 0.41 | 0.48 | 0.81 | 0.95 | 1.30 | 1.73 |
+| Separation 5–9 | 0.46 | 0.49 | 0.75 | 0.97 | 1.68 | 1.39 |
+| Separation 10–19 | 0.42 | 0.49 | 0.62 | 0.85 | 1.25 | 1.27 |
+| Separation 20–49 | 0.36 | 0.39 | 0.55 | 0.63 | 0.98 | 0.98 |
+| Separation 50+ | 0.29 | 0.31 | 0.42 | 0.46 | 0.79 | 0.72 |
+| Distance 0–5 Å | 0.48 | 0.64 | 1.01 | 1.44 | 1.83 | 2.73 |
+| Distance 5–10 Å | 0.36 | 0.42 | 0.72 | 0.89 | 1.14 | 1.49 |
+| Distance 10–20 Å | 0.41 | 0.43 | 0.67 | 0.71 | 1.30 | 1.19 |
+| Distance 20–40 Å | 0.33 | 0.40 | 0.41 | 0.61 | 0.79 | 0.74 |
+| Distance 40+ Å | 0.26 | 0.28 | 0.34 | 0.34 | 0.46 | 0.65 |
+
+- **Transfer costs the most, relative to the layer's own probe, for pairs that
+  are close in sequence or in space.** At 10 layers apart, forward transfer adds
+  107% to the error at separation 1 and 101% at 0–5 Å, against 42% at separation
+  50+ and 34% beyond 40 Å.
+- **The forward advantage is a short-range effect.** At 20 layers apart,
+  backward transfer adds 315% at separation 1 against 207% forward. For
+  separations of 20 or more the two directions cost the same.
+- **Early and late layers fail in different ways.** Mean absolute error in Å:
+
+| Stratum | Probes from layers 0–7 on layers 16–47 | Probes from layers 16–47 on layers 0–7 | Layers 0–7, own probe |
+|---|---:|---:|---:|
+| Separation 1 | 10.0 | 23.2 | 3.7 |
+| Separation 2–4 | 11.2 | 10.1 | 3.6 |
+| Separation 5–9 | 10.1 | 5.8 | 3.5 |
+| Separation 10–19 | 10.4 | 6.3 | 4.0 |
+| Separation 20–49 | 10.1 | 7.1 | 4.7 |
+| Separation 50+ | 10.4 | 8.2 | 6.2 |
+| Distance 0–5 Å | 10.2 | 21.0 | 4.1 |
+| Distance 5–10 Å | 12.8 | 9.0 | 4.6 |
+| Distance 10–20 Å | 8.9 | 6.4 | 4.6 |
+| Distance 20–40 Å | 11.0 | 6.1 | 4.4 |
+| Distance 40+ Å | 10.6 | 19.5 | 14.1 |
+
+- Early probes read on later layers are about 10 Å off in every stratum alike.
+  Later probes read on early layers are far worse on neighbours and contacts
+  (21–23 Å) and on the most distant pairs (19.5 Å), but only 6–8 Å off in between.
+- The sequence-gated weights in section 2 were most stable for separations 2–9,
+  yet the shared probe's transfer is relatively costliest at short range. The two
+  are different probes, and the ratio here is against a small baseline error, so
+  this is not a contradiction, but it is worth a closer look.
+- In a few cells the transferred probe is slightly better than the layer's own
+  (99 of 2,304 beyond 40 Å, at most 26 in any other stratum). The excess
+  heatmaps show those as zero.
+
+Each panel has its own colour scale, and the top 5% of cells saturate.
+
+![Excess error by sequence separation](../../diagnostic_plots/probe_layer_similarity_v1/12_transfer_excess_mae_by_sequence_separation.png)
+
+![Excess error by distance](../../diagnostic_plots/probe_layer_similarity_v1/13_transfer_excess_mae_by_spatial_distance.png)
+
+![Absolute error by sequence separation](../../diagnostic_plots/probe_layer_similarity_v1/10_transfer_mae_by_sequence_separation.png)
+
+![Absolute error by distance](../../diagnostic_plots/probe_layer_similarity_v1/11_transfer_mae_by_spatial_distance.png)
+
+## 6. How the measures relate
 
 - Across the 1,128 layer pairs, Spearman correlation with transfer R² (median
   per-protein, averaged over the two directions): prediction correlation 0.92,
@@ -179,6 +249,7 @@ rerun on the full cohort; the earlier run covered the 154 CAMEO proteins only.
   means the readout direction differs, not that distance information is absent.
 - Prediction and error similarity compare each layer's own probe on its own
   layer. Only the transfer matrix applies one layer's probe to another layer.
+- The stratified whole-protein error reproduces `transfer_matrix.csv` to 2 × 10⁻¹⁵.
 - The values at 40 or more layers apart rest on few layer pairs (eight at 40,
   one at 47).
 
@@ -191,4 +262,4 @@ rerun on the full cohort; the earlier run covered the 154 CAMEO proteins only.
 | Figures (PNG and PDF) | `delta_files/diagnostic_plots/probe_layer_similarity_v1/` |
 | Code and runbook | `scripts/cluster_scripts/diagnostics/probe_layer_similarity/` |
 | Full outputs on Delta | `~/diagnostic_experiments/probe_layer_similarity_v1/`, `~/diagnostic_experiments/cross_layer_probe_transfer_all_layers_v1/` |
-| Jobs | transfer replay `24125962`, aggregation `24125963`, similarity `24125964`, figures `24125965` and `24128141` |
+| Jobs | transfer replay `24125962`, aggregation `24125963`, similarity `24125964`, figures `24125965` and `24128141`, transfer by stratum `24134288` |

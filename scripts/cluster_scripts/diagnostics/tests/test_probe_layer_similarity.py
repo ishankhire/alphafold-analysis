@@ -135,3 +135,38 @@ def test_figures_render_from_tables(tmp_path, monkeypatch):
     (tmp_path / "run_manifest.json").write_text(json.dumps({"analysis_status": "parity_failed", "n_proteins": 9}))
     with pytest.raises(SystemExit):
         figures.main()
+
+
+def test_transfer_by_stratum_is_protein_equal_and_measures_excess(tmp_path):
+    import transfer_by_stratum as strata
+
+    n_layers, n_proteins, n_categories = 3, 4, len(strata.CATEGORIES)
+    rng = np.random.default_rng(6)
+    (tmp_path / "layer_shards").mkdir()
+    probes = []
+    for target in range(n_layers):
+        probe = np.zeros((n_layers, n_proteins, n_categories, 7))
+        probe[..., strata.STAT_N] = rng.integers(1, 1000, size=(1, n_proteins, n_categories))
+        probe[..., strata.STAT_SUM_ABS_ERROR] = probe[..., strata.STAT_N] * rng.uniform(1, 5, size=probe.shape[:3])
+        probe[:, 3, -1] = 0  # one protein has no pairs in the last stratum
+        probes.append(probe)
+        np.savez(tmp_path / "layer_shards" / f"target_layer_{target:02d}.npz", probe=probe,
+                 target_layer=target, completed=np.ones(n_proteins, dtype=bool))
+    summaries = strata.load_summaries(tmp_path, n_layers)
+    mae = probes[2][0, :, 1, strata.STAT_SUM_ABS_ERROR] / probes[2][0, :, 1, strata.STAT_N]
+    native = probes[2][2, :, 1, strata.STAT_SUM_ABS_ERROR] / probes[2][2, :, 1, strata.STAT_N]
+    assert summaries["mean_mae"].shape == (n_layers, n_layers, n_categories)
+    assert summaries["mean_mae"][0, 2, 1] == pytest.approx(mae.mean())  # not weighted by pair count
+    assert summaries["mean_excess"][0, 2, 1] == pytest.approx((mae - native).mean())
+    assert np.allclose(summaries["mean_excess"][[0, 1, 2], [0, 1, 2]], 0)
+    assert summaries["n_proteins"][0, 0, -1] == 3 and summaries["n_proteins"][0, 0, 0] == 4
+
+    rows = list(strata.table_rows(summaries))
+    assert len(rows) == n_categories * n_layers ** 2 and len(rows[0]) == len(strata.COLUMNS)
+    with open(tmp_path / "transfer_matrix.csv", "w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(("source_layer", "target_layer", "mean_protein_mae"))
+        writer.writerows((s, t, summaries["mean_mae"][s, t, 0]) for s in range(n_layers) for t in range(n_layers))
+    assert strata.check_parity(summaries, tmp_path) == 0
+    strata.draw(summaries, tmp_path)
+    assert len(list(tmp_path.glob("1*_transfer_*.png"))) == 4
