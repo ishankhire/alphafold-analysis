@@ -2693,3 +2693,19 @@ rises to 0.543 at layer 34 before falling again. At layer 0 low stress tracks se
 (across channels r = −0.83 with `|ρ| separation`); from layer 20 it tracks distance (r ≈ −0.7), and
 at layer 47 neither (r = −0.31 and −0.08): the lowest-stress layer-47 channels are mostly not
 distance-like. About a third of each channel's off-diagonal variance is antisymmetric and discarded.
+
+## Session: 2026-11-18 — Probe layer similarity; all-layer transfer on 552 proteins
+
+Added `scripts/cluster_scripts/diagnostics/probe_layer_similarity/` (compute, figures, launchers,
+runbook, tests). It compares the frozen probes across layers: weight cosine for the shared and
+sequence-gated linear probes, and per-protein Pearson and Spearman correlation of stored OOF
+predictions and of errors for all four probes. Everything is protein-equal; nothing is pooled over
+pairs. Job `24125964` (32 min, 7.8 GiB) passed 192/192 MAE parity checks.
+
+Reran the all-layer shared-OLS transfer with `ALL_LAYER_COHORT=full`, no code change (array
+`24125962`, aggregation `24125963`; 2,456/2,456 checks). Report:
+`delta_files/analysis/probe_layer_similarity_report_v1/REPORT.md`.
+
+Follow-up (same day): `transfer_by_stratum.py` splits the 552-protein transfer by sequence separation
+and by final structure distance from the stored shards, protein-equal, as absolute and excess
+error (job `24134288`). Table `transfer_by_stratum.csv`, figures 10-13, report section 5.

@@ -15,8 +15,9 @@ authorization and deletion rules.
   structure PDBs were purged from Delta on 2026-11-06, so current results are
   `cameo`. They use the same frozen probes and stay out-of-fold, but they are a
   different cohort: do not compare pooled numbers across cohorts. The ECOD
-  inputs are back on Delta (PDBs 2026-11-08, pair tensors 2026-11-13), but the
-  `full` run has not been made.
+  inputs are back on Delta (PDBs 2026-11-08, pair tensors 2026-11-13), and the
+  `full` run was made on 2026-11-18 (array `24125962`, aggregation `24125963`),
+  without the figure stage.
 - Each held-out protein in outer fold `f` is evaluated with the fold-`f` probe
   from the source layer, applied to its target-layer `[Z_ij | Z_ji]` features.
 - `target_restandardized`: the source standardized coefficients and intercept
